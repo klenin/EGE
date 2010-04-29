@@ -37,4 +37,6 @@ sub pick_n {
     @array[0 .. $n - 1];
 }
 
+sub coin { rand(2) > 1 }
+
 1;

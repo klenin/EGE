@@ -1,10 +1,11 @@
-﻿package EGE::Gen::A3;
+package EGE::Gen::A3;
 
 use strict;
 use warnings;
 
 use Bit::Vector;
 use EGE::Random;
+use EGE::Bin;
 
 sub ones {
     my $npower = rnd->in_range(5, 9);
@@ -35,7 +36,7 @@ sub zeroes {
 sub convert {
     my $n = 32 + rnd->in_range(0, 15) * 2 + 1;
     my $v = Bit::Vector->new_Dec(7, $n);
-    my $bin = $v->to_Bin;
+    my $bin = substr($v->to_Bin, 1);
     my $v1 = Bit::Vector->new(7);
     $v1->Reverse($v);
     $v1->Move_Right(1);
@@ -49,6 +50,34 @@ sub convert {
     {
         question => "Переведите число $bin в десятичную систему.",
         variants => [ $n, rnd->pick_n(3, @errors) ],
+        answer => 0,
+        variants_order => 'random',
+    };
+}
+
+sub range {
+    my $av = rnd->in_range(1, 13);
+    my $bv = rnd->in_range(2, 15 - $av);
+    $av += rnd->in_range(1, 16) * 16;
+    $bv += $av;
+    my $x = rnd->in_range($av + 1, $bv - 1);
+
+    my ($atext, $btext) = map hex_or_oct($_, rnd->coin), $av, $bv;
+    my $q = <<QUESTION
+Дано: <i>a</i> = $atext, <i>b</i> = $btext.
+Какое из чисел <i>x</i>, записанных в двоичной системе, отвечает
+неравенству <i>a</i> &lt; <i>x</i> &lt; <i>b</i>?
+QUESTION
+;
+    my @bits = map 1 << $_, 0..7;
+    my @errors = (
+        $av, $bv,
+        map($av - $_, grep $_ & $av, @bits),
+        map($bv + $_, grep !($_ & $bv), @bits),
+    );
+    {
+        question => $q,
+        variants => [ map to_bin($_), $x, rnd->pick_n(3, @errors) ],
         answer => 0,
         variants_order => 'random',
     };
