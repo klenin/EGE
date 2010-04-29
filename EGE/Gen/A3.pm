@@ -32,4 +32,27 @@ sub zeroes {
     };
 }
 
+sub convert {
+    my $n = 32 + rnd->in_range(0, 15) * 2 + 1;
+    my $v = Bit::Vector->new_Dec(6, $n);
+    my $bin = $v->to_Bin;
+    my $v1 = Bit::Vector->new(6);
+    $v1->Reverse($v);
+    $v1->Resize(7);
+    my $rn = int($v1->to_Dec);
+    $v1->Copy($v);
+    $v1->Bit_Off(6);
+    $v1->bit_flip(rnd->in_range(0, 5));
+    my $fn = int($v1->to_Dec);
+    my %seen = ($n => 1);
+    my @errors = grep !$seen{$_}++,
+        $n * 2, int($n / 2), $n + 1, $n - 1, $rn, $rn + 1, $rn - 1, $fn;
+    {
+        question => "Переведите число $bin в десятичную систему.",
+        variants => [ $n, rnd->pickn(3, @errors) ],
+        answer => 0,
+        variants_order => 'random',
+    };
+}
+
 1;
