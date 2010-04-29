@@ -5,7 +5,7 @@ use warnings;
 
 use Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT = qw(num_text);
+our @EXPORT = qw(num_text num_bits num_bytes);
 
 sub num_text {
     my ($n, $ts) = @_;

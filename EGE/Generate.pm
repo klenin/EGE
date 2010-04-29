@@ -8,11 +8,9 @@ use Encode;
 use EGE::Random;
 use EGE::NumText;
 
-sub bit_byte {
-    rnd->pick(
-        EGE::NumText::num_bytes($_[0]),
-        EGE::NumText::num_bits($_[0] * 8))
-}
+sub bits_and_bytes { num_bytes($_[0]), num_bits($_[0] * 8) }
+
+sub bits_or_bytes { rnd->pick(bits_and_bytes($_[0])) }
 
 sub A1_recode {
     my $delta = rnd->pick(8, 16, 32, map $_ * 10, 1..10);
@@ -20,7 +18,7 @@ sub A1_recode {
       { from => '16-битной кодировке UCS-2', to => '8-битную кодировку КОИ-8', change => 'уменьшилось' },
       { from => '8-битной кодировке КОИ-8', to => '16-битную кодировку UCS-2', change => 'увеличилось' },
     );
-    my $delta_text = bit_byte($delta);
+    my $delta_text = bits_or_bytes($delta);
     my $q = <<QUESTION
 Автоматическое устройство осуществило перекодировку информационного сообщения,
 первоначально записанного в $dir->{from}, в $dir->{to}.
@@ -63,7 +61,7 @@ QUESTION
     my $len_nosp = length Encode::decode_utf8($text_nosp);
     {
         question => $q,
-        variants => [ map bit_byte($_), $len, 2 * $len, int($len / 8), $len_nosp ],
+        variants => [ map bits_or_bytes($_), $len, 2 * $len, int($len / 8), $len_nosp ],
         answer => $enc->{size} - 1,
         variants_order => 'random',
     };
