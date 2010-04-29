@@ -5,7 +5,7 @@ use warnings;
 
 use Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT = qw(num_text num_bits num_bytes);
+our @EXPORT = qw(num_text num_bits num_bytes bits_and_bytes);
 
 sub num_text {
     my ($n, $ts) = @_;
@@ -20,5 +20,7 @@ sub num_text {
 
 sub num_bits { num_text($_[0], [ 'бит', 'бита', 'бит' ]) }
 sub num_bytes { num_text($_[0], [ 'байт', 'байта', 'байтов' ]) }
+
+sub bits_and_bytes { num_bytes($_[0]), num_bits($_[0] * 8) }
 
 1;
