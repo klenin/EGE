@@ -57,9 +57,14 @@ sub exec_frag {
         push @errors, $get_c->();
         $$var += 1;
     }
+    for (1 .. $b->count_ops) {
+        my $env = { _skip => $_ };
+        $b->run($env);
+        push @errors, $env->{c};
+    }
     my $correct = $get_c->();
     my %seen = ($correct => 1);
-    my @errors = grep !$seen{$_}++, @errors;
+    @errors = grep !$seen{$_}++, @errors;
 
     {
         question => $q,

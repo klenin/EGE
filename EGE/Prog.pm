@@ -15,6 +15,8 @@ sub to_lang {
     die;
 }
 
+sub count_ops { 0 }
+
 package EGE::Prog::Assign;
 
 use base 'EGE::Prog::SynElement';
@@ -35,6 +37,8 @@ sub run {
     $env->{$self->{var}} = $self->{expr}->run($env);
 }
 
+sub count_ops { $_[0]->{expr}->count_ops; }
+
 package EGE::Prog::BinOp;
 
 use base 'EGE::Prog::SynElement';
@@ -52,9 +56,12 @@ sub to_lang {
 sub run {
     my ($self, $env) = @_;
     my $vl = $self->{left}->run($env);
+    return $vl if ($env->{_skip} || 0) == ++$env->{_count};
     my $vr = $self->{right}->run($env);
     eval "$vl $self->{op} $vr";
 }
+
+sub count_ops { $_[0]->{left}->count_ops + $_[0]->{right}->count_ops + 1; }
 
 package EGE::Prog::UnOp;
 
@@ -70,8 +77,11 @@ sub to_lang {
 sub run {
     my ($self, $env) = @_;
     my $v = $self->{arg}->run($env);
+    return $v if ($env->{_skip} || 0) == ++$env->{_count};
     eval "$self->{op} $v";
 }
+
+sub count_ops { $_[0]->{arg}->count_ops + 1; }
 
 package EGE::Prog::Var;
 
@@ -130,6 +140,12 @@ sub to_lang {
 sub run {
     my ($self, $env) = @_;
     $_->run($env) for @{$self->{statements}};
+}
+
+sub count_ops {
+    my $count = 0;
+    $count += $_->count_ops for @{$_[0]->{statements}};
+    $count;
 }
 
 package EGE::Prog;
