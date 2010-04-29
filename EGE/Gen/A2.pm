@@ -30,7 +30,7 @@ QUESTION
         question => $q,
         variants => [
             num_bits($bits * $passed),
-            rnd->pickn(3,
+            rnd->pick_n(3,
                 bits_and_bytes($total),
                 bits_and_bytes($passed),
                 num_bits($bits * $total)

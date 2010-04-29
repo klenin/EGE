@@ -31,7 +31,7 @@ sub pick {
     @array[rand @array];
 }
 
-sub pickn {
+sub pick_n {
     my ($self, $n, @array) = @_;
     @array = List::Util::shuffle @array;
     @array[0 .. $n - 1];

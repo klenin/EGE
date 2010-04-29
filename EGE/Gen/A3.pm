@@ -49,7 +49,7 @@ sub convert {
         $n * 2, int($n / 2), $n + 1, $n - 1, $rn, $rn + 1, $rn - 1, $fn;
     {
         question => "Переведите число $bin в десятичную систему.",
-        variants => [ $n, rnd->pickn(3, @errors) ],
+        variants => [ $n, rnd->pick_n(3, @errors) ],
         answer => 0,
         variants_order => 'random',
     };
