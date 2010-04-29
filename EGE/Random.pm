@@ -7,6 +7,8 @@ use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT = qw(rnd);
 
+use List::Util;
+
 my $rnd;
 
 sub rnd {
@@ -27,6 +29,12 @@ sub in_range {
 sub pick {
     my ($self, @array) = @_;
     @array[rand @array];
+}
+
+sub pickn {
+    my ($self, $n, @array) = @_;
+    @array = List::Util::shuffle @array;
+    @array[0 .. $n - 1];
 }
 
 1;
