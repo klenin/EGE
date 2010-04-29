@@ -67,4 +67,39 @@ QUESTION
     };
 }
 
+sub A2_sport {
+    my $flavour = rnd->pick(
+        { t1 => 'велокроссе', t2 => [ 'велосипедист', 'велосипедиста', 'велосипедистов' ] },
+        { t1 => 'забеге', t2 => [ 'бегун', 'бегуна', 'бегунов' ] },
+        { t1 => 'марафоне', t2 => [ 'атлет', 'атлета', 'атлетов' ] },
+        { t1 => 'заплыве', t2 => [ 'пловец', 'пловца', 'пловцов' ] },
+    );
+    my $bits = rnd->in_range(5, 7);
+    my $total = 2 ** $bits - rnd->in_range(2, 5);
+    my $passed = rnd->in_range($total / 2 - 5, $total / 2 + 5);
+    my $passed_text = num_text($passed, $flavour->{t2});
+    my $total_text = num_text($total, [ 'спортсмен', 'спортсмена', 'спортсменов' ]);
+    my $q = <<QUESTION
+В $flavour->{t1} участвуют $total_text. Специальное устройство регистрирует
+прохождение каждым из участников промежуточнго финиша, записывая его номер
+с использованием минимального количества бит, одинакового для каждого спортсмена.
+Каков информационный объем сообщения, записанного устройством,
+после того как промежуточный финиш прошли $passed_text?
+QUESTION
+;
+    {
+        question => $q,
+        variants => [
+            num_bits($bits * $passed),
+            rnd->pickn(3,
+                bits_and_bytes($total),
+                bits_and_bytes($passed),
+                num_bits($bits * $total)
+            )
+        ],
+        answer => 0,
+        variants_order => 'random',
+    };
+}
+
 1;
