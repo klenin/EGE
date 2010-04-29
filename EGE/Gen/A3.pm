@@ -34,14 +34,13 @@ sub zeroes {
 
 sub convert {
     my $n = 32 + rnd->in_range(0, 15) * 2 + 1;
-    my $v = Bit::Vector->new_Dec(6, $n);
+    my $v = Bit::Vector->new_Dec(7, $n);
     my $bin = $v->to_Bin;
-    my $v1 = Bit::Vector->new(6);
+    my $v1 = Bit::Vector->new(7);
     $v1->Reverse($v);
-    $v1->Resize(7);
+    $v1->Move_Right(1);
     my $rn = int($v1->to_Dec);
     $v1->Copy($v);
-    $v1->Bit_Off(6);
     $v1->bit_flip(rnd->in_range(0, 5));
     my $fn = int($v1->to_Dec);
     my %seen = ($n => 1);
