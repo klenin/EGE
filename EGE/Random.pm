@@ -39,4 +39,9 @@ sub pick_n {
 
 sub coin { rand(2) > 1 }
 
+sub shuffle {
+    shift;
+    List::Util::shuffle(@_);
+}
+
 1;
