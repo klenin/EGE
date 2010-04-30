@@ -5,20 +5,9 @@ use warnings;
 
 use EGE::Random;
 use EGE::Prog;
-
-sub row {
-    my $r = join '', map "<td>$_</td>", @_;
-    "<tr>$r</tr>\n";
-}
-
-sub lang_row {
-    my $prog = shift;
-    row(map EGE::Prog::lang_names->{$_}, @_) .
-    row(map '<pre>' . $prog->to_lang($_) . '</pre>', @_);
-}
+use EGE::LangTable;
 
 sub arith {
-
     my $v1 = rnd->in_range(1, 9);
     my $v2 = rnd->in_range(1, 9);
     my $v3 = rnd->in_range(2, 4);
@@ -32,15 +21,10 @@ sub arith {
         '=', 'c', [ '+', [ '-', $ab2[0] ], [ '*', \$v3, $ab2[1] ] ],
     ]);
 
-    my $q = q~
-Определите значение переменной <i>c</i> после выполнения следующего
-фрагмента программы:
-<table border="1">
-~;
-    $q .=
-        lang_row($b, 'Basic', 'Alg') .
-        lang_row($b, 'Pascal', 'C') .
-        "</table>\n";
+    my $lt = EGE::LangTable::table($b, [ [ 'Basic', 'Alg' ], [ 'Pascal', 'C' ] ]);
+    my $q =
+        'Определите значение переменной <i>c</i> после выполнения ' .
+        "следующего фрагмента программы: $lt";
 
     my $get_c = sub { $b->run_val('c', { @_ }) };
 
@@ -85,11 +69,8 @@ sub div_mod_common {
         $get_fn->($env);
     };
     my $correct = $get_v->();
-    $q .= q~ после выполнения следующего фрагмента программы:
-<table border="1">
-~ .
-        lang_row($b, 'Basic', 'Pascal', 'Alg') .
-        "</table>\n";
+    my $lt = EGE::LangTable::table($b, [ [ 'Basic', 'Pascal', 'Alg' ] ]);
+    $q .= " после выполнения следующего фрагмента программы: $lt";
 
     my @errors;
     push @errors, $get_v->(_replace_op => $_),
