@@ -12,6 +12,7 @@ use EGE::Gen::A2;
 use EGE::Gen::A3;
 use EGE::Gen::A4;
 use EGE::Gen::A5;
+use EGE::Gen::A6;
 
 my @questions;
 
@@ -62,6 +63,7 @@ sub print_html {
 #g('A3', 'range');
 #g('A4', 'sum');
 #g('A5', 'arith');
-g('A5', 'div_mod_10');
-g('A5', 'div_mod_rotate');
+#g('A5', 'div_mod_10');
+#g('A5', 'div_mod_rotate');
+g('A6', 'count_by_sign');
 print_html;
