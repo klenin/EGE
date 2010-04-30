@@ -69,7 +69,9 @@ sub run {
     my $vl = $self->{left}->run($env);
     return $vl if ($env->{_skip} || 0) == ++$env->{_count};
     my $vr = $self->{right}->run($env);
-    eval sprintf op_to_lang($self->{op}, 'Perl'), $vl, $vr;
+    my $op = $self->{op};
+    $op = ($env->{_replace_op} || {})->{$op} || $op;
+    eval sprintf op_to_lang($op, 'Perl'), $vl, $vr;
 }
 
 sub count_ops { $_[0]->{left}->count_ops + $_[0]->{right}->count_ops + 1; }

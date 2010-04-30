@@ -45,3 +45,6 @@ my $b1 = EGE::Prog::make_block([
 print $b1->to_lang('Basic'), "\n";
 $b1->run($env);
 print "\n", %$env;
+$env = { _replace_op => { '%' => '//' } };
+$b1->run($env);
+print "\n", %$env;
