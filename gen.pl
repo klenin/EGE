@@ -61,5 +61,6 @@ sub print_html {
 #g('A3', 'convert');
 #g('A3', 'range');
 #g('A4', 'sum');
-g('A5', 'exec_frag');
+g('A5', 'arith');
+g('A5', 'div_mod');
 print_html;
