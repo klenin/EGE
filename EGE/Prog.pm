@@ -212,7 +212,7 @@ sub count_ops {
 
 package EGE::Prog::ForLoop;
 
-use base 'EGE::Prog::Block';
+use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang) = @_;
@@ -230,22 +230,18 @@ sub to_lang {
         Alg => 'кц',
         Perl => '}',
     }->{$lang};
-    my $block = $self->SUPER::to_lang($lang);
-    $block =~ s/^/  /mg;
+    my $body = $self->{body}->to_lang($lang);
+    $body =~ s/^/  /mg;
     sprintf
         "$fmt_start\n%4\$s\n$fmt_end",
-        map($self->{$_}->to_lang($lang), qw(var lb ub)), $block;
+        map($self->{$_}->to_lang($lang), qw(var lb ub)), $body;
 };
 
 sub run {
     my ($self, $env) = @_;
     my $i = $self->{var}->get_ref($env);
-    for (
-        $$i = $self->{lb}->run($env);
-        $$i <= $self->{ub}->run($env);
-        ++$$i
-    ) {
-        $self->SUPER::run($env);
+    for ($$i = $self->{lb}->run($env); $$i <= $self->{ub}->run($env); ++$$i) {
+        $self->{body}->run($env);
     }
 }
 
@@ -300,34 +296,37 @@ sub make_expr {
     return EGE::Prog::Const->new(value => $src);
 }
 
+sub statements_descr {{
+    '#' => { type => 'LangSpecificText', args => ['C_text'] },
+    '=' => { type => 'Assign', args => [qw(E_var E_expr)] },
+    'for' => { type => 'ForLoop', args => [qw(E_var E_lb E_ub B_body)] },
+}}
+
+sub arg_processors {{
+    C => sub { $_[0] },
+    E => \&make_expr,
+    B => \&make_block,
+}}
+
+sub make_statement {
+    my ($next) = @_;
+    my $name = $next->();
+    my $d = statements_descr->{$name};
+    $d or die "Unknown statement $name";
+    my %args;
+    for (@{$d->{args}}) {
+        my ($p, $n) = /(\w)_(\w+)/;
+        $args{$n} = arg_processors->{$p}->($next->());
+    }
+    "EGE::Prog::$d->{type}"->new(%args);
+}
+
 sub make_block {
     my ($src) = @_;
     ref $src eq 'ARRAY' or die;
     my @s;
     for (my $i = 0; $i < @$src; ) {
-        if ($src->[$i] eq '#') {
-            push @s, EGE::Prog::LangSpecificText->new(text => $src->[$i + 1]);
-            $i += 2;
-            next;
-        }
-        if ($src->[$i] eq '=') {
-            push @s, EGE::Prog::Assign->new(
-                var => make_expr($src->[$i + 1]),
-                expr => make_expr($src->[$i + 2]),
-            );
-            $i += 3;
-            next;
-        }
-        if ($src->[$i] eq 'for') {
-            push @s, EGE::Prog::ForLoop->new(
-                var => make_expr($src->[$i + 1]),
-                lb => make_expr($src->[$i + 2]),
-                ub => make_expr($src->[$i + 3]),
-                statements => make_block($src->[$i + 4])->{statements},
-            );
-            $i += 5;
-            next;
-        }
+        push @s, make_statement(sub { $src->[$i++] });
     }
     EGE::Prog::Block->new(statements => \@s);
 }
