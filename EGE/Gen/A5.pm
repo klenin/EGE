@@ -70,16 +70,13 @@ sub arith {
     };
 }
 
-sub div_mod {
-    my $v2 = rnd->in_range(2, 9);
-    my $v3 = rnd->in_range(2, 9);
+sub div_mod_common {
+    my ($q, $src, $get_fn) = @_;
     my $cc =
         ', вычисляющие результат деления нацело первого аргумента на второй '.
         'и остаток от деления соответственно';
     my $b = EGE::Prog::make_block([
-        '=', 'x', [ '+', rnd->in_range(1, 9), [ '*', \$v2, \$v3 ] ],
-        '=', 'y', [ '+', ['%', 'x', 10 ], rnd->in_range(11, 19) ],
-        '=', 'x', [ '+', ['//', 'y', 10 ], rnd->in_range(1, 9) ],
+        @$src,
         '#', {
             Basic => "</pre>\'\\ и MOD &mdash; операции$cc",
             Pascal => "</pre>{div и mod &mdash; операции$cc}",
@@ -87,24 +84,22 @@ sub div_mod {
         },
     ]);
 
-    my $get_xy = sub {
+    my $get_v = sub {
         my $env = { @_ };
         $b->run($env);
-        "<i>x</i> = $env->{x}, <i>y</i> = $env->{y}"
+        $get_fn->($env);
     };
-    my $correct = $get_xy->();
-    my $q = q~
-Определите значение целочисленных переменных <i>x</i> и <i>y</i>
-после выполнения следующего фрагмента программы:
+    my $correct = $get_v->();
+    $q .= q~ после выполнения следующего фрагмента программы:
 <table border="1">
 ~ .
         lang_row($b, 'Basic', 'Pascal', 'Alg') .
         "</table>\n";
 
     my @errors;
-    push @errors, $get_xy->(_replace_op => $_),
+    push @errors, $get_v->(_replace_op => $_),
         for { '%' => '//' }, { '//' => '%' }, { '%' => '//', '//' => '%' };
-    push @errors, $get_xy->(_skip => $_) for 1 .. $b->count_ops;
+    push @errors, $get_v->(_skip => $_) for 1 .. $b->count_ops;
 
     my %seen = ($correct => 1);
     @errors = grep !$seen{$_}++, @errors;
@@ -114,6 +109,34 @@ sub div_mod {
         answer => 0,
         variants_order => 'random',
     };
+}
+
+sub div_mod_10 {
+    my $v2 = rnd->in_range(2, 9);
+    my $v3 = rnd->in_range(2, 9);
+    return div_mod_common(
+        'Определите значение целочисленных переменных <i>x</i> и <i>y</i>',
+        [
+            '=', 'x', [ '+', rnd->in_range(1, 9), [ '*', $v2, $v3 ] ],
+            '=', 'y', [ '+', [ '%', 'x', 10 ], rnd->in_range(11, 19) ],
+            '=', 'x', [ '+', [ '//', 'y', 10 ], rnd->in_range(1, 9) ],
+        ],
+        sub { "<i>x</i> = $_[0]->{x}, <i>y</i> = $_[0]->{y}" },
+    );
+}
+
+sub div_mod_rotate {
+    div_mod_common(
+        'Переменные <i>x</i> и <i>y</i> описаны в программе как целочисленные. ' .
+        'Определите значение переменной <i>x</i>',
+        [
+            '=', 'x', rnd->in_range(101, 999),
+            '=', 'y', [ '//', 'x', 100 ],
+            '=', 'x', [ '*', [ '%', 'x', 100 ], 10 ],
+            '=', 'x', [ '+', 'x', 'y' ],
+        ],
+        sub { $_[0]->{x} },
+    );
 }
 
 1;
