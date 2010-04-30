@@ -161,6 +161,17 @@ sub count_ops {
     $count;
 }
 
+package EGE::Prog::LangSpecificText;
+
+use base 'EGE::Prog::SynElement';
+
+sub to_lang {
+    my ($self, $lang) = @_;
+    $self->{text}->{$lang};
+};
+
+sub run {}
+
 package EGE::Prog;
 
 sub make_expr {
@@ -195,11 +206,19 @@ sub make_block {
     my ($src) = @_;
     ref $src eq 'ARRAY' or die;
     my @s;
-    for (my $i = 0; $i < @$src; $i += 3) {
-        $src->[$i] eq '=' or die;
-        push @s, EGE::Prog::Assign->new(
-            var => $src->[$i + 1], expr => make_expr($src->[$i + 2])
-        );
+    for (my $i = 0; $i < @$src; ) {
+        if ($src->[$i] eq '#') {
+            push @s, EGE::Prog::LangSpecificText->new(text => $src->[$i + 1]);
+            $i += 2;
+            next;
+        }
+        if ($src->[$i] eq '=') {
+            push @s, EGE::Prog::Assign->new(
+                var => $src->[$i + 1], expr => make_expr($src->[$i + 2])
+            );
+            $i += 3;
+            next;
+        }
     }
     EGE::Prog::Block->new(statements => \@s);
 }

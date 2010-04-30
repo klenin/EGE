@@ -40,9 +40,10 @@ my $b1 = EGE::Prog::make_block([
     '=', 'x', ['+', 4, ['*', 8, 3]],
     '=', 'y', ['+', ['%', 'x', 10], 15],
     '=', 'x', ['+', ['//', 'y', 10], 3],
+    '#', { Basic => '\' comment', Pascal => '{comment}' },
 ]);
 
-print $b1->to_lang('Basic'), "\n";
+print $b1->to_lang('Pascal'), "\n";
 $b1->run($env);
 print "\n", %$env;
 $env = { _replace_op => { '%' => '//' } };
