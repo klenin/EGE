@@ -18,7 +18,7 @@ sub lang_row {
     row(map '<pre>' . $prog->to_lang($_) . '</pre>', @_);
 }
 
-sub exec_frag {
+sub arith {
 
     my $v1 = rnd->in_range(1, 9);
     my $v2 = rnd->in_range(1, 9);
@@ -44,7 +44,7 @@ sub exec_frag {
         "</table>\n";
 
     my $get_c = sub { 
-        my $env = {};
+        my $env = { @_ };
         $b->run($env);
         $env->{c};
     };
@@ -57,11 +57,7 @@ sub exec_frag {
         push @errors, $get_c->();
         $$var += 1;
     }
-    for (1 .. $b->count_ops) {
-        my $env = { _skip => $_ };
-        $b->run($env);
-        push @errors, $env->{c};
-    }
+    push @errors, $get_c->(_skip => $_) for 1 .. $b->count_ops;
     my $correct = $get_c->();
     my %seen = ($correct => 1);
     @errors = grep !$seen{$_}++, @errors;
