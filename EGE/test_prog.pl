@@ -57,4 +57,21 @@ my $b2 = EGE::Prog::make_block([
     '=', ['[]', 'A', 2 ], [ '+', [ '[]', 'A', 3 ], 1 ],
 ]);
 
+=begin
 print $b2->to_lang('Pascal'), "\n";
+$env = {};
+$b2->run($env);
+print Dumper($env);
+=cut
+
+my $b3 = EGE::Prog::make_block([
+    'for', 'i', 1, 10, [
+        '=', ['[]', 'A', 'i'], 'i',
+        '=', ['[]', 'B', 'i'], 'i',
+    ]
+]);
+
+print $b3->to_lang('Pascal'), "\n";
+$env = {};
+$b3->run($env);
+print Dumper($env);

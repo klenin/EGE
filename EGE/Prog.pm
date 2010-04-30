@@ -210,6 +210,45 @@ sub count_ops {
     $count;
 }
 
+package EGE::Prog::ForLoop;
+
+use base 'EGE::Prog::Block';
+
+sub to_lang {
+    my ($self, $lang) = @_;
+    my $fmt_start = {
+        Basic => 'FOR %s = %s TO %s',
+        C => 'for(%s = %2$s; %1$s <= %3$s; ++%1$s) {',
+        Pascal => 'for %s := %s to %s do begin',
+        Alg => 'нц для %s от %s до %s',
+        Perl => 'for(%s = %2$s; %1$s <= %3$s; ++%1$s) {',
+    }->{$lang};
+    my $fmt_end = {
+        Basic => 'NEXT %1$s',
+        C => '}',
+        Pascal => 'end;',
+        Alg => 'кц',
+        Perl => '}',
+    }->{$lang};
+    my $block = $self->SUPER::to_lang($lang);
+    $block =~ s/^/  /mg;
+    sprintf
+        "$fmt_start\n%4\$s\n$fmt_end",
+        map($self->{$_}->to_lang($lang), qw(var lb ub)), $block;
+};
+
+sub run {
+    my ($self, $env) = @_;
+    my $i = $self->{var}->get_ref($env);
+    for (
+        $$i = $self->{lb}->run($env);
+        $$i <= $self->{ub}->run($env);
+        ++$$i
+    ) {
+        $self->SUPER::run($env);
+    }
+}
+
 package EGE::Prog::LangSpecificText;
 
 use base 'EGE::Prog::SynElement';
@@ -274,9 +313,19 @@ sub make_block {
         if ($src->[$i] eq '=') {
             push @s, EGE::Prog::Assign->new(
                 var => make_expr($src->[$i + 1]),
-                expr => make_expr($src->[$i + 2])
+                expr => make_expr($src->[$i + 2]),
             );
             $i += 3;
+            next;
+        }
+        if ($src->[$i] eq 'for') {
+            push @s, EGE::Prog::ForLoop->new(
+                var => make_expr($src->[$i + 1]),
+                lb => make_expr($src->[$i + 2]),
+                ub => make_expr($src->[$i + 3]),
+                statements => make_block($src->[$i + 4])->{statements},
+            );
+            $i += 5;
             next;
         }
     }

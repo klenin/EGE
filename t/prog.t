@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 24;
+use Test::More tests => 26;
 
 use lib '..';
 use EGE::Prog qw(make_block make_expr);
@@ -62,4 +62,15 @@ use EGE::Prog qw(make_block make_expr);
     my $b = EGE::Prog::make_block([ '=', [ '[]', 'A', 2 ], 5 ]);
     is($b->to_lang('Pascal'), 'A[2] := 5;');
     is_deeply($b->run_val('A'), [ undef, undef, 5 ]);
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, 4, [ '=', ['[]', 'M', 'i'], 'i' ]
+    ]);
+    my $p = q~for i := 0 to 4 do begin
+  M[i] := i;
+end;~;
+    is($b->to_lang('Pascal'), $p, 'loop in Pascal');
+    is_deeply($b->run_val('M'), [ 0, 1, 2, 3, 4 ], 'loop run');
 }
