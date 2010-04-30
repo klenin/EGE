@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 26;
+use Test::More tests => 28;
 use Test::Exception;
 
 use lib '..';
@@ -36,6 +36,7 @@ use EGE::Prog qw(make_block make_expr);
 {
     my $b = make_block([]);
     is($b->to_lang($_), '', $_) for keys %{EGE::Prog::lang_names()};
+    throws_ok { make_block(['xyz']) } qr/xyz/, 'undefined statement';
 }
 
 {
