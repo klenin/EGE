@@ -2,6 +2,7 @@ use strict;
 use warnings;
 
 use Test::More tests => 26;
+use Test::Exception;
 
 use lib '..';
 use EGE::Prog qw(make_block make_expr);
@@ -18,6 +19,10 @@ use EGE::Prog qw(make_block make_expr);
     is(make_expr(shift @t)->run({}), shift @t) while @t;
     my $env = { a => '2', b => '3' };
     is(make_expr([ '*', 'a', ['+', 'b', 7 ] ])->run($env), 20);
+}
+
+{
+    throws_ok { make_expr(['xyz'])->run({}) } qr/xyz/, 'undefined variable';
 }
 
 {

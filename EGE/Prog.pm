@@ -152,7 +152,7 @@ sub to_lang {
 sub run {
     my ($self, $env) = @_;
     for ($env->{$self->{name}}) {
-        defined $_ or die;
+        defined $_ or die "Undefined variable $self->{name}";
         return $_;
     }
 }
