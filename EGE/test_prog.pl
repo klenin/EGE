@@ -24,6 +24,7 @@ my $b = EGE::Prog::make_block([
 my $env = {};
 
 #print Dumper($b);
+=begin
 $b->run($env);
 
 print $b->to_lang('Pascal'), "\n";
@@ -33,3 +34,14 @@ print ' ops=', $b->count_ops, "\n";
 $env = { _skip => rnd->in_range(1, $b->count_ops) };
 $b->run($env);
 print %$env;
+=cut
+
+my $b1 = EGE::Prog::make_block([
+    '=', 'x', ['+', 4, ['*', 8, 3]],
+    '=', 'y', ['+', ['%', 'x', 10], 15],
+    '=', 'x', ['+', ['//', 'y', 10], 3],
+]);
+
+print $b1->to_lang('Basic'), "\n";
+$b1->run($env);
+print "\n", %$env;

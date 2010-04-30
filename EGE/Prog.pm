@@ -32,6 +32,7 @@ sub to_lang {
     };
     sprintf $f->{$lang}, $self->{var}, $self->{expr}->to_lang($lang);
 }
+
 sub run {
     my ($self, $env) = @_;
     $env->{$self->{var}} = $self->{expr}->run($env);
@@ -43,14 +44,24 @@ package EGE::Prog::BinOp;
 
 use base 'EGE::Prog::SynElement';
 
-sub op_to_lang { $_[0] }
+sub op_to_lang {
+    my ($op, $lang) = @_;
+    my $fmt = {
+        Basic => { '%' => 'MOD', '//' => '\\' },
+        C => { '//' => 'int(%s / %s)', },
+        Pascal => { '%' => 'mod', '//' => 'div', },
+        Alg => { '%' => 'mod(%s, %s)', '//' => 'div(%s, %s)', },
+        Perl => { '//' => 'int(%s / %s)', },
+    }->{$lang}->{$op} || $op;
+    $fmt = '%%' if $fmt eq '%';
+    $fmt =~ /%\w/ ? $fmt : "%s $fmt %s";
+}
 
 sub to_lang {
     my ($self, $lang) = @_;
-    join ' ',
-        $self->{left}->to_lang($lang),
+    sprintf
         op_to_lang($self->{op}, $lang),
-        $self->{right}->to_lang($lang);
+        map $self->{$_}->to_lang($lang), qw(left right);
 }
 
 sub run {
@@ -58,7 +69,7 @@ sub run {
     my $vl = $self->{left}->run($env);
     return $vl if ($env->{_skip} || 0) == ++$env->{_count};
     my $vr = $self->{right}->run($env);
-    eval "$vl $self->{op} $vr";
+    eval sprintf op_to_lang($self->{op}, 'Perl'), $vl, $vr;
 }
 
 sub count_ops { $_[0]->{left}->count_ops + $_[0]->{right}->count_ops + 1; }
