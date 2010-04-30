@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 23;
+use Test::More tests => 24;
 
 use lib '..';
 use EGE::Prog qw(make_block make_expr);
@@ -59,6 +59,7 @@ use EGE::Prog qw(make_block make_expr);
 }
 
 {
-    my $b = EGE::Prog::make_block([ '=', [ '[]', 'A', 3 ], 5 ]);
-    is($b->to_lang('Pascal'), 'A[3] := 5;');
+    my $b = EGE::Prog::make_block([ '=', [ '[]', 'A', 2 ], 5 ]);
+    is($b->to_lang('Pascal'), 'A[2] := 5;');
+    is_deeply($b->run_val('A'), [ undef, undef, 5 ]);
 }
