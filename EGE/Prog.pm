@@ -174,7 +174,7 @@ use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang) = @_;
-    $self->{text}->{$lang};
+    $self->{text}->{$lang} || '';
 };
 
 sub run {}
