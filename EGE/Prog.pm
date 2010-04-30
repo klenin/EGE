@@ -17,6 +17,13 @@ sub to_lang {
 
 sub count_ops { 0 }
 
+sub run_val {
+    my ($self, $name, $env) = @_;
+    $env ||= {};
+    $self->run($env);
+    $env->{$name};
+}
+
 package EGE::Prog::Assign;
 
 use base 'EGE::Prog::SynElement';

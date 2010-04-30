@@ -43,11 +43,7 @@ sub arith {
         lang_row($b, 'Pascal', 'C') .
         "</table>\n";
 
-    my $get_c = sub { 
-        my $env = { @_ };
-        $b->run($env);
-        $env->{c};
-    };
+    my $get_c = sub { $b->run_val('c', { @_ }) };
 
     my @errors;
     for my $var (\$v1, \$v2, \$v3) {
