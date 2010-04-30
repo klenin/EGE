@@ -43,9 +43,18 @@ my $b1 = EGE::Prog::make_block([
     '#', { Basic => '\' comment', Pascal => '{comment}' },
 ]);
 
+=begin
 print $b1->to_lang('Pascal'), "\n";
 $b1->run($env);
 print "\n", %$env;
 $env = { _replace_op => { '%' => '//' } };
 $b1->run($env);
 print "\n", %$env;
+=cut
+
+my $b2 = EGE::Prog::make_block([
+    '=', ['[]', 'A', 3 ], 5,
+    '=', ['[]', 'A', 2 ], [ '+', [ '[]', 'A', 3 ], 1 ],
+]);
+
+print $b2->to_lang('Pascal'), "\n";

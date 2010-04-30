@@ -10,10 +10,9 @@ sub new {
     $self;
 }
 
-sub to_lang {
-    my ($self, $lang) = @_;
-    die;
-}
+sub to_lang { die; }
+sub run { die; }
+sub get_ref { die; }
 
 sub count_ops { 0 }
 
@@ -37,15 +36,53 @@ sub to_lang {
         Alg => '%s := %s',
         Perl => '$%s = %s;',
     };
-    sprintf $f->{$lang}, $self->{var}, $self->{expr}->to_lang($lang);
+    sprintf $f->{$lang}, map $self->{$_}->to_lang($lang), qw(var expr);
 }
 
 sub run {
     my ($self, $env) = @_;
-    $env->{$self->{var}} = $self->{expr}->run($env);
+    ${$self->{var}->get_ref($env)} = $self->{expr}->run($env);
 }
 
 sub count_ops { $_[0]->{expr}->count_ops; }
+
+package EGE::Prog::Index;
+
+use base 'EGE::Prog::SynElement';
+
+sub to_lang {
+    my ($self, $lang) = @_;
+    my $fmt = {
+        Basic => '%s(%s)',
+        C => '%s[%s]',
+        Pascal => '%s[%s]',
+        Alg => '%s[%s]',
+        Perl => '$%s[%s]',
+    }->{$lang};
+    sprintf $fmt,
+        $self->{array}->to_lang($lang),
+        join ', ', map $_->to_lang($lang), @{$self->{indices}};
+}
+
+sub run {
+    my ($self, $env) = @_;
+    my $v = $self->{array}->run($env);
+    $v = $v->[$_->run($env)] for @{$self->{indices}};
+    $v;
+}
+
+sub get_ref {
+    my ($self, $env) = @_;
+    my $v = $self->{array}->get_ref($env);
+    $v = \($$v->[$_->run($env)]) for @{$self->{indices}};
+    $v;
+}
+
+sub count_ops {
+    my ($self) = @_;
+    my $count = 0;
+    $count += $_->count_ops for @{$self->{indices}};
+}
 
 package EGE::Prog::BinOp;
 
@@ -120,6 +157,11 @@ sub run {
     }
 }
 
+sub get_ref {
+    my ($self, $env, $value) = @_;
+    \$env->{$self->{name}};
+}
+
 package EGE::Prog::Const;
 
 use base 'EGE::Prog::SynElement';
@@ -181,12 +223,22 @@ sub run {}
 
 package EGE::Prog;
 
+use base 'Exporter';
+our @EXPORT_OK = qw(make_expr make_block lang_names);
+
 sub make_expr {
     my ($src) = @_;
     if (ref $src =~ /^EGE::Prog::/) {
         return $src;
     }
     if (ref $src eq 'ARRAY') {
+        if (@$src >= 2 && $src->[0] eq '[]') {
+            my @p = @$src;
+            shift @p;
+            $_ = make_expr($_) for @p;
+            my $array = shift @p;
+            return EGE::Prog::Index->new(array => $array, indices => \@p);
+        }
         if (@$src == 2) {
             return EGE::Prog::UnOp->new(
                 op => $src->[0], arg => make_expr($src->[1]));
@@ -221,7 +273,8 @@ sub make_block {
         }
         if ($src->[$i] eq '=') {
             push @s, EGE::Prog::Assign->new(
-                var => $src->[$i + 1], expr => make_expr($src->[$i + 2])
+                var => make_expr($src->[$i + 1]),
+                expr => make_expr($src->[$i + 2])
             );
             $i += 3;
             next;
