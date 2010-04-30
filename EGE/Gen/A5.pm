@@ -3,7 +3,6 @@ package EGE::Gen::A5;
 use strict;
 use warnings;
 
-use Bit::Vector;
 use EGE::Random;
 use EGE::Prog;
 
