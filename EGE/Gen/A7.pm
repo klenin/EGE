@@ -10,6 +10,7 @@ use EGE::Random;
 use EGE::Logic;
 use EGE::NumText;
 use EGE::Russian::Names;
+use EGE::Russian::Animals;
 
 sub make_condition {
     {
@@ -64,7 +65,10 @@ sub names {
     my $good = -1;
     my $true_false;
     my $e_text;
+    my $list_text;
     do {
+        my $list_idx = rnd->coin;
+        $list_text = $list_idx ? 'имени' : 'из названий животных';
         my ($c1, $c2) = (make_condition());
         do { $c2 = make_condition() } while cond_eq($c1, $c2);
         my ($v1, $v2);
@@ -72,7 +76,9 @@ sub names {
         $v1 = cond_to_text($c1);
         $v2 = cond_to_text($c2);
         $e_text = $e->to_lang_named('Logic');
-        my @candidates = rnd->shuffle(@EGE::Russian::Names::list);
+        my @candidates = rnd->shuffle($list_idx ?
+            @EGE::Russian::Names::list :
+            @EGE::Russian::Animals::list);
         my $min_len = List::Util::max($c1->{n}, $c2->{n});
         $true_false = [ [], [] ];
         for my $name (@candidates) {
@@ -85,7 +91,7 @@ sub names {
     } while $good < 0;
     my $tf = $good ? 'истинно' : 'ложно';
     {
-        question => "Для какого имени $tf высказывание:<br/>$e_text?",
+        question => "Для какого $list_text $tf высказывание:<br/>$e_text?",
         variants => [ $true_false->[$good][0], @{$true_false->[1 - $good]}[0 .. 2] ],
         answer => 0,
         variants_order => 'random',
