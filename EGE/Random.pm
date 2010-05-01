@@ -44,4 +44,6 @@ sub shuffle {
     List::Util::shuffle(@_);
 }
 
+sub index_var { $_[0]->pick('i', 'j', 'k', 'm', 'n') }
+
 1;
