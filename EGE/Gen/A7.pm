@@ -55,20 +55,18 @@ sub cond_eq {
 
 sub check_good {
     my ($tf) = @_;
-    for (0 .. 1) {
+    for (rnd->shuffle(0, 1)) {
         return $_ if @{$tf->[$_]} && @{$tf->[1 - $_]} >= 3;
     }
     -1;
 }
 
-sub names {
+sub strings {
+    my ($next_string, $list_text) = @_;
     my $good = -1;
     my $true_false;
     my $e_text;
-    my $list_text;
     do {
-        my $list_idx = rnd->coin;
-        $list_text = $list_idx ? 'имени' : 'из названий животных';
         my ($c1, $c2) = (make_condition());
         do { $c2 = make_condition() } while cond_eq($c1, $c2);
         my ($v1, $v2);
@@ -76,12 +74,9 @@ sub names {
         $v1 = cond_to_text($c1);
         $v2 = cond_to_text($c2);
         $e_text = $e->to_lang_named('Logic');
-        my @candidates = rnd->shuffle($list_idx ?
-            @EGE::Russian::Names::list :
-            @EGE::Russian::Animals::list);
         my $min_len = List::Util::max($c1->{n}, $c2->{n});
         $true_false = [ [], [] ];
-        for my $name (@candidates) {
+        while(my $name = $next_string->()) {
             next if length($name) < $min_len;
             $v1 = check_cond($c1, $name);
             $v2 = check_cond($c2, $name);
@@ -90,12 +85,25 @@ sub names {
         }
     } while $good < 0;
     my $tf = $good ? 'истинно' : 'ложно';
+
     {
         question => "Для какого $list_text $tf высказывание:<br/>$e_text?",
         variants => [ $true_false->[$good][0], @{$true_false->[1 - $good]}[0 .. 2] ],
         answer => 0,
         variants_order => 'random',
     };
+}
+
+sub names {
+    my @list = rnd->shuffle(@EGE::Russian::Names::list);
+    my $i = 0;
+    strings(sub { $list[$i++] }, 'имени');
+}
+
+sub animals {
+    my @list = rnd->shuffle(@EGE::Russian::Animals::list);
+    my $i = 0;
+    strings(sub { $list[$i++] }, 'из названий животных');
 }
 
 1;
