@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 28;
+use Test::More tests => 31;
 use Test::Exception;
 
 use lib '..';
@@ -35,18 +35,19 @@ use EGE::Prog qw(make_block make_expr);
 
 {
     my $b = make_block([]);
-    is($b->to_lang($_), '', $_) for keys %{EGE::Prog::lang_names()};
+    is($b->to_lang_named($_), '', $_) for keys %{EGE::Prog::lang_names()};
     throws_ok { make_block(['xyz']) } qr/xyz/, 'undefined statement';
 }
 
 {
     my $b = make_block([ '=', 'x', 99 ]);
-    is($b->to_lang('Alg'), 'x := 99');
+    is($b->to_lang_named('Alg'), 'x := 99');
     is($b->run_val('x'), 99);
 }
 
 {
     my $b = make_block([ '=', 'x', 3, '=', 'y', 'x' ]);
+    is($b->to_lang_named('Perl'), "\$x = 3;\n\$y = \$x;");
     is($b->run_val('y'), 3);
 }
 
@@ -60,13 +61,13 @@ use EGE::Prog qw(make_block make_expr);
 
 {
     my $b = make_block([ '#', { 'Basic' => 'basic text' }]);
-    is($b->to_lang('Basic'), 'basic text');
-    is($b->to_lang('C'), '');
+    is($b->to_lang_named('Basic'), 'basic text');
+    is($b->to_lang_named('C'), '');
 }
 
 {
     my $b = EGE::Prog::make_block([ '=', [ '[]', 'A', 2 ], 5 ]);
-    is($b->to_lang('Pascal'), 'A[2] := 5;');
+    is($b->to_lang_named('Pascal'), 'A[2] := 5;');
     is_deeply($b->run_val('A'), [ undef, undef, 5 ]);
 }
 
@@ -77,6 +78,19 @@ use EGE::Prog qw(make_block make_expr);
     my $p = q~for i := 0 to 4 do begin
   M[i] := i;
 end;~;
-    is($b->to_lang('Pascal'), $p, 'loop in Pascal');
+    is($b->to_lang_named('Pascal'), $p, 'loop in Pascal');
     is_deeply($b->run_val('M'), [ 0, 1, 2, 3, 4 ], 'loop run');
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        '=', 'a', 1,
+        'for', 'i', 1, 3, [ '=', 'a', ['*', 'a', '2'] ]
+    ]);
+    my $p = q~a := 1
+нц для i от 1 до 3
+  a := a * 2
+кц~;
+    is($b->to_lang_named('Alg'), $p, 'loop in Alg');
+    is($b->run_val('a'), 8, 'loop run');
 }

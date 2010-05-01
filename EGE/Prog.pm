@@ -1,6 +1,8 @@
 use strict;
 use warnings;
 
+use EGE::Prog::Lang;
+
 package EGE::Prog::SynElement;
 
 sub new {
@@ -8,6 +10,11 @@ sub new {
     my $self = { %init };
     bless $self, $class;
     $self;
+}
+
+sub to_lang_named {
+    my ($self, $lang_name) = @_;
+    $self->to_lang(EGE::Prog::Lang::lang($lang_name));
 }
 
 sub to_lang { die; }
@@ -29,14 +36,8 @@ use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang) = @_;
-    my $f = {
-        Basic => '%s = %s',
-        C => '%s = %s;',
-        Pascal => '%s := %s;',
-        Alg => '%s := %s',
-        Perl => '$%s = %s;',
-    };
-    sprintf $f->{$lang}, map $self->{$_}->to_lang($lang), qw(var expr);
+    sprintf $lang->assign_fmt,
+        map $self->{$_}->to_lang($lang), qw(var expr);
 }
 
 sub run {
@@ -52,14 +53,7 @@ use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang) = @_;
-    my $fmt = {
-        Basic => '%s(%s)',
-        C => '%s[%s]',
-        Pascal => '%s[%s]',
-        Alg => '%s[%s]',
-        Perl => '$%s[%s]',
-    }->{$lang};
-    sprintf $fmt,
+    sprintf $lang->index_fmt,
         $self->{array}->to_lang($lang),
         join ', ', map $_->to_lang($lang), @{$self->{indices}};
 }
@@ -88,23 +82,10 @@ package EGE::Prog::BinOp;
 
 use base 'EGE::Prog::SynElement';
 
-sub op_to_lang {
-    my ($op, $lang) = @_;
-    my $fmt = {
-        Basic => { '%' => 'MOD', '//' => '\\' },
-        C => { '//' => 'int(%s / %s)', },
-        Pascal => { '%' => 'mod', '//' => 'div', },
-        Alg => { '%' => 'mod(%s, %s)', '//' => 'div(%s, %s)', },
-        Perl => { '//' => 'int(%s / %s)', },
-    }->{$lang}->{$op} || $op;
-    $fmt = '%%' if $fmt eq '%';
-    $fmt =~ /%\w/ ? $fmt : "%s $fmt %s";
-}
-
 sub to_lang {
     my ($self, $lang) = @_;
     sprintf
-        op_to_lang($self->{op}, $lang),
+        $lang->op_fmt($self->{op}),
         map $self->{$_}->to_lang($lang), qw(left right);
 }
 
@@ -115,7 +96,7 @@ sub run {
     my $vr = $self->{right}->run($env);
     my $op = $self->{op};
     $op = ($env->{_replace_op} || {})->{$op} || $op;
-    eval sprintf op_to_lang($op, 'Perl'), $vl, $vr;
+    eval sprintf EGE::Prog::Lang::lang('Perl')->op_fmt($op), $vl, $vr;
 }
 
 sub count_ops { $_[0]->{left}->count_ops + $_[0]->{right}->count_ops + 1; }
@@ -146,7 +127,7 @@ use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang) = @_;
-    ($lang eq 'Perl' ? '$' : '') . $self->{name};
+    sprintf $lang->var_fmt, $self->{name};
 }
 
 sub run {
@@ -216,22 +197,10 @@ use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang) = @_;
-    my $fmt_start = {
-        Basic => 'FOR %s = %s TO %s',
-        C => 'for(%s = %2$s; %1$s <= %3$s; ++%1$s) {',
-        Pascal => 'for %s := %s to %s do begin',
-        Alg => 'нц для %s от %s до %s',
-        Perl => 'for(%s = %2$s; %1$s <= %3$s; ++%1$s) {',
-    }->{$lang};
-    my $fmt_end = {
-        Basic => 'NEXT %1$s',
-        C => '}',
-        Pascal => 'end;',
-        Alg => 'кц',
-        Perl => '}',
-    }->{$lang};
+    my $fmt_start = $lang->for_start_fmt;
+    my $fmt_end = $lang->for_end_fmt;
     my $body = $self->{body}->to_lang($lang);
-    $body =~ s/^/  /mg;
+    $body =~ s/^/  /mg; # отступы
     sprintf
         "$fmt_start\n%4\$s\n$fmt_end",
         map($self->{$_}->to_lang($lang), qw(var lb ub)), $body;
@@ -251,7 +220,7 @@ use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang) = @_;
-    $self->{text}->{$lang} || '';
+    $self->{text}->{$lang->name} || '';
 };
 
 sub run {}

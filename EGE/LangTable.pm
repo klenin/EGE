@@ -13,7 +13,7 @@ sub row {
 sub lang_row {
     my $prog = shift;
     row(map EGE::Prog::lang_names->{$_}, @_) .
-    row(map '<pre>' . $prog->to_lang($_) . '</pre>', @_);
+    row(map '<pre>' . $prog->to_lang_named($_) . '</pre>', @_);
 }
 
 sub table {
