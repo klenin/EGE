@@ -13,6 +13,7 @@ use EGE::Gen::A3;
 use EGE::Gen::A4;
 use EGE::Gen::A5;
 use EGE::Gen::A6;
+use EGE::Gen::A7;
 
 my @questions;
 
@@ -68,7 +69,9 @@ sub print_html {
 #g('A6', 'count_by_sign');
 #g('A6', 'find_min_max');
 #g('A6', 'count_odd_even');
-g('A6', 'alg_min_max');
-g('A6', 'alg_avg');
+#g('A6', 'alg_min_max');
+#g('A6', 'alg_avg');
+g('A7', 'names');
+
 binmode STDOUT, ':utf8';
 print_html;
