@@ -31,6 +31,8 @@ sub run_val {
     $env->{$name};
 }
 
+sub gather_vars {}
+
 package EGE::Prog::Assign;
 use base 'EGE::Prog::SynElement';
 
@@ -110,6 +112,8 @@ sub run {
 
 sub count_ops { $_[0]->{left}->count_ops + $_[0]->{right}->count_ops + 1; }
 
+sub gather_vars { $_[0]->{$_}->gather_vars($_[1]) for qw(left right) }
+
 package EGE::Prog::UnOp;
 use base 'EGE::Prog::SynElement';
 
@@ -137,6 +141,8 @@ sub run {
 
 sub count_ops { $_[0]->{arg}->count_ops + 1; }
 
+sub gather_vars { $_[0]->{arg}->gather_vars($_[1]) }
+
 package EGE::Prog::Var;
 use base 'EGE::Prog::SynElement';
 
@@ -157,6 +163,8 @@ sub get_ref {
     my ($self, $env, $value) = @_;
     \$env->{$self->{name}};
 }
+
+sub gather_vars { $_[1]->{$_[0]->{name}} = 1 }
 
 package EGE::Prog::Const;
 use base 'EGE::Prog::SynElement';

@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 45;
+use Test::More tests => 48;
 use Test::Exception;
 
 use lib '..';
@@ -144,4 +144,11 @@ end;~;
     is $b->to_lang_named('Perl'), "if (\$a) {\n  \$x = 7;\n}", 'if in Perl';
     is $b->run_val('x', { a => 0 }), undef, 'if (false) run';
     is $b->run_val('x', { a => 1 }), 7, 'if (true) run';
+}
+
+{
+    my $e = make_expr([ '+', 'x', [ '-', 'y' ] ]);
+    my $v = {};
+    $e->gather_vars($v);
+    is_deeply $v, { x => 1, y => 1 }, 'gather_vars';
 }
