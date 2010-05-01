@@ -44,6 +44,9 @@ sub shuffle {
     List::Util::shuffle(@_);
 }
 
-sub index_var { $_[0]->pick('i', 'j', 'k', 'm', 'n') }
+sub index_var {
+    my ($self, $n) = @_;
+    $self->pick_n($n || 1, 'i', 'j', 'k', 'm', 'n')
+}
 
 1;

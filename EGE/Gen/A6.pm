@@ -89,4 +89,45 @@ sub max_or_min {
     };
 }
 
+sub count_odd_even {
+    my $n = rnd->in_range(7, 10);
+    my ($i, $j) = rnd->index_var(2);
+    my $b = EGE::Prog::make_block([
+        'for', $i, 1, $n, [
+            'for', $j, 1, $n, [
+                '=',
+                    [ '[]', 'A', $i, $j ],
+                    [ '+', $i, [ rnd->pick('+', '-'), $j, 1 ] ]
+            ],
+        ],
+    ]);
+    my $lt = EGE::LangTable::table($b, [ [ 'Basic', 'Pascal', 'Alg' ] ]);
+    my $case = rnd->pick(
+        { name => 'чётное', test => 0 },
+        { name => 'нечётное', test => 1 },
+    );
+    my $q =
+        "Значения двумерного массива A размера $n &times; $n " .
+        'задаются с помощью вложенного оператора цикла ' .
+        "в представленном фрагменте программы: $lt" .
+        "Сколько элементов массива A будут принимать $case->{name} значение?";
+
+    my $A = $b->run_val('A');
+    my $c = 0;
+    for my $ii (1 .. $n) {
+        for my $jj (1 .. $n) {
+            ++$c if  $A->[$ii][$jj] % 2 == $case->{test}
+        }
+    }
+    my %seen = ($c => 1);
+    my @errors = grep !$seen{$_}++,
+        map $c + $_, -5 .. -1, 1 .. 5;
+    {
+        question => $q,
+        variants => [ $c, rnd->pick_n(3, @errors) ],
+        answer => 0,
+        variants_order => 'random',
+    };
+}
+
 1;
