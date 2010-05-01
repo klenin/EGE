@@ -196,12 +196,13 @@ use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang) = @_;
-    my $fmt_start = $lang->for_start_fmt;
-    my $fmt_end = $lang->for_end_fmt;
+    my $body_block = @{$self->{body}->{statements}} > 1;
+    my $fmt_start = $lang->for_start_fmt($body_block);
+    my $fmt_end = $lang->for_end_fmt($body_block);
     my $body = $self->{body}->to_lang($lang);
     $body =~ s/^/  /mg; # отступы
     sprintf
-        "$fmt_start\n%4\$s\n$fmt_end",
+        "$fmt_start\n%4\$s$fmt_end",
         map($self->{$_}->to_lang($lang), qw(var lb ub)), $body;
 };
 

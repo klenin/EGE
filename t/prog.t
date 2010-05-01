@@ -85,11 +85,24 @@ use EGE::Prog qw(make_block make_expr);
     my $b = EGE::Prog::make_block([
         'for', 'i', 0, 4, [ '=', ['[]', 'M', 'i'], 'i' ]
     ]);
-    my $p = q~for i := 0 to 4 do begin
-  M[i] := i;
-end;~;
+    my $p = q~for i := 0 to 4 do
+  M[i] := i;~;
     is $b->to_lang_named('Pascal'), $p, 'loop in Pascal';
     is_deeply $b->run_val('M'), [ 0, 1, 2, 3, 4 ], 'loop run';
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, 4, [
+            '=', ['[]', 'M', 'i'], 'i',
+            '=', ['[]', 'M', 'i'], 'i',
+        ]
+    ]);
+    my $p = q~for i := 0 to 4 do begin
+  M[i] := i;
+  M[i] := i;
+end;~;
+    is $b->to_lang_named('Pascal'), $p, 'loop in Pascal with begin-end';
 }
 
 {

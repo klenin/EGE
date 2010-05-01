@@ -49,7 +49,7 @@ sub assign_fmt { '%s = %s' }
 sub index_fmt { '%s(%s)' }
 sub translate_op { { '%' => 'MOD', '//' => '\\' } }
 sub for_start_fmt { 'FOR %s = %s TO %s' }
-sub for_end_fmt { 'NEXT %1$s' }
+sub for_end_fmt { "\nNEXT %1\$s" }
 
 package EGE::Prog::Lang::C;
 use base 'EGE::Prog::Lang';
@@ -57,8 +57,12 @@ use base 'EGE::Prog::Lang';
 sub assign_fmt { '%s = %s;' }
 sub index_fmt { '%s[%s]' }
 sub translate_op { { '//' => 'int(%s / %s)', } }
-sub for_start_fmt { 'for(%s = %2$s; %1$s <= %3$s; ++%1$s) {' }
-sub for_end_fmt { '}' }
+
+sub for_start_fmt {
+    'for(%s = %2$s; %1$s <= %3$s; ++%1$s)' . ($_[1] ? '{' : '')
+}
+
+sub for_end_fmt { $_[1] ? "\n}" : '' }
 
 package EGE::Prog::Lang::Pascal;
 use base 'EGE::Prog::Lang';
@@ -66,8 +70,14 @@ use base 'EGE::Prog::Lang';
 sub assign_fmt { '%s := %s;' }
 sub index_fmt { '%s[%s]' }
 sub translate_op { { '%' => 'mod', '//' => 'div', } }
-sub for_start_fmt { 'for %s := %s to %s do begin' }
-sub for_end_fmt { 'end;' }
+
+sub for_start_fmt {
+    'for %s := %s to %s do' . ($_[1] ? ' begin' : '')
+}
+
+sub for_end_fmt {
+    $_[1] ? "\nend;" : ''
+}
 
 package EGE::Prog::Lang::Alg;
 use base 'EGE::Prog::Lang';
@@ -76,16 +86,20 @@ sub assign_fmt { '%s := %s' }
 sub index_fmt { '%s[%s]' }
 sub translate_op { { '%' => 'mod(%s, %s)', '//' => 'div(%s, %s)', } }
 sub for_start_fmt { 'нц для %s от %s до %s' }
-sub for_end_fmt { 'кц' }
+sub for_end_fmt { "\nкц" }
 
 package EGE::Prog::Lang::Perl;
 use base 'EGE::Prog::Lang';
 
+sub var_fmt { '$%s' }
 sub assign_fmt { '%s = %s;' }
 sub index_fmt { '$%s[%s]' }
 sub translate_op { { '//' => 'int(%s / %s)', } }
-sub for_start_fmt { 'for(%s = %2$s; %1$s <= %3$s; ++%1$s) {' }
-sub for_end_fmt { '}' }
-sub var_fmt { '$%s' }
+
+sub for_start_fmt {
+    'for(%s = %2$s; %1$s <= %3$s; ++%1$s)' . ($_[1] ? '{' : '')
+}
+
+sub for_end_fmt { $_[1] ? "\n}" : '' }
 
 1;
