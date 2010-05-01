@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use utf8;
 
+use Bit::Vector;
+
 use EGE::Prog qw(make_expr);
 use EGE::Random;
 
@@ -23,6 +25,20 @@ sub random_logic_expr_3 {
         random_logic_2(random_logic_2($v1, $v2), $v3) :
         random_logic_2($v1, random_logic_2($v2, $v3))
     );
+}
+
+sub truth_table_string {
+    my ($expr, @vars) = @_;
+    @vars or return $expr->run({});
+    my $bits = Bit::Vector->new(scalar @vars);
+    my $r = '';
+    my %h;
+    for my $i (1 .. 2 ** @vars) {
+        $h{$vars[$_]} = ($bits->bit_test($_) || 0) for 0 .. $#vars;
+        $r .= $expr->run(\%h);
+        $bits->increment;
+    }
+    $r;
 }
 
 1;
