@@ -12,7 +12,7 @@ use EGE::NumText;
 use EGE::Russian::Names;
 use EGE::Russian::Animals;
 
-sub make_condition {
+sub make_condition() {
     {
         n => rnd->in_range(1, 5),
         type => (rnd->in_range(1, 6) > 1 ? 1 : 2),
@@ -61,33 +61,52 @@ sub check_good {
     -1;
 }
 
+sub make_cond_group {
+    my $g = { size => rnd->pick(2, 3) };
+    my $v = $g->{vars} = [ (0) x $g->{size} ];
+    {
+        no strict 'refs';
+        $g->{expr} = "EGE::Logic::random_logic_expr_$g->{size}"->(map \$_, @$v);
+    }
+    my $c = $g->{cond} = [ make_condition ];
+    for (2 .. $g->{size}) {
+        my $new_cond;
+        do {
+            $new_cond = make_condition;
+        } while grep cond_eq($_, $new_cond), @$c;
+        push @$c, $new_cond;
+    }
+    $v->[$_] = cond_to_text($c->[$_]) for 0 .. $g->{size} - 1;
+    $g->{text} = $g->{expr}->to_lang_named('Logic');
+    $g->{min_len} = List::Util::max(map $_->{n}, @$c);
+    $g;
+}
+
+sub check_cond_group {
+    my ($g, $str) = @_;
+    $g->{vars}->[$_] = check_cond($g->{cond}->[$_], $str)
+        for 0 .. $g->{size} - 1;
+    $g->{expr}->run({}) ? 1 : 0;
+}
+
 sub strings {
     my ($next_string, $list_text) = @_;
     my $good = -1;
     my $true_false;
-    my $e_text;
+    my $g;
     do {
-        my ($c1, $c2) = (make_condition());
-        do { $c2 = make_condition() } while cond_eq($c1, $c2);
-        my ($v1, $v2);
-        my $e = EGE::Logic::random_logic_expr_2(\$v1, \$v2);
-        $v1 = cond_to_text($c1);
-        $v2 = cond_to_text($c2);
-        $e_text = $e->to_lang_named('Logic');
-        my $min_len = List::Util::max($c1->{n}, $c2->{n});
+        $g = make_cond_group;
         $true_false = [ [], [] ];
-        while(my $name = $next_string->()) {
-            next if length($name) < $min_len;
-            $v1 = check_cond($c1, $name);
-            $v2 = check_cond($c2, $name);
-            push @{$true_false->[$e->run({}) ? 1 : 0]}, $name;
+        while(my $str = $next_string->()) {
+            next if length($str) < $g->{min_len};
+            push @{$true_false->[check_cond_group($g, $str)]}, $str;
             $good = check_good($true_false);
         }
     } while $good < 0;
     my $tf = $good ? 'истинно' : 'ложно';
 
     {
-        question => "Для какого $list_text $tf высказывание:<br/>$e_text?",
+        question => "Для какого $list_text $tf высказывание:<br/>$g->{text}?",
         variants => [ $true_false->[$good][0], @{$true_false->[1 - $good]}[0 .. 2] ],
         answer => 0,
         variants_order => 'random',
