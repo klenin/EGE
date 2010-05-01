@@ -75,7 +75,7 @@ use base 'EGE::Prog::Lang';
 
 sub assign_fmt { '%s = %s;' }
 sub index_fmt { '%s[%s]' }
-sub translate_op { { '//' => 'int(%s / %s)', } }
+sub translate_op { { '//' => 'int(%s / %s)', '=>' => '<=' } }
 
 sub for_start_fmt { 'for (%s = %2$s; %1$s <= %3$s; ++%1$s)' . ($_[1] ? '{' : '') }
 sub for_end_fmt { $_[1] ? "\n}" : '' }
@@ -92,7 +92,7 @@ sub index_fmt { '%s[%s]' }
 sub translate_op {{
     '%' => 'mod', '//' => 'div',
     '==' => '=', '!=' => '<>',
-    '&&' => 'and', '||' => 'or', '^' => 'xor',
+    '&&' => 'and', '||' => 'or', '^' => 'xor', '=>' => '<=',
 }}
 sub translate_un_op { { '!' => 'not' } }
 
@@ -109,7 +109,7 @@ sub assign_fmt { '%s := %s' }
 sub index_fmt { '%s[%s]' }
 sub translate_op {{
     '%' => 'mod(%s, %s)', '//' => 'div(%s, %s)',
-    '&&' => 'и', '||' => 'или',
+    '&&' => 'и', '||' => 'или', '=>' => '→',
 }}
 sub translate_un_op { { '!' => 'не' } }
 
@@ -125,12 +125,22 @@ use base 'EGE::Prog::Lang';
 sub var_fmt { '$%s' }
 sub assign_fmt { '%s = %s;' }
 sub index_fmt { '$%s[%s]' }
-sub translate_op { { '//' => 'int(%s / %s)', } }
+sub translate_op { { '//' => 'int(%s / %s)', '=>' => '<=' } }
 
 sub for_start_fmt { 'for (%s = %2$s; %1$s <= %3$s; ++%1$s) {' }
 sub for_end_fmt { "\n}" }
 
 sub if_start_fmt { "if (%s) {\n" }
 sub if_end_fmt { "\n}" }
+
+package EGE::Prog::Lang::Logic;
+use base 'EGE::Prog::Lang';
+
+sub translate_op {{
+    '&&' => '∧', '||' => '∨', '^' => '⊕', '=>' => '→'
+}}
+
+sub translate_un_op { { '!' => '¬' } }
+
 
 1;

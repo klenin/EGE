@@ -29,6 +29,8 @@ use EGE::Prog qw(make_block make_expr);
 {
     my $e = make_expr([ '!', [ '>', 'A', 'B' ] ]);
     is $e->to_lang_named('Basic'), 'NOT (A > B)', 'not()';
+    is $e->to_lang_named('Logic'), '¬ (A > B)', 'not in logic';
+    ok make_expr([ '||', [ '!', [ '&&', 1, 1 ] ], 1 ]);
 }
 
 {
