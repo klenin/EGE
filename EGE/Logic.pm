@@ -34,14 +34,16 @@ sub random_logic {
 sub random_logic_expr { make_expr(random_logic @_) }
 
 sub truth_table_string {
-    my ($expr, @vars) = @_;
-    @vars or return $expr->run({});
-    my $bits = Bit::Vector->new(scalar @vars);
+    my ($expr) = @_;
+    $expr->gather_vars(\my %vars);
+    %vars or return $expr->run({});
+    my @names = sort keys %vars;
+    my $bits = Bit::Vector->new(scalar @names);
     my $r = '';
-    my %h;
-    for my $i (1 .. 2 ** @vars) {
-        $h{$vars[$_]} = ($bits->bit_test($_) || 0) for 0 .. $#vars;
-        $r .= $expr->run(\%h);
+    for my $i (1 .. 2 ** @names) {
+        my $i = 0;
+        $vars{$_} = $bits->bit_test($i++) for @names;
+        $r .= $expr->run(\%vars);
         $bits->increment;
     }
     $r;
