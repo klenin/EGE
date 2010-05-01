@@ -110,18 +110,23 @@ sub count_ops { $_[0]->{left}->count_ops + $_[0]->{right}->count_ops + 1; }
 package EGE::Prog::UnOp;
 use base 'EGE::Prog::SynElement';
 
-sub op_to_lang { $_[0] }
+sub op_to_lang {
+    my ($self, $lang) = @_;
+    $lang->translate_un_op->{$self->{op}} || $self->{op};
+}
 
 sub to_lang {
     my ($self, $lang) = @_;
-    $self->{op} . $self->{arg}->to_lang($lang);
+    my $arg = $self->{arg}->to_lang($lang);
+    $arg = "($arg)" if $self->{arg}->isa('EGE::Prog::BinOp');
+    $self->op_to_lang($lang) . " $arg";
 }
 
 sub run {
     my ($self, $env) = @_;
     my $v = $self->{arg}->run($env);
     return $v if ($env->{_skip} || 0) == ++$env->{_count};
-    eval "$self->{op} $v";
+    eval $self->op_to_lang(EGE::Prog::Lang::lang('Perl')) . $v;
 }
 
 sub count_ops { $_[0]->{arg}->count_ops + 1; }

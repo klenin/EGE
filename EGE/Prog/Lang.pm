@@ -50,6 +50,8 @@ sub make_priorities {
 
 sub prio_list { [ ops::mult ], [ ops::add ], [ ops::comp ], [ ops::logic ] }
 
+sub translate_un_op { {} }
+
 package EGE::Prog::Lang::Basic;
 use base 'EGE::Prog::Lang';
 
@@ -60,6 +62,7 @@ sub translate_op {{
     '==' => '=', '!=' => '<>',
     '&&' => 'AND', '||' => 'OR', '^' => 'XOR', '=>' => 'IMP',
 }}
+sub translate_un_op { { '!' => 'NOT' } }
 
 sub for_start_fmt { 'FOR %s = %s TO %s' }
 sub for_end_fmt { "\nNEXT %1\$s" }
@@ -91,6 +94,7 @@ sub translate_op {{
     '==' => '=', '!=' => '<>',
     '&&' => 'and', '||' => 'or', '^' => 'xor',
 }}
+sub translate_un_op { { '!' => 'not' } }
 
 sub for_start_fmt { 'for %s := %s to %s do' . ($_[1] ? ' begin' : '') }
 sub for_end_fmt { $_[1] ? "\nend;" : '' }
@@ -107,6 +111,7 @@ sub translate_op {{
     '%' => 'mod(%s, %s)', '//' => 'div(%s, %s)',
     '&&' => 'и', '||' => 'или',
 }}
+sub translate_un_op { { '!' => 'не' } }
 
 sub for_start_fmt { 'нц для %s от %s до %s' }
 sub for_end_fmt { "\nкц" }
