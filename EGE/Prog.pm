@@ -82,11 +82,19 @@ package EGE::Prog::BinOp;
 
 use base 'EGE::Prog::SynElement';
 
+sub operand {
+    my ($self, $lang, $operand) = @_;
+    my $t = $operand->to_lang($lang);
+    $operand->isa('EGE::Prog::BinOp') &&
+    $lang->{prio}->{$operand->{op}} > $lang->{prio}->{$self->{op}} ?
+        "($t)" : $t;
+}
+
 sub to_lang {
     my ($self, $lang) = @_;
     sprintf
         $lang->op_fmt($self->{op}),
-        map $self->{$_}->to_lang($lang), qw(left right);
+        map $self->operand($lang, $self->{$_}), qw(left right);
 }
 
 sub run {

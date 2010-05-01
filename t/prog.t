@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 31;
+use Test::More tests => 33;
 use Test::Exception;
 
 use lib '..';
@@ -31,6 +31,16 @@ use EGE::Prog qw(make_block make_expr);
     is($b->run({}), -4);
     is($b->run({ _skip => 1 }), 3);
     is($b->run({ _replace_op => { '-' => '*' } }), 21);
+}
+
+{
+    my $e = make_expr([ '*', [ '+', 'a', 1 ], [ '-', 'b', 2 ] ]);
+    is $e->to_lang_named('C'), '(a + 1) * (b - 2)', 'priorities 1';
+}
+
+{
+    my $e = make_expr([ '+', [ '*', 'a', 1 ], [ '/', 'b', 2 ] ]);
+    is $e->to_lang_named('C'), 'a * 1 + b / 2', 'priorities 2';
 }
 
 {

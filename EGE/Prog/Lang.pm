@@ -14,6 +14,7 @@ sub new {
     my ($class, %init) = @_;
     my $self = { %init };
     bless $self, $class;
+    $self->make_priorities;
     $self;
 }
 
@@ -30,6 +31,16 @@ sub name {
 }
 
 sub var_fmt { '%s' }
+
+sub make_priorities {
+    my ($self) = @_;
+    my @raw = $self->prio_list;
+    for my $prio (1 .. @raw) {
+        $self->{prio}->{$_} = $prio for @{$raw[$prio - 1]};
+    }
+}
+
+sub prio_list { [ '*', '/', '%', '//' ], [ '+', '-' ] }
 
 package EGE::Prog::Lang::Basic;
 use base 'EGE::Prog::Lang';
