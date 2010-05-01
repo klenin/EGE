@@ -2,6 +2,13 @@ use strict;
 use warnings;
 use utf8;
 
+package ops;
+
+sub mult { '*', '/', '%', '//' }
+sub add { '+', '-' }
+sub comp { '>', '<', '==', '!=', '>=', '<=' }
+sub logic { '&&', '||', '^', '=>' }
+
 package EGE::Prog::Lang;
 
 my %lang_cache;
@@ -41,11 +48,7 @@ sub make_priorities {
     }
 }
 
-sub prio_list {
-    [ '*', '/', '%', '//' ],
-    [ '+', '-' ],
-    [ '>', '<', '==', '!=', '>=', '<=' ]
-}
+sub prio_list { [ ops::mult ], [ ops::add ], [ ops::comp ], [ ops::logic ] }
 
 package EGE::Prog::Lang::Basic;
 use base 'EGE::Prog::Lang';
@@ -53,7 +56,9 @@ use base 'EGE::Prog::Lang';
 sub assign_fmt { '%s = %s' }
 sub index_fmt { '%s(%s)' }
 sub translate_op {{
-    '%' => 'MOD', '//' => '\\', '==' => '=', '!=' => '<>'
+    '%' => 'MOD', '//' => '\\',
+    '==' => '=', '!=' => '<>',
+    '&&' => 'AND', '||' => 'OR', '^' => 'XOR', '=>' => 'IMP',
 }}
 
 sub for_start_fmt { 'FOR %s = %s TO %s' }
@@ -78,10 +83,13 @@ sub if_end_fmt { $_[1] ? "\n}" : '' }
 package EGE::Prog::Lang::Pascal;
 use base 'EGE::Prog::Lang';
 
+sub prio_list { [ ops::mult, '&&' ], [ ops::add, '||', '^' ], [ ops::comp ] }
 sub assign_fmt { '%s := %s;' }
 sub index_fmt { '%s[%s]' }
 sub translate_op {{
-    '%' => 'mod', '//' => 'div', '==' => '=', '!=' => '<>',
+    '%' => 'mod', '//' => 'div',
+    '==' => '=', '!=' => '<>',
+    '&&' => 'and', '||' => 'or', '^' => 'xor',
 }}
 
 sub for_start_fmt { 'for %s := %s to %s do' . ($_[1] ? ' begin' : '') }
@@ -95,7 +103,10 @@ use base 'EGE::Prog::Lang';
 
 sub assign_fmt { '%s := %s' }
 sub index_fmt { '%s[%s]' }
-sub translate_op { { '%' => 'mod(%s, %s)', '//' => 'div(%s, %s)', } }
+sub translate_op {{
+    '%' => 'mod(%s, %s)', '//' => 'div(%s, %s)',
+    '&&' => 'и', '||' => 'или',
+}}
 
 sub for_start_fmt { 'нц для %s от %s до %s' }
 sub for_end_fmt { "\nкц" }

@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 39;
+use Test::More tests => 43;
 use Test::Exception;
 
 use lib '..';
@@ -16,6 +16,8 @@ use EGE::Prog qw(make_block make_expr);
         [ '%', 14, 5 ],   4,
         [ '//', 14, 5 ],  2,
         [ '<', 4, 5 ],    1,
+        [ '&&', 1, 0 ],   0,
+        [ '||', 1, 0 ],   1,
         [ '-', 4 ],      -4,
     );
     is make_expr(shift @t)->run({}), shift @t while @t;
@@ -43,6 +45,12 @@ use EGE::Prog qw(make_block make_expr);
 {
     my $e = make_expr([ '+', [ '*', 'a', 1 ], [ '/', 'b', 2 ] ]);
     is $e->to_lang_named('C'), 'a * 1 + b / 2', 'priorities 2';
+}
+
+{
+    my $e = make_expr([ '&&', [ '<=', 1, 'a' ], [ '<=', 'a', 'n' ] ]);
+    is $e->to_lang_named('C'), '1 <= a && a <= n', 'logic priorities C';
+    is $e->to_lang_named('Pascal'), '(1 <= a) and (a <= n)', 'logic priorities Pascal';
 }
 
 {
