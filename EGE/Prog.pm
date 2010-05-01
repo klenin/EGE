@@ -31,7 +31,6 @@ sub run_val {
 }
 
 package EGE::Prog::Assign;
-
 use base 'EGE::Prog::SynElement';
 
 sub to_lang {
@@ -48,7 +47,6 @@ sub run {
 sub count_ops { $_[0]->{expr}->count_ops; }
 
 package EGE::Prog::Index;
-
 use base 'EGE::Prog::SynElement';
 
 sub to_lang {
@@ -79,7 +77,6 @@ sub count_ops {
 }
 
 package EGE::Prog::BinOp;
-
 use base 'EGE::Prog::SynElement';
 
 sub operand {
@@ -110,7 +107,6 @@ sub run {
 sub count_ops { $_[0]->{left}->count_ops + $_[0]->{right}->count_ops + 1; }
 
 package EGE::Prog::UnOp;
-
 use base 'EGE::Prog::SynElement';
 
 sub op_to_lang { $_[0] }
@@ -130,7 +126,6 @@ sub run {
 sub count_ops { $_[0]->{arg}->count_ops + 1; }
 
 package EGE::Prog::Var;
-
 use base 'EGE::Prog::SynElement';
 
 sub to_lang {
@@ -152,7 +147,6 @@ sub get_ref {
 }
 
 package EGE::Prog::Const;
-
 use base 'EGE::Prog::SynElement';
 
 sub to_lang {
@@ -166,7 +160,6 @@ sub run {
 }
 
 package EGE::Prog::RefConst;
-
 use base 'EGE::Prog::SynElement';
 
 sub to_lang {
@@ -180,7 +173,6 @@ sub run {
 }
 
 package EGE::Prog::Block;
-
 use base 'EGE::Prog::SynElement';
 
 sub to_lang {
@@ -200,7 +192,6 @@ sub count_ops {
 }
 
 package EGE::Prog::ForLoop;
-
 use base 'EGE::Prog::SynElement';
 
 sub to_lang {
@@ -223,7 +214,6 @@ sub run {
 }
 
 package EGE::Prog::LangSpecificText;
-
 use base 'EGE::Prog::SynElement';
 
 sub to_lang {
@@ -234,8 +224,8 @@ sub to_lang {
 sub run {}
 
 package EGE::Prog;
-
 use base 'Exporter';
+
 our @EXPORT_OK = qw(make_expr make_block lang_names);
 
 sub make_expr {
