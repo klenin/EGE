@@ -13,7 +13,10 @@ sub maybe_not { rnd->pick($_[0], $_[0], [ '!', $_[0] ]) }
 
 sub random_logic_2 {
     my ($v1, $v2) = @_;
-    [ rnd->pick(ops::logic), maybe_not($v1), maybe_not($v2) ];
+    my @common = ('&&', '||');
+    my @rare = ('=>', '^');
+    my @all = (@common, @common, @common, @rare);
+    [ rnd->pick(@all), maybe_not($v1), maybe_not($v2) ];
 }
 
 sub random_logic_expr_2 { make_expr(random_logic_2 @_) }
