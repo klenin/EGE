@@ -69,5 +69,6 @@ sub print_html {
 #g('A6', 'find_min_max');
 #g('A6', 'count_odd_even');
 g('A6', 'alg_min_max');
+g('A6', 'alg_avg');
 binmode STDOUT, ':utf8';
 print_html;
