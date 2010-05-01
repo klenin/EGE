@@ -77,6 +77,7 @@ binmode STDOUT, ':utf8';
 #g('A7', 'names');
 #g('A7', 'animals');
 #g('A7', 'random_sequences');
-g('A8', 'equiv');
+g('A8', 'equiv_3');
+g('A8', 'equiv_4');
 
 print_html;

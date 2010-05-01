@@ -7,21 +7,22 @@ use utf8;
 use EGE::Random;
 use EGE::Logic;
 
-sub tts { EGE::Logic::truth_table_string($_[0], qw(A B C)) }
+sub tts { EGE::Logic::truth_table_string($_[0]) }
 
 sub rand_expr_text {
-    my $e = EGE::Logic::random_logic_expr(qw(A B C));
+    my $e = EGE::Logic::random_logic_expr(@_);
     ($e, $e->to_lang_named('Logic'));
 }
 
-sub equiv {
-    my ($e, $e_text) = rand_expr_text;
+sub equiv_common {
+    my @vars = @_;
+    my ($e, $e_text) = rand_expr_text(@vars);
     my $e_tts = tts($e);
     my %seen = ($e_text => 1);
     my (@good, @bad);
     until (@good && @bad >= 3) {
         my ($e1, $e1_text);
-        do { ($e1, $e1_text) = rand_expr_text; } while $seen{$e1_text}++;
+        do { ($e1, $e1_text) = rand_expr_text(@vars); } while $seen{$e1_text}++;
         tts($e1) eq $e_tts ? push @good, $e1_text : push @bad, $e1_text;
     }
     {
@@ -31,5 +32,10 @@ sub equiv {
         variants_order => 'random',
     };
 }
+
+sub equiv_3 { equiv_common qw(A B C) }
+
+# может работать долго
+sub equiv_4 { equiv_common qw(A B C D) }
 
 1;
