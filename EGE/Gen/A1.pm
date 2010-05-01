@@ -2,6 +2,7 @@ package EGE::Gen::A1;
 
 use strict;
 use warnings;
+use utf8;
 
 use Encode;
 
@@ -53,10 +54,10 @@ sub simple {
 следующего предложения в данном представлении: <b>$text</b>.
 QUESTION
 ;
-    my $len = length Encode::decode_utf8($text);
+    my $len = length $text;
     my $text_nosp = $text;
     $text_nosp =~ s/ //g;
-    my $len_nosp = length Encode::decode_utf8($text_nosp);
+    my $len_nosp = length $text_nosp;
     {
         question => $q,
         variants => [ map bits_or_bytes($_), $len, 2 * $len, int($len / 8), $len_nosp ],

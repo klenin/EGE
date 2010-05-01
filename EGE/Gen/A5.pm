@@ -2,6 +2,7 @@ package EGE::Gen::A5;
 
 use strict;
 use warnings;
+use utf8;
 
 use EGE::Random;
 use EGE::Prog;

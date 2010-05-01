@@ -2,6 +2,7 @@ package EGE::NumText;
 
 use strict;
 use warnings;
+use utf8;
 
 use Exporter;
 our @ISA = qw(Exporter);
