@@ -53,6 +53,8 @@ sub print_html {
     print "</body>\n";
 }
 
+binmode STDOUT, ':utf8';
+
 #g('A1', 'recode');
 #g('A1', 'simple');
 #g('A2', 'sport');
@@ -73,6 +75,6 @@ sub print_html {
 #g('A6', 'alg_avg');
 g('A7', 'names');
 g('A7', 'animals');
+g('A7', 'random_sequences');
 
-binmode STDOUT, ':utf8';
 print_html;

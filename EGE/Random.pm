@@ -2,6 +2,7 @@ package EGE::Random;
 
 use strict;
 use warnings;
+use utf8;
 
 use Exporter;
 our @ISA = qw(Exporter);
@@ -47,6 +48,17 @@ sub shuffle {
 sub index_var {
     my ($self, $n) = @_;
     $self->pick_n($n || 1, 'i', 'j', 'k', 'm', 'n')
+}
+
+sub russian_letter {
+    my ($self) = @_;
+    chr([ord('а')..ord('я')]->[rnd->in_range(0, 31)]);
+}
+
+sub pretty_russian_letter {
+    my ($self) = @_;
+    my $pretty = 'абвгдежзиклмнопрстуфхэя';
+    substr($pretty, rnd->in_range(0, length($pretty) - 1), 1);
 }
 
 1;

@@ -106,4 +106,20 @@ sub animals {
     strings(sub { $list[$i++] }, 'из названий животных');
 }
 
+sub random_sequences {
+    my %seen = ();
+    my $gen_seq = sub {
+        my $r;
+        do {
+            $r = join '', map uc rnd->pretty_russian_letter, 1..6;
+        } while $seen{$r}++;
+        if (keys %seen > 100) {
+            %seen = ();
+            return;
+        }
+        $r;
+    };
+    strings($gen_seq, 'символьного набора');
+}
+
 1;
