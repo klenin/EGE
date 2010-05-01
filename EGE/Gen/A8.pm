@@ -10,7 +10,7 @@ use EGE::Logic;
 sub tts { EGE::Logic::truth_table_string($_[0], qw(A B C)) }
 
 sub rand_expr_text {
-    my $e = EGE::Logic::random_logic_expr_3(qw(A B C));
+    my $e = EGE::Logic::random_logic_expr(qw(A B C));
     ($e, $e->to_lang_named('Logic'));
 }
 

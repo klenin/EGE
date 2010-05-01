@@ -11,24 +11,27 @@ use EGE::Random;
 
 sub maybe_not { rnd->pick($_[0], $_[0], [ '!', $_[0] ]) }
 
-sub random_logic_2 {
-    my ($v1, $v2) = @_;
+sub random_op {
     my @common = ('&&', '||');
     my @rare = ('=>', '^');
     my @all = (@common, @common, @common, @rare);
-    [ rnd->pick(@all), maybe_not($v1), maybe_not($v2) ];
+    rnd->pick(@all);
 }
 
-sub random_logic_expr_2 { make_expr(random_logic_2 @_) }
+sub random_logic {
+    my ($v1, $v2) = @_;
+    return rnd->coin if !@_;
+    return maybe_not($_[0]) if @_ == 1;
 
-sub random_logic_expr_3 {
-    my ($v1, $v2, $v3) = @_;
-
-    make_expr(rnd->coin ?
-        random_logic_2(random_logic_2($v1, $v2), $v3) :
-        random_logic_2($v1, random_logic_2($v2, $v3))
-    );
+    my $p = rnd->in_range(1, @_ - 1);
+    maybe_not [
+        random_op,
+        random_logic(@_[0 .. $p - 1]),
+        random_logic(@_[$p .. $#_])
+    ];
 }
+
+sub random_logic_expr { make_expr(random_logic @_) }
 
 sub truth_table_string {
     my ($expr, @vars) = @_;

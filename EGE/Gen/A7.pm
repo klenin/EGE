@@ -64,10 +64,7 @@ sub check_good {
 sub make_cond_group {
     my $g = { size => rnd->pick(2, 3) };
     my $v = $g->{vars} = [ (0) x $g->{size} ];
-    {
-        no strict 'refs';
-        $g->{expr} = "EGE::Logic::random_logic_expr_$g->{size}"->(map \$_, @$v);
-    }
+    $g->{expr} = EGE::Logic::random_logic_expr(map \$_, @$v);
     my $c = $g->{cond} = [ make_condition ];
     for (2 .. $g->{size}) {
         my $new_cond;
