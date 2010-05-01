@@ -214,6 +214,26 @@ sub run {
     }
 }
 
+package EGE::Prog::IfThen;
+use base 'EGE::Prog::SynElement';
+
+sub to_lang {
+    my ($self, $lang) = @_;
+    my $body_block = @{$self->{body}->{statements}} > 1;
+    my $fmt_start = $lang->if_start_fmt($body_block);
+    my $fmt_end = $lang->if_end_fmt($body_block);
+    my $body = $self->{body}->to_lang($lang);
+    $body =~ s/^/  /mg if $fmt_start =~ /\n$/; # отступы
+    sprintf
+        "$fmt_start%2\$s$fmt_end", $self->{cond}->to_lang($lang), $body;
+};
+
+sub run {
+    my ($self, $env) = @_;
+    my $cond = $self->{cond}->run($env);
+    $self->{body}->run($env) if $cond;
+}
+
 package EGE::Prog::LangSpecificText;
 use base 'EGE::Prog::SynElement';
 
@@ -268,6 +288,7 @@ sub statements_descr {{
     '#' => { type => 'LangSpecificText', args => ['C_text'] },
     '=' => { type => 'Assign', args => [qw(E_var E_expr)] },
     'for' => { type => 'ForLoop', args => [qw(E_var E_lb E_ub B_body)] },
+    'if' => { type => 'IfThen', args => [qw(E_cond B_body)] },
 }}
 
 sub arg_processors {{

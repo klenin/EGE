@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 33;
+use Test::More tests => 38;
 use Test::Exception;
 
 use lib '..';
@@ -116,4 +116,14 @@ end;~;
 кц~;
     is $b->to_lang_named('Alg'), $p, 'loop in Alg';
     is $b->run_val('a'), 8, 'loop run';
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'if', 'a', ['=', 'x', 7],
+    ]);
+    is $b->to_lang_named('Basic'), 'IF a THEN x = 7', 'if in Basic';
+    is $b->to_lang_named('Perl'), "if (\$a) {\n  \$x = 7;\n}", 'if in Perl';
+    is $b->run_val('x', { a => 0 }), undef, 'if (false) run';
+    is $b->run_val('x', { a => 1 }), 7, 'if (true) run';
 }
