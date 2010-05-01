@@ -1,7 +1,8 @@
 use strict;
 use warnings;
+use utf8;
 
-use Test::More tests => 38;
+use Test::More tests => 39;
 use Test::Exception;
 
 use lib '..';
@@ -14,6 +15,7 @@ use EGE::Prog qw(make_block make_expr);
         [ '/', 4, 5 ],  0.8,
         [ '%', 14, 5 ],   4,
         [ '//', 14, 5 ],  2,
+        [ '<', 4, 5 ],    1,
         [ '-', 4 ],      -4,
     );
     is make_expr(shift @t)->run({}), shift @t while @t;

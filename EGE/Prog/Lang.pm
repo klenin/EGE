@@ -1,5 +1,6 @@
 use strict;
 use warnings;
+use utf8;
 
 package EGE::Prog::Lang;
 
@@ -40,14 +41,20 @@ sub make_priorities {
     }
 }
 
-sub prio_list { [ '*', '/', '%', '//' ], [ '+', '-' ] }
+sub prio_list {
+    [ '*', '/', '%', '//' ],
+    [ '+', '-' ],
+    [ '>', '<', '==', '!=', '>=', '<=' ]
+}
 
 package EGE::Prog::Lang::Basic;
 use base 'EGE::Prog::Lang';
 
 sub assign_fmt { '%s = %s' }
 sub index_fmt { '%s(%s)' }
-sub translate_op { { '%' => 'MOD', '//' => '\\' } }
+sub translate_op {{
+    '%' => 'MOD', '//' => '\\', '==' => '=', '!=' => '<>'
+}}
 
 sub for_start_fmt { 'FOR %s = %s TO %s' }
 sub for_end_fmt { "\nNEXT %1\$s" }
@@ -73,7 +80,9 @@ use base 'EGE::Prog::Lang';
 
 sub assign_fmt { '%s := %s;' }
 sub index_fmt { '%s[%s]' }
-sub translate_op { { '%' => 'mod', '//' => 'div', } }
+sub translate_op {{
+    '%' => 'mod', '//' => 'div', '==' => '=', '!=' => '<>',
+}}
 
 sub for_start_fmt { 'for %s := %s to %s do' . ($_[1] ? ' begin' : '') }
 sub for_end_fmt { $_[1] ? "\nend;" : '' }
