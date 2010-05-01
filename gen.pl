@@ -65,7 +65,9 @@ sub print_html {
 #g('A5', 'arith');
 #g('A5', 'div_mod_10');
 #g('A5', 'div_mod_rotate');
-g('A6', 'count_by_sign');
-g('A6', 'max_or_min');
-g('A6', 'count_odd_even');
+#g('A6', 'count_by_sign');
+#g('A6', 'find_min_max');
+#g('A6', 'count_odd_even');
+g('A6', 'alg_min_max');
+binmode STDOUT, ':utf8';
 print_html;

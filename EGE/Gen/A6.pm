@@ -48,7 +48,7 @@ sub count_by_sign {
     };
 }
 
-sub max_or_min {
+sub find_min_max {
     my $n = rnd->in_range(50, 100);
     # нужно гарантировать единственные максимум и минимум
     my $m = rnd->in_range($n / 2 + 1, $n - 1);
@@ -127,6 +127,49 @@ sub count_odd_even {
         question => $q,
         variants => [ $c, rnd->pick_n(3, @errors) ],
         answer => 0,
+        variants_order => 'random',
+    };
+}
+
+sub alg_min_max {
+    my ($i, $j) = rnd->pick_n(2, 'i', 'j', 'k', 'm'); # n занято размером массива
+
+    my $minmax = rnd->pick(
+        { text => 'максимальн', comp => '>' },
+        { text => 'минимальн', comp => '<' },
+    );
+    my $eq = rnd->pick(
+        { answer => 1, comp => '' },
+        { answer => 2, comp => '=' },
+    );
+    my $idx = rnd->pick(
+        { answer => 0, res => [ '[]', 'A', $j ] },
+        { answer => $eq->{answer}, res => $j },
+    );
+    my $b = EGE::Prog::make_block([
+        '=', $j, 1,
+        'for', $i, 1, 'N', [
+            'if', [ "$minmax->{comp}$eq->{comp}", [ '[]', 'A', $i ], [ '[]', 'A', $j ] ],
+                [ '=', $j, $i ],
+        ],
+        '=', 's', $idx->{res},
+    ]);
+    my $lt = EGE::LangTable::table($b, [ [ 'Basic', 'Pascal', 'Alg' ] ]);
+    my $q =
+        "Дан фрагмент программы, обрабатывающей массив A из N элементов: $lt" .
+        "Чему будет равно значение переменной s после выполнения " .
+        "данного алгоритма, при любых значениях элементов массива A?";
+    my $if_many = " из них, если $minmax->{text}ых элементов несколько)";
+    my @v = (
+        "\u$minmax->{text}ому элементу в массиве A",
+        "Индексу $minmax->{text}ого элемента в массиве A (первому$if_many",
+        "Индексу $minmax->{text}ого элемента в массиве A (последнему$if_many",
+        "Количеству элементов, равных $minmax->{text}ому в массиве A"
+    );
+    {
+        question => $q,
+        variants => \@v,
+        answer => $idx->{answer},
         variants_order => 'random',
     };
 }
