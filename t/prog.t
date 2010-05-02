@@ -34,6 +34,11 @@ use EGE::Prog qw(make_block make_expr);
 }
 
 {
+    my $e = make_expr([ '+', 'a', 3 ]);
+    is_deeply make_expr($e), $e, 'double make_expr';
+}
+
+{
     throws_ok { make_expr(['xyz'])->run({}) } qr/xyz/, 'undefined variable';
 }
 

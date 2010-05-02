@@ -271,9 +271,8 @@ our @EXPORT_OK = qw(make_expr make_block lang_names);
 
 sub make_expr {
     my ($src) = @_;
-    if (ref $src =~ /^EGE::Prog::/) {
-        return $src;
-    }
+    ref($src) =~ /^EGE::Prog::/ and return $src;
+
     if (ref $src eq 'ARRAY') {
         if (@$src >= 2 && $src->[0] eq '[]') {
             my @p = @$src;
