@@ -22,7 +22,18 @@ sub equiv_common {
     my (@good, @bad);
     until (@good && @bad >= 3) {
         my ($e1, $e1_text);
-        do { ($e1, $e1_text) = rand_expr_text(@vars); } while $seen{$e1_text}++;
+        if (@bad > 300) {
+            # случайный перебор может работать долго, поэтому
+            # через некоторое время применяем эквивалентное преобразование
+            $e1 = EGE::Logic::equiv_not($e);
+            $e1_text = $e1->to_lang_named('Logic');
+            $e_text .= '!';
+        }
+        else {
+            do {
+                ($e1, $e1_text) = rand_expr_text(@vars);
+            } while $seen{$e1_text}++;
+        }
         tts($e1) eq $e_tts ? push @good, $e1_text : push @bad, $e1_text;
     }
     {
@@ -35,7 +46,6 @@ sub equiv_common {
 
 sub equiv_3 { equiv_common qw(A B C) }
 
-# может работать долго
 sub equiv_4 { equiv_common qw(A B C D) }
 
 1;
