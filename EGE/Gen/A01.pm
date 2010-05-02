@@ -1,4 +1,4 @@
-package EGE::Gen::A1;
+package EGE::Gen::A01;
 
 use strict;
 use warnings;

@@ -7,25 +7,24 @@ use Encode;
 
 use lib '.';
 
-use EGE::Gen::A1;
-use EGE::Gen::A2;
-use EGE::Gen::A3;
-use EGE::Gen::A4;
-use EGE::Gen::A5;
-use EGE::Gen::A6;
-use EGE::Gen::A7;
-use EGE::Gen::A8;
-use EGE::Gen::A9;
+use EGE::Generate;
 
-my @questions;
+use EGE::Gen::A01;
+use EGE::Gen::A02;
+use EGE::Gen::A03;
+use EGE::Gen::A04;
+use EGE::Gen::A05;
+use EGE::Gen::A06;
+use EGE::Gen::A07;
+use EGE::Gen::A08;
+use EGE::Gen::A09;
 
-sub g {
-    no strict 'refs';
-    push @questions, "EGE::Gen::$_[0]::$_[1]"->();
-}
+my $questions;
+
+sub g { push @$questions, EGE::Generate::one(@_); }
 
 sub print_dump {
-    for (@questions) {
+    for (@$questions) {
         my $dump = Dumper($_);
         Encode::from_to($dump, 'UTF8', 'CP866');
         print $dump;
@@ -39,7 +38,7 @@ sub print_html {
 </head>
 <body>
 ~;
-    for my $q (@questions) {
+    for my $q (@$questions) {
         print qq~
 <div>
 <p>$q->{question}</p>

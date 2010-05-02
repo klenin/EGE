@@ -1,4 +1,4 @@
-package EGE::Gen::A8;
+package EGE::Gen::A08;
 
 use strict;
 use warnings;
@@ -27,7 +27,6 @@ sub equiv_common {
             # через некоторое время применяем эквивалентное преобразование
             $e1 = EGE::Logic::equiv_not($e);
             $e1_text = $e1->to_lang_named('Logic');
-            $e_text .= '!';
         }
         else {
             do {
