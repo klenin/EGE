@@ -49,4 +49,27 @@ sub truth_table_string {
     $r;
 }
 
+sub is_unop { $_[0]->isa('EGE::Prog::UnOp') }
+sub is_binop { $_[0]->isa('EGE::Prog::BinOp') }
+
+sub equiv_not1 {
+    my ($e) = @_;
+    my ($op, $el, $er) = @$e{qw(op left right)};
+    my $nel = [ '!', $el ];
+    my $ner = [ '!', $er ];
+    make_expr(
+        $op eq '&&' ? [ '||', $nel, $ner ] :
+        $op eq '||' ? [ '&&', $nel, $ner ] :
+        $op eq '^'  ? [ '^' , $nel, $er  ] :
+        $op eq '=>' ? [ '&&', $el , $ner ] : die $op
+    );
+}
+
+sub equiv_not {
+    my ($e) = @_;
+    is_unop($e) && is_binop($e->{arg}) ? equiv_not1($e->{arg}) :
+    is_binop($e) ? make_expr([ '!', equiv_not1($e) ]) :
+    make_expr([ '!', [ '!', $e ] ]);
+}
+
 1;

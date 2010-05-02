@@ -2,11 +2,13 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 4;
+use Test::More tests => 10;
 
 use lib '..';
 use EGE::Prog qw(make_expr);
 use EGE::Logic;
+
+sub tts { EGE::Logic::truth_table_string($_[0]) }
 
 {
     my @t = (
@@ -16,9 +18,29 @@ use EGE::Logic;
         { e => [ '^', 'a', [ '^', 'b', 'x' ] ], r => '01101001', c => 3 },
     );
 
+    is tts(make_expr($_->{e})), $_->{r}, "$_->{c} vars" for @t;
+}
+
+{
+    my @t = (
+        {
+            e => 'a',
+            r => [ '!', [ '!', 'a' ] ],
+        },
+        {
+            e => [ '&&', 'a', 'b' ],
+            r => [ '!', [ '||', [ '!', 'a' ], [ '!', 'b' ] ] ],
+        },
+        {
+            e => [ '!', [ '=>', 'a', 'b' ] ],
+            r => [ '&&', 'a', [ '!', 'b' ] ],
+        },
+    );
     for (@t) {
         my $e = make_expr($_->{e});
-        is EGE::Logic::truth_table_string($e), $_->{r}, "$_->{c} vars";
+        my $e_text = $e->to_lang_named('Pascal');
+        my $e1 = EGE::Logic::equiv_not($e);
+        is_deeply $e1, make_expr($_->{r}), "equiv_not $e_text";
+        is tts($e), tts($e1), "tts equiv_not $e_text";
     }
-
 }
