@@ -15,6 +15,7 @@ use EGE::Gen::A5;
 use EGE::Gen::A6;
 use EGE::Gen::A7;
 use EGE::Gen::A8;
+use EGE::Gen::A9;
 
 my @questions;
 
@@ -77,7 +78,8 @@ binmode STDOUT, ':utf8';
 #g('A7', 'names');
 #g('A7', 'animals');
 #g('A7', 'random_sequences');
-g('A8', 'equiv_3');
-g('A8', 'equiv_4');
+#g('A8', 'equiv_3');
+#g('A8', 'equiv_4');
+g('A9', 'truth_table_fragment');
 
 print_html;
