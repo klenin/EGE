@@ -4,9 +4,8 @@ use strict;
 use warnings;
 use utf8;
 
-use Bit::Vector;
-use Bit::Vector::String;
 use EGE::Random;
+use EGE::Bits;
 
 sub variable_length {
     my %code = ( 'А' => '00', 'Б' => '11', 'В' => '010', 'Г' => '011' );
@@ -17,11 +16,10 @@ sub variable_length {
     my @msg = map rnd->pick(@letters), 1..6;
     my $msgt = join '', @msg;
 
-    my $bits = join '', map $code{$_}, @msg;
-    my $bv = Bit::Vector->new_Bin(length($bits), $bits);
-
-    my $bad_bits = join '', map substr('000' . $code{$_}, -3), @msg;
-    my $bad_bv = Bit::Vector->new_Bin(length($bad_bits), $bad_bits);
+    my $bs = EGE::Bits->new->set_bin([ map $code{$_}, @msg ]);
+    my $bad_bs = EGE::Bits->new->set_bin(
+        join '', map substr('000' . $code{$_}, -3), @msg
+    );
 
     my $c = 'A';
     my %bad_letters = map { $_ => $c++ } @letters;
@@ -35,7 +33,7 @@ sub variable_length {
             'Закодируйте соощение данным кодом. ' .
             'Полученную двоичную последовательность переведите в восьмеричный вид.'
             ,
-        variants => [ $bv->to_Oct, $bv->to_Hex, $bad_bv->to_Oct, $bads ],
+        variants => [ $bs->get_oct, $bs->get_hex, $bad_bs->get_oct, $bads ],
         answer => 0,
         variants_order => 'random',
     };
@@ -43,7 +41,7 @@ sub variable_length {
 
 sub fixed_hex {
     my $bits = join '', @_;
-    Bit::Vector->new_Bin(length($bits), $bits)->to_Hex;
+    EGE::Bits->new->set_bin($bits)->get_hex;
 }
 
 sub fixed_length {
