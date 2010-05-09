@@ -15,6 +15,7 @@ use EGE::Gen::A06;
 use EGE::Gen::A07;
 use EGE::Gen::A08;
 use EGE::Gen::A09;
+use EGE::Gen::A10;
 
 sub one {
     no strict 'refs';
@@ -23,10 +24,15 @@ sub one {
 
 sub g {
     my $unit = shift;
-    my ($p, $n) = ($unit =~ /^(\w+)(\d+)$/);
+    my ($p, $n) = ($unit =~ /^(\w)(\d+)$/);
     my $q = one sprintf('%s%02d', $p, $n), rnd->pick(@_);
     $q->{question} = "<h3>$unit</h3>\n$q->{question}";
     $q;
+}
+
+sub gg {
+    my $unit = shift;
+    map g($unit, $_), @_;
 }
 
 sub all {[
@@ -39,6 +45,7 @@ sub all {[
     g('A7', qw(names animals random_sequences)),
     g('A8', qw(equiv_3 equiv_4)),
     g('A9', qw(truth_table_fragment)),
+    g('A10', qw(graph_by_matrix)),
 ]}
 
 1;

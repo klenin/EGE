@@ -18,6 +18,7 @@ use EGE::Gen::A06;
 use EGE::Gen::A07;
 use EGE::Gen::A08;
 use EGE::Gen::A09;
+use EGE::Gen::A10;
 
 my $questions;
 
@@ -79,6 +80,8 @@ binmode STDOUT, ':utf8';
 #g('A7', 'random_sequences');
 #g('A8', 'equiv_3');
 #g('A8', 'equiv_4');
-g('A9', 'truth_table_fragment');
+#g('A9', 'truth_table_fragment');
+g('A10', 'graph_by_matrix');
+#$questions = EGE::Generate::all;
 
 print_html;
