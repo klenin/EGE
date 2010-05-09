@@ -15,7 +15,7 @@ use EGE::Generate;
 
 my $questions;
 
-sub g { push @$questions, EGE::Generate::one(@_); }
+sub g { push @$questions, EGE::Generate::g(@_); }
 
 sub print_dump {
     for (@$questions) {
@@ -78,7 +78,8 @@ binmode STDOUT, ':utf8';
 #g('A11', 'variable_length');
 #g('A11', 'fixed_length');
 #g('A12', 'beads');
-g('A13', 'file_mask');
+#g('A13', 'file_mask');
+g('A14', 'database');
 #$questions = EGE::Generate::all;
 
 print_html;
