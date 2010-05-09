@@ -17,6 +17,7 @@ use EGE::Gen::A08;
 use EGE::Gen::A09;
 use EGE::Gen::A10;
 use EGE::Gen::A11;
+use EGE::Gen::A12;
 
 sub one {
     no strict 'refs';
@@ -48,6 +49,7 @@ sub all {[
     g('A9', qw(truth_table_fragment)),
     g('A10', qw(graph_by_matrix)),
     g('A11', qw(variable_length fixed_length)),
+    g('A12', qw(beads)),
 ]}
 
 1;
