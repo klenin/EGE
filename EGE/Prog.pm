@@ -297,7 +297,7 @@ sub make_expr {
     if (ref $src eq 'SCALAR') {
         return EGE::Prog::RefConst->new(ref => $src);
     }
-    if ($src =~ /^[A-Za-z][A-Za-z0-9]*$/) {
+    if ($src =~ /^[[:alpha:]][[:alnum:]]*$/) {
         return EGE::Prog::Var->new(name => $src);
     }
     return EGE::Prog::Const->new(value => $src);
