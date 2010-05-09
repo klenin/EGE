@@ -108,6 +108,7 @@ use base 'EGE::Prog::Lang';
 sub assign_fmt { '%s := %s' }
 sub index_fmt { '%s[%s]' }
 sub translate_op {{
+    '==' => '=', '!=' => '≠',
     '%' => 'mod(%s, %s)', '//' => 'div(%s, %s)',
     '&&' => 'и', '||' => 'или', '=>' => '→',
 }}
