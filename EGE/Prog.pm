@@ -133,7 +133,7 @@ sub run {
     my ($self, $env) = @_;
     my $v = $self->{arg}->run($env);
     return $v if ($env->{_skip} || 0) == ++$env->{_count};
-    my $r = eval $self->op_to_lang(EGE::Prog::Lang::lang('Perl')) . $v;
+    my $r = eval $self->op_to_lang(EGE::Prog::Lang::lang('Perl')) . " $v";
     my $err = $@;
     $err and die $err;
     $r || 0;
