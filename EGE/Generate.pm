@@ -20,6 +20,7 @@ use EGE::Gen::A11;
 use EGE::Gen::A12;
 use EGE::Gen::A13;
 use EGE::Gen::A14;
+use EGE::Gen::A15;
 
 sub one {
     no strict 'refs';
@@ -54,6 +55,7 @@ sub all {[
     g('A12', qw(beads)),
     g('A13', qw(file_mask)),
     g('A14', qw(database)),
+    g('A15', qw(rgb)),
 ]}
 
 1;

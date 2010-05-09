@@ -79,7 +79,8 @@ binmode STDOUT, ':utf8';
 #g('A11', 'fixed_length');
 #g('A12', 'beads');
 #g('A13', 'file_mask');
-g('A14', 'database');
+#g('A14', 'database');
+g('A15', 'rgb');
 #$questions = EGE::Generate::all;
 
 print_html;
