@@ -9,17 +9,6 @@ use lib '.';
 
 use EGE::Generate;
 
-use EGE::Gen::A01;
-use EGE::Gen::A02;
-use EGE::Gen::A03;
-use EGE::Gen::A04;
-use EGE::Gen::A05;
-use EGE::Gen::A06;
-use EGE::Gen::A07;
-use EGE::Gen::A08;
-use EGE::Gen::A09;
-use EGE::Gen::A10;
-
 my $questions;
 
 sub g { push @$questions, EGE::Generate::one(@_); }
