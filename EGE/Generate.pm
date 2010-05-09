@@ -16,6 +16,7 @@ use EGE::Gen::A07;
 use EGE::Gen::A08;
 use EGE::Gen::A09;
 use EGE::Gen::A10;
+use EGE::Gen::A11;
 
 sub one {
     no strict 'refs';
@@ -46,6 +47,7 @@ sub all {[
     g('A8', qw(equiv_3 equiv_4)),
     g('A9', qw(truth_table_fragment)),
     g('A10', qw(graph_by_matrix)),
+    g('A11', 'variable_length'),
 ]}
 
 1;
