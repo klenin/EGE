@@ -73,7 +73,8 @@ binmode STDOUT, ':utf8';
 #g('A10', 'graph_by_matrix');
 #g('A11', 'variable_length');
 #g('A11', 'fixed_length');
-g('A12', 'beads'),
+#g('A12', 'beads');
+g('A13', 'file_mask');
 #$questions = EGE::Generate::all;
 
 print_html;
