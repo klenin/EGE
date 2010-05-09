@@ -97,8 +97,8 @@ sub units {
         variants => [
             sprintf('2<sup>%d</sup>', $npower + $unit->{power2}),
             sprintf('2<sup>%d</sup>', $npower + $unit->{power2} + 3),
-            sprintf('%d &times; 10<sup>%d</sup>', $n, $unit->{power10}),
-            sprintf('%d &times; 10<sup>%d</sup>', 8 * $n, $unit->{power10}),
+            sprintf('%d × 10<sup>%d</sup>', $n, $unit->{power10}),
+            sprintf('%d × 10<sup>%d</sup>', 8 * $n, $unit->{power10}),
         ],
         answer => 0,
         variants_order => 'random',

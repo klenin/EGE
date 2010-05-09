@@ -13,8 +13,10 @@ sub row {
 sub lang_row {
     my $prog = shift;
     row(map EGE::Prog::lang_names->{$_}, @_) .
-    row(map '<pre>' . $prog->to_lang_named($_) . '</pre>', @_);
+    row(map '<pre><![CDATA[' . $prog->to_lang_named($_) . ']]></pre>', @_);
 }
+
+sub unpre { "]]></pre>$_[0]<pre><![CDATA[" }
 
 sub table {
     my ($prog, $rows) = @_;

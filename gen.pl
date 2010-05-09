@@ -32,7 +32,7 @@ sub print_dump {
 }
 
 sub print_html {
-    print q~<html>
+    print q~<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 </head>
@@ -49,9 +49,9 @@ sub print_html {
             my $style = $i++ == $q->{answer} ? ' style="color:red"' : '';
             print "<li$style>$_</li>\n";
         }
-        print "</ol>\n";
+        print "</ol>\n</div>\n";
     }
-    print "</body>\n";
+    print "</body>\n</html>";
 }
 
 binmode STDOUT, ':utf8';

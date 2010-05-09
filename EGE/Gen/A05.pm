@@ -54,13 +54,13 @@ sub div_mod_common {
     my ($q, $src, $get_fn) = @_;
     my $cc =
         ', вычисляющие результат деления нацело первого аргумента на второй '.
-        'и остаток от деления соответственно<pre>';
+        'и остаток от деления соответственно';
     my $b = EGE::Prog::make_block([
         @$src,
         '#', {
-            Basic => "</pre>\'\\ и MOD &mdash; операции$cc",
-            Pascal => "</pre>{div и mod &mdash; операции$cc}",
-            Alg => "</pre>|div и mod &mdash; функции$cc",
+            Basic => EGE::LangTable::unpre("\'\\ и MOD — операции$cc"),
+            Pascal => EGE::LangTable::unpre("{div и mod — операции$cc}"),
+            Alg => EGE::LangTable::unpre("|div и mod — функции$cc"),
         },
     ]);
 
