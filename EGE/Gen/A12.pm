@@ -6,8 +6,6 @@ use utf8;
 
 use EGE::Random;
 
-sub sort1 { sort @_ }
-
 sub except {
     my ($all, $except) = @_;
     my %h;
@@ -17,10 +15,10 @@ sub except {
 }
 
 sub beads {
-    my @all = sort1 rnd->pick_n(5, 'A' .. 'Z');
+    my @all = rnd->pick_n_sorted(5, 'A' .. 'Z');
     my $len = 3;
     my @order = rnd->shuffle(0 .. $len - 1);
-    my @subsets = map [ sort1 rnd->pick_n(rnd->pick(3, 4), @all) ], 1 .. $len;
+    my @subsets = map [ rnd->pick_n_sorted(rnd->pick(3, 4), @all) ], 1 .. $len;
 
     my $gen = sub {
         my ($bad_stage) = @_;

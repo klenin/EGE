@@ -38,6 +38,13 @@ sub pick_n {
     @array[0 .. $n - 1];
 }
 
+# Выражение вида sort rnd->pick_n вызывает синтаксическую ошибку,
+# поэтому заводим специальную функцию.
+sub pick_n_sorted {
+    my $self = shift;
+    sort $self->pick_n(@_);
+}
+
 sub coin { rand(2) > 1 }
 
 sub shuffle {
@@ -50,9 +57,11 @@ sub index_var {
     $self->pick_n($n || 1, 'i', 'j', 'k', 'm', 'n')
 }
 
+sub english_letter { $_[0]->pick('a' .. 'z') }
+
 sub russian_letter {
     my ($self) = @_;
-    chr([ord('а')..ord('я')]->[rnd->in_range(0, 31)]);
+    chr([ord('а') .. ord('я')]->[rnd->in_range(0, 31)]);
 }
 
 sub pretty_russian_letter {

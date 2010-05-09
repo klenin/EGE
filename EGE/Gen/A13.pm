@@ -8,7 +8,7 @@ use EGE::Random;
 
 my $q;
 
-sub random_chars { map rnd->pick('a' .. 'z'), 1 .. $_[0] }
+sub random_chars { map rnd->english_letter, 1 .. $_[0] }
 sub random_str { join '', random_chars @_ }
 
 sub gen_file {
@@ -35,7 +35,7 @@ sub file_mask {
         $mask = join '', rnd->shuffle(rnd->pick_n(2, qw(? ? *)), random_chars(5));
     } while $mask =~ /(\?\*|\*\?)/;
     $mask .= ".$ext_mask";
-    (my $bad_mask = $mask) =~ s/(\w)(\w)/$1 . random_str(1) . $2/e;
+    (my $bad_mask = $mask) =~ s/(\w)(\w)/$1 . rnd->english_letter . $2/e;
 
     {
         question => sprintf($q ||= do { undef local $/; <DATA>; }, $mask),
