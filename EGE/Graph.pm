@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use List::Util qw(min max);
+use EGE::Html;
 
 sub new {
     my ($class, %init) = @_;
@@ -18,20 +19,15 @@ sub edge2 {
     $self->{edges}->{$v2}->{$v1} = $w;
 }
 
-sub html_row {
-    my $r = join '', map "<td>$_</td>", map $_ || ' ', @_;
-    "<tr>$r</tr>\n";
-}
-
 sub html_matrix {
     my ($self) = @_;
     my @vnames = sort keys %{$self->{vertices}};
-    my $r = html_row(undef, @vnames);
+    my $r = html->row_n('td', '', @vnames);
     for (@vnames) {
         my $e = $self->{edges}->{$_};
-        $r .= html_row($_, @$e{@vnames});
+        $r .= html->row_n('td', $_, map $_ || ' ', @$e{@vnames});
     }
-    qq~<table border="1">$r</table>~;
+    html->table($r, { border => 1 });
 }
 
 sub update_min_max {
@@ -40,13 +36,7 @@ sub update_min_max {
     $$max = $value if !defined($$max) || $value > $$max;
 }
 
-sub tag {
-    my ($tag, $attrs, $body) = @_;
-    "<$tag" . join('', map qq~ $_="$attrs->{$_}"~, keys %$attrs) .
-    ($body ? ">$body</$tag>" : '/>');
-}
-
-sub tagn { tag(@_) . "\n" }
+sub tagn { html->tag(@_) . "\n" }
 
 sub xy {
     my ($pt, $x, $y) = @_;
@@ -89,20 +79,20 @@ sub svg {
         qq~viewBox="$xmin $ymin $xsize $ysize" ~ .
         'preserveAspectRatio="meet"> '.
         qq~<g fill="black" stroke="black" font-size="$font_size">\n~;
-    $r .= tagn('circle', { xy($_, qw(cx cy)), r => $radius }) for @at;
+    $r .= tagn('circle', undef, { xy($_, qw(cx cy)), r => $radius }) for @at;
     for my $src (@vnames) {
         my $at = $self->{vertices}{$src}{at};
-        $r .= tagn('text', { xy($at, qw(x y)), dx => $radius, dy => -3 }, " $src");
+        $r .= tagn('text', " $src", { xy($at, qw(x y)), dx => $radius, dy => -3 });
         my %xy1 = xy($at, qw(x1 y1));
 
         my $edges = $self->{edges}{$src};
         for my $e (keys %$edges) {
             my $w = $edges->{$e} or next;
             my $dest_at = $self->{vertices}{$e}{at};
-            $r .= tagn('line', { %xy1, xy($dest_at, qw(x2 y2)) });
+            $r .= tagn('line', undef, { %xy1, xy($dest_at, qw(x2 y2)) });
             my $c = [ map 0.5 * ($at->[$_] + $dest_at->[$_]), 0 .. 1 ];
             $at->[1] == $dest_at->[1] ? $c->[1] -= $font_size / 2 : $c->[0] += 5;
-            $r .= tagn('text', { xy($c, qw(x y)) }, " $w");
+            $r .= tagn('text', " $w", { xy($c, qw(x y)) });
         }
     }
     $r . '</g></svg>';

@@ -6,6 +6,7 @@ use utf8;
 
 use EGE::Random;
 use EGE::Logic;
+use EGE::Html;
 
 sub rand_expr_text {
     my $e = EGE::Logic::random_logic_expr(@_);
@@ -19,18 +20,11 @@ sub tt_row {
     $r;
 }
 
-sub make_tr {
-    my $tag = shift;
-    my $r = join '', map "<$tag>$_</$tag>", @_;
-    "  <tr>$r</tr>\n";
-}
-
 sub tt_html {
     my ($table, @vars) = @_;
-    my $r = join '',
-        make_tr('th', @vars),
-        map make_tr('td', @$_{@vars}), @$table;
-    qq~<table border="1">$r</table>~;
+    my $r = html->row_n('th', @vars);
+    $r .= html->row_n('td', @$_{@vars}) for @$table;
+    html->table($r, { border => 1 });
 }
 
 sub check_rows {
