@@ -39,6 +39,8 @@ sub row {
 
 sub row_n { row(@_) . "\n" }
 
+sub cdata { "<![CDATA[$_[1]]]>" }
+
 BEGIN {
     for my $tag (qw(td th table)) {
         no strict 'refs';

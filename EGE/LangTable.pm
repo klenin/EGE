@@ -10,7 +10,7 @@ sub lang_row {
     my $prog = shift;
     html->row_n('th', map EGE::Prog::lang_names->{$_}, @_) .
     html->row_n('td',
-        map '<pre><![CDATA[' . $prog->to_lang_named($_) . ']]></pre>', @_);
+        map '<pre>' . html->cdata($prog->to_lang_named($_)) . '</pre>', @_);
 }
 
 sub unpre { "]]></pre>$_[0]<pre><![CDATA[" }
