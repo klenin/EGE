@@ -72,6 +72,7 @@ binmode STDOUT, ':utf8';
 #g('A9', 'truth_table_fragment');
 #g('A10', 'graph_by_matrix');
 g('A11', 'variable_length');
+g('A11', 'fixed_length');
 #$questions = EGE::Generate::all;
 
 print_html;

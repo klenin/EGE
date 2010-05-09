@@ -47,7 +47,7 @@ sub all {[
     g('A8', qw(equiv_3 equiv_4)),
     g('A9', qw(truth_table_fragment)),
     g('A10', qw(graph_by_matrix)),
-    g('A11', 'variable_length'),
+    g('A11', qw(variable_length fixed_length)),
 ]}
 
 1;

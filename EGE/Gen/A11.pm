@@ -41,4 +41,35 @@ sub variable_length {
     };
 }
 
+sub fixed_hex {
+    my $bits = join '', @_;
+    Bit::Vector->new_Bin(length($bits), $bits)->to_Hex;
+}
+
+sub fixed_length {
+    my %code = ( 'А' => '00', 'Б' => '01', 'В' => '10', 'Г' => '11' );
+    my @letters = sort keys %code;
+    my $symt = join ', ', @letters;
+
+    my @msg = map rnd->pick(@letters), 1..4;
+    my $msgt = join '', @msg;
+
+    my $good = fixed_hex map $code{$_}, @msg;
+    my @bad = map fixed_hex(@$_),
+        [ map $code{$_}, rnd->shuffle(@msg) ],
+        [ map "00$code{$_}", @msg ],
+        [ map "$code{$_}00", @msg ];
+
+    {
+        question =>
+            "Для кодирования букв $symt решили использовать двухразрядные " .
+            'последовательные двоичные числа (от 00 до 11, соответственно). ' .
+            "Если таким способом закодировать последовательность символов $msgt и " .
+            'записать результат в шестнадцатеричной системе счисления, то получится',
+        variants => [ $good, @bad ],
+        answer => 0,
+        variants_order => 'random',
+    };
+}
+
 1;
