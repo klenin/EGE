@@ -25,6 +25,7 @@ sub graph_by_matrix {
          [ qw(B C) ], [ qw(B D) ],
          [ qw(C E) ],
     );
+    # TODO: генерировать связные графы, генерировать незначительные отклонения
     my $make_random_graph = sub {
         my $g = EGE::Graph->new(vertices => \%vertices);
         $g->edge2(@$_, rnd->in_range(2, 5)) for rnd->pick_n(5, @edges);
