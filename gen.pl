@@ -48,6 +48,26 @@ sub print_html {
     print "</body>\n</html>";
 }
 
+sub quote {
+    my ($s) = @_;
+    $s =~ s/\\/\\\\/g;
+    $s =~ s/"/\\"/g;
+    $s =~ s/\n/\\n/g;
+    qq~"$s"~;
+}
+
+sub print_json {
+    print "[\n";
+    for my $q (@$questions) {
+        print
+            '{ "type": "sc", "text": ', quote($q->{question}),
+            ', "variants": [', join(', ', map quote($_), @{$q->{variants}}),
+            '], "correct": ', $q->{answer},
+            " },\n";
+    }
+    print "]\n";
+}
+
 binmode STDOUT, ':utf8';
 
 #g('A1', 'recode');
