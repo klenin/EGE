@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 34;
+use Test::More tests => 38;
 
 use lib '..';
 use EGE::Bits;
@@ -86,4 +86,16 @@ use EGE::Bits;
     is $b->get_bit(1), 0, 'get 1';
     is $b->set_bit(1, 1)->get_bit(1), 1, 'set/get 1';
     is $b->get_bit(2), 1, 'get 2';
+    is $b->flip(2)->get_bit(2), 0, 'flip 2';
+}
+
+{
+    my $b = EGE::Bits->new->set_bin('01010111');
+    is $b->reverse_->get_bin, '11101010', 'reverse';
+}
+
+{
+    my $b = EGE::Bits->new->set_bin('01110101');
+    is $b->dup->shift_(-1)->get_bin, '11101010', 'shift left';
+    is $b->dup->shift_(1)->get_bin, '00111010', 'shift right';
 }

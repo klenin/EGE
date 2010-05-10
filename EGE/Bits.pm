@@ -6,7 +6,7 @@ use warnings;
 sub new {
     my ($class, %init) = @_;
     my $self = { v => [] };
-    bless $self, $class;
+    bless $self, ref $class || $class;
     $self;
 }
 
@@ -45,7 +45,8 @@ sub set_bin {
     $self;
 }
 
-sub copy { $_[0]->set_bin_array($_[1]->{v}); }
+sub copy { $_[0]->set_bin_array($_[1]->{v}) }
+sub dup { $_[0]->new->copy($_[0]) }
 
 sub get_oct {
     my ($self) = @_;
@@ -154,10 +155,38 @@ sub set_bit {
     $self;
 }
 
+sub flip {
+    my ($self, $index) = @_;
+    $self->{v}->[-$index - 1] ^= 1;
+    $self;
+}
+
 sub is_empty {
     my ($self) = @_;
     $_ && return 0 for @{$self->{v}};
     1;
+}
+
+sub reverse_ {
+    my ($self) = @_;
+    $self->{v} = [ reverse @{$self->{v}} ];
+    $self;
+}
+
+sub shift_ {
+    my ($self, $d) = @_;
+    my $v = $self->{v};
+    if ($d > 0) { # вправо
+        my $j = @$v;
+        my $i = @$v - $d;
+        $v->[--$j] = $i ? $v->[--$i] : 0 while $j;
+    }
+    elsif ($d < 0) { # влево
+        my $j = 0;
+        my $i = -$d;
+        $v->[$j++] = $i < @$v ? $v->[$i++] : 0 while $j < @$v;
+    }
+    $self;
 }
 
 1;
