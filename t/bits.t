@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 31;
+use Test::More tests => 32;
 
 use lib '..';
 use EGE::Bits;
@@ -73,7 +73,8 @@ use EGE::Bits;
 }
 
 {
-    my $b = EGE::Bits->new->set_size(2);
-    is $b->get_bit(1), 0, 'get 0';
+    my $b = EGE::Bits->new->set_bin('0100');
+    is $b->get_bit(1), 0, 'get 1';
     is $b->set_bit(1, 1)->get_bit(1), 1, 'set/get 1';
+    is $b->get_bit(2), 1, 'get 2';
 }

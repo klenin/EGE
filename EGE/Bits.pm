@@ -138,11 +138,11 @@ sub inc {
     $self;
 }
 
-sub get_bit { $_[0]->{v}->[$_[1]] }
+sub get_bit { $_[0]->{v}->[- $_[1] - 1] }
 
 sub set_bit {
     my ($self, $index, $bit) = @_;
-    $self->{v}->[$index] = $bit;
+    $self->{v}->[-$index - 1] = $bit;
     $self;
 }
 
