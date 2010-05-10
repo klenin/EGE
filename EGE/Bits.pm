@@ -112,4 +112,44 @@ sub set_hex {
     $self;
 }
 
+sub get_dec {
+    my ($self) = @_;
+    my $r = 0;
+    $r = $r * 2 + $_ for @{$self->{v}};
+    $r;
+}
+
+sub set_dec {
+    my ($self, $new_dec) = @_;
+    my $v = $self->{v};
+    for (my $i = $#$v; $i >= 0; --$i) {
+        $v->[$i] = $new_dec % 2;
+        $new_dec >>= 1;
+    }
+    $self;
+}
+
+sub inc {
+    my ($self) = @_;
+    my $v = $self->{v};
+    for (my $i = $#$v; $i >= 0; --$i) {
+        last if $v->[$i] ^= 1;
+    }
+    $self;
+}
+
+sub get_bit { $_[0]->{v}->[$_[1]] }
+
+sub set_bit {
+    my ($self, $index, $bit) = @_;
+    $self->{v}->[$index] = $bit;
+    $self;
+}
+
+sub is_empty {
+    my ($self) = @_;
+    $_ && return 0 for @{$self->{v}};
+    1;
+}
+
 1;
