@@ -21,6 +21,7 @@ use EGE::Gen::A12;
 use EGE::Gen::A13;
 use EGE::Gen::A14;
 use EGE::Gen::A15;
+use EGE::Gen::A16;
 
 sub one {
     no strict 'refs';
@@ -56,6 +57,7 @@ sub all {[
     g('A13', qw(file_mask)),
     g('A14', qw(database)),
     g('A15', qw(rgb)),
+    g('A16', qw(spreadsheet)),
 ]}
 
 1;

@@ -80,7 +80,8 @@ binmode STDOUT, ':utf8';
 #g('A12', 'beads');
 #g('A13', 'file_mask');
 #g('A14', 'database');
-g('A15', 'rgb');
+#g('A15', 'rgb');
+g('A16', 'spreadsheet'),
 #$questions = EGE::Generate::all;
 
 print_html;
