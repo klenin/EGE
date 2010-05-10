@@ -189,4 +189,11 @@ sub shift_ {
     $self;
 }
 
+sub scan_left {
+    my ($self, $pos) = @_;
+    my $bit = $self->get_bit($pos);
+    ++$pos while $pos < $self->get_size && $self->get_bit($pos) == $bit;
+    $pos;
+}
+
 1;
