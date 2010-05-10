@@ -19,7 +19,6 @@ sub ones {
         question => "Сколько единиц в двоичной записи числа $n?",
         variants => [ 1, 2, $npower - 1, $npower ],
         answer => $case->{a},
-        variants_order => 'random',
     };
 }
 
@@ -31,7 +30,6 @@ sub zeroes {
         question => "Сколько значащих нулей в двоичной записи числа $n?",
         variants => [ $nzeroes, $nzeroes + 1, $nzeroes + 2, $nzeroes - 1 ],
         answer => 0,
-        variants_order => 'random',
     };
 }
 
@@ -50,7 +48,6 @@ sub convert {
         question => "Переведите число $bin в десятичную систему.",
         variants => [ $n, rnd->pick_n(3, @errors) ],
         answer => 0,
-        variants_order => 'random',
     };
 }
 
@@ -78,7 +75,6 @@ QUESTION
         question => $q,
         variants => [ map to_bin($_), $x, rnd->pick_n(3, @errors) ],
         answer => 0,
-        variants_order => 'random',
     };
 }
 

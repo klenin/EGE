@@ -35,7 +35,6 @@ sub variable_length {
             ,
         variants => [ $bs->get_oct, $bs->get_hex, $bad_bs->get_oct, $bads ],
         answer => 0,
-        variants_order => 'random',
     };
 }
 
@@ -63,7 +62,6 @@ sub fixed_length {
             'записать результат в шестнадцатеричной системе счисления, то получится',
         variants => [ $good, @bad ],
         answer => 0,
-        variants_order => 'random',
     };
 }
 

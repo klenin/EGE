@@ -18,7 +18,6 @@ sub sum {
         question => $q,
         variants => [ map bin_hex_or_oct($_, rnd->in_range(0, 2)), $r, @errors ],
         answer => 0,
-        variants_order => 'random',
     };
 }
 

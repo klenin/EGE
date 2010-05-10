@@ -55,7 +55,6 @@ sub database {
             "Сколько записей в ней удовлетворяют условию «$cond»?",
         variants => [ $count, rnd->pick_n(3, grep $_ != $count, 1 .. @table) ],
         answer => 0,
-        variants_order => 'random',
     };
 }
 

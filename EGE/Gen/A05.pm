@@ -46,7 +46,6 @@ sub arith {
         question => $q,
         variants => [ $correct, rnd->pick_n(3, @errors) ],
         answer => 0,
-        variants_order => 'random',
     };
 }
 
@@ -84,7 +83,6 @@ sub div_mod_common {
         question => $q,
         variants => [ $correct, rnd->pick_n(3, @errors) ],
         answer => 0,
-        variants_order => 'random',
     };
 }
 

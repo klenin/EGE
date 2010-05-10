@@ -43,7 +43,6 @@ sub count_by_sign {
         question => $q,
         variants => [ $c, rnd->pick_n(3, @errors) ],
         answer => 0,
-        variants_order => 'random',
     };
 }
 
@@ -85,7 +84,6 @@ sub find_min_max {
         question => $q,
         variants => [ map "B[$_]", $c, rnd->pick_n(3, @errors) ],
         answer => 0,
-        variants_order => 'random',
     };
 }
 
@@ -126,7 +124,6 @@ sub count_odd_even {
         question => $q,
         variants => [ $c, rnd->pick_n(3, @errors) ],
         answer => 0,
-        variants_order => 'random',
     };
 }
 
@@ -169,7 +166,6 @@ sub alg_min_max {
         question => $q,
         variants => \@v,
         answer => $idx->{answer},
-        variants_order => 'random',
     };
 }
 
@@ -209,7 +205,6 @@ sub alg_avg {
         question => $q,
         variants => \@v,
         answer => $c,
-        variants_order => 'random',
     };
 }
 

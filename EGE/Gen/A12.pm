@@ -57,7 +57,6 @@ sub beads {
             ,
         variants => [ map $gen->($_ - 1), 0 .. $len ],
         answer => 0,
-        variants_order => 'random',
     };
 }
 

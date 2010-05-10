@@ -29,7 +29,6 @@ QUESTION
         question => $q,
         variants => [ $delta * 8, $delta, int($delta / 2), $delta * 16 ],
         answer => 1,
-        variants_order => 'random',
     };
 }
 
@@ -62,7 +61,6 @@ QUESTION
         question => $q,
         variants => [ map bits_or_bytes($_), $len, 2 * $len, int($len / 8), $len_nosp ],
         answer => $enc->{size} - 1,
-        variants_order => 'random',
     };
 }
 

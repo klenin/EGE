@@ -41,7 +41,6 @@ sub file_mask {
         question => sprintf($q ||= do { undef local $/; <DATA>; }, $mask),
         variants => [ gen_file($bad_mask, 0), map gen_file($mask, $_), 0 .. 2 ],
         answer => 1,
-        variants_order => 'random',
     };
 }
 

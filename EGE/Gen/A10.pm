@@ -47,7 +47,6 @@ sub graph_by_matrix {
             'Укажите схему, соответствующую таблице: ' . $g->html_matrix,
         variants => [ map svg_in_box($_), $g, @bad ],
         answer => 0,
-        variants_order => 'random',
     };
 }
 

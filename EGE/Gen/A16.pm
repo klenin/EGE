@@ -61,7 +61,6 @@ sub spreadsheet {
         question => $q,
         variants => [ $values[$order[1]], rnd->pick_n(3, @bad) ],
         answer => 0,
-        variants_order => 'random',
     };
 }
 

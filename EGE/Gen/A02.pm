@@ -38,7 +38,6 @@ QUESTION
             )
         ],
         answer => 0,
-        variants_order => 'random',
     };
 }
 
@@ -79,7 +78,6 @@ sub database {
             num_bits($n),
         ],
         answer => 0,
-        variants_order => 'random',
     };
 }
 
@@ -101,7 +99,6 @@ sub units {
             sprintf('%d × 10<sup>%d</sup>', 8 * $n, $unit->{power10}),
         ],
         answer => 0,
-        variants_order => 'random',
     };
 }
 

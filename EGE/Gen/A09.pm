@@ -61,7 +61,6 @@ sub truth_table_fragment {
         question => $q,
         variants => [ $e_text, @bad ],
         answer => 0,
-        variants_order => 'random',
     };
 }
 

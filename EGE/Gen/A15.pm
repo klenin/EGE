@@ -42,7 +42,6 @@ bgcolor="#XXXXXX", где в кавычках задаются шестнадц�
         question => sprintf($q, $color),
         variants => [ map color_name($pure, invert $_, @rgb), -1 .. 2 ],
         answer => 0,
-        variants_order => 'random',
     };
 }
 

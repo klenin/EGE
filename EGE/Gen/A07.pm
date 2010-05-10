@@ -106,7 +106,6 @@ sub strings {
         question => "Для какого $list_text $tf высказывание:<br/>$g->{text}?",
         variants => [ $true_false->[$good][0], @{$true_false->[1 - $good]}[0 .. 2] ],
         answer => 0,
-        variants_order => 'random',
     };
 }
 

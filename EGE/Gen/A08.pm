@@ -39,7 +39,6 @@ sub equiv_common {
         question => "Укажите, какое логическое выражение равносильно выражению $e_text.",
         variants => [ $good[0], @bad[0..2] ],
         answer => 0,
-        variants_order => 'random',
     };
 }
 
