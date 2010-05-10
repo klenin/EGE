@@ -24,8 +24,9 @@ sub ones {
 }
 
 sub zeroes {
-    my $n = rnd->in_range(64, 127) * rnd->pick(2, 4);
-    (my $nzeroes) = EGE::Bits->new->set_size(10)->set_dec($n)->scan_left(0);
+    my $bits = [ 1, map(rnd->coin, 1..6), 0 ];
+    my $nzeroes = grep !$_, @$bits;
+    my $n = EGE::Bits->new->set_bin($bits, 1)->get_dec;
     {
         question => "Сколько значащих нулей в двоичной записи числа $n?",
         variants => [ $nzeroes, $nzeroes + 1, $nzeroes + 2, $nzeroes - 1 ],
