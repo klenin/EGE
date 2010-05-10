@@ -20,16 +20,22 @@ sub set_size {
 
 sub get_bin { return join '', @{$_[0]->{v}} }
 
+sub set_bin_array {
+    my ($self, $new_bin, $by_ref) = @_;
+    if (my $i = $self->get_size) {
+        my $j = @$new_bin;
+        $self->{v}->[--$i] = $new_bin->[--$j] while $i && $j;
+    }
+    else {
+        $self->{v} = $by_ref ? $new_bin : [ @$new_bin ];
+    }
+    $self;
+}
+
 sub set_bin {
-    my ($self, $new_bin) = @_;
+    my ($self, $new_bin, $by_ref) = @_;
     if (ref $new_bin eq 'ARRAY') {
-        if (my $i = $self->get_size) {
-            my $j = @$new_bin;
-            $self->{v}->[--$i] = $new_bin->[--$j] while $i;
-        }
-        else {
-            $self->{v} = $new_bin;
-        }
+        $self->set_bin_array($new_bin, $by_ref);
     }
     else {
         $self->get_size || $self->set_size(length $new_bin);
@@ -38,6 +44,8 @@ sub set_bin {
     }
     $self;
 }
+
+sub copy { $_[0]->set_bin_array($_[1]->{v}); }
 
 sub get_oct {
     my ($self) = @_;

@@ -16,7 +16,7 @@ sub variable_length {
     my @msg = map rnd->pick(@letters), 1..6;
     my $msgt = join '', @msg;
 
-    my $bs = EGE::Bits->new->set_bin([ map $code{$_}, @msg ]);
+    my $bs = EGE::Bits->new->set_bin([ map $code{$_}, @msg ], 1);
     my $bad_bs = EGE::Bits->new->set_bin(
         join '', map substr('000' . $code{$_}, -3), @msg
     );
@@ -39,10 +39,7 @@ sub variable_length {
     };
 }
 
-sub fixed_hex {
-    my $bits = join '', @_;
-    EGE::Bits->new->set_bin($bits)->get_hex;
-}
+sub fixed_hex { EGE::Bits->new->set_bin(join '', @_)->get_hex }
 
 sub fixed_length {
     my %code = ( 'А' => '00', 'Б' => '01', 'В' => '10', 'Г' => '11' );

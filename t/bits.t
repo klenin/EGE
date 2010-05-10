@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 32;
+use Test::More tests => 34;
 
 use lib '..';
 use EGE::Bits;
@@ -27,6 +27,15 @@ use EGE::Bits;
     is $b->get_bin, '1010', 'set_bin array bin init';
     $b->set_bin([1, 1, 1, 0, 1]);
     is $b->get_bin, '1101', 'set_bin array bin';
+}
+
+{
+    my $b1 = EGE::Bits->new->set_bin('1010');
+    my $b2 = EGE::Bits->new->copy($b1);
+    is $b2->get_bin, '1010', 'copy';
+    $b1->set_bit(0, 1);
+    is $b2->get_bin, '1010', 'copy by val';
+    $b2->copy($b1, 1);
 }
 
 {
