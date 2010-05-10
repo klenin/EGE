@@ -4,10 +4,9 @@ use strict;
 use warnings;
 use utf8;
 
-use Bit::Vector;
-
 use EGE::Prog qw(make_expr);
 use EGE::Random;
+use EGE::Bits;
 
 sub maybe_not { rnd->pick($_[0], $_[0], [ '!', $_[0] ]) }
 
@@ -36,7 +35,7 @@ sub random_logic_expr { make_expr(random_logic @_) }
 sub bits_to_vars {
     my ($bits, @names) = @_;
     my $i = 0;
-    return { map { $_ => $bits->bit_test($i++) } @names };
+    return { map { $_ => $bits->get_bit($i++) } @names };
 }
 
 sub truth_table_string {
@@ -44,11 +43,11 @@ sub truth_table_string {
     $expr->gather_vars(\my %vars);
     %vars or return $expr->run({});
     my @names = sort keys %vars;
-    my $bits = Bit::Vector->new(scalar @names);
+    my $bits = EGE::Bits->new->set_size(scalar @names);
     my $r = '';
     do {
         $r .= $expr->run(bits_to_vars($bits, @names));
-        $bits->increment;
+        $bits->inc;
     } until $bits->is_empty;
     $r;
 }

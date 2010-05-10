@@ -5,6 +5,7 @@ use warnings;
 use utf8;
 
 use EGE::Random;
+use EGE::Bits;
 use EGE::Logic;
 use EGE::Html;
 
@@ -39,7 +40,7 @@ sub truth_table_fragment {
     my @vars = qw(X Y Z);
     my ($e, $e_text) = rand_expr_text(@vars);
     my @rows = sort { $a <=> $b } rnd->pick_n(3, 0 .. 2 ** @vars - 1);
-    my @bits = map Bit::Vector->new_Dec(4, $_), @rows;
+    my @bits = map EGE::Bits->new->set_size(4)->set_dec($_), @rows;
     my $fragment = [ map tt_row($e, $_, @vars), @bits ];
     my %seen = ($e_text => 1);
     my @bad;
