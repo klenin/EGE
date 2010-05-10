@@ -4,9 +4,9 @@ use strict;
 use warnings;
 use utf8;
 
-use Bit::Vector;
 use EGE::Random;
 use EGE::Bin;
+use EGE::Bits;
 
 sub ones {
     my $npower = rnd->in_range(5, 9);
@@ -25,9 +25,9 @@ sub ones {
 
 sub zeroes {
     my $n = rnd->in_range(64, 127) * rnd->pick(2, 4);
-    (my $nzeroes) = Bit::Vector->new_Dec(10, $n)->Interval_Scan_inc(0);
+    (my $nzeroes) = EGE::Bits->new->set_size(10)->set_dec($n)->scan_left(0);
     {
-        question => "Сколько значащих нулей двоичной записи числа $n?",
+        question => "Сколько значащих нулей в двоичной записи числа $n?",
         variants => [ $nzeroes, $nzeroes + 1, $nzeroes + 2, $nzeroes - 1 ],
         answer => 0,
         variants_order => 'random',
@@ -36,15 +36,12 @@ sub zeroes {
 
 sub convert {
     my $n = 32 + rnd->in_range(0, 15) * 2 + 1;
-    my $v = Bit::Vector->new_Dec(7, $n);
-    my $bin = substr($v->to_Bin, 1);
-    my $v1 = Bit::Vector->new(7);
-    $v1->Reverse($v);
-    $v1->Move_Right(1);
-    my $rn = int($v1->to_Dec);
-    $v1->Copy($v);
-    $v1->bit_flip(rnd->in_range(0, 5));
-    my $fn = int($v1->to_Dec);
+    my $v = EGE::Bits->new->set_size(7)->set_dec($n);
+    my $bin = substr($v->get_bin, 1);
+    
+    my $rn = int($v->dup->reverse_->shift_(-1)->get_dec);
+    my $fn = int($v->dup->flip(rnd->in_range(0, 5))->get_dec);
+
     my %seen = ($n => 1);
     my @errors = grep !$seen{$_}++,
         $n * 2, int($n / 2), $n + 1, $n - 1, $rn, $rn + 1, $rn - 1, $fn;
