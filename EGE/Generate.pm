@@ -28,11 +28,21 @@ sub one {
     "EGE::Gen::$_[0]::$_[1]"->();
 }
 
+sub shuffle_variants {
+    my ($q)= @_;
+    my @order = rnd->shuffle(0 .. @{$q->{variants}} - 1);
+    $q->{answer} = $order[$q->{answer}];
+    my @v;
+    $v[$order[$_]] = $q->{variants}->[$_] for @order;
+    $q->{variants} = \@v;
+}
+
 sub g {
     my $unit = shift;
     my ($p, $n) = ($unit =~ /^(\w)(\d+)$/);
     my $q = one sprintf('%s%02d', $p, $n), rnd->pick(@_);
     $q->{question} = "<h3>$unit</h3>\n$q->{question}";
+    shuffle_variants($q);
     $q;
 }
 
