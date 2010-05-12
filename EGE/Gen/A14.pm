@@ -13,11 +13,12 @@ use EGE::Prog;
 use EGE::Prog::Lang;
 use EGE::Html;
 use EGE::Russian::FamilyNames;
+use EGE::Russian::Subjects;
 
 sub database {
     my ($self) = @_;
     my @families = rnd->pick_n_sorted(6, @EGE::Russian::FamilyNames::list);
-    my @subjects = qw(Математика История Физика Химия Биология);
+    my @subjects = rnd->pick_n(5, grep !/\s/, @EGE::Russian::Subjects::list);
     my @table;
     for (@families) {
         my $sex = rnd->coin;
