@@ -7,6 +7,7 @@ use warnings;
 use Carp;
 $SIG{__WARN__} = sub { Carp::confess @_ };
 $SIG{__DIE__} = sub { Carp::confess @_ };
+$SIG{INT} = sub { Carp::confess @_ };
 
 use Data::Dumper;
 use Encode;
