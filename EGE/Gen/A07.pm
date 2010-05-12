@@ -91,13 +91,14 @@ sub check_cond_group {
 }
 
 sub strings {
-    my ($self, $next_string, $list_text) = @_;
+    my ($self, $init_string, $next_string, $list_text) = @_;
     my $good = -1;
     my $true_false;
     my $g;
     do {
         $g = make_cond_group;
         $true_false = [ [], [] ];
+        $init_string->();
         while(my $str = $next_string->()) {
             next if length($str) < $g->{min_len};
             push @{$true_false->[check_cond_group($g, $str)]}, $str;
@@ -113,32 +114,29 @@ sub strings {
 sub names {
     my ($self) = @_;
     my @list = rnd->shuffle(@EGE::Russian::Names::list);
-    my $i = 0;
-    $self->strings(sub { $list[$i++] }, 'имени');
+    my $i;
+    $self->strings(sub { $i = 0 }, sub { $list[$i++] }, 'имени');
 }
 
 sub animals {
     my ($self) = @_;
     my @list = rnd->shuffle(@EGE::Russian::Animals::list);
-    my $i = 0;
-    $self->strings(sub { $list[$i++] }, 'из названий животных');
+    my $i;
+    $self->strings(sub { $i = 0 }, sub { $list[$i++] }, 'из названий животных');
 }
 
 sub random_sequences {
     my ($self) = @_;
-    my %seen = ();
+    my %seen;
     my $gen_seq = sub {
         my $r;
         do {
             $r = join '', map uc rnd->pretty_russian_letter, 1..6;
         } while $seen{$r}++;
-        if (keys %seen > 100) {
-            %seen = ();
-            return;
-        }
+        return if keys %seen > 100;
         $r;
     };
-    $self->strings($gen_seq, 'символьного набора');
+    $self->strings(sub { %seen = () }, $gen_seq, 'символьного набора');
 }
 
 1;
