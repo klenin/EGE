@@ -38,12 +38,12 @@ sub print_html {
     for my $q (@$questions) {
         print qq~
 <div>
-<p>$q->{question}</p>
+<p>$q->{text}</p>
 <ol>
 ~;
         my $i = 0;
         for (@{$q->{variants}}) {
-            my $style = $i++ == $q->{answer} ? ' style="color:red"' : '';
+            my $style = $i++ == $q->{correct} ? ' style="color:red"' : '';
             print "<li$style>$_</li>\n";
         }
         print "</ol>\n</div>\n";
@@ -56,17 +56,18 @@ sub quote {
     $s =~ s/\\/\\\\/g;
     $s =~ s/"/\\"/g;
     $s =~ s/\n/\\n/g;
-    qq~"$s"~;
+    $s =~ /^\d+$/ ? $s : qq~"$s"~;
 }
 
 sub print_json {
     print "[\n";
     for my $q (@$questions) {
+        print '{';
         print
-            '{ "type": "sc", "text": ', quote($q->{question}),
-            ', "variants": [', join(', ', map quote($_), @{$q->{variants}}),
-            '], "correct": ', $q->{answer},
-            " },\n";
+            join ', ', map qq~"$_":~ . quote($q->{$_}), qw(type text correct);
+        print ', "variants": [', join(', ', map quote($_), @{$q->{variants}}), '], '
+            if $q->{variants};
+        print " },\n";
     }
     print "]\n";
 }
@@ -108,3 +109,4 @@ g('A16', 'spreadsheet'),
 #$questions = EGE::Generate::all;
 
 print_html;
+#print_json;

@@ -2,6 +2,7 @@
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
 package EGE::Gen::A10;
+use base 'EGE::GenBase::SingleChoice';
 
 use strict;
 use warnings;
@@ -16,6 +17,7 @@ sub svg_in_box {
 }
 
 sub graph_by_matrix {
+    my ($self) = @_;
     my %vertices = (
         'A' => { at => [  50,  0 ] },
         'B' => { at => [  25, 50 ] },
@@ -43,14 +45,11 @@ sub graph_by_matrix {
         do { $g1 = $make_random_graph->() } while $seen{$g1->edges_string}++;
         push @bad, $g1;
     }
-    {
-        question =>
-            'В таблице приведена стоимость перевозки между ' .
-            'соседними железнодорожными станциями. ' .
-            'Укажите схему, соответствующую таблице: ' . $g->html_matrix,
-        variants => [ map svg_in_box($_), $g, @bad ],
-        answer => 0,
-    };
+    $self->{text} =
+        'В таблице приведена стоимость перевозки между ' .
+        'соседними железнодорожными станциями. ' .
+        'Укажите схему, соответствующую таблице: ' . $g->html_matrix;
+    $self->variants(map svg_in_box($_), $g, @bad);
 }
 
 1;

@@ -2,6 +2,7 @@
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
 package EGE::Gen::A13;
+use base 'EGE::GenBase::SingleChoice';
 
 use strict;
 use warnings;
@@ -28,7 +29,7 @@ sub gen_file {
 }
 
 sub file_mask {
-
+    my ($self) = @_;
     my $ext = rnd->pick(qw(txt doc png lst gif jpg map cpp pas bas));
     my $ext_mask = $ext;
     substr($ext_mask, rnd->in_range(0, length($ext) - 1), rnd->coin) = '?';
@@ -40,11 +41,9 @@ sub file_mask {
     $mask .= ".$ext_mask";
     (my $bad_mask = $mask) =~ s/(\w)(\w)/$1 . rnd->english_letter . $2/e;
 
-    {
-        question => sprintf($q ||= do { undef local $/; <DATA>; }, $mask),
-        variants => [ gen_file($bad_mask, 0), map gen_file($mask, $_), 0 .. 2 ],
-        answer => 1,
-    };
+    $self->{text} = sprintf($q ||= do { undef local $/; <DATA>; }, $mask);
+    $self->variants(gen_file($bad_mask, 0), map gen_file($mask, $_), 0 .. 2);
+    $self->{correct} = 1;
 }
 
 1;

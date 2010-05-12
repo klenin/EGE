@@ -2,6 +2,7 @@
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
 package EGE::Gen::A06;
+use base 'EGE::GenBase::SingleChoice';
 
 use strict;
 use warnings;
@@ -12,6 +13,7 @@ use EGE::Prog;
 use EGE::LangTable;
 
 sub count_by_sign {
+    my ($self) = @_;
     my $n = rnd->in_range(50, 100);
     my $i = rnd->index_var;
     my $b = EGE::Prog::make_block([
@@ -33,7 +35,7 @@ sub count_by_sign {
         { name => 'отрицательные', test => sub { $_[0] < 0 } },
         { name => 'неотрицательные', test => sub { $_[0] >= 0 } },
     );
-    my $q =
+    $self->{text} =
         "Значения двух массивов A и B с индексами от 1 до $n " .
         "задаются при помощи следующего фрагмента программы: $lt" .
         "Какое количество элементов массива B[1..$n] будет принимать " .
@@ -42,14 +44,11 @@ sub count_by_sign {
     my $B = $b->run_val('B');
     my $c = grep $case->{test}->($B->[$_]), 1 .. $n;
     my @errors = ($c + 1, $c - 1, $n - $c, $n - $c + 1, $n - $c - 1);
-    {
-        question => $q,
-        variants => [ $c, rnd->pick_n(3, @errors) ],
-        answer => 0,
-    };
+    $self->variants($c, rnd->pick_n(3, @errors));
 }
 
 sub find_min_max {
+    my ($self) = @_;
     my $n = rnd->in_range(50, 100);
     # нужно гарантировать единственные максимум и минимум
     my $m = rnd->in_range($n / 2 + 1, $n - 1);
@@ -69,7 +68,7 @@ sub find_min_max {
         { name => 'наибольшим', test => 1 },
         { name => 'наименьшим', test => -1 },
     );
-    my $q =
+    $self->{text} =
         "Значения двух массивов A[1..$n] и B[1..$n] " .
         "задаются с помощью следующего фрагмента программы: $lt" .
         "Какой элемент массива B будет $case->{name}?";
@@ -83,14 +82,11 @@ sub find_min_max {
     my %seen = ($c => 1);
     my @errors = grep 1 <= $_ && $_ <= $n && !$seen{$_}++,
         ($c + 1, $c - 1, $n - $c, $n - $c + 1, $n - $c - 1, $w, $n - $w );
-    {
-        question => $q,
-        variants => [ map "B[$_]", $c, rnd->pick_n(3, @errors) ],
-        answer => 0,
-    };
+    $self->variants(map "B[$_]", $c, rnd->pick_n(3, @errors));
 }
 
 sub count_odd_even {
+    my ($self) = @_;
     my $n = rnd->in_range(7, 10);
     my ($i, $j) = rnd->index_var(2);
     my $b = EGE::Prog::make_block([
@@ -107,7 +103,7 @@ sub count_odd_even {
         { name => 'чётное', test => 0 },
         { name => 'нечётное', test => 1 },
     );
-    my $q =
+    $self->{text} =
         "Значения двумерного массива A размера $n × $n " .
         'задаются с помощью вложенного оператора цикла ' .
         "в представленном фрагменте программы: $lt" .
@@ -121,16 +117,12 @@ sub count_odd_even {
         }
     }
     my %seen = ($c => 1);
-    my @errors = grep !$seen{$_}++,
-        map $c + $_, -5 .. -1, 1 .. 5;
-    {
-        question => $q,
-        variants => [ $c, rnd->pick_n(3, @errors) ],
-        answer => 0,
-    };
+    my @errors = grep !$seen{$_}++, map $c + $_, -5 .. -1, 1 .. 5;
+    $self->variants($c, rnd->pick_n(3, @errors));
 }
 
 sub alg_min_max {
+    my ($self) = @_;
     my ($i, $j) = rnd->pick_n(2, 'i', 'j', 'k', 'm'); # n занято размером массива
 
     my $minmax = rnd->pick(
@@ -154,32 +146,29 @@ sub alg_min_max {
         '=', 's', $idx->{res},
     ]);
     my $lt = EGE::LangTable::table($b, [ [ 'Basic', 'Pascal', 'Alg' ] ]);
-    my $q =
+    $self->{text} =
         "Дан фрагмент программы, обрабатывающей массив A из N элементов: $lt" .
         'Чему будет равно значение переменной s после выполнения ' .
         'данного алгоритма, при любых значениях элементов массива A?';
     my $if_many = " из них, если $minmax->{text}ых элементов несколько)";
-    my @v = (
+    $self->variants(
         "\u$minmax->{text}ому элементу в массиве A",
         "Индексу $minmax->{text}ого элемента в массиве A (первому$if_many",
         "Индексу $minmax->{text}ого элемента в массиве A (последнему$if_many",
         "Количеству элементов, равных $minmax->{text}ому в массиве A"
     );
-    {
-        question => $q,
-        variants => \@v,
-        answer => $idx->{answer},
-    };
+    $self->{correct} = $idx->{answer};
 }
 
 sub alg_avg {
+    my ($self) = @_;
     my ($i, $j) = rnd->pick_n(2, 'i', 'j', 'k', 'm'); # n занято размером массива
 
     my $pn = rnd->pick(
         { text => 'положительн', comp => '>' },
         { text => 'отрицательн', comp => '<' },
     );
-    my $c = rnd->in_range(1, 3);
+    my $c = $self->{correct} = rnd->in_range(1, 3);
     my $Ai = [ '[]', 'A', $i ];
     my $b = EGE::Prog::make_block([
         '=', 's', 0,
@@ -193,22 +182,17 @@ sub alg_avg {
         ($c == 3 ? () : ('=', 's', $c == 1 ? [ '/', 's', $j ] : $j)),
     ]);
     my $lt = EGE::LangTable::table($b, [ [ 'Basic', 'Pascal' ], [ 'C', 'Alg' ] ]);
-    my $q =
+    $self->{text} =
         'Дан фрагмент программы, обрабатывающей массив A из N элементов ' .
         "(известно, что в массиве имеются $pn->{text}ые элементы): $lt" .
         'Чему будет равно значение переменной s после выполнения ' .
         'данного алгоритма, при любых значениях элементов массива A?';
-    my @v = (
+    $self->variants(
         "Среднему арифметическому всех элементов массива A",
         "Среднему арифметическому всех $pn->{text}ых элементов массива A",
         "Количеству $pn->{text}ых элементов массива A",
-        "Значению последнего $pn->{text}ого элемента массива A"
+        "Значению последнего $pn->{text}ого элемента массива A",
     );
-    {
-        question => $q,
-        variants => \@v,
-        answer => $c,
-    };
 }
 
 1;

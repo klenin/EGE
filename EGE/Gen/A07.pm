@@ -2,6 +2,7 @@
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
 package EGE::Gen::A07;
+use base 'EGE::GenBase::SingleChoice';
 
 use strict;
 use warnings;
@@ -90,7 +91,7 @@ sub check_cond_group {
 }
 
 sub strings {
-    my ($next_string, $list_text) = @_;
+    my ($self, $next_string, $list_text) = @_;
     my $good = -1;
     my $true_false;
     my $g;
@@ -105,26 +106,26 @@ sub strings {
     } while $good < 0;
     my $tf = $good ? 'истинно' : 'ложно';
 
-    {
-        question => "Для какого $list_text $tf высказывание:<br/>$g->{text}?",
-        variants => [ $true_false->[$good][0], @{$true_false->[1 - $good]}[0 .. 2] ],
-        answer => 0,
-    };
+    $self->{text} = "Для какого $list_text $tf высказывание:<br/>$g->{text}?";
+    $self->variants($true_false->[$good][0], @{$true_false->[1 - $good]}[0 .. 2]);
 }
 
 sub names {
+    my ($self) = @_;
     my @list = rnd->shuffle(@EGE::Russian::Names::list);
     my $i = 0;
-    strings(sub { $list[$i++] }, 'имени');
+    $self->strings(sub { $list[$i++] }, 'имени');
 }
 
 sub animals {
+    my ($self) = @_;
     my @list = rnd->shuffle(@EGE::Russian::Animals::list);
     my $i = 0;
-    strings(sub { $list[$i++] }, 'из названий животных');
+    $self->strings(sub { $list[$i++] }, 'из названий животных');
 }
 
 sub random_sequences {
+    my ($self) = @_;
     my %seen = ();
     my $gen_seq = sub {
         my $r;
@@ -137,7 +138,7 @@ sub random_sequences {
         }
         $r;
     };
-    strings($gen_seq, 'символьного набора');
+    $self->strings($gen_seq, 'символьного набора');
 }
 
 1;

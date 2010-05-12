@@ -2,6 +2,7 @@
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
 package EGE::Gen::A01;
+use base 'EGE::GenBase::SingleChoice';
 
 use strict;
 use warnings;
@@ -15,27 +16,26 @@ use EGE::NumText;
 sub bits_or_bytes { rnd->pick(bits_and_bytes($_[0])) }
 
 sub recode {
+    my ($self) = @_;
     my $delta = rnd->pick(8, 16, 32, map $_ * 10, 1..10);
     my $dir = rnd->pick(
       { from => '16-битной кодировке UCS-2', to => '8-битную кодировку КОИ-8', change => 'уменьшилось' },
       { from => '8-битной кодировке КОИ-8', to => '16-битную кодировку UCS-2', change => 'увеличилось' },
     );
     my $delta_text = bits_or_bytes($delta);
-    my $q = <<QUESTION
+    $self->{text} = <<QUESTION
 Автоматическое устройство осуществило перекодировку информационного сообщения,
 первоначально записанного в $dir->{from}, в $dir->{to}.
 При этом информационное сообщение $dir->{change} на $delta_text.
 Какова длина сообщения в символах?
 QUESTION
 ;
-    {
-        question => $q,
-        variants => [ $delta * 8, $delta, int($delta / 2), $delta * 16 ],
-        answer => 1,
-    };
+    $self->variants($delta * 8, $delta, int($delta / 2), $delta * 16);
+    $self->{correct} = 1;
 }
 
 sub simple {
+    my ($self) = @_;
     my $enc = rnd->pick(
         { name => 'UCS-2', size => 2 }, 
         { name => 'КОИ-8', size => 1 }, 
@@ -51,7 +51,7 @@ sub simple {
         'У сильного всегда бессильный виноват.',
         'Попрыгунья Стрекоза лето красное пропела',
     );
-    my $q = <<QUESTION
+    $self->{text} = <<QUESTION
 В кодировке $enc->{name} каждый символ кодируется $size_name. Определите объём
 следующего предложения в данном представлении: <b>$text</b>.
 QUESTION
@@ -60,11 +60,8 @@ QUESTION
     my $text_nosp = $text;
     $text_nosp =~ s/ //g;
     my $len_nosp = length $text_nosp;
-    {
-        question => $q,
-        variants => [ map bits_or_bytes($_), $len, 2 * $len, int($len / 8), $len_nosp ],
-        answer => $enc->{size} - 1,
-    };
+    $self->variants(map bits_or_bytes($_), $len, 2 * $len, int($len / 8), $len_nosp);
+    $self->{correct} = $enc->{size} - 1;
 }
 
 1;
