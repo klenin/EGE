@@ -32,22 +32,24 @@ sub start {
         varsion => '1.1',
         viewBox => join(' ', @$viewBox),
         preserveAspectRatio => 'meet'
-    });
-}
-
-sub text {
-    my ($self, $text, %params) = @_;
-    html->tag('text', $text, \%params) . "\n";
+    }) . "\n";
 }
 
 sub end { "</svg>\n"; }
 
 BEGIN {
-    for my $tag (qw(line circle)) {
-        no strict 'refs';
+    no strict 'refs';
+    for my $tag (qw(line circle rect path)) {
         *$tag = sub {
             my ($self, %params) = @_;
             html->tag($tag, undef, \%params) . "\n";
+        };
+    }
+    for my $tag (qw(text g)) {
+        *$tag = sub {
+            my ($self, $text, %params) = @_;
+            $text = join '', @$text if ref $text eq 'ARRAY';
+            html->tag($tag, $text, \%params) . "\n";
         };
     }
 }

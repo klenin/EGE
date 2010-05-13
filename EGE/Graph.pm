@@ -79,32 +79,33 @@ sub as_svg {
     my ($xsize, $ysize) = ();
 
     
-    my $r = svg->start([ $xmin, $ymin, $xmax - $xmin, $ymax - $ymin ]);
-    $r .= html->open_tag('g', { fill => 'black', stroke => 'black' }) . "\n";
-    $r .= svg->circle(xy($_, qw(cx cy)), r => $radius) for @at;
     my @texts;
+    my $path = '';
     for my $src (@vnames) {
         my $at = $self->{vertices}{$src}{at};
         push @texts, [ $src, x => $at->[0] + $radius, y => $at->[1] - 3 ];
-        my %xy1 = xy($at, qw(x1 y1));
 
         my $edges = $self->{edges}{$src};
         for my $e (keys %$edges) {
             my $w = $edges->{$e} or next;
             my $dest_at = $self->{vertices}{$e}{at};
-            $r .= svg->line(%xy1, xy($dest_at, qw(x2 y2)));
+            $path .= "M @$at L @$dest_at ";
             my $c = [ map 0.5 * ($at->[$_] + $dest_at->[$_]), 0 .. 1 ];
             $at->[1] == $dest_at->[1] ?
-                $c->[1] -= $font_size / 2 :
+                $c->[1] -= int($font_size / 2) :
                 $c->[0] += 5;
             push @texts, [ $w, xy($c, qw(x y)) ];
         }
     }
-    $r .= html->close_tag('g');
-    $r .= html->tag(
-        'g', join('', map svg->text(@$_), @texts), { 'font-size' => $font_size }
-    );
-    $r .= svg->end;
+
+    svg->start([ $xmin, $ymin, $xmax - $xmin, $ymax - $ymin ]) .
+    svg->g(
+        [ map svg->circle(cx => $_->[0], cy => $_->[1], r => $radius), @at ],
+        fill => 'black', stroke => 'black', 
+    ) .
+    svg->path(d => $path, stroke => 'black') .
+    svg->g([ map svg->text(@$_), @texts ], 'font-size' => $font_size) .
+    svg->end;
 }
 
 1;
