@@ -25,9 +25,13 @@ sub new {
 
 sub tag {
     my ($self, $tag, $body, $attrs) = @_;
+    $self->open_tag($tag, $attrs, defined $body ? ">$body</$tag>" : '/>');
+}
+
+sub open_tag {
+    my ($self, $tag, $attrs, $rest) = @_;
     $attrs ||= {};
-    "<$tag" . join('', map qq~ $_="$attrs->{$_}"~, keys %$attrs) .
-    (defined $body ? ">$body</$tag>" : '/>');
+    "<$tag" . join('', map qq~ $_="$attrs->{$_}"~, keys %$attrs) . ($rest || '>');
 }
 
 sub tr_ {

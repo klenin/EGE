@@ -8,6 +8,7 @@ use warnings;
 
 use List::Util qw(min max);
 use EGE::Html;
+use EGE::Svg;
 
 sub new {
     my ($class, %init) = @_;
@@ -63,7 +64,7 @@ sub edges_string {
     $r;
 }
 
-sub svg {
+sub as_svg {
     my ($self) = @_;
 
     my $radius = 5;
@@ -75,30 +76,30 @@ sub svg {
     my $xmax = max map $_->[0] + $radius + $font_size, @at;
     my $ymin = min map $_->[1] - $radius - $font_size, @at;
     my $ymax = max map $_->[1] + $radius, @at;
-    my ($xsize, $ysize) = ($xmax - $xmin, $ymax - $ymin);
+    my ($xsize, $ysize) = ();
 
-    my $r =
-        '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" ' .
-        qq~viewBox="$xmin $ymin $xsize $ysize" ~ .
-        'preserveAspectRatio="meet"> '.
-        qq~<g fill="black" stroke="black" font-size="$font_size">\n~;
-    $r .= tagn('circle', undef, { xy($_, qw(cx cy)), r => $radius }) for @at;
+    
+    my $r = svg->start([ $xmin, $ymin, $xmax - $xmin, $ymax - $ymin ]);
+    $r .= qq~<g fill="black" stroke="black" font-size="$font_size">\n~;
+    $r .= svg->circle(xy($_, qw(cx cy)), r => $radius) for @at;
     for my $src (@vnames) {
         my $at = $self->{vertices}{$src}{at};
-        $r .= tagn('text', " $src", { xy($at, qw(x y)), dx => $radius, dy => -3 });
+        $r .= svg->text(" $src", xy($at, qw(x y)), dx => $radius, dy => -3);
         my %xy1 = xy($at, qw(x1 y1));
 
         my $edges = $self->{edges}{$src};
         for my $e (keys %$edges) {
             my $w = $edges->{$e} or next;
             my $dest_at = $self->{vertices}{$e}{at};
-            $r .= tagn('line', undef, { %xy1, xy($dest_at, qw(x2 y2)) });
+            $r .= svg->line(%xy1, xy($dest_at, qw(x2 y2)));
             my $c = [ map 0.5 * ($at->[$_] + $dest_at->[$_]), 0 .. 1 ];
-            $at->[1] == $dest_at->[1] ? $c->[1] -= $font_size / 2 : $c->[0] += 5;
-            $r .= tagn('text', " $w", { xy($c, qw(x y)) });
+            $at->[1] == $dest_at->[1] ?
+                $c->[1] -= $font_size / 2 :
+                $c->[0] += 5;
+            $r .= svg->text(" $w", xy($c, qw(x y)));
         }
     }
-    $r . '</g></svg>';
+    $r . '</g>' . svg->end;
 }
 
 1;

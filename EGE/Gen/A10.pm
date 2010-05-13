@@ -12,7 +12,7 @@ use EGE::Random;
 use EGE::Graph;
 
 sub svg_in_box {
-    my $svg = $_[0]->svg;
+    my $svg = $_[0]->as_svg;
     qq~<div style="width: 120px; height: 80px; margin: 5px;">\n$svg\n</div>~;
 }
 
