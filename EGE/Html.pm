@@ -34,6 +34,11 @@ sub open_tag {
     "<$tag" . join('', map qq~ $_="$attrs->{$_}"~, keys %$attrs) . ($rest || '>');
 }
 
+sub close_tag {
+    my ($self, $tag) = @_;
+    "</$tag>";
+}
+
 sub tr_ {
     my $self = shift;
     $self->tag('tr', @_);

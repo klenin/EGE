@@ -80,11 +80,12 @@ sub as_svg {
 
     
     my $r = svg->start([ $xmin, $ymin, $xmax - $xmin, $ymax - $ymin ]);
-    $r .= qq~<g fill="black" stroke="black" font-size="$font_size">\n~;
+    $r .= html->open_tag('g', { fill => 'black', stroke => 'black' }) . "\n";
     $r .= svg->circle(xy($_, qw(cx cy)), r => $radius) for @at;
+    my @texts;
     for my $src (@vnames) {
         my $at = $self->{vertices}{$src}{at};
-        $r .= svg->text(" $src", xy($at, qw(x y)), dx => $radius, dy => -3);
+        push @texts, [ $src, x => $at->[0] + $radius, y => $at->[1] - 3 ];
         my %xy1 = xy($at, qw(x1 y1));
 
         my $edges = $self->{edges}{$src};
@@ -96,10 +97,14 @@ sub as_svg {
             $at->[1] == $dest_at->[1] ?
                 $c->[1] -= $font_size / 2 :
                 $c->[0] += 5;
-            $r .= svg->text(" $w", xy($c, qw(x y)));
+            push @texts, [ $w, xy($c, qw(x y)) ];
         }
     }
-    $r . '</g>' . svg->end;
+    $r .= html->close_tag('g');
+    $r .= html->tag(
+        'g', join('', map svg->text(@$_), @texts), { 'font-size' => $font_size }
+    );
+    $r .= svg->end;
 }
 
 1;
