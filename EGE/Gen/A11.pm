@@ -51,10 +51,12 @@ sub fixed_length {
     my $msgt = join '', @msg;
 
     my $good = fixed_hex map $code{$_}, @msg;
-    my @bad = map fixed_hex(@$_),
-        [ map $code{$_}, rnd->shuffle(@msg) ],
-        [ map "00$code{$_}", @msg ],
-        [ map "$code{$_}00", @msg ];
+    my @bad = (
+        fixed_hex(map "00$code{$_}", @msg),
+        fixed_hex(map "$code{$_}00", @msg));
+    do {
+        $bad[2] = fixed_hex map $code{$_}, rnd->shuffle(@msg);
+    } while $bad[2] eq $good;
 
     $self->{text} =
         "Для кодирования букв $symt решили использовать двухразрядные " .
