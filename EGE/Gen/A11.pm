@@ -21,7 +21,7 @@ sub variable_length {
     my @msg = map rnd->pick(@letters), 1..6;
     my $msgt = join '', @msg;
 
-    my $bs = EGE::Bits->new->set_bin([ map $code{$_}, @msg ], 1);
+    my $bs = EGE::Bits->new->set_bin(join '', map $code{$_}, @msg);
     my $bad_bs = EGE::Bits->new->set_bin(
         join '', map substr('000' . $code{$_}, -3), @msg
     );
