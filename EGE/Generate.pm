@@ -26,6 +26,7 @@ use EGE::Gen::A13;
 use EGE::Gen::A14;
 use EGE::Gen::A15;
 use EGE::Gen::A16;
+use EGE::Gen::A17;
 
 sub one {
     my ($package, $method) = @_;
@@ -75,6 +76,7 @@ sub all {[
     g('A14', qw(database)),
     g('A15', qw(rgb)),
     g('A16', qw(spreadsheet)),
+    g('A17', qw(diagram)),
 ]}
 
 1;

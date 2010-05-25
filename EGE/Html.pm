@@ -53,8 +53,13 @@ sub row_n { row(@_) . "\n" }
 
 sub cdata { "<![CDATA[$_[1]]]>" }
 
+sub style {
+    my ($self, %p) = @_;
+    style => join '', map "$_: $p{$_};", keys %p;
+}
+
 BEGIN {
-    for my $tag (qw(td th table)) {
+    for my $tag (qw(td th table div)) {
         no strict 'refs';
         *$tag = sub {
             my $self = shift;
