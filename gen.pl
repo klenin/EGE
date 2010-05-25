@@ -31,6 +31,7 @@ sub print_html {
     print q~<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <style>li.correct { color: red; }</style>
 </head>
 <body>
 ~;
@@ -42,7 +43,7 @@ sub print_html {
 ~;
         my $i = 0;
         for (@{$q->{variants}}) {
-            my $style = $i++ == $q->{answer} ? ' style="color:red"' : '';
+            my $style = $i++ == $q->{answer} ? ' class="correct"' : '';
             print "<li$style>$_</li>\n";
         }
         print "</ol>\n</div>\n";
