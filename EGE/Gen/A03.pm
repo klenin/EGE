@@ -46,7 +46,7 @@ sub convert {
     my %seen = ($n => 1);
     my @errors = grep !$seen{$_}++,
         $n * 2, int($n / 2), $n + 1, $n - 1, $rn, $rn + 1, $rn - 1, $fn;
-    $self->{text} = "Переведите число $bin в десятичную систему.",
+    $self->{text} = "Переведите число $bin<sub>2</sub> в десятичную систему.",
     $self->variants($n, rnd->pick_n(3, @errors));
 }
 
