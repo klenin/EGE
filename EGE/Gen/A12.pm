@@ -2,6 +2,7 @@
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
 package EGE::Gen::A12;
+use base 'EGE::GenBase::SingleChoice';
 
 use strict;
 use warnings;
@@ -18,6 +19,7 @@ sub except {
 }
 
 sub beads {
+    my ($self) = @_;
     my @all = rnd->pick_n_sorted(5, 'A' .. 'Z');
     my $len = 3;
     my @order = rnd->shuffle(0 .. $len - 1);
@@ -52,15 +54,11 @@ sub beads {
             rnd->pick('которой нет', 'не стоящая'), $pos_name->($_ - 1);
     }
 
-    {
-        question =>
-            'Цепочка из трёх бусин, помеченных латинскими буквами, ' .
-            "формируется по следующему правилу. $rule" .
-            'Какая из перечисленных цепочек создана по этому правилу?'
-            ,
-        variants => [ map $gen->($_ - 1), 0 .. $len ],
-        answer => 0,
-    };
+    $self->{text} =
+        'Цепочка из трёх бусин, помеченных латинскими буквами, ' .
+        "формируется по следующему правилу. $rule" .
+        'Какая из перечисленных цепочек создана по этому правилу?';
+    $self->variants(map $gen->($_ - 1), 0 .. $len);
 }
 
 1;

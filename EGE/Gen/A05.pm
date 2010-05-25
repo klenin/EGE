@@ -2,6 +2,7 @@
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
 package EGE::Gen::A05;
+use base 'EGE::GenBase::SingleChoice';
 
 use strict;
 use warnings;
@@ -12,6 +13,7 @@ use EGE::Prog;
 use EGE::LangTable;
 
 sub arith {
+    my ($self) = @_;
     my $v1 = rnd->in_range(1, 9);
     my $v2 = rnd->in_range(1, 9);
     my $v3 = rnd->in_range(2, 4);
@@ -26,7 +28,7 @@ sub arith {
     ]);
 
     my $lt = EGE::LangTable::table($b, [ [ 'Basic', 'Alg' ], [ 'Pascal', 'C' ] ]);
-    my $q =
+    $self->{text} =
         'Определите значение переменной <i>c</i> после выполнения ' .
         "следующего фрагмента программы: $lt";
 
@@ -45,15 +47,11 @@ sub arith {
     my %seen = ($correct => 1);
     @errors = grep !$seen{$_}++, @errors;
 
-    {
-        question => $q,
-        variants => [ $correct, rnd->pick_n(3, @errors) ],
-        answer => 0,
-    };
+    $self->variants($correct, rnd->pick_n(3, @errors));
 }
 
 sub div_mod_common {
-    my ($q, $src, $get_fn) = @_;
+    my ($self, $q, $src, $get_fn) = @_;
     my $cc =
         ', вычисляющие результат деления нацело первого аргумента на второй '.
         'и остаток от деления соответственно';
@@ -73,7 +71,8 @@ sub div_mod_common {
     };
     my $correct = $get_v->();
     my $lt = EGE::LangTable::table($b, [ [ 'Basic', 'Pascal', 'Alg' ] ]);
-    $q .= " после выполнения следующего фрагмента программы: $lt";
+    
+    $self->{text} = "$q после выполнения следующего фрагмента программы: $lt";
 
     my @errors;
     push @errors, $get_v->(_replace_op => $_),
@@ -82,17 +81,14 @@ sub div_mod_common {
 
     my %seen = ($correct => 1);
     @errors = grep !$seen{$_}++, @errors;
-    {
-        question => $q,
-        variants => [ $correct, rnd->pick_n(3, @errors) ],
-        answer => 0,
-    };
+    $self->variants($correct, rnd->pick_n(3, @errors));
 }
 
 sub div_mod_10 {
+    my ($self) = @_;
     my $v2 = rnd->in_range(2, 9);
     my $v3 = rnd->in_range(2, 9);
-    return div_mod_common(
+    $self->div_mod_common(
         'Определите значение целочисленных переменных <i>x</i> и <i>y</i>',
         [
             '=', 'x', [ '+', rnd->in_range(1, 9), [ '*', $v2, $v3 ] ],
@@ -104,7 +100,8 @@ sub div_mod_10 {
 }
 
 sub div_mod_rotate {
-    div_mod_common(
+    my ($self) = @_;
+    $self->div_mod_common(
         'Переменные <i>x</i> и <i>y</i> описаны в программе как целочисленные. ' .
         'Определите значение переменной <i>x</i>',
         [

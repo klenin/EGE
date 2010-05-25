@@ -9,6 +9,7 @@ use utf8;
 
 use EGE::Random;
 
+use EGE::GenBase;
 use EGE::Gen::A01;
 use EGE::Gen::A02;
 use EGE::Gen::A03;
@@ -25,16 +26,20 @@ use EGE::Gen::A13;
 use EGE::Gen::A14;
 use EGE::Gen::A15;
 use EGE::Gen::A16;
+use EGE::Gen::A17;
 
 sub one {
+    my ($package, $method) = @_;
     no strict 'refs';
-    "EGE::Gen::$_[0]::$_[1]"->();
+    my $g = "EGE::Gen::$package"->new;
+    $g->$method;
+    $g;
 }
 
 sub shuffle_variants {
     my ($q)= @_;
     my @order = rnd->shuffle(0 .. @{$q->{variants}} - 1);
-    $q->{answer} = $order[$q->{answer}];
+    $q->{correct} = $order[$q->{correct}];
     my @v;
     $v[$order[$_]] = $q->{variants}->[$_] for @order;
     $q->{variants} = \@v;
@@ -44,7 +49,7 @@ sub g {
     my $unit = shift;
     my ($p, $n) = ($unit =~ /^(\w)(\d+)$/);
     my $q = one sprintf('%s%02d', $p, $n), rnd->pick(@_);
-    $q->{question} = "<h3>$unit</h3>\n$q->{question}";
+    $q->{text} = "<h3>$unit</h3>\n$q->{text}";
     shuffle_variants($q);
     $q;
 }
@@ -71,6 +76,7 @@ sub all {[
     g('A14', qw(database)),
     g('A15', qw(rgb)),
     g('A16', qw(spreadsheet)),
+    g('A17', qw(diagram)),
 ]}
 
 1;

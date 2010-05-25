@@ -2,6 +2,7 @@
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
 package EGE::Gen::A15;
+use base 'EGE::GenBase::SingleChoice';
 
 use strict;
 use warnings;
@@ -29,6 +30,7 @@ sub invert {
 }
 
 sub rgb {
+    my ($self) = @_;
     my @rgb = map rnd->coin, 1 .. 3;
     my $pure = rnd->coin;
 
@@ -41,11 +43,8 @@ bgcolor="#XXXXXX", где в кавычках задаются шестнадц�
 интенсивности цветовых компонент в 24-битной RGB-модели.
 Какой цвет будет у страницы, заданной тегом &lt;body bgcolor="%s">?
 ~;
-    {
-        question => sprintf($q, $color),
-        variants => [ map color_name($pure, invert $_, @rgb), -1 .. 2 ],
-        answer => 0,
-    };
+    $self->{text} = sprintf($q, $color);
+    $self->variants(map color_name($pure, invert $_, @rgb), -1 .. 2);
 }
 
 1;

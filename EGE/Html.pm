@@ -25,9 +25,18 @@ sub new {
 
 sub tag {
     my ($self, $tag, $body, $attrs) = @_;
+    $self->open_tag($tag, $attrs, defined $body ? ">$body</$tag>" : '/>');
+}
+
+sub open_tag {
+    my ($self, $tag, $attrs, $rest) = @_;
     $attrs ||= {};
-    "<$tag" . join('', map qq~ $_="$attrs->{$_}"~, keys %$attrs) .
-    (defined $body ? ">$body</$tag>" : '/>');
+    "<$tag" . join('', map qq~ $_="$attrs->{$_}"~, keys %$attrs) . ($rest || '>');
+}
+
+sub close_tag {
+    my ($self, $tag) = @_;
+    "</$tag>";
 }
 
 sub tr_ {
@@ -44,8 +53,13 @@ sub row_n { row(@_) . "\n" }
 
 sub cdata { "<![CDATA[$_[1]]]>" }
 
+sub style {
+    my ($self, %p) = @_;
+    style => join '', map "$_: $p{$_};", keys %p;
+}
+
 BEGIN {
-    for my $tag (qw(td th table)) {
+    for my $tag (qw(td th table div)) {
         no strict 'refs';
         *$tag = sub {
             my $self = shift;

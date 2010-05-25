@@ -2,6 +2,7 @@
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
 package EGE::Gen::A09;
+use base 'EGE::GenBase::SingleChoice';
 
 use strict;
 use warnings;
@@ -40,6 +41,7 @@ sub check_rows {
 }
 
 sub truth_table_fragment {
+    my ($self) = @_;
     my @vars = qw(X Y Z);
     my ($e, $e_text) = rand_expr_text(@vars);
     my @rows = sort { $a <=> $b } rnd->pick_n(3, 0 .. 2 ** @vars - 1);
@@ -55,16 +57,12 @@ sub truth_table_fragment {
         push @bad, $e1_text unless check_rows($fragment, $e1);
     }
     my $tt_text = tt_html($fragment, @vars, 'F');
-    my $q =
+    $self->{text} =
         'Символом F обозначено одно из указанных ниже логических выражений ' .
         'от трёх аргументов X, Y, Z. ' .
         "Дан фрагмент таблицы истинности выражения F: \n$tt_text\n" .
         'Какое выражение соответствует F?';
-    {
-        question => $q,
-        variants => [ $e_text, @bad ],
-        answer => 0,
-    };
+    $self->variants($e_text, @bad);
 }
 
 1;

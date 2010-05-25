@@ -2,6 +2,7 @@
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
 package EGE::Gen::A02;
+use base 'EGE::GenBase::SingleChoice';
 
 use strict;
 use warnings;
@@ -11,6 +12,7 @@ use EGE::Random;
 use EGE::NumText;
 
 sub sport {
+    my ($self) = @_;
     my $flavour = rnd->pick(
         { t1 => 'велокроссе', t2 => [ 'велосипедист', 'велосипедиста', 'велосипедистов' ] },
         { t1 => 'забеге', t2 => [ 'бегун', 'бегуна', 'бегунов' ] },
@@ -22,7 +24,7 @@ sub sport {
     my $passed = rnd->in_range($total / 2 - 5, $total / 2 + 5);
     my $passed_text = num_text($passed, $flavour->{t2});
     my $total_text = num_text($total, [ 'спортсмен', 'спортсмена', 'спортсменов' ]);
-    my $q = <<QUESTION
+    $self->{text} = <<QUESTION
 В $flavour->{t1} участвуют $total_text. Специальное устройство регистрирует
 прохождение каждым из участников промежуточнго финиша, записывая его номер
 с использованием минимального количества бит, одинакового для каждого спортсмена.
@@ -30,23 +32,20 @@ sub sport {
 после того как промежуточный финиш прошли $passed_text?
 QUESTION
 ;
-    {
-        question => $q,
-        variants => [
-            num_bits($bits * $passed),
-            rnd->pick_n(3,
-                bits_and_bytes($total),
-                bits_and_bytes($passed),
-                num_bits($bits * $total)
-            )
-        ],
-        answer => 0,
-    };
+    $self->variants(
+        num_bits($bits * $passed),
+        rnd->pick_n(3,
+            bits_and_bytes($total),
+            bits_and_bytes($passed),
+            num_bits($bits * $total)
+        )
+    );
 }
 
 sub bits_or_bytes { rnd->pick(bits_and_bytes($_[0])) }
 
 sub database {
+    my ($self) = @_;
     my $n = rnd->pick(map($_ * 10, 3..10), map($_ * 100, 2..9));
     # должно быть bits != 8
     my $flavour = rnd->pick(
@@ -72,37 +71,32 @@ sub database {
         },
     );
     my $bits = $flavour->{bits} * $n;
-    {
-        question => $flavour->{q},
-        variants => [
-            rnd->pick(num_bits($bits), $bits % 8 ? () : num_bytes(int ($bits / 8))),
-            bits_or_bytes($n),
-            bits_or_bytes(2 * $n),
-            num_bits($n),
-        ],
-        answer => 0,
-    };
+    $self->{text} = $flavour->{q};
+    $self->variants(
+        rnd->pick(num_bits($bits), $bits % 8 ? () : num_bytes(int ($bits / 8))),
+        bits_or_bytes($n),
+        bits_or_bytes(2 * $n),
+        num_bits($n),
+    );
 }
 
 sub units {
+    my ($self) = @_;
     my $npower = rnd->in_range(1, 4);
     my $n = 2 ** $npower;
     my $unit = rnd->pick(
         { name => 'Кбайт', power2 => 10, power10 => 3 },
         { name => 'Мбайт', power2 => 20, power10 => 6 },
         { name => 'Гбайт', power2 => 30, power10 => 9 },
-   );
+    );
 
-    {
-        question => "Сколько бит содержит $n $unit->{name}?",
-        variants => [
-            sprintf('2<sup>%d</sup>', $npower + $unit->{power2}),
-            sprintf('2<sup>%d</sup>', $npower + $unit->{power2} + 3),
-            sprintf('%d × 10<sup>%d</sup>', $n, $unit->{power10}),
-            sprintf('%d × 10<sup>%d</sup>', 8 * $n, $unit->{power10}),
-        ],
-        answer => 0,
-    };
+    $self->{text} = "Сколько бит содержит $n $unit->{name}?";
+    $self->variants(
+        sprintf('2<sup>%d</sup>', $npower + $unit->{power2}),
+        sprintf('2<sup>%d</sup>', $npower + $unit->{power2} + 3),
+        sprintf('%d × 10<sup>%d</sup>', $n, $unit->{power10}),
+        sprintf('%d × 10<sup>%d</sup>', 8 * $n, $unit->{power10}),
+    );
 }
 
 1;

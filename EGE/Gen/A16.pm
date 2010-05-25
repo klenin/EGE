@@ -2,6 +2,7 @@
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
 package EGE::Gen::A16;
+use base 'EGE::GenBase::SingleChoice';
 
 use strict;
 use warnings;
@@ -12,6 +13,7 @@ use List::Util qw(sum);
 use EGE::Random;
 
 sub spreadsheet {
+    my ($self) = @_;
     my @len;
     $len[2] = rnd->pick(5, 6);
     $len[0] = rnd->in_range(1, $len[2] - 1);
@@ -56,15 +58,11 @@ sub spreadsheet {
         }
     }
 
-    my $q = sprintf
+    $self->{text} = sprintf
         'В электронной таблице %1$s равно %2$s. ' .
         'Чему равно %3$s, если %5$s равно %6$s?' ,
         map { $descr[$order[$_]], $values[$order[$_]] } 0 .. 2;
-    {
-        question => $q,
-        variants => [ $values[$order[1]], rnd->pick_n(3, @bad) ],
-        answer => 0,
-    };
+    $self->variants($values[$order[1]], rnd->pick_n(3, @bad));
 }
 
 1;

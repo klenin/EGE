@@ -2,6 +2,7 @@
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
 package EGE::Gen::A08;
+use base 'EGE::GenBase::SingleChoice';
 
 use strict;
 use warnings;
@@ -18,7 +19,7 @@ sub rand_expr_text {
 }
 
 sub equiv_common {
-    my @vars = @_;
+    my ($self, @vars) = @_;
     my ($e, $e_text) = rand_expr_text(@vars);
     my $e_tts = tts($e);
     my %seen = ($e_text => 1);
@@ -38,15 +39,12 @@ sub equiv_common {
         }
         tts($e1) eq $e_tts ? push @good, $e1_text : push @bad, $e1_text;
     }
-    {
-        question => "Укажите, какое логическое выражение равносильно выражению $e_text.",
-        variants => [ $good[0], @bad[0..2] ],
-        answer => 0,
-    };
+    $self->{text} = "Укажите, какое логическое выражение равносильно выражению $e_text.",
+    $self->variants($good[0], @bad[0..2]);
 }
 
-sub equiv_3 { equiv_common qw(A B C) }
+sub equiv_3 { $_[0]->equiv_common qw(A B C) }
 
-sub equiv_4 { equiv_common qw(A B C D) }
+sub equiv_4 { $_[0]->equiv_common qw(A B C D) }
 
 1;

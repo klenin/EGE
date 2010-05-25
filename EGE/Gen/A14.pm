@@ -2,6 +2,7 @@
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
 package EGE::Gen::A14;
+use base 'EGE::GenBase::SingleChoice';
 
 use strict;
 use warnings;
@@ -12,10 +13,12 @@ use EGE::Prog;
 use EGE::Prog::Lang;
 use EGE::Html;
 use EGE::Russian::FamilyNames;
+use EGE::Russian::Subjects;
 
 sub database {
+    my ($self) = @_;
     my @families = rnd->pick_n_sorted(6, @EGE::Russian::FamilyNames::list);
-    my @subjects = qw(Математика История Физика Химия Биология);
+    my @subjects = rnd->pick_n(5, grep !/\s/, @EGE::Russian::Subjects::list);
     my @table;
     for (@families) {
         my $sex = rnd->coin;
@@ -52,13 +55,10 @@ sub database {
         }
     }
 
-    {
-        question =>
-            "Результаты тестирования представлены в таблице\n$table_text\n" .
-            "Сколько записей в ней удовлетворяют условию «$cond»?",
-        variants => [ $count, rnd->pick_n(3, grep $_ != $count, 1 .. @table) ],
-        answer => 0,
-    };
+    $self->{text} =
+        "Результаты тестирования представлены в таблице\n$table_text\n" .
+        "Сколько записей в ней удовлетворяют условию «$cond»?",
+    $self->variants($count, rnd->pick_n(3, grep $_ != $count, 1 .. @table));
 }
 
 1;
