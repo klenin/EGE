@@ -11,8 +11,6 @@ use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT = qw(rnd);
 
-use List::Util;
-
 my $rnd;
 
 sub rnd {
@@ -37,8 +35,12 @@ sub pick {
 
 sub pick_n {
     my ($self, $n, @array) = @_;
-    @array = List::Util::shuffle @array;
-    @array[0 .. $n - 1];
+    die if $n-- > @array;
+    for (0 .. $n) {
+        my $pos = $self->in_range($_, $#array);
+        @array[$_, $pos] = @array[$pos, $_];
+    }
+    @array[0 .. $n];
 }
 
 # Выражение вида sort rnd->pick_n вызывает синтаксическую ошибку,
@@ -51,8 +53,8 @@ sub pick_n_sorted {
 sub coin { rand(2) > 1 }
 
 sub shuffle {
-    shift;
-    List::Util::shuffle(@_);
+    my $self = shift;
+    $self->pick_n(scalar @_, @_);
 }
 
 sub index_var {
