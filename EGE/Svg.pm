@@ -29,7 +29,7 @@ sub start {
     my ($self, $viewBox) = @_;
     html->open_tag('svg', {
         xmlns => 'http://www.w3.org/2000/svg',
-        varsion => '1.1',
+        version => '1.1',
         viewBox => join(' ', @$viewBox),
         preserveAspectRatio => 'meet'
     }) . "\n";
