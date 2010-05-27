@@ -124,12 +124,7 @@ sub bar_chart {
     }
     $r .= text($x_labels, 'middle', 'text-before-edge');
 
-    div_xy($r . svg->end, @sizes);
-}
-
-sub div_xy {
-    my ($text, $x, $y) = @_;
-    html->div($text, { html->style(width => "${x}px", height => "${y}px") });
+    html->div_xy($r . svg->end, @sizes);
 }
 
 use constant PIE_SZ => 60;
@@ -155,7 +150,7 @@ sub pie_chart {
         $prev_x = $x;
         $prev_y = $y;
     }
-    div_xy($r . html->close_tag('g') . svg->end, PIE_SZ * 2, PIE_SZ * 2);
+    html->div_xy($r . html->close_tag('g') . svg->end, PIE_SZ * 2, PIE_SZ * 2);
 }
 
 sub diagram {

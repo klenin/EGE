@@ -58,6 +58,11 @@ sub style {
     style => join '', map "$_: $p{$_};", keys %p;
 }
 
+sub div_xy {
+    my ($self, $text, $x, $y) = @_;
+    $self->div($text, { $self->style(width => "${x}px", height => "${y}px") });
+}
+
 BEGIN {
     for my $tag (qw(td th table div)) {
         no strict 'refs';
