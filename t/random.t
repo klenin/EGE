@@ -1,7 +1,8 @@
 use strict;
 use warnings;
 
-use Test::More tests => 7;
+use Test::More tests => 8;
+use List::Util qw(sum);
 
 use lib '..';
 use EGE::Random;
@@ -29,6 +30,11 @@ ok $v =~ /^[a-z]$/, 'pick';
 {
     my ($v1, $v2, $v3) = rnd->pick_n_sorted(3, 'a' .. 'z');
     ok $v1 lt $v2 && $v2 lt $v3 && "$v1$v2$v3" =~ /^[a-z]{3}$/, 'pick_n_sorted';
+}
+
+{
+    my @v = rnd->split_number(20, 3);
+    ok @v == 3 && 3 == grep($_ > 0, @v) && sum(@v) == 20, 'split_number';
 }
 
 1;

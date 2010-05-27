@@ -75,4 +75,11 @@ sub pretty_russian_letter {
     substr($pretty, rnd->in_range(0, length($pretty) - 1), 1);
 }
 
+sub split_number {
+    my ($self, $number, $parts) = @_;
+    die if $parts > $number;
+    my @p = sort { $a <=> $b } $self->pick_n($parts - 1, 1 .. $number - 1);
+    $p[0], map($p[$_] - $p[$_ - 1], 1 .. $#p), $number - $p[-1];
+}
+
 1;
