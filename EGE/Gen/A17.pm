@@ -1,4 +1,4 @@
-# Copyright  2010 Alexander S. Klenin
+# Copyright © 2010 Alexander S. Klenin
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
 package EGE::Gen::A17;
@@ -38,7 +38,7 @@ sub regions() {qw(
 my @colors = qw(red green blue);
 
 use constant SZ => 350;
-use constant STEP => 20;
+use constant STEP => 10;
 use constant LEFT_MARKS => 50;
 use constant LEGEND => 200;
 
@@ -163,10 +163,12 @@ sub diagram {
     my @regions = rnd->pick_n(3, regions());
     my @subjects = rnd->pick_n(3, @EGE::Russian::Subjects::list);
     my @splits = ([ 2, 1, 1 ], [ 1, 1, 1 ], [ 2, 2, 1 ], [ 3, 2, 1 ]);
-    my $c = $self->{correct} = rnd->in_range(0 .. $#splits);
+    $self->{correct} = rnd->in_range(0, $#splits);
+    my $k = rnd->in_range(10, 20);
     my $data;
-    for my $r (0 .. 2) {
-        $data->[$r] = [ map rnd->in_range(3, 12) * STEP, 0 .. 2 ];
+    for my $c (0 .. 2) {
+        my @s = rnd->split_number($k * $splits[$self->{correct}]->[$c], 3);
+        $data->[$_]->[$c] = $s[$_] * STEP for 0 .. 2;
     }
     my $chart = bar_chart($data, \@regions, \@subjects);
     $self->{text} =
