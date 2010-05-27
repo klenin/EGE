@@ -14,6 +14,14 @@ use EGE::Svg;
 
 sub row { html->table(html->row('td', @_), { border => 1 }) }
 
+sub walls {
+    my ($lab, $x, $y) = @_;
+    [
+        !$y || $lab->[$y - 1][$x] & 2, $lab->[$y][$x] & 2,
+        !$x || $lab->[$y][$x - 1] & 1, $lab->[$y][$x] & 1,
+    ];
+};
+
 sub gen_labirinth {
     my $s = 5;
     my $lab = [ map [ map 0, 0 .. $s ], 0 .. $s ];
@@ -21,8 +29,13 @@ sub gen_labirinth {
         $lab->[$_][$s] |= 1;
         $lab->[$s][$_] |= 2;
     }
-    for (1 .. 10) {
-        $lab->[rnd->in_range(0, $s)][rnd->in_range(0, $s)] |= rnd->coin + 1;
+    my $wall_count = rnd->in_range(8, 12);
+    for (1 .. $wall_count) {
+        my $x = rnd->in_range(0, $s);
+        my $y = rnd->in_range(0, $s);
+        my $w = rnd->coin + 1;
+        redo if $lab->[$y][$x] & $w || 3 == grep $_, @{walls($lab, $x, $y)};
+        $lab->[$y][$x] |= $w;
     }
     $lab;
 }
@@ -94,21 +107,11 @@ sub gen_program {
     \@program;
 }
 
-sub test_dir {
-    my ($lab, $x, $y, $dir) = @_;
-    [
-        !$y || $lab->[$y - 1][$x] & 2,
-        $lab->[$y][$x] & 2,
-        !$x || $lab->[$y][$x - 1] & 1,
-        $lab->[$y][$x] & 1,
-    ]->[$dir];
-};
-
 sub execute_program {
     my ($lab, $program, $x, $y) = @_;
     my @offsets = ([ -1, 0 ], [ 1, 0 ], [ 0, -1 ], [ 0, 1 ]);
     for (@$program) {
-        until (test_dir($lab, $x, $y, $_)) {
+        until (walls($lab, $x, $y)->[$_]) {
             $y += $offsets[$_]->[0];
             $x += $offsets[$_]->[1];
         }
@@ -135,12 +138,13 @@ sub robot_loop {
     my @dirs = qw(вверх вниз влево вправо);
     my @tests = map "$_ свободно", qw(сверху снизу слева справа);
 
-    my ($lab, $program, $count);
+    my $count = rnd->in_range(1, 4);
+    $self->{correct} = $count - 1;
+    my ($lab, $program);
     do {
         $lab = gen_labirinth;
         $program = gen_program;
-        $count = count_loops($lab, $program);
-    } while $count < 2;
+    } while count_loops($lab, $program) != $count;
 
     my $html_program = join '<br/>',
         'НАЧАЛО',
@@ -161,8 +165,7 @@ sub robot_loop {
         'выполнив предложенную ниже программу, ' .
         "РОБОТ остановится в той же клетке, с которой он начал движение?</p>\n" .
         html->table(html->row('td', $html_program, svg_labirinth($lab)));
-    my @bad = rnd->pick_n(3, grep $_ > 0 && $_ != $count, $count - 3 .. $count + 3);
-    $self->variants($count, @bad);
+    $self->variants(1 .. 4);
 }
 
 1;
