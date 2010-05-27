@@ -10,6 +10,7 @@ use utf8;
 
 use EGE::Random;
 use EGE::Html;
+use EGE::Svg;
 
 sub row { html->table(html->row('td', @_), { border => 1 }) }
 
@@ -32,6 +33,8 @@ sub cell_class {
     { class => join ' ', ($cell & 1 ? 'b1' : ()), ($cell & 2 ? 'b2' : ()) };
 }
 
+# Тег style, вообще говоря, нельзя вставлять внутрь body.
+# Поэтому html_labirinth имеет смысл использовать только в отладочных целях.
 sub html_labirinth {
     my ($lab) = @_;
     my $r =
@@ -49,6 +52,38 @@ sub html_labirinth {
         );
     }
     $r . html->close_tag('table');
+}
+
+sub svg_labirinth {
+    my ($lab) = @_;
+    my $step = 25;
+    my ($nx, $ny) = (scalar @{$lab->[0]}, scalar @$lab);
+    my @sizes = map $_ * $step, $nx, $ny;
+
+    my $r = "\n" . svg->start([ 0, 0, @sizes ]);
+
+    my $mh = sub { my ($x, $y, $l) = map $_ * $step, @_; "M$x,$y h$l" };
+    my $mv = sub { my ($x, $y, $l) = map $_ * $step, @_; "M$x,$y v$l" };
+
+    $r .= svg->path(stroke => 'gray', d => join ' ',
+        map($mh->(0, $_, $nx), 1 .. $ny - 1),
+        map($mv->($_, 0, $ny), 1 .. $nx - 1)
+    );
+
+    $r .= html->open_tag('g', { stroke => 'black', 'stroke-width' => 2 });
+    $r .= svg->rect(
+        x => 1, y => 1, width => $sizes[0] - 2, height => $sizes[1] - 2,
+        fill => 'none');
+    my @p = ();
+    for my $y (0 .. $ny - 1) {
+        for my $x (0 .. $nx - 1) {
+            my $c = $lab->[$y][$x];
+            push @p, $mv->($x + 1, $y, 1) if $x < $nx - 1 && $c & 1;
+            push @p, $mh->($x, $y + 1, 1) if $y < $ny - 1 && $c & 2;
+        }
+    }
+    $r .= svg->path(d => join ' ', @p);
+    html->div_xy($r . html->close_tag('g') . svg->end, @sizes);
 }
 
 sub gen_program {
@@ -69,10 +104,9 @@ sub test_dir {
     ]->[$dir];
 };
 
-my @offsets = ([ -1, 0 ], [ 1, 0 ], [ 0, -1 ], [ 0, 1 ]);
-
 sub execute_program {
     my ($lab, $program, $x, $y) = @_;
+    my @offsets = ([ -1, 0 ], [ 1, 0 ], [ 0, -1 ], [ 0, 1 ]);
     for (@$program) {
         until (test_dir($lab, $x, $y, $_)) {
             $y += $offsets[$_]->[0];
@@ -126,7 +160,7 @@ sub robot_loop {
         'Сколько клеток приведённого лабиринта соответствует условию, что, ' .
         'выполнив предложенную ниже программу, ' .
         "РОБОТ остановится в той же клетке, с которой он начал движение?</p>\n" .
-        html->table(html->row('td', $html_program, html_labirinth($lab)));
+        html->table(html->row('td', $html_program, svg_labirinth($lab)));
     my @bad = rnd->pick_n(3, grep $_ > 0 && $_ != $count, $count - 3 .. $count + 3);
     $self->variants($count, @bad);
 }
