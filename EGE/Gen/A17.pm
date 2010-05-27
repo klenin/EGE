@@ -127,7 +127,7 @@ sub bar_chart {
     html->div_xy($r . svg->end, @sizes);
 }
 
-use constant PIE_SZ => 60;
+use constant PIE_SZ => 40;
 use constant PI => 3.141592653589793238;
 
 sub pie_chart {
