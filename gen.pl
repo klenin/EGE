@@ -107,7 +107,8 @@ binmode STDOUT, ':utf8';
 #g('A14', 'database');
 #g('A15', 'rgb');
 #g('A16', 'spreadsheet'),
-g('A17', 'diagram'),
+#g('A17', 'diagram'),
+g('A18', 'robot_loop'),
 #$questions = EGE::Generate::all;
 
 print_html;
