@@ -28,4 +28,15 @@ sub variants {
     $self->{variants} = [ @_ ];
 }
 
+package EGE::GenBase::DirectInput;
+use base 'EGE::GenBase';
+
+sub init {
+    $_[0]->{type} = 'di';
+}
+
+sub accept_number {
+    $_[0]->{accept} = qr/^\d+$/;
+}
+
 1;

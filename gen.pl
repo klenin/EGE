@@ -42,9 +42,18 @@ sub print_html {
 <p>$q->{text}</p>
 <ol>
 ~;
+        my (@v, $correct);
+        if ($q->{type} eq 'sc') {
+            @v = @{$q->{variants}};
+            $correct = $q->{correct}
+        }
+        else {
+            @v = ($q->{correct});
+            $correct = 0;
+        }
         my $i = 0;
-        for (@{$q->{variants}}) {
-            my $style = $i++ == $q->{correct} ? ' class="correct"' : '';
+        for (@v) {
+            my $style = $i++ == $correct ? ' class="correct"' : '';
             print "<li$style>$_</li>\n";
         }
         print "</ol>\n</div>\n";

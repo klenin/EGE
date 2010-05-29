@@ -39,6 +39,7 @@ sub one {
 
 sub shuffle_variants {
     my ($q)= @_;
+    $q->{variants} or return;
     my @order = rnd->shuffle(0 .. @{$q->{variants}} - 1);
     $q->{correct} = $order[$q->{correct}];
     my @v;
