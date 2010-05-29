@@ -28,6 +28,7 @@ use EGE::Gen::A15;
 use EGE::Gen::A16;
 use EGE::Gen::A17;
 use EGE::Gen::A18;
+use EGE::Gen::B01;
 
 sub one {
     my ($package, $method) = @_;
@@ -80,6 +81,7 @@ sub all {[
     g('A16', qw(spreadsheet)),
     g('A17', qw(diagram)),
     g('A18', qw(robot_loop)),
+    g('B01', qw(direct)),
 ]}
 
 1;
