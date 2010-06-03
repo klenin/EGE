@@ -214,20 +214,28 @@ sub count_ops {
     $count;
 }
 
-package EGE::Prog::ForLoop;
+package EGE::Prog::CompoundStatement;
 use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang) = @_;
-    my $body_block = @{$self->{body}->{statements}} > 1;
-    my $fmt_start = $lang->for_start_fmt($body_block);
-    my $fmt_end = $lang->for_end_fmt($body_block);
+    my $body_is_block = @{$self->{body}->{statements}} > 1;
+    no strict 'refs';
+    my ($fmt_start, $fmt_end) =
+        map $lang->$_($body_is_block), $self->get_formats;
     my $body = $self->{body}->to_lang($lang);
-    $body =~ s/^/  /mg; # отступы
+    $body =~ s/^/  /mg if $fmt_start =~ /\n$/; # отступы
     sprintf
-        "$fmt_start\n%4\$s$fmt_end",
-        map($self->{$_}->to_lang($lang), qw(var lb ub)), $body;
-};
+        $fmt_start . $self->to_lang_fmt . $fmt_end,
+        map($self->{$_}->to_lang($lang), $self->to_lang_fields), $body;
+}
+
+package EGE::Prog::ForLoop;
+use base 'EGE::Prog::CompoundStatement';
+
+sub get_formats { qw(for_start_fmt for_end_fmt) }
+sub to_lang_fmt { '%4$s' }
+sub to_lang_fields { qw(var lb ub) }
 
 sub run {
     my ($self, $env) = @_;
@@ -238,23 +246,27 @@ sub run {
 }
 
 package EGE::Prog::IfThen;
-use base 'EGE::Prog::SynElement';
+use base 'EGE::Prog::CompoundStatement';
 
-sub to_lang {
-    my ($self, $lang) = @_;
-    my $body_block = @{$self->{body}->{statements}} > 1;
-    my $fmt_start = $lang->if_start_fmt($body_block);
-    my $fmt_end = $lang->if_end_fmt($body_block);
-    my $body = $self->{body}->to_lang($lang);
-    $body =~ s/^/  /mg if $fmt_start =~ /\n$/; # отступы
-    sprintf
-        "$fmt_start%2\$s$fmt_end", $self->{cond}->to_lang($lang), $body;
-};
+sub get_formats { qw(if_start_fmt if_end_fmt) }
+sub to_lang_fmt { '%2$s' }
+sub to_lang_fields { qw(cond) }
 
 sub run {
     my ($self, $env) = @_;
-    my $cond = $self->{cond}->run($env);
-    $self->{body}->run($env) if $cond;
+    $self->{body}->run($env) if $self->{cond}->run($env);
+}
+
+package EGE::Prog::While;
+use base 'EGE::Prog::CompoundStatement';
+
+sub get_formats { qw(while_start_fmt while_end_fmt) }
+sub to_lang_fmt { '%2$s' }
+sub to_lang_fields { qw(cond) }
+
+sub run {
+    my ($self, $env) = @_;
+    $self->{body}->run($env) while $self->{cond}->run($env);
 }
 
 package EGE::Prog::LangSpecificText;
@@ -311,6 +323,7 @@ sub statements_descr {{
     '=' => { type => 'Assign', args => [qw(E_var E_expr)] },
     'for' => { type => 'ForLoop', args => [qw(E_var E_lb E_ub B_body)] },
     'if' => { type => 'IfThen', args => [qw(E_cond B_body)] },
+    'while' => { type => 'While', args => [qw(E_cond B_body)] },
 }}
 
 sub arg_processors {{
