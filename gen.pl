@@ -119,7 +119,8 @@ binmode STDOUT, ':utf8';
 #g('A17', 'diagram');
 #g('A18', 'robot_loop');
 #g('B01', 'direct');
-g('B02', 'flowchart'),
+#g('B02', 'flowchart');
+g('B03', 'q1234');
 #$questions = EGE::Generate::all;
 
 print_html;

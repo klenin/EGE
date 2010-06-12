@@ -30,6 +30,7 @@ use EGE::Gen::A17;
 use EGE::Gen::A18;
 use EGE::Gen::B01;
 use EGE::Gen::B02;
+use EGE::Gen::B03;
 
 sub one {
     my ($package, $method) = @_;
@@ -84,6 +85,7 @@ sub all {[
     g('A18', qw(robot_loop)),
     g('B01', qw(direct)),
     g('B02', qw(flowchart)),
+    g('B03', qw(q1234)),
 ]}
 
 1;
