@@ -257,8 +257,11 @@ sub run {
     $self->{body}->run($env) if $self->{cond}->run($env);
 }
 
-package EGE::Prog::While;
+package EGE::Prog::CondLoop;
 use base 'EGE::Prog::CompoundStatement';
+
+package EGE::Prog::While;
+use base 'EGE::Prog::CondLoop';
 
 sub get_formats { qw(while_start_fmt while_end_fmt) }
 sub to_lang_fmt { '%2$s' }
@@ -267,6 +270,18 @@ sub to_lang_fields { qw(cond) }
 sub run {
     my ($self, $env) = @_;
     $self->{body}->run($env) while $self->{cond}->run($env);
+}
+
+package EGE::Prog::Until;
+use base 'EGE::Prog::CondLoop';
+
+sub get_formats { qw(until_start_fmt until_end_fmt) }
+sub to_lang_fmt { '%2$s' }
+sub to_lang_fields { qw(cond) }
+
+sub run {
+    my ($self, $env) = @_;
+    $self->{body}->run($env) until $self->{cond}->run($env);
 }
 
 package EGE::Prog::LangSpecificText;
@@ -324,6 +339,7 @@ sub statements_descr {{
     'for' => { type => 'ForLoop', args => [qw(E_var E_lb E_ub B_body)] },
     'if' => { type => 'IfThen', args => [qw(E_cond B_body)] },
     'while' => { type => 'While', args => [qw(E_cond B_body)] },
+    'until' => { type => 'Until', args => [qw(E_cond B_body)] },
 }}
 
 sub arg_processors {{

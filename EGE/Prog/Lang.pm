@@ -76,6 +76,9 @@ sub if_end_fmt { $_[1] ? "\nEND IF" : '' }
 sub while_start_fmt { "DO WHILE %s\n" }
 sub while_end_fmt { "\nEND DO" }
 
+sub until_start_fmt { "DO UNTIL %s\n" }
+sub until_end_fmt { "\nEND DO" }
+
 package EGE::Prog::Lang::C;
 use base 'EGE::Prog::Lang';
 
@@ -93,6 +96,9 @@ sub if_end_fmt { $_[1] ? "\n}" : '' }
 
 sub while_start_fmt { 'while (%s)' . ($_[1] ? " {\n" : "\n") }
 sub while_end_fmt { $_[1] ? "\n}" : '' }
+
+sub until_start_fmt { 'while (!(%s))' . ($_[1] ? " {\n" : "\n") }
+sub until_end_fmt { $_[1] ? "\n}" : '' }
 
 package EGE::Prog::Lang::Pascal;
 use base 'EGE::Prog::Lang';
@@ -116,6 +122,9 @@ sub if_end_fmt { $_[1] ? "\nend;" : '' }
 sub while_start_fmt { 'while %s do' . ($_[1] ? " begin\n" : "\n") }
 sub while_end_fmt { $_[1] ? "\nend;" : '' }
 
+sub until_start_fmt { 'while not (%s) do' . ($_[1] ? " begin\n" : "\n") }
+sub until_end_fmt { $_[1] ? "\nend;" : '' }
+
 package EGE::Prog::Lang::Alg;
 use base 'EGE::Prog::Lang';
 
@@ -137,6 +146,9 @@ sub if_end_fmt { "\nвсе" }
 sub while_start_fmt { "пока %s нц\n" }
 sub while_end_fmt { "\nкц" }
 
+sub until_start_fmt { "пока не (%s) нц\n" }
+sub until_end_fmt { "\nкц" }
+
 package EGE::Prog::Lang::Perl;
 use base 'EGE::Prog::Lang';
 
@@ -153,6 +165,9 @@ sub if_end_fmt { "\n}" }
 
 sub while_start_fmt { "while (%s) {\n" }
 sub while_end_fmt { "\n}" }
+
+sub until_start_fmt { "until (%s) {\n" }
+sub until_end_fmt { "\n}" }
 
 package EGE::Prog::Lang::Logic;
 use base 'EGE::Prog::Lang';

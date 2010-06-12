@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 53;
+use Test::More tests => 56;
 use Test::Exception;
 
 use lib '..';
@@ -169,6 +169,16 @@ end;~;
          ]
     ]);
     is $b->run_val('x'), 4, 'while run 2';
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'until', [ '==', 'a', 0 ], [ '=', 'a', [ '-', 'a', 1 ] ]
+    ]);
+    is $b->to_lang_named('Basic'),
+        "DO UNTIL a = 0\n  a = a - 1\nEND DO", 'until in Basic';
+    is $b->to_lang_named('C'), "while (!(a == 0))\n  a = a - 1;", 'until in C';
+    is $b->run_val('a', { a => 5 }), 0, 'until run';
 }
 
 {
