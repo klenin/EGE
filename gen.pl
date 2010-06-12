@@ -122,7 +122,8 @@ binmode STDOUT, ':utf8';
 #g('B02', 'flowchart');
 #g('B03', 'q1234');
 #g('B03', 'last_digit');
-g('B03', 'count_digits');
+#g('B03', 'count_digits');
+g('B04', 'impl_border');
 #$questions = EGE::Generate::all;
 
 print_html;
