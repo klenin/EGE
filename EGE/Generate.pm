@@ -75,7 +75,7 @@ sub all {[
     g('A18', qw(robot_loop)),
     g('B01', qw(direct)),
     g('B02', qw(flowchart)),
-    g('B03', qw(q1234 last_digit)),
+    g('B03', qw(q1234 last_digit count_digits)),
 ]}
 
 1;

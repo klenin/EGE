@@ -7,7 +7,7 @@ use strict;
 use warnings;
 
 use base 'Exporter';
-our @EXPORT = qw(base_to_dec);
+our @EXPORT_OK = qw(base_to_dec dec_to_base);
 
 sub base_to_dec {
     my ($base, $number) = @_;
