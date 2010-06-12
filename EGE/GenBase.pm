@@ -15,8 +15,12 @@ sub new {
     $self;
 }
 
+sub post_process {}
+
 package EGE::GenBase::SingleChoice;
 use base 'EGE::GenBase';
+
+use EGE::Random;
 
 sub init {
     $_[0]->{type} = 'sc';
@@ -27,6 +31,18 @@ sub variants {
     my $self = shift;
     $self->{variants} = [ @_ ];
 }
+
+sub shuffle_variants {
+    my ($self)= @_;
+    $self->{variants} or die;
+    my @order = rnd->shuffle(0 .. @{$self->{variants}} - 1);
+    $self->{correct} = $order[$self->{correct}];
+    my @v;
+    $v[$order[$_]] = $self->{variants}->[$_] for @order;
+    $self->{variants} = \@v;
+}
+
+sub post_process { $_[0]->shuffle_variants; }
 
 package EGE::GenBase::DirectInput;
 use base 'EGE::GenBase';

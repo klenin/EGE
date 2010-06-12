@@ -37,17 +37,8 @@ sub one {
     no strict 'refs';
     my $g = "EGE::Gen::$package"->new;
     $g->$method;
+    $g->post_process;
     $g;
-}
-
-sub shuffle_variants {
-    my ($q)= @_;
-    $q->{variants} or return;
-    my @order = rnd->shuffle(0 .. @{$q->{variants}} - 1);
-    $q->{correct} = $order[$q->{correct}];
-    my @v;
-    $v[$order[$_]] = $q->{variants}->[$_] for @order;
-    $q->{variants} = \@v;
 }
 
 sub g {
@@ -55,7 +46,6 @@ sub g {
     my ($p, $n) = ($unit =~ /^(\w)(\d+)$/);
     my $q = one sprintf('%s%02d', $p, $n), rnd->pick(@_);
     $q->{text} = "<h3>$unit</h3>\n$q->{text}";
-    shuffle_variants($q);
     $q;
 }
 
