@@ -23,4 +23,17 @@ sub base_to_dec {
     $r;
 }
 
+sub dec_to_base {
+    my ($base, $number) = @_;
+    my $r = '';
+    $number or return '0';
+    while ($number) {
+        my $digit = $number % $base;
+        $digit = chr(ord('A') + $digit - 10) if $digit > 9;
+        $r = "$digit$r";
+        $number = int($number / $base);
+    }
+    $r;
+}
+
 1;
