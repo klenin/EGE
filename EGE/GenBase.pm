@@ -49,10 +49,13 @@ use base 'EGE::GenBase';
 
 sub init {
     $_[0]->{type} = 'di';
+    $_[0]->{accept} = qr/.+/;
 }
 
 sub accept_number {
     $_[0]->{accept} = qr/^\d+$/;
 }
+
+sub post_process { $_[0]->{correct} =~ $_[0]->{accept} or die; }
 
 1;
