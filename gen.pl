@@ -115,10 +115,10 @@ binmode STDOUT, ':utf8';
 #g('A13', 'file_mask');
 #g('A14', 'database');
 #g('A15', 'rgb');
-#g('A16', 'spreadsheet'),
-#g('A17', 'diagram'),
-#g('A18', 'robot_loop'),
-#g('B01', 'direct'),
+#g('A16', 'spreadsheet');
+#g('A17', 'diagram');
+#g('A18', 'robot_loop');
+#g('B01', 'direct');
 g('B02', 'flowchart'),
 #$questions = EGE::Generate::all;
 

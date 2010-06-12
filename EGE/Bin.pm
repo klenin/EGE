@@ -6,8 +6,7 @@ package EGE::Bin;
 use strict;
 use warnings;
 
-use Exporter;
-our @ISA = qw(Exporter);
+use base 'Exporter';
 our @EXPORT = qw(hex_or_oct to_bin bin_hex_or_oct);
 
 sub to_bin {
