@@ -1,4 +1,4 @@
-# Copyright © 2010 Alexander S. Klenin
+# Copyright Â© 2010 Alexander S. Klenin
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
 package EGE::Bits;
@@ -179,12 +179,12 @@ sub reverse_ {
 sub shift_ {
     my ($self, $d) = @_;
     my $v = $self->{v};
-    if ($d > 0) { # âïðàâî
+    if ($d > 0) { # Ð²Ð¿Ñ€Ð°Ð²Ð¾
         my $j = @$v;
         my $i = @$v - $d;
         $v->[--$j] = $i ? $v->[--$i] : 0 while $j;
     }
-    elsif ($d < 0) { # âëåâî
+    elsif ($d < 0) { # Ð²Ð»ÐµÐ²Ð¾
         my $j = 0;
         my $i = -$d;
         $v->[$j++] = $i < @$v ? $v->[$i++] : 0 while $j < @$v;

@@ -1,4 +1,4 @@
-# Copyright © 2010 Alexander S. Klenin
+# Copyright Â© 2010 Alexander S. Klenin
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
 package EGE::Html;
