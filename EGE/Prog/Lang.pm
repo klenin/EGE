@@ -173,6 +173,8 @@ package EGE::Prog::Lang::Logic;
 use base 'EGE::Prog::Lang';
 
 sub translate_op {{
+    '-' => '−', '*' => '⋅',
+    '!=' => '≠', '>=' => '≥', '<=' => '≤',
     '&&' => '∧', '||' => '∨', '^' => '⊕', '=>' => '→'
 }}
 
