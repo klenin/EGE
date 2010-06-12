@@ -83,7 +83,7 @@ sub all {[
     g('A17', qw(diagram)),
     g('A18', qw(robot_loop)),
     g('B01', qw(direct)),
-    g('B02', qw(flow1)),
+    g('B02', qw(flowchart)),
 ]}
 
 1;

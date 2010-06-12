@@ -12,22 +12,38 @@ use EGE::Random;
 use EGE::Prog;
 use EGE::Prog::Flowchart;
 
-sub flow1 {
+sub flowchart {
     my ($self) = @_;
+    my ($va, $vb) = rnd->shuffle('a', 'b');
+    my $loop = rnd->pick(qw(while until));
+    my ($va_init, $va_end, $va_op, $va_arg, $va_cmp) = rnd->pick(
+        sub { 0, rnd->in_range(5, 7), '+', 1, '<' },
+        sub { rnd->in_range(5, 7), 0, '-', 1, '>' },
+        sub { 1, 2 ** rnd->in_range(3, 5), '*', 2, '<' },
+        sub { 2 ** rnd->in_range(3, 5), 1, '/', 2, '>' },
+    )->();
+    my ($vb_init, $vb_op, $vb_arg) = rnd->pick(
+        sub { rnd->in_range(0, 3), rnd->pick('+'), rnd->in_range(1, 3) },
+        sub { rnd->in_range(15, 20), rnd->pick('-'), rnd->in_range(1, 3) },
+        sub { rnd->in_range(1, 4), '*', rnd->in_range(2, 4) },
+        sub { 2 ** rnd->in_range(8, 10), '/', 2 },
+    )->();
     my $b = EGE::Prog::make_block([
-        '=', 'a', '256',
-        '=', 'b', 0,
-        'while', [ '>', 'a', 0 ], [
-            '=', 'a', [ '/', 'a', 2 ],
-            '=', 'b', [ '+', 'b', 'a' ],
+        '=', $va, $va_init,
+        '=', $vb, $vb_init,
+        $loop, [ ($loop eq 'while' ? $va_cmp : '=='), $va, $va_end ],
+        [
+            '=', $va, [ $va_op, $va, $va_arg ],
+            '=', $vb, [ $vb_op, $vb, $vb_arg ],
         ],
-        '=', 'c', 7,
     ]);
     $self->{text} =
         'Запишите значение переменной b после выполнения фрагмента алгоритма:' .
         $b->to_svg_main .
         '<i>Примечание: знаком “:=” обозначена операция присваивания</i>';
-    $self->{correct} = $b->run_val('b');
+    my $vars = { $va => 0, $vb => 0 };
+    $b->run($vars);
+    $self->{correct} = $vars->{$vb};
     $self->accept_number;
 }
 
