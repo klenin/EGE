@@ -35,7 +35,7 @@ sub pick {
 
 sub pick_n {
     my ($self, $n, @array) = @_;
-    die if $n-- > @array;
+    die 'pick_n' if $n-- > @array;
     for (0 .. $n) {
         my $pos = $self->in_range($_, $#array);
         @array[$_, $pos] = @array[$pos, $_];
