@@ -32,6 +32,7 @@ use EGE::Gen::B01;
 use EGE::Gen::B02;
 use EGE::Gen::B03;
 use EGE::Gen::B04;
+use EGE::Gen::B05;
 
 sub one {
     my ($package, $method) = @_;
@@ -78,6 +79,7 @@ sub all {[
     g('B02', qw(flowchart)),
     g('B03', qw(q1234 last_digit count_digits)),
     g('B04', qw(impl_border)),
+    g('B05', qw(calculator)),
 ]}
 
 1;

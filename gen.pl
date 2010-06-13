@@ -123,7 +123,8 @@ binmode STDOUT, ':utf8';
 #g('B03', 'q1234');
 #g('B03', 'last_digit');
 #g('B03', 'count_digits');
-g('B04', 'impl_border');
+#g('B04', 'impl_border');
+g('B05', 'calculator');
 #$questions = EGE::Generate::all;
 
 print_html;
