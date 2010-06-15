@@ -95,7 +95,7 @@ sub calculator {
         "числа $result, содержащей не более $num команд, указывая лишь номера команд " .
         "(Например, программа $sample_code — это программма " .
         '<b><ul> ' . li(@sample_prg_list) . '</ul></b> ' .
-        "которая преобразует число 1 в число $sample_result ";
+        "которая преобразует число 1 в число $sample_result)";
     $self->{correct} = $code;
     $self->accept_number;
 }
