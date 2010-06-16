@@ -50,8 +50,8 @@ sub impl_border {
     my $et = html->cdata($e->to_lang_named('Logic'));
 
     my $facet = first { between $_->{v}, 1, $n - 1 } rnd->shuffle(map {
-        t1 => [ qw(наименьшее наибольшее) ]->[$_ % 2],
-        t2 => [ qw(истинно ложно) ]->[$_ / 2],
+        t1 => [ qw(наименьшее наибольшее) ]->[$_ / 2],
+        t2 => [ qw(ложно истинно) ]->[$_ % 2],
         v => ($_ < 2 ? \&find_first : \&find_last)->($_ % 2, \@values),
     }, 0 .. 3);
     $self->{text} =
