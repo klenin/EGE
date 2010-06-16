@@ -57,6 +57,8 @@ sub next_prg {
 sub code { join '', map $_ + 1, @{$_[0]}; }
 sub li { join '', map "<li>$_</li>", @_; }
 
+sub same_digit { $_[0] =~ /^(\d)\1+$/; }
+
 sub calculator {
     my ($self) = @_;
     my $num = rnd->in_range(4, 6);
@@ -81,7 +83,10 @@ sub calculator {
         $sample_prg = [ map rnd->in_range(0, $#$cmd), 1 .. $num ];
         $sample_code = code($sample_prg);
         $sample_result = apply($cmd, $sample_prg, 1);
-    } while $sample_code eq $code || $sample_result eq $result;
+    } while
+        $sample_code eq $code ||
+        $sample_result eq $result ||
+        same_digit($sample_code);
 
     my @sample_prg_list = map $cmd->[$_]->{t1}, @$sample_prg;
     $sample_prg_list[-1] .= ',';
