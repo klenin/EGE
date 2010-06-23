@@ -9,6 +9,7 @@ use warnings;
 use utf8;
 
 use Encode;
+use POSIX qw(floor);
 
 use EGE::Random;
 
@@ -138,6 +139,21 @@ sub p6 {
         'соединяющий точки (0, <i>i</i>) и (10, <i>i</i>), ' .
         "перескает прямую $a<i>x</i> − 10<i>y</i> $ctext?";
     $self->{correct} = $y2 - $y1 + 1;
+}
+
+sub log10 { log($_[0])/log(10) }
+
+sub p7 {
+    my ($self) = @_;
+    my $n1 = rnd->in_range(100, 200);
+    my $n2 = rnd->in_range(300, 400);
+    my $phi = 0.5 * (sqrt(5) + 1);
+    my $f = sub { ($phi ** $_[0] - (1 - $phi) ** $_[0]) / sqrt(5) };
+
+    $self->{text} =
+        'Сколько цифр в десятичной записи числа ' .
+        "F<sub>$n1</sub> ⋅ F<sub>$n2</sub>, где F — числа Фибоначчи? ";
+    $self->{correct} = floor(log10($f->($n1) * $f->($n2))) + 1;
 }
 
 1;
