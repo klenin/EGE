@@ -195,4 +195,118 @@ sub alg_avg {
     );
 }
 
+sub swap{ my $tmp = $_[0]; $_[0] = $_[1]; $_[1] = $tmp }
+
+sub stime { return int($_[0] / 60 + 7) . ":" . sprintf("%02d", $_[0] % 60) }
+
+sub exist_in_arr{
+    my $elem = shift;
+    int(grep $_ == $elem, @_);
+}
+
+sub random_routes{
+    my ($path_count) = @_;
+    my @b = map $_ < $path_count ? 1 : 0, 0..3*4-1;
+    rnd->shuffle(@b);
+    my @v;
+    for (0..$#b) {
+        my ($x, $y) = ($_ % 3, int($_ / 3));
+        $x += 1 if $x >= $y;
+        push @v, { from => $x, to => $y} if $b[$_];
+    }
+    rnd->shuffle(@v);
+    my $time = 0;
+    for (@v) {
+        $time += 5 * rnd->in_range(2, 20);
+        $_->{start} = $time;
+        $_->{fin} = $time + 5 * rnd->in_range(1, 10);
+    }
+    @v;
+}
+
+sub find_all_routes{
+    my ($a) = @_;
+    for my $k (0..3) {
+        for my $i (0..3) {
+            for my $j (0..3) {
+                my ($v, $u, $w) = ($a->[$i][$j], $a->[$i][$k], $a->[$k][$j]);
+                next if (not defined $u->{start} or not defined $w->{fin});
+                next if ($u->{fin} > $w->{start});
+                if (not defined $v->{start} or ($v->{fin} > $w->{fin}))
+                {
+                    $v->{last_time} = $v->{fin} if defined $v->{fin};
+                    $v->{fin} = $w->{fin};
+                    $v->{start} = $u->{start};
+                    $v->{from} = $u->{from};
+                    $v->{to} = $w->{to};
+                }
+            }
+        }
+    }
+}
+
+sub gen_schedule{
+    my ($way, $towns, $v) = @_;
+    my $start_time = stime(5 * rnd->in_range(0, int($way->{start}/5)));
+    my $text = <<TEXT
+<p>
+Путешественник пришел в $start_time на автостанцию населенного пункта
+<strong>$towns->[$way->{from}]</strong> и обнаружил следующее расписание автобусов для всей районной
+сети маршрутов:
+</p>
+<table border="1">
+<tbody>
+<tr>
+<th>Пункт отправления</th>
+<th>Пункт прибытия</th>
+<th>Время отправления</th>
+<th>Время прибытия</th>
+</tr>
+TEXT
+;
+    for (@{$v}) {
+        $text .= "<tr>";
+        $text .= "<td>$towns->[$_->{from}]</td>";
+        $text .= "<td>$towns->[$_->{to}]</td>";
+        $text .= "<td>" . stime($_->{start}) . "</td>";
+        $text .= "<td>" . stime($_->{fin}) . "</td>";
+        $text .= "</tr>\n";
+    }
+    $text .= "</tbody><table>\n";
+    $text .= "<br>Определите самое раннее время, когда путешественник сможет оказаться в
+пункте <strong>$towns->[$way->{to}]</strong> согласно этому расписанию.\n";
+}
+
+sub bus_station{
+    my ($self) = @_;
+    my @towns = rnd->pick_n(4, qw(ЛИСЬЕ СОБОЛЕВО ЕЖОВО ЗАЙЦЕВО МЕДВЕЖЬЕ ПЧЕЛИННОЕ));
+    my @v = random_routes(rnd->in_range(6, 10));
+    my $a = [];
+    $a->[@_] = [] for (0..3);
+    $a->[$_->{from}][$_->{to}] = $_ for @v;
+    find_all_routes($a);
+    my @can_go;
+    for (@{$a}) {
+        for (@{$_}) {
+            push(@can_go, $_) if (defined $_->{fin});
+        }
+    }
+    my $way = rnd->pick(@can_go);
+    my @ans = ($way->{fin});
+    for my $i (0..3) {
+        my $elem = $a->[$i][$way->{to}];
+        if (defined $elem->{fin}) {
+            push (@ans, $elem->{fin}) unless exist_in_arr($elem->{fin}, @ans)
+        }
+    }
+    for (@ans..3) {
+        my $elem;
+        do { $elem = rnd->pick(@can_go) } while exist_in_arr($elem->{fin}, @ans);
+        push(@ans, $elem->{fin}) ;
+    }
+    $ans[3] = $way->{last_time} if defined $way->{last_time};
+    $self->{text} = gen_schedule($way, \@towns, \@v);
+    $self->variants(map stime($_), @ans);
+}
+
 1;

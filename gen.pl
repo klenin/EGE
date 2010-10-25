@@ -15,6 +15,7 @@ use Encode;
 use lib '.';
 
 use EGE::Generate;
+use EGE::Math::Summer;
 
 my $questions;
 
@@ -98,6 +99,7 @@ binmode STDOUT, ':utf8';
 #g('A5', 'div_mod_10');
 #g('A5', 'div_mod_rotate');
 #g('A6', 'count_by_sign');
+#g('A6', 'bus_station');
 #g('A6', 'find_min_max');
 #g('A6', 'count_odd_even');
 #g('A6', 'alg_min_max');
@@ -124,8 +126,10 @@ binmode STDOUT, ':utf8';
 #g('B03', 'last_digit');
 #g('B03', 'count_digits');
 #g('B04', 'impl_border');
-g('B05', 'calculator');
-#$questions = EGE::Generate::all;
+#g('B05', 'calculator');
+$questions = EGE::Generate::all;
+
+#push @$questions, EGE::Math::Summer::g($_) for qw(p1 p2 p3 p4 p5 p6 p7);
 
 print_html;
 #print_json;
