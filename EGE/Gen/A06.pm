@@ -228,7 +228,7 @@ sub find_all_routes{
             for my $j (0..$n) {
                 my ($v, $u, $w) = ($a->[$i][$j], $a->[$i][$k], $a->[$k][$j]);
                 next if !defined $u->{fin} || !defined $w->{start} || ($u->{fin} > $w->{start});
-                if (not defined $v->{start} or ($v->{fin} > $w->{fin})) {
+                if (!defined $v->{start} || ($v->{fin} > $w->{fin})) {
                     $v->{pred_res} = $v->{fin} if defined $v->{fin};
                     $v->{fin} = $w->{fin};
                     $v->{start} = $u->{start};
