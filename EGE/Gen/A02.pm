@@ -42,6 +42,70 @@ QUESTION
     );
 }
 
+sub make_alphabet {
+    my $char_cnt = rnd->in_range(1, 33);
+    my $base = rnd->pick(
+        [2, 'двоичные'],
+        [8, 'восьмеричные'],
+        [10, 'десятичные'],
+        [16, 'шеснадцатиричные']
+    );
+    my $text = num_text($char_cnt, ['букву', 'различные буквы', 'различных букв']);
+    $text .= ' и ' . $base->[1] . ' цифры' if ($base->[0]);
+    ($char_cnt + $base->[0], $text);
+}
+
+sub max_pow_contained {
+    my ($n, $base) =  @_;
+    return 1 if $n <= $base;
+    my $pow = 0;
+    --$n;
+    while ($n) {
+        $n = int($n / $base);
+        ++$pow;
+    }
+    $pow;
+}
+
+sub car_numbers {
+    my ($self) = @_;
+    my $obj_name = choose_obg();rnd->pick(
+        { long => 'автомобильный номер', short => 'номер',
+               forms => ['номерa', 'номеров', 'номеров'] },
+        { long => 'телефонный номер', short => 'номер',
+               forms => ['номерa', 'номеров', 'номеров'] },
+        { long => 'почтовый индекс', short => 'индекс',
+               forms => ['индекса', 'индексов', 'индексов'] },
+        { long => 'почтовый адрес', short => 'адрес',
+               forms => ['адреса', 'адресов', 'адресов'] },
+        { long => 'номер медецинской страховки', short => 'номер',
+               forms => ['номерa', 'номеров', 'номеров'] }
+    );
+    my $sym_cnt = rnd->in_range(1, 20);
+    my $items_cnt = rnd->in_range(1, 20);
+    my $sym_cnt_text = num_text( $sym_cnt, ['символа', 'символов', 'символов'] );
+    my ($alph_length, $alph_text) = make_alphabet();
+    my $items_cnt_text = num_text( $items_cnt, $obj_name->{forms} );
+    my $text = <<QUESTION
+В некоторой стране $obj_name->{long} состоит из $sym_cnt_text. В качестве символов
+используют $alph_text. Каждый такой $obj_name->{short} в компьютерной программе
+записывается минимально возможным и одинаковым целым количеством байтов, при этом
+используют посимвольное кодирование и все символы кодируются одинаковым и минимально
+возможным количеством битов. Определите объем памяти, отводимый этой программой для
+записи $items_cnt_text.
+QUESTION
+;
+    my $bit_per_item = max_pow_contained($alph_length, 2) * $sym_cnt;
+    my @ans = (
+        ceil( $bit_per_item / 8 ) * $items_cnt,
+        ceil( $bit_per_item / 8 - 1 ) * $items_cnt,
+        $bit_per_item * $items_cnt,
+        $alph_length * $items_cnt
+    );
+    $self->{text} = $text;
+    $self->variants(map num_text($_, ['байт', 'байта', 'байт']), @ans);
+}
+
 sub bits_or_bytes { rnd->pick(bits_and_bytes($_[0])) }
 
 sub database {
