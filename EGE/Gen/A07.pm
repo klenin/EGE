@@ -139,4 +139,54 @@ sub random_sequences {
     $self->strings(sub { %seen = () }, $gen_seq, 'символьного набора');
 }
 
+sub random_str {
+    my $res = '';
+    $res .= rnd->pick('A'..'F', 0..9)  for 1..$_[0];
+    $res;
+}
+
+sub rnd_subpattern {
+    $_[0] = '' unless $_[0];
+    my $res = '';
+    do {
+        $res = uc(rnd->english_letter()) . rnd->in_range(0, 9)
+    } while $res eq $_[0];
+    $res;
+}
+
+sub restore_passwd {
+    my ($self) = @_;
+    my $repeats = 2;
+    my $str = random_str(6);
+    my $ans_str = $str;
+    my $sub_init = rnd_subpattern();
+    my $sub_good = rnd_subpattern();
+
+    my @pos = sort {$b <=> $a} rnd->pick_n($repeats, 0..(length $str)-1);
+    for (@pos) {
+        substr($str, $_, 0, $sub_good);
+        substr($ans_str, $_, 0, $sub_init);
+    }
+
+    my $ans_len = 0;
+    for my $i (1..length $str) {
+        my $res = " $str ";
+        while ($res =~ s/(\D)\d{$i}(\D)/$1$2/) {
+            push @{$self->{variants}}, $res;
+            $ans_len = $i;
+        }
+    }
+    $self->{correct} = $#{$self->{variants}};
+    push @{$self->{variants}}, $str;
+    $str =~ s/$sub_good/$sub_init/g;
+    push @{$self->{variants}}, $str;
+    @{$self->{variants}} = @{$self->{variants}}[0..3];
+    $self->{text} = "Лена забыла пароль для входа в Windows XP, но помнила алгоритм его " .
+                    "получения из символов «$ans_str» в строке подсказки. Если " .
+                    "последовательность символов «$sub_init» заменить на «$sub_good» и из получившейся " .
+                    "строки удалить все ". $ans_len .
+                    "-значные числа, то полученная последовательность и " .
+                    "будет паролем: ";
+}
+
 1;
