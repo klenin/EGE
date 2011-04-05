@@ -14,7 +14,10 @@ use EGE::Random;
 use EGE::Logic;
 use EGE::NumText;
 use EGE::Russian::Names;
+use EGE::Russian::SimpleNames;
 use EGE::Russian::Animals;
+
+use Data::Dumper;
 
 sub make_condition() {
     {
@@ -139,15 +142,9 @@ sub random_sequences {
     $self->strings(sub { %seen = () }, $gen_seq, 'символьного набора');
 }
 
-sub random_str {
-    my $res = '';
-    $res .= rnd->pick('A'..'F', 0..9)  for 1..$_[0];
-    $res;
-}
-
 sub rnd_subpattern {
     $_[0] = '' unless $_[0];
-    my $res = '';
+    my $res;
     do {
         $res = uc(rnd->english_letter()) . rnd->in_range(0, 9)
     } while $res eq $_[0];
@@ -156,37 +153,55 @@ sub rnd_subpattern {
 
 sub restore_passwd {
     my ($self) = @_;
-    my $repeats = 2;
-    my $str = random_str(6);
+    my $OS = rnd->pick("Windows XP", "GNU/Linux", "почтовый аккаунт");
+    my $str = join '', map { rnd->pick('A'..'F', 0..9) } 1..5;
     my $ans_str = $str;
     my $sub_init = rnd_subpattern();
-    my $sub_good = rnd_subpattern();
+    my $sub_good = rnd_subpattern($sub_init);
 
-    my @pos = sort {$b <=> $a} rnd->pick_n($repeats, 0..(length $str)-1);
+    my @pos = sort {$b <=> $a} rnd->pick_n(2, 0..(length $str) - 1);
     for (@pos) {
         substr($str, $_, 0, $sub_good);
         substr($ans_str, $_, 0, $sub_init);
     }
 
-    my $ans_len = 0;
+    my @good_variants;
     for my $i (1..length $str) {
-        my $res = " $str ";
+        my ($res, $b) = (" $str ", 0);
         while ($res =~ s/(\D)\d{$i}(\D)/$1$2/) {
             push @{$self->{variants}}, $res;
-            $ans_len = $i;
+            $b = 1;
         }
+        push @good_variants, [(pop @{$self->{variants}}), $i] if $b;
     }
-    $self->{correct} = $#{$self->{variants}};
-    push @{$self->{variants}}, $str;
-    $str =~ s/$sub_good/$sub_init/g;
-    push @{$self->{variants}}, $str;
+
+    rnd->shuffle(@good_variants);
+    my $ans = $good_variants[0];
+
+    @{$self->{variants}} = (
+       $ans->[0],
+       @{$self->{variants}},
+       (map {$_->[0]} @good_variants[1..$#good_variants])
+    );
+
+    $self->{text} =
+      rnd->pick(@EGE::Russian::SimpleNames::list) .
+      " забыл пароль для входа в $OS, но помнил алгоритм его " .
+      "получения из символов «$ans_str» в строке подсказки. Если " .
+      "последовательность символов «$sub_init» заменить на «$sub_good» " .
+      "и из получившейся строки удалить все ".
+      ($ans->[1] == 1 ? "одно" : (num_by_words $ans->[1], 1, "genitive")) .
+      "значные числа, то полученная последовательность и " .
+      "будет паролем: ";
+
+    push @{$self->{variants}}, $ans_str;
+    while ($ans_str =~ s/(\D)\d{$ans->[1]}(\D)/$1$2/) {
+        push @{$self->{variants}}, $ans_str;
+    }
+    push @{$self->{variants}}, $sub_good;
+
     @{$self->{variants}} = @{$self->{variants}}[0..3];
-    $self->{text} = "Лена забыла пароль для входа в Windows XP, но помнила алгоритм его " .
-                    "получения из символов «$ans_str» в строке подсказки. Если " .
-                    "последовательность символов «$sub_init» заменить на «$sub_good» и из получившейся " .
-                    "строки удалить все ". $ans_len .
-                    "-значные числа, то полученная последовательность и " .
-                    "будет паролем: ";
+
 }
 
 1;
