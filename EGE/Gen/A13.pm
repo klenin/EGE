@@ -9,8 +9,12 @@ use warnings;
 use utf8;
 
 use EGE::Random;
+use List::Util qw/ reduce /;
+use Data::Dumper;
 
 my $q;
+
+my @extensions = qw/ txt doc png lst gif jpg map cpp pas bas /;
 
 sub random_chars { map rnd->english_letter, 1 .. $_[0] }
 sub random_str { join '', random_chars @_ }
@@ -30,7 +34,7 @@ sub gen_file {
 
 sub file_mask {
     my ($self) = @_;
-    my $ext = rnd->pick(qw(txt doc png lst gif jpg map cpp pas bas));
+    my $ext = rnd->pick(@extensions);
     my $ext_mask = $ext;
     substr($ext_mask, rnd->in_range(0, length($ext) - 1), rnd->coin) = '?';
 
@@ -41,9 +45,119 @@ sub file_mask {
     $mask .= ".$ext_mask";
     (my $bad_mask = $mask) =~ s/(\w)(\w)/$1 . rnd->english_letter . $2/e;
 
-    $self->{text} = sprintf($q ||= do { undef local $/; <DATA>; }, $mask);
+    my $t = $q ||= do { undef local $/; <DATA>; };
+    $t .= "Определите, какие из указанных имён файлов удовлетворяют маске <tt>%s</tt>";
+    
+    $self->{text} = sprintf($t, $mask);
     $self->variants(gen_file($bad_mask, 0), map gen_file($mask, $_), 0 .. 2);
     $self->{correct} = 1;
+}
+
+sub exact_gen_file {
+    my ($mask, $ok) = @_;
+    my $fn = '';
+    for my $i (0 .. length($mask) - 1) {
+        my $c = substr($mask, $i, 1);
+        $fn .= 
+            $c eq '?' ? random_str($ok ? 1 : rnd->pick(0, 2, 3)) :
+            $c eq '*' ? random_str(rnd->in_range(0, 3)) :
+            $c;
+    }
+    $fn;
+}
+
+sub masks_to_re {
+    my @res = @_;
+    for (@res) {
+        s/\*/\.\*/g;
+        s/\?/\./g;
+        $_ = "^$_\$";
+    }
+    @res;
+}
+
+sub gen_names {
+    my ($masks, $patterns, $good, $count) = @_;
+    my @res;
+    my $check = [ sub {
+                      my ($a, $b, $f) = @_;
+                      $a || ($f !~ $b);
+                  },
+                  sub {
+                      my ($a, $b, $f) = @_;
+                      $a && ($f =~ $b);
+                  }]->[$good];
+    my $i = 0;
+    while (@res < $count) {
+        my $f = exact_gen_file($masks->[$i], $good);
+        if (reduce { $check->($a, $patterns->[$b], $f) } $good, 0 .. 3) {
+            push @res, $f;
+        }
+        $i = ($i + 1) % $count;
+    }
+    @res;
+}
+
+sub gen_masks {
+    my ($s, $count) = @_;
+    my @pos;
+    do {
+        @pos = sort {$b <=> $a} rnd->pick_n($count, 0 .. length($s) - 1)
+    } while $count > 1 && $pos[0] + 1 == $pos[1];
+    my $was_q = 0;
+    my @res;
+    @res = map {
+        my @m = rnd->shuffle(map { rnd->pick(qw(? *)) } 1 .. $count);
+        $was_q |= ($_ eq '?') for @m;
+        my $t = $s;
+        substr($t, $pos[$_], 1, $m[$_]) for 0 .. $count - 1;
+        $t;
+    } 1 .. 4 while !$was_q;
+    @res;
+}
+
+sub join_arr {
+    my ($a, $b) = @_;
+    my @res;
+    for my $i (@$a) {
+        for my $j (@$b) {
+            push @res, "$i.$j";
+        }
+    }
+    @res;
+}
+
+sub file_mask2 {
+    my ($self) = @_;
+    my $s = random_str(rnd->in_range(5, 8));
+    my $ext = rnd->pick(@extensions);
+
+    my @base_masks = gen_masks($s, 2);
+    my @patterns = masks_to_re(@base_masks);
+    my @good_base = gen_names \@base_masks, \@patterns, 1, 1;
+    my @bad_base = gen_names \@base_masks, \@patterns, 0, 2;
+
+    my @ext_masks = gen_masks($ext, 1);
+    @patterns = masks_to_re(@ext_masks);
+    my @good_ext = gen_names \@ext_masks, \@patterns, 1, 1;
+    my @bad_ext = gen_names \@ext_masks, \@patterns, 0, 2;
+
+    my @good_ans = join_arr \@good_base, \@good_ext;
+    my @bad_ans = ( (join_arr \@good_base, \@bad_ext),
+                    (join_arr \@bad_base, \@good_ext),
+                    (join_arr \@bad_base, \@bad_ext) );
+
+
+    my $t = $q ||= do { undef local $/; <DATA>; };
+    $self->{text} = "$t Определите, какой из указынный файлов удовлетворяет всем маскам:
+<ul>";
+    for my $i (0 .. 3) {
+        $self->{text} .= "<li>$base_masks[$i].$ext_masks[$i] </li>";
+    }
+    $self->{text} .= "</ul>";
+    $self->{variants} = [@good_ans, rnd->shuffle(@bad_ans)];
+    @{$self->{variants}} = @{$self->{variants}}[0..3];
+    $self->{text} .= '';
 }
 
 1;
@@ -57,5 +171,4 @@ __DATA__
 </p>
 <p>Символ «*» (звёздочка) означает любую последовательность символов произвольной длины,
 в том числе и пустую последовательность.
-Определите, какие из указанных имён файлов удовлетворяют маске <tt>%s</tt>
 </p>
