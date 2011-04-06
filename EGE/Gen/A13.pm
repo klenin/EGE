@@ -47,7 +47,7 @@ sub file_mask {
 
     my $t = $q ||= do { undef local $/; <DATA>; };
     $t .= "Определите, какие из указанных имён файлов удовлетворяют маске <tt>%s</tt>";
-    
+
     $self->{text} = sprintf($t, $mask);
     $self->variants(gen_file($bad_mask, 0), map gen_file($mask, $_), 0 .. 2);
     $self->{correct} = 1;
@@ -98,20 +98,31 @@ sub gen_names {
     @res;
 }
 
-sub gen_masks {
-    my ($s, $count) = @_;
+sub put_mask_to_s {
+    my ($s, $m, $pos) = @_;
+    my $t = $s;
+    substr($t, $pos->[$_], 1, $m->[$_]) for 0..$#{$pos};
+    $t;
+}
+
+sub select_pos {
+    my ($len, $metachars) = @_;
     my @pos;
     do {
-        @pos = sort {$b <=> $a} rnd->pick_n($count, 0 .. length($s) - 1)
-    } while $count > 1 && $pos[0] + 1 == $pos[1];
+        @pos = sort {$b <=> $a} rnd->pick_n($metachars, 0 .. $len - 1)
+    } while $metachars > 1 && $pos[0] == $pos[1] + 1;
+    @pos;
+}
+
+sub gen_masks {
+    my ($s, $metachars) = @_;
+    my @pos = select_pos((length $s), $metachars);
     my $was_q = 0;
     my @res;
     @res = map {
-        my @m = rnd->shuffle(map { rnd->pick(qw(? *)) } 1 .. $count);
+        my @m = rnd->shuffle(map { rnd->pick(qw(? *)) } 1 .. $metachars);
         $was_q |= ($_ eq '?') for @m;
-        my $t = $s;
-        substr($t, $pos[$_], 1, $m[$_]) for 0 .. $count - 1;
-        $t;
+        put_mask_to_s($s, \@m, \@pos);
     } 1 .. 4 while !$was_q;
     @res;
 }
@@ -128,36 +139,65 @@ sub join_arr {
 }
 
 sub file_mask2 {
+    sub gen_good_bad_names {
+        my ($s, $metachars) = @_;
+        my @masks = gen_masks($s, $metachars);
+        my @patterns = masks_to_re(@masks);
+        my @good = gen_names(\@masks, \@patterns, 1, 1);
+        my @bad = gen_names(\@masks, \@patterns, 0, 2);
+        (\@masks, \@good, \@bad);
+    }
+
     my ($self) = @_;
     my $s = random_str(rnd->in_range(5, 8));
     my $ext = rnd->pick(@extensions);
 
-    my @base_masks = gen_masks($s, 2);
-    my @patterns = masks_to_re(@base_masks);
-    my @good_base = gen_names \@base_masks, \@patterns, 1, 1;
-    my @bad_base = gen_names \@base_masks, \@patterns, 0, 2;
+    my ($base_masks, $good_base, $bad_base) = gen_good_bad_names($s, 2);
+    my ($ext_masks, $good_ext, $bad_ext) = gen_good_bad_names($ext, 1);
 
-    my @ext_masks = gen_masks($ext, 1);
-    @patterns = masks_to_re(@ext_masks);
-    my @good_ext = gen_names \@ext_masks, \@patterns, 1, 1;
-    my @bad_ext = gen_names \@ext_masks, \@patterns, 0, 2;
-
-    my @good_ans = join_arr \@good_base, \@good_ext;
-    my @bad_ans = ( (join_arr \@good_base, \@bad_ext),
-                    (join_arr \@bad_base, \@good_ext),
-                    (join_arr \@bad_base, \@bad_ext) );
-
+    my @good_ans = join_arr $good_base, $good_ext;
+    my @bad_ans = ( (join_arr $good_base, $bad_ext),
+                    (join_arr $bad_base, $good_ext),
+                    (join_arr $bad_base, $bad_ext) );
+    $self->{variants} = [@good_ans, rnd->pick_n(3, @bad_ans)];
 
     my $t = $q ||= do { undef local $/; <DATA>; };
     $self->{text} = "$t Определите, какой из указынный файлов удовлетворяет всем маскам:
 <ul>";
     for my $i (0 .. 3) {
-        $self->{text} .= "<li>$base_masks[$i].$ext_masks[$i] </li>";
+        $self->{text} .= "<li>$base_masks->[$i].$ext_masks->[$i] </li>";
     }
     $self->{text} .= "</ul>";
-    $self->{variants} = [@good_ans, rnd->shuffle(@bad_ans)];
-    @{$self->{variants}} = @{$self->{variants}}[0..3];
-    $self->{text} .= '';
+}
+
+sub file_mask3 {
+    sub gen_masks_names {
+        my ($s, $metachars) = @_;
+        my @pos = select_pos((length $s), $metachars);
+        my $mask_arr = [
+                        [['*'], ['?'], ['?'], ['?']],
+                        [['*', '*'], ['*', '?'], ['?', '*'], ['?', '?']]
+                       ]->[$metachars - 1];
+        my @masks = map { put_mask_to_s($s, $_, \@pos) } @$mask_arr;
+        my @names = map { exact_gen_file($_, 0) } @masks;
+        (\@masks, \@names);
+    }
+
+    my ($self) = @_;
+
+    my $s = random_str(rnd->in_range(5, 8));
+    my $ext = rnd->pick(@extensions);
+    my ($base_masks, $base_names) = gen_masks_names($s, 2);
+    my ($ext_masks, $ext_names) = gen_masks_names($ext, rnd->pick(1, 2));
+
+    my @ans = join_arr($base_masks, $ext_masks);
+    $self->{variants} = [shift @ans];
+    @{$self->{variants}} = (@{$self->{variants}}, rnd->pick_n(3, @ans));
+
+    my $t = $q ||= do { undef local $/; <DATA>; };
+    $self->{text} = "$t Определите, по какой из масок будет выбрана указанная группа файлов: <ul>";
+    $self->{text} .= "<li>$base_names->[$_].$ext_names->[$_]</li>" for 0..3;
+    $self->{text} .= "</ul>";
 }
 
 1;
