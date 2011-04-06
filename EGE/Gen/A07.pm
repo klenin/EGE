@@ -16,6 +16,7 @@ use EGE::NumText;
 use EGE::Russian::Names;
 use EGE::Russian::SimpleNames;
 use EGE::Russian::Animals;
+use EGE::Bits;
 
 use Data::Dumper;
 
@@ -151,57 +152,78 @@ sub rnd_subpattern {
     $res;
 }
 
-sub restore_passwd {
+sub delete_nums {
+    my ($str) = @_;
+    $str = " $str ";
+    my (@good_variants, @bad_variants);
+    for my $len (1..length $str) {
+        my @pos;
+        push @pos, pos($str)-- - $len - 1 while $str =~ /(\D)\d{$len}(\D)/g;
+        next unless @pos;
+
+        my $per = EGE::Bits->new();
+        $per->set_size(scalar @pos);
+        # генерация всех подмножеств множества перечисленим двоичных векторов
+        for (2 .. 2**@pos) {
+            $per->inc();
+            my $s = $str;
+            for (my $i = $#pos; $i >= 0; --$i) {
+                if ($per->get_bit($i)) {
+                    substr($s, $pos[$i], $len, '');
+                }
+            }
+            push @bad_variants, $s;
+        }
+        push @good_variants, [pop (@bad_variants), $len];
+    }
+    (\@good_variants, \@bad_variants);
+}
+
+sub restore_password {
     my ($self) = @_;
-    my $OS = rnd->pick("Windows XP", "GNU/Linux", "почтовый аккаунт");
     my $str = join '', map { rnd->pick('A'..'F', 0..9) } 1..5;
-    my $ans_str = $str;
+    my $init_str = $str;
+    # Сгенерируем 2 разные маленькие строки из 2х символов: буква + цифра.
     my $sub_init = rnd_subpattern();
     my $sub_good = rnd_subpattern($sub_init);
 
+    # Вставим в разные копии одной строки в 2 позиции маленькие строки.
+    # Для полученных строк выполняется: $str получается из $init_str заменой
+    # $sub_init на $sub_good
     my @pos = sort {$b <=> $a} rnd->pick_n(2, 0..(length $str) - 1);
     for (@pos) {
         substr($str, $_, 0, $sub_good);
-        substr($ans_str, $_, 0, $sub_init);
+        substr($init_str, $_, 0, $sub_init);
     }
+    $str =~ s/$sub_init/$sub_good/;
 
-    my @good_variants;
-    for my $i (1..length $str) {
-        my ($res, $b) = (" $str ", 0);
-        while ($res =~ s/(\D)\d{$i}(\D)/$1$2/) {
-            push @{$self->{variants}}, $res;
-            $b = 1;
-        }
-        push @good_variants, [(pop @{$self->{variants}}), $i] if $b;
-    }
+    # Удалив полностью и частично чифры из строк получим варианты ответов
+    my ($good_variants, $bad_variants) = delete_nums($str);
+    my ($bad_variants2, $bad_variants3) = delete_nums($init_str);
 
-    rnd->shuffle(@good_variants);
-    my $ans = $good_variants[0];
+    rnd->shuffle(@{$good_variants});
+    my $ans = shift @{$good_variants};
 
     @{$self->{variants}} = (
        $ans->[0],
-       @{$self->{variants}},
-       (map {$_->[0]} @good_variants[1..$#good_variants])
-    );
+       @{$bad_variants},
+       (map {$_->[0]} @{$good_variants}),
+       @{$bad_variants3},
+       (map {$_->[0]} @{$bad_variants2})
+   );
 
-    $self->{text} =
+    @{$self->{variants}} = @{$self->{variants}}[0..3];
+
+    my $OS = rnd->pick("Windows XP", "GNU/Linux", "почтовый аккаунт");
+    $self->{text} .=
       rnd->pick(@EGE::Russian::SimpleNames::list) .
       " забыл пароль для входа в $OS, но помнил алгоритм его " .
-      "получения из символов «$ans_str» в строке подсказки. Если " .
+      "получения из символов «$init_str» в строке подсказки. Если " .
       "последовательность символов «$sub_init» заменить на «$sub_good» " .
       "и из получившейся строки удалить все ".
       ($ans->[1] == 1 ? "одно" : (num_by_words $ans->[1], 1, "genitive")) .
       "значные числа, то полученная последовательность и " .
       "будет паролем: ";
-
-    push @{$self->{variants}}, $ans_str;
-    while ($ans_str =~ s/(\D)\d{$ans->[1]}(\D)/$1$2/) {
-        push @{$self->{variants}}, $ans_str;
-    }
-    push @{$self->{variants}}, $sub_good;
-
-    @{$self->{variants}} = @{$self->{variants}}[0..3];
-
 }
 
 1;
