@@ -39,20 +39,60 @@ sub push_each {
     push @$_, $val for @$arr;
 };
 
-#path (правее какой вершины)
-my $p = [ [], [], [], [] ];
+sub unique_pairs {
+    my ($n) = @_;
+    my @res;
+    for my $i (0 .. $n - 1) {
+        for my $j ($i + 1 .. $n - 1) {
+            push @res, [$i, $j];
+        }
+    }
+    @res;
+}
+
+sub all_pairs {
+    my ($n) = @_;
+    my @res;
+    for my $i (0 .. $n - 1) {
+        for my $j (0 .. $n - 1) {
+            push @res, [$i, $j];
+        }
+    }
+    @res;
+}
+
+sub AddRelation {
+    my ($i, $j, $h, $sym) = @_;
+    $h->{$i}->{$j} = 1;
+    $h->{$j}->{$i} = 1 if $sym;
+}
+
+sub RmRelation {
+    my ($i, $j, $h, $sym) = @_;
+    delete $h->{$i}->{$j};
+    delete $h->{$j}->{$i} if $sym;
+}
+
+#(правее какой вершины)
+my $p = { 0 => {}, 1 => {}, 2 => {}, 3 => {} };
 #together
-my $t = [ [], [], [], [] ];
+my $t = { 0 => {}, 1 => {}, 2 => {}, 3 => {} };
 #not together
-my $n = [ [], [], [], [] ];
+my $n = { 0 => {}, 1 => {}, 2 => {}, 3 => {} };
 # ссылки на нижний уровень (левее каких позиций)
-my $d_left = [ [], [], [], [] ];
+my $d_left = { 0 => {}, 1 => {}, 2 => {}, 3 => {} };
 #(правее каких позиций)
-my $d_right = [ [], [], [], [] ];
-#вместе
-my $d_t = [ [], [], [], [] ];
-#не вместе
-my $d_n = [ [], [], [], [] ];
+my $d_right = { 0 => {}, 1 => {}, 2 => {}, 3 => {} };
+#на каком месте
+my $d_t = { 0 => {}, 1 => {}, 2 => {}, 3 => {} };
+#не на каком месте
+my $d_n = { 0 => {}, 1 => {}, 2 => {}, 3 => {} };
+
+#todo добавить стрелочки на нижний уровень "рядом" "не рядом"
+
+# [container, is_symmetrical]
+my @relations = ( [$p, 0], [$t, 1], [$n, 1], [$d_left, 0], [$d_right, 0],
+                  [$d_t, 0], [$d_n, 0] );
 
 sub all_top {
     our $ans = [];
@@ -77,11 +117,41 @@ sub all_top {
         }
     };
 
-    my %h = map { $_ => $$p[$_] } 0 .. $#{$p};
-    rec(\%h, [[]], scalar @{$p});
+    my %h = map { $_ => [keys %{$p->{$_}}] } 0 .. 3;
+    rec(\%h, [[]], 4);
 
     %h = map { (join ' ', @{$_} ) => $_ } @$ans; # unique ans
     map { $h{$_} } sort keys %h;
+}
+
+sub check {
+    my ($r) = @_;
+    for my $i (0 .. $#{$r}) {
+        my ($pred, $curr, $nxt) = @{$r}[$i-1 .. $i+1];
+        for (keys %{$t->{$curr}}) {
+            unless (($i > 0 && $t->{$curr}->{$pred}) ||
+                ($i < $#{$r} && $t->{$curr}->{$nxt})) {
+                return 0;
+            }
+        }
+        if ($i > 0 && $n->{$curr}->{$pred} ||
+            $i < $#{$r} && $n->{$curr}->{$nxt}) {
+            return 0;
+        }
+        for (keys %{$d_left->{$curr}}) {
+            return 0 if $_ <= $i;
+        }
+        for (keys %{$d_right->{$curr}}) {
+            return 0 if $_ >= $i;
+        }
+        for (keys %{$d_t->{$curr}}) {
+            return 0 if $_ != $i;
+        }
+        for (keys %{$d_n->{$curr}}) {
+            return 0 if $_ == $i;
+        }
+    }
+    1;
 }
 
 sub filter {
@@ -89,107 +159,48 @@ sub filter {
     grep { check($_, $t, $n) } @$r;
 }
 
-sub check {
+sub cool_check {
     my ($r) = @_;
+    my %pos = map { $r->[$_] => $_ } 0 .. 3;
     for my $i (0 .. $#{$r}) {
-        for (@{$t->[$r->[$i]]}) {
-            unless (($i > 0 && $r->[$i - 1] == $_) ||
-                ($i < $#{$r} && $r->[$i + 1] == $_)) {
-                return 0;
-            }
-        }
-        for (@{$n->[$r->[$i]]}) {
-            if (($i > 0 && $r->[$i - 1] == $_) ||
-                    ($i < $#{$r} && $r->[$i + 1] == $_)) {
-                return 0;
-            }
-        }
-        for (@{$d_left->[$r->[$i]]}) {
-            return 0 if $_ <= $i;
-        }
-        for (@{$d_right->[$r->[$i]]}) {
-            return 0 if $_ >= $i;
-        }
-        for (@{$d_t->[$r->[$i]]}) {
-            return 0 if $_ != $i;
-        }
-        for (@{$d_n->[$r->[$i]]}) {
-            return 0 if $_ == $i;
+        my ($curr) = $r->[$i];
+        for (keys %{$p->{$curr}}) {
+            return 0 if $i <= $pos{$_};
         }
     }
     1;
 }
 
-sub all_pairs {
-    my ($n) = @_;
-    my @res;
-    for my $i (0 .. $n - 1) {
-        for my $j ($i + 1 .. $n - 1) {
-            push @res, [$i, $j];
-        }
-    }
-    @res;
+sub cool_filter {
+    my ($r, $t, $n) = @_;
+    grep { cool_check($_, $t, $n) && check($_, $t, $n) } @$r;
 }
 
 sub try_new_cond {
-    my ($pair, $answers) = @_;
-    our ($variant, $i, $j) = @$pair;
-
-    sub MakeBiAction {
-        my ($arr) = @_;
-        {
-            try => sub { push @{$arr->[$j]}, $i; push @{$arr->[$i]}, $j },
-            restore => sub { pop @{$arr->[$j]}; pop @{$arr->[$i]} }
-        }
-    }
-    sub MakeMonoAction {
-        my ($arr) = @_;
-        {
-            try => sub { push @{$arr->[$i]}, $j },
-            restore => sub { pop @{$arr->[$i]} }
-        }
-    }
-
-    my $action =
-      [
-       MakeBiAction($t),
-       MakeBiAction($n),
-       MakeMonoAction($d_left),
-       MakeMonoAction($d_right),
-       MakeMonoAction($d_t),
-       MakeMonoAction($d_n)
-      ]->[$variant];
-    $action->{try}->();
+    my ($action, $answers) = @_;
+    AddRelation(@$action);
     my @new_ans = filter([ all_top() ]);  #filter( $answers );
-    my $new_cnt = @new_ans;
-    if ($new_cnt == @$answers || !$new_cnt) {
-        $action->{restore}->();
-        return 0;
+    if (@new_ans == @$answers || !@new_ans) {
+        RmRelation(@$action);
+    } else {
+        @$answers = @new_ans;
     }
-    @$answers = @new_ans;
-    return $new_cnt == 1;
+    return @new_ans == 1;
 }
 
 sub create_cond {
-    our ($max_act) = @_;
+    our (@relations) = @_;
     sub make_pairs {
         my @pairs;
-        for my $p (all_pairs(scalar @$p)) {
-            for my $variant (0 .. $max_act) {
-                push @pairs, [$variant, @$p];
-            }
-        }
-        if ($max_act >= 4) {
-            for (0 .. scalar @$p) {
-                push @pairs, [4, $_, $_];
-            }
+        for my $rel (@relations) {
+            my @tmp = $rel->[1] ? unique_pairs(4) : all_pairs(4);
+            push @pairs, [@$_, @$rel] for @tmp;
         }
         rnd->shuffle(@pairs);
     }
     my @pairs = make_pairs();
-    my $ok = 0;
     my @answers = all_top();
-    my $ans_cnt = @answers;
+    my $ok = !@answers;
     while (!$ok) {
         $ok |= try_new_cond(pop @pairs, \@answers);
         @pairs = make_pairs unless @pairs;
@@ -199,135 +210,76 @@ sub create_cond {
 
 sub create_init_cond {
     my ($cnt) = @_;
-    my @edgees = rnd->shuffle( all_pairs(scalar @$p) );
-    for (@edgees[0 .. $cnt - 1]) {
+    my @edgees = rnd->pick_n($cnt, unique_pairs(4) );
+    for (@edgees) {
         my ($i, $j) = @$_;
-        push @{$p->[$i]}, $j;
+        $p->{$j}->{$i} = 1;
     }
 }
 
-sub clear { #todo - удалить лишние условия (подумать будут ли они заодно)
-    my $var = all_perm();
+sub clear {
+    my $var = all_perm(0 .. 3);
+    my $ans_cnt = cool_filter($var);
     my $ok = 1;
-  LOOP:
     while ($ok) {
         $ok = 0;
-        for my $i (0 .. $#{$t}) {
-            for (0 .. $#{$t->[$i]}) {
-                my $e = shift @{$t->[$i]};
-                $t->[$e] = [ map { $_ != $i } @{$t->[$e]} ];
-                if (scalar( filter($var) ) != 1) {
-                    push @{$t->[$i]}, $e;
-                    push @{$t->[$e]}, $i;
-                } else {
-                    redo LOOP;
+        for my $rel (@relations) {
+            for my $i (0 .. 3) {
+                for my $j (keys %{$rel->[0]->{$i}}) {
+                    RmRelation($i, $j, @$rel);
+                    if (cool_filter($var) != $ans_cnt) {
+                        AddRelation($i, $j, @$rel)
+                    } else {
+                        $ok = 1;
+                    }
                 }
             }
         }
+
     }
 }
 
 sub solve {
     my ($self) = @_;
-    #print Dumper( (all_pairs(4))[0..3] );
     my @names = qw/ A B C D /;
     my @prof = qw/ 0 1 2 3 4 /;
 
     create_init_cond(rnd->pick(2, 2, 3));
-    #$p->[0] = [1];
-    #$p->[2] = [3];
-    my $ans = create_cond(1);
-    #clear();
-=begin
-    $self->{text} .= "<pre>";
-    $self->{text} .= Dumper filter([all_top()]);
-    $self->{text} .= "</pre>";
-=cut
+    my $ans = create_cond(@relations[1 .. 2]);
+    clear();
+
+    my @descr = ( "правее", "рядом c", "не рядом c" );
 
     my @cond;
-    for my $i (0 .. $#{$p}) {
-        for (@{$p->[$i]}) {
-            push @cond, "$prof[$i] правее $prof[$_]";
+    for my $j (0 .. 2) {
+        my $rel = $relations[$j];
+        for my $i (0 .. 3) {
+            for (keys %{$rel->[0]->{$i}}) {
+                if (!$rel->[1] || $i > $_) {
+                    push @cond, "$prof[$i] " . $descr[$j] .  " $prof[$_]"
+                }
+            }
         }
     }
-    for my $i (0 .. $#{$t}) {
-        for (@{$t->[$i]}) {
-            push @cond, "$prof[$i] рядом $prof[$_]" if ($i > $_);
-        }
-    }
-    for my $i (0 .. $#{$n}) {
-        for (@{$n->[$i]}) {
-            push @cond, "$prof[$i] не рядом $prof[$_]" if ($i > $_);
-        }
-    }
-
-    @cond = ();
-    $_ = [ [], [], [], [] ] for $p, $t, $n, $d_left, $d_right, $d_t, $d_n;
-
-#    $p->[0] = [1];
-#    $p->[2] = [3];
-#    $d_t->[1] = [0];
-#    $d_right->[0] = [2];
-
-
-    create_init_cond(rnd->pick(2, 2, 3));
-    $ans = create_cond(5);
-
-    for my $i (0 .. $#{$p}) {
-        for (@{$p->[$i]}) {
-            push @cond, "$names[$i] правее $names[$_]";
-        }
-    }
-    for my $i (0 .. $#{$t}) {
-        for (@{$t->[$i]}) {
-            push @cond, "$names[$i] рядом $names[$_]" if ($i > $_);
-        }
-    }
-    for my $i (0 .. $#{$n}) {
-        for (@{$n->[$i]}) {
-            push @cond, "$names[$i] не рядом $names[$_]" if ($i > $_);
-        }
-    }
-    for my $i (0 .. $#{$d_t}) {
-        for (@{$d_t->[$i]}) {
-            push @cond, "$names[$i] работает $prof[$_]";
-        }
-    }
-    for my $i (0 .. $#{$d_n}) {
-        for (@{$d_n->[$i]}) {
-            push @cond, "$names[$i] не является $prof[$_]";
-        }
-    }
-    for my $i (0 .. $#{$d_left}) {
-        for (@{$d_left->[$i]}) {
-            push @cond, "$names[$i] левее $prof[$_]";
-        }
-    }
-    for my $i (0 .. $#{$d_right}) {
-        for (@{$d_right->[$i]}) {
-            push @cond, "$names[$i] правее $prof[$_]";
-        }
-    }
-    #todo добавить стрелочки на нижний уровень "рядом" "нерядом"
 
     $self->{text} .= "<ol>";
     $self->{text} .= "<li>$_</li>" for @cond;
     $self->{text} .= "</ol>";
-#=begin
+
+=begin
     $self->{text} .= "<pre>";
-    #    $self->{text} .= Dumper [all_top()];
     for (filter([all_top()])) {
+        $self->{text} .= join '', @$_;
+        $self->{text} .= "<br/>";
+    }
+    $self->{text} .= "----<br/>";
+    for (all_top()) {
         $self->{text} .= join '', @$_;
         $self->{text} .= "<br/>";
     }
     $self->{text} .= Dumper $p, $t, $n, $d_t, $d_n, $d_left, $d_right;
     $self->{text} .= "</pre>";
-#=cut
+=cut
 
-    #    print scalar all_top($p, $n), "\n";
-
-#    print scalar filter([ all_top($p, $n) ]), "\n";
-    #print scalar all_top($p, $n), "\n";
-    #print Dumper all_top($p, $n);
     $self->{correct} = Dumper $ans;
 }
