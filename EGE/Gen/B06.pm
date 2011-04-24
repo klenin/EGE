@@ -239,6 +239,24 @@ sub clear {
     }
 }
 
+use EGE::Russian::SimpleNames;
+
+sub create_questions {
+    my ($descr) = @_;
+    my @cond;
+    for my $j (0 .. $#relations) {
+        my $rel = $relations[$j];
+        for my $i (0 .. 3) {
+            for (keys %{$rel->[0]->{$i}}) {
+                if (!$rel->[1] || $i > $_) {
+                    push @cond, $descr->[$j]->($i, $_)
+                }
+            }
+        }
+    }
+    @cond;
+}
+
 sub solve {
     my ($self) = @_;
     my @names = qw/ A B C D /;
@@ -247,20 +265,31 @@ sub solve {
     create_init_cond(rnd->pick(2, 2, 3));
     my $ans = create_cond(@relations[1 .. 2]);
     clear();
+    my @prof_order = $ans->[0];
 
-    my @descr = ( "правее", "рядом c", "не рядом c" );
+    my @descr = ( sub { "$prof[$_[0]] правее $prof[$_[1]]" },
+                  sub { "$prof[$_[0]] рядом с $prof[$_[1]]" },
+                  sub { "$prof[$_[0]] нe рядом с $prof[$_[1]]" } );
 
-    my @cond;
-    for my $j (0 .. 2) {
-        my $rel = $relations[$j];
-        for my $i (0 .. 3) {
-            for (keys %{$rel->[0]->{$i}}) {
-                if (!$rel->[1] || $i > $_) {
-                    push @cond, "$prof[$i] " . $descr[$j] .  " $prof[$_]"
-                }
-            }
-        }
+    my @cond = create_questions(\@descr);
+
+    for my $r ($t, $p, $n) {
+        $r->{$_} = {} for (0 .. 3)
     }
+
+    create_init_cond(rnd->pick(2, 2, 3));
+    $ans = create_cond(@relations[1 .. $#relations]);
+    clear();
+
+    @descr = ( sub { "$names[$_[0]] правее $names[$_[1]]" },
+               sub { "$names[$_[0]] рядом с $names[$_[1]]" },
+               sub { "$names[$_[0]] нe рядом с $names[$_[1]]" },
+               sub { "$names[$_[0]] левее $prof[$_[1]]" },
+               sub { "$names[$_[0]] правее  $prof[$_[1]]" },
+               sub { "$names[$_[0]] работает $prof[$_[1]]" },
+               sub { "$names[$_[0]] не работает $prof[$_[1]]" } );
+
+    @cond = (@cond, create_questions(\@descr));
 
     $self->{text} .= "<ol>";
     $self->{text} .= "<li>$_</li>" for @cond;
@@ -268,16 +297,18 @@ sub solve {
 
 =begin
     $self->{text} .= "<pre>";
+    for (cool_filter([all_top()])) {
+        $self->{text} .= (join '', @$_) . "<br/>";
+    }
+    $self->{text} .= "----<br/>";
     for (filter([all_top()])) {
-        $self->{text} .= join '', @$_;
-        $self->{text} .= "<br/>";
+        $self->{text} .= (join '', @$_) . "<br/>";
     }
     $self->{text} .= "----<br/>";
     for (all_top()) {
-        $self->{text} .= join '', @$_;
-        $self->{text} .= "<br/>";
+        $self->{text} .= (join '', @$_) . "<br/>";
     }
-    $self->{text} .= Dumper $p, $t, $n, $d_t, $d_n, $d_left, $d_right;
+    $self->{text} .= Dumper map { $_->[0] } @relations;
     $self->{text} .= "</pre>";
 =cut
 
