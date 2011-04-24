@@ -8,13 +8,12 @@ use strict;
 use warnings;
 use utf8;
 
-use Encode;
-
 use EGE::Random;
-use EGE::NumText;
+use EGE::Russian::SimpleNames;
 use Data::Dumper;
 
 use Storable qw/ dclone /;
+use Switch;
 
 sub all_perm {
     my $rec;
@@ -97,7 +96,8 @@ my @relations = ( [$p, 0], [$t, 1], [$n, 1], [$d_left, 0], [$d_right, 0],
 sub all_top {
     our $ans = [];
 
-    sub rec {
+    my $rec;
+    $rec = sub {
         my ($path, $results, $n) = @_;
         unless ($n) {
             push @$ans, $_ for @$results;
@@ -112,13 +112,13 @@ sub all_top {
                 while (my ($k, $v) = each %{$np}) {
                     $np->{$k} = [ grep { $_ != $i } @$v ];
                 }
-                rec($np, $nr, $n - 1);
+                $rec->($np, $nr, $n - 1);
             }
         }
     };
 
     my %h = map { $_ => [keys %{$p->{$_}}] } 0 .. 3;
-    rec(\%h, [[]], 4);
+    $rec->(\%h, [[]], 4);
 
     %h = map { (join ' ', @{$_} ) => $_ } @$ans; # unique ans
     map { $h{$_} } sort keys %h;
@@ -159,7 +159,7 @@ sub filter {
     grep { check($_, $t, $n) } @$r;
 }
 
-sub cool_check {
+sub total_check {
     my ($r) = @_;
     my %pos = map { $r->[$_] => $_ } 0 .. 3;
     for my $i (0 .. $#{$r}) {
@@ -171,15 +171,15 @@ sub cool_check {
     1;
 }
 
-sub cool_filter {
+sub total_filter {
     my ($r, $t, $n) = @_;
-    grep { cool_check($_, $t, $n) && check($_, $t, $n) } @$r;
+    grep { total_check($_, $t, $n) && check($_, $t, $n) } @$r;
 }
 
 sub try_new_cond {
     my ($action, $answers) = @_;
     AddRelation(@$action);
-    my @new_ans = filter([ all_top() ]);  #filter( $answers );
+    my @new_ans = filter( $answers );
     if (@new_ans == @$answers || !@new_ans) {
         RmRelation(@$action);
     } else {
@@ -205,7 +205,8 @@ sub create_cond {
         $ok |= try_new_cond(pop @pairs, \@answers);
         @pairs = make_pairs unless @pairs;
     }
-    \@answers;
+    clear_cond();
+    @{$answers[0]};
 }
 
 sub create_init_cond {
@@ -217,9 +218,9 @@ sub create_init_cond {
     }
 }
 
-sub clear {
+sub clear_cond {
     my $var = all_perm(0 .. 3);
-    my $ans_cnt = cool_filter($var);
+    my $ans_cnt = total_filter($var);
     my $ok = 1;
     while ($ok) {
         $ok = 0;
@@ -227,7 +228,7 @@ sub clear {
             for my $i (0 .. 3) {
                 for my $j (keys %{$rel->[0]->{$i}}) {
                     RmRelation($i, $j, @$rel);
-                    if (cool_filter($var) != $ans_cnt) {
+                    if (total_filter($var) != $ans_cnt) {
                         AddRelation($i, $j, @$rel)
                     } else {
                         $ok = 1;
@@ -235,11 +236,8 @@ sub clear {
                 }
             }
         }
-
     }
 }
-
-use EGE::Russian::SimpleNames;
 
 sub create_questions {
     my ($descr) = @_;
@@ -257,60 +255,89 @@ sub create_questions {
     @cond;
 }
 
+sub genitive { # родительный падеж
+    my $name = shift;
+    switch ($name) {
+        case /й$/ { $name =~ s/й$/я/ }
+        case /ь$/ { $name =~ s/ь$/я/ }
+        else { $name .= 'а' };
+    }
+    $name;
+}
+
+sub ablative { # творительный падеж
+    my $name = shift;
+    switch ($name) {
+        case /й$/ { $name =~ s/й$/ем/ }
+        case /ь$/ { $name =~ s/ь$/ем/ }
+        else { $name .= 'ом' };
+    }
+    $name;
+}
+
+sub on_right {
+    switch (rnd->in_range(0, 3)) {
+        case 0 { return "$_[1] живет левее  " . genitive($_[0]) }
+        case 1 { return "$_[0] живёт правее " . genitive($_[1]) }
+        case 2 { return "$_[1] живет левее, чем  " . $_[0] }
+        case 3 { return "$_[0] живёт правее, чем " . $_[1] }
+    }
+ }
+
+sub together {
+    "$_[0] живёт рядом " . "c " . ablative($_[1]);
+}
+
+sub not_together {
+    "$_[0] живёт не рядом " . "c " . ablative($_[1]);
+}
+
 sub solve {
     my ($self) = @_;
-    my @names = qw/ A B C D /;
-    my @prof = qw/ 0 1 2 3 4 /;
+    my @names = qw/ Александр Борис Геннадий Денис /;
+    my @prof = qw/ Автомеханик Банкир Водитель Геолог /;
 
     create_init_cond(rnd->pick(2, 2, 3));
-    my $ans = create_cond(@relations[1 .. 2]);
-    clear();
-    my @prof_order = $ans->[0];
+    my @prof_order = create_cond(@relations[1 .. 2]);
 
-    my @descr = ( sub { "$prof[$_[0]] правее $prof[$_[1]]" },
-                  sub { "$prof[$_[0]] рядом с $prof[$_[1]]" },
-                  sub { "$prof[$_[0]] нe рядом с $prof[$_[1]]" } );
-
+    my @descr = ( sub { on_right($prof[$_[0]], $prof[$_[1]]) },
+                  sub { together($prof[$_[0]], $prof[$_[1]]) },
+                  sub { not_together($prof[$_[0]], $prof[$_[1]]) } );
     my @cond = create_questions(\@descr);
 
-    for my $r ($t, $p, $n) {
-        $r->{$_} = {} for (0 .. 3)
-    }
-
+    for my $r ($t, $p, $n) { $r->{$_} = {} for (0 .. 3) } #clear conditions
     create_init_cond(rnd->pick(2, 2, 3));
-    $ans = create_cond(@relations[1 .. $#relations]);
-    clear();
+    my @ans = create_cond(@relations[1 .. $#relations]);
 
-    @descr = ( sub { "$names[$_[0]] правее $names[$_[1]]" },
-               sub { "$names[$_[0]] рядом с $names[$_[1]]" },
-               sub { "$names[$_[0]] нe рядом с $names[$_[1]]" },
-               sub { "$names[$_[0]] левее $prof[$_[1]]" },
-               sub { "$names[$_[0]] правее  $prof[$_[1]]" },
-               sub { "$names[$_[0]] работает $prof[$_[1]]" },
-               sub { "$names[$_[0]] не работает $prof[$_[1]]" } );
-
+    @descr = ( sub { on_right($names[$_[0]], $names[$_[1]]) },
+               sub { together($names[$_[0]], $names[$_[1]]) },
+               sub { not_together($names[$_[0]], $names[$_[1]]) },
+               sub { on_right($prof[$prof_order[$_[1]]], $names[$_[0]]) },
+               sub { on_right($names[$_[0]], $prof[$prof_order[$_[1]]]) },
+               sub { "$names[$_[0]] работает " .
+                       ablative($prof[$prof_order[$_[1]]]) },
+               sub { "$names[$_[0]] не работает " .
+                       ablative($prof[$prof_order[$_[1]]]) } );
     @cond = (@cond, create_questions(\@descr));
 
+    $self->{text} =
+      "На одной улице стоят в ряд 4 дома, в которых живут 4 человека: " .
+      (join ", ", map "<strong>$_</strong>", @names) .
+      ". Известно, что каждый из них владеет ровно одной из следующих профессий: " .
+      (join ", ", map "<strong>$_</strong>", @prof) .
+      ", но неизвестно, кто какой и неизвестно, кто в каком доме живет. Однако, " .
+      "известно, что:<br/>";
+
     $self->{text} .= "<ol>";
-    $self->{text} .= "<li>$_</li>" for @cond;
+    $self->{text} .= "<li>$_</li>" for rnd->shuffle(@cond);
     $self->{text} .= "</ol>";
 
-=begin
-    $self->{text} .= "<pre>";
-    for (cool_filter([all_top()])) {
-        $self->{text} .= (join '', @$_) . "<br/>";
-    }
-    $self->{text} .= "----<br/>";
-    for (filter([all_top()])) {
-        $self->{text} .= (join '', @$_) . "<br/>";
-    }
-    $self->{text} .= "----<br/>";
-    for (all_top()) {
-        $self->{text} .= (join '', @$_) . "<br/>";
-    }
-    $self->{text} .= Dumper map { $_->[0] } @relations;
-    $self->{text} .= "</pre>";
-=cut
+    my @example = rnd->shuffle(@names);
+    $self->{text} .=
+      "Выясните, кто какой профессии, и кто где живет, и дайте ответ в виде " .
+      "заглавных букв имени людей, в порядке слева направо. Например, если бы " .
+      "в домах жили (слева направо) " . (join ", ", @example) .
+      ", ответ был бы: " . join '', map substr($_, 0, 1), @example;
 
-    $self->{correct} = Dumper $ans;
+    $self->{correct} = join '',  map { substr($names[$_], 0, 1) } @ans;
 }
