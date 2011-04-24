@@ -10,6 +10,7 @@ use utf8;
 
 use EGE::Random;
 use EGE::Russian::Names;
+use EGE::NumText qw/ num_by_words /;
 
 use POSIX qw/ ceil /;
 use Data::Dumper;
@@ -38,7 +39,7 @@ sub positive_stmt {
 
 sub negative_stmt {
     my ($p, $me) = (shift, shift);
-    return "разбила Мариванна" unless (@_);
+    return "разбил директор" unless (@_);
     my $neg = rnd->pick(["не виноват", "не виновата", "не виновны"],
                         ["этого не делал", "этого не делала", "этого не делали"],
                         ["не разбивал", "не разбивала", "не разбивали"]);
@@ -56,41 +57,85 @@ sub different_people {
     map { rnd->pick(@{$h{$_}}) } rnd->pick_n($count, keys %h);
 }
 
-sub who_is_right {
-    my ($self) = @_;
-    my $n = rnd->in_range(4, 6);
-    my @people = different_people($n);
-
-    # придумать подходящее для задачи распределение: много к границам, мало
-    # к середине
-    my $ans_pow = rnd->in_range(1, $n);
-    my $ans_index = rnd->in_range(0, $n - 1);
-    my @powers = map { rnd->in_range(0, $n - 1) } 0 .. $n - 1;
-    @powers = map { $_ >= $ans_pow ? $_ + 1 : $_ } @powers;
-    $powers[$ans_index] = $ans_pow;
-
-    my %in_ans;
-    my @stmts = map { [] } 1 .. $n;
-    for my $i (0 .. $n - 1) {
-        for my $j (rnd->pick_n($powers[$i], 0 .. $n - 1)) {
-            push @{$stmts[$j]}, $i;
-            if ($i == $ans_index) {
-                $in_ans{$j} = 1;
-            }
+sub make_stmts {
+    my ($n) = @_;
+    my $row_powers = (make_powers($n));
+    my $ans = {};
+    for my $i (0 .. $n) {
+        my @select = rnd->pick_n($row_powers->[$i], 0 .. $n-1);
+        $ans->{$i}->{$_} = 1 for @select;
+    }
+    my @col_powers = ((0) x $n);
+    for my $i (0 .. $n-1) {
+        for my $j (0 .. $n-1) {
+            ++$col_powers[$j] if $ans->{$i}{$j};
         }
     }
-
-    my @strong;
-    my @weak;
-    for my $i (0 .. $n - 1) {
-        if (!@{$stmts[$i]} || @{$stmts[$i]} == $n) {
-            push @weak, $i;
-            next;
+    my %col_powers;
+    for my $i (0 .. $n-1) {
+        $col_powers{$col_powers[$i]} ||= [];
+        push @{$col_powers{$col_powers[$i]}}, $i;
+    }
+    my ($min, $mi) = ($n + 1, -1);
+    for my $pow (keys %col_powers) {
+        if (@{$col_powers{$pow}} < $min) {
+            ($min, $mi) = (scalar @{$col_powers{$pow}}, $pow);
         }
-        push @strong, $i;
+    }
+    my $ans_index = $mi;
+    if (@{$col_powers{$mi}} > 1) {
+        my @elems = rnd->shuffle(@{$col_powers{$mi}});
+        $ans_index = shift @elems;
+        $ans->{$n}->{$_} = 1 for @elems;
+        ++$n;
+    }
+
+    ($n, $col_powers[$ans_index], $ans_index, $ans);
+}
+
+sub make_powers {
+    # придумать подходящее для задачи распределение: много к границам, мало
+    # к середине, при этом нет нулей или $n
+    my ($n) = @_;
+    my $ans_pow = rnd->in_range(1, $n-1);
+    my $ans_index = rnd->in_range(0, $n - 1);
+    my @powers = map { rnd->in_range(0, $n - 3) } 0 .. $n - 1;
+    @powers = map { $_ >= $ans_pow ? $_ + 2 : $_ + 1 } @powers;
+    $powers[$ans_index] = $ans_pow;
+    \@powers;
+}
+
+sub print_matr { # debug
+    my ($a, $n) = @_;
+    my $res = "<style>td { border : 1px solid black } </style>";
+    $res .= "<table style=\"border: 1px solid black; border-collapse: collapse\">";
+    $res .= "<tr><td></td>";
+    $res .= "<th>$_</th>" for 0 .. $n-1;
+    for my $i (0 .. $n-1) {
+        $res .= "<tr><th>$i</th>";
+        for my $j (0 .. $n-1) {
+            $res .= "<td>" .
+              ($a->{$i}->{$j} ? 1 : "-" ) .
+              "</td>";
+        }
+        $res .= "<tr>";
+    }
+    "$res</table>";
+}
+
+sub who_is_right {
+    my ($self) = @_;
+    my $n = rnd->in_range(7, 9);
+    my @people = different_people($n + 1);
+
+    my ($ans_pow, $ans_index, $stmts);
+    ($n, $ans_pow, $ans_index, $stmts) = make_stmts($n);
+#    $self->{text} .= print_matr($stmts, $n);
+
+    for my $i (0 .. $n - 1) {
         my $s;
-        my %h = map { $_, 1} @{$stmts[$i]};
-        if (@{$stmts[$i]} <= ceil($n/2)) {
+        my %h = %{$stmts->{$i}};
+        if (keys %h <= ceil($n/2)) {
             $s = positive_stmt(\@people, $i, keys %h);
         } else {
             $s = negative_stmt(\@people, $i, grep { !$h{$_} } 0 .. $n - 1);
@@ -98,21 +143,25 @@ sub who_is_right {
         $self->{text} .= "$people[$i]->[0]: «$s»<br/>";
     }
 
-    for (@weak) {
-        my $to = rnd->pick(@strong);
-        my $side = rnd->coin();
-        $self->{text} .= sprintf("%s: «%s»<br/>",  $people[$_]->[0],
-          "$people[$to]->[0] " .
-          ["говорит неправду", "говорит правду"]->[$side]);
-        push @strong, $_;
-        unless ($side xor $in_ans{$to}) { $in_ans{$_} = 1 }
-    }
+    my $action = rnd->pick( ["разбил окно", "в кабинете"],
+                            ["разбил цветочный горшок", "в кабинете"],
+                            ["разбил мензурки", "в лаборатории"],
+                            ["разбил люстру", "в учительской"] );
+    my $big_men = rnd->pick( ["директору", "директора"],
+                             ["завучу", "завуча"],
+                             ["классному руководителю", "руководителя"],
+                             ["участковому", "участкового"] );
+    $self->{text} = ucfirst(num_by_words($n)) .
+      " школьников, остававшихся в классе на перемене, были вызваны " .
+      "к $big_men->[0]. <strong>Один из них</strong> " .
+      (join " ", @$action) . ". На вопрос " .
+      "$big_men->[1], кто это сделал, были получены следующие ответы:<br/>" .
+      "<p>$self->{text}</p>" .
+      "Кто $action->[0], если известно, что из этих девяти высказываний " .
+      ($ans_pow == 1 ? "истино" : "истины") .
+      " <strong>только " . num_by_words($ans_pow, 2) . "</strong>" .
+      "? Ответ запишите в виде первой буквы имени.";
 
-    for (keys %in_ans) {
-        $self->{text} .= $people[$_]->[0] . " ";
-    }
-    $self->{text} = "Ровно " . scalar(keys %in_ans) .
-                    " говорят правду: <br/><br/>" . $self->{text};
     $self->{correct} = substr($people[$ans_index]->[0], 0, 1);
 }
 

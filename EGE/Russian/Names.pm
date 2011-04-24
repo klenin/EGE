@@ -4,8 +4,7 @@ use strict;
 use warnings;
 use utf8;
 
-our @list =
-qw(
+our @male = qw(
 Августин
 Авдей
 Авраам
@@ -129,7 +128,9 @@ qw(
 Ян
 Яромир
 Ярослав
+);
 
+our @female = qw(
 Аврора
 Агата
 Агнесса
@@ -282,3 +283,5 @@ qw(
 Яна
 Ярослава
 );
+
+our @list = (@male, @female);
