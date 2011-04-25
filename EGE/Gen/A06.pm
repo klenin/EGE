@@ -197,14 +197,14 @@ sub alg_avg {
 
 sub stime { return int($_[0] / 60 + 7) . ":" . sprintf("%02d", $_[0] % 60) }
 
-sub random_routes{
+sub random_routes {
 # Генерация случайных маршрутов без петель
 # |~|1|2|3| каждому целому числу от 0 до $n * ($n - 1) можно
 # |4|~|5|6| однозначно сопоставить позицию в матрице смежности
 # |7|8|~|9|
 # ...
     my ($path_count, $n) = @_;
-    my @b = rnd->pick_n($path_count, 0..$n*($n - 1) - 1);
+    my @b = rnd->pick_n($path_count, 0 .. $n*($n - 1) - 1);
     my @v;
     for (@b) {
         my ($x, $y) = ($_ % ($n - 1), int($_ / ($n - 1)));
@@ -220,12 +220,12 @@ sub random_routes{
     @v;
 }
 
-sub find_all_routes{
-# Для нахождения кратчайших используется Алгоритм Флойда — Уоршелла
+sub find_all_routes {
+# Для нахождения кратчайших расстояний используется Алгоритм Флойда — Уоршелла
     my ($a, $n) = @_;
-    for my $k (0..$n) {
-        for my $i (0..$n) {
-            for my $j (0..$n) {
+    for my $k (0 .. $n) {
+        for my $i (0 .. $n) {
+            for my $j (0 .. $n) {
                 my ($v, $u, $w) = ($a->[$i][$j], $a->[$i][$k], $a->[$k][$j]);
                 next if !defined $u->{fin} || !defined $w->{start} || ($u->{fin} > $w->{start});
                 if (!defined $v->{start} || ($v->{fin} > $w->{fin})) {
@@ -240,7 +240,7 @@ sub find_all_routes{
     }
 }
 
-sub gen_schedule_text{
+sub gen_schedule_text {
     my ($way, $towns, $v) = @_;
     my $start_time = stime(5 * rnd->in_range(0, int($way->{start}/5)));
     my $text = <<TEXT
@@ -272,13 +272,12 @@ TEXT
     $text;
 }
 
-sub bus_station{
+sub bus_station {
     my ($self) = @_;
     my $towns_count = 4;
     my @towns = rnd->pick_n($towns_count, qw(ЛИСЬЕ СОБОЛЕВО ЕЖОВО ЗАЙЦЕВО МЕДВЕЖЬЕ ПЧЕЛИННОЕ));
     my @init_verts = random_routes(rnd->in_range(6, 10), $towns_count);
     my $a = [];
-    $a->[$_] = [] for (0..$towns_count);
     $a->[$_->{from}][$_->{to}] = $_ for @init_verts;
     find_all_routes($a, $towns_count);
     my @can_go;
@@ -294,13 +293,13 @@ sub bus_station{
     # При добавлении проверяется уникальность ответов.
     my @ans = ($way->{fin});
     push (@ans, $way->{pred_res}) if defined $way->{last_time};
-    for my $i (@ans..$towns_count - 1) {
+    for my $i (@ans .. $towns_count - 1) {
         my $elem = $a->[$i][$way->{to}];
         if (defined $elem->{fin}) {
             push (@ans, $elem->{fin}) unless grep $_ == $elem->{fin}, @ans;
         }
     }
-    for (@ans..$towns_count - 1) {
+    for (@ans .. $towns_count - 1) {
         my $elem;
         do { $elem = rnd->pick(@can_go) } while grep $_ == $elem->{fin}, @ans;
         push (@ans, $elem->{fin});

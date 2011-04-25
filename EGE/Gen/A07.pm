@@ -144,11 +144,11 @@ sub random_sequences {
 }
 
 sub rnd_subpattern {
-    $_[0] = '' unless $_[0];
+    my ($last_prn) = $_[0] || '';
     my $res;
     do {
         $res = uc(rnd->english_letter()) . rnd->in_range(0, 9)
-    } while $res eq $_[0];
+    } while $res eq $last_prn;
     $res;
 }
 
@@ -156,7 +156,7 @@ sub delete_nums {
     my ($str) = @_;
     $str = " $str ";
     my (@good_variants, @bad_variants);
-    for my $len (1..length $str) {
+    for my $len (1 .. length $str) {
         my @pos;
         push @pos, pos($str)-- - $len - 1 while $str =~ /(\D)\d{$len}(\D)/g;
         next unless @pos;
@@ -190,7 +190,7 @@ sub restore_password {
     # Вставим в разные копии одной строки в 2 позиции маленькие строки.
     # Для полученных строк выполняется: $str получается из $init_str заменой
     # $sub_init на $sub_good
-    my @pos = sort {$b <=> $a} rnd->pick_n(2, 0..(length $str) - 1);
+    my @pos = sort { $b <=> $a } rnd->pick_n(2, 0 .. (length $str) - 1);
     for (@pos) {
         substr($str, $_, 0, $sub_good);
         substr($init_str, $_, 0, $sub_init);
@@ -212,7 +212,7 @@ sub restore_password {
        (map {$_->[0]} @{$bad_variants2})
    );
 
-    @{$self->{variants}} = @{$self->{variants}}[0..3];
+    @{$self->{variants}} = rnd->pick_n(4, @{$self->{variants}});
 
     my $OS = rnd->pick("Windows XP", "GNU/Linux", "почтовый аккаунт");
     $self->{text} .=

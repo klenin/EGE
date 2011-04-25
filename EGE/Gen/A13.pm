@@ -9,12 +9,12 @@ use warnings;
 use utf8;
 
 use EGE::Random;
-use List::Util qw/ reduce /;
+use List::Util qw(reduce);
 use Data::Dumper;
 
 my $q;
 
-my @extensions = qw/ txt doc png lst gif jpg map cpp pas bas /;
+my @extensions = qw(txt doc png lst gif jpg map cpp pas bas);
 
 sub random_chars { map rnd->english_letter, 1 .. $_[0] }
 sub random_str { join '', random_chars @_ }
@@ -119,12 +119,14 @@ sub gen_masks {
     my @pos = select_pos((length $s), $metachars);
     my $was_q = 0;
     my @res;
-    @res = map {
-        my @m = rnd->shuffle(map { rnd->pick(qw(? *)) } 1 .. $metachars);
-        $was_q |= ($_ eq '?') for @m;
-        put_mask_to_s($s, \@m, \@pos);
-    } 1 .. 4 while !$was_q;
-    @res;
+    do {
+        @res = map {
+            my @m = map { rnd->pick(qw(? *)) } 1 .. $metachars;
+            $was_q |= ($_ eq '?') for @m;
+            [@m];
+        } 1 .. 4;
+    } while !$was_q;
+    map { put_mask_to_s($s, $_, \@pos) } @res;
 }
 
 sub join_arr {
@@ -162,8 +164,7 @@ sub file_mask2 {
     $self->{variants} = [@good_ans, rnd->pick_n(3, @bad_ans)];
 
     my $t = $q ||= do { undef local $/; <DATA>; };
-    $self->{text} = "$t Определите, какой из указынный файлов удовлетворяет всем маскам:
-<ul>";
+    $self->{text} = "$t Определите, какой из указынный файлов удовлетворяет всем маскам:<ul>";
     for my $i (0 .. 3) {
         $self->{text} .= "<li>$base_masks->[$i].$ext_masks->[$i] </li>";
     }
@@ -196,7 +197,7 @@ sub file_mask3 {
 
     my $t = $q ||= do { undef local $/; <DATA>; };
     $self->{text} = "$t Определите, по какой из масок будет выбрана указанная группа файлов: <ul>";
-    $self->{text} .= "<li>$base_names->[$_].$ext_names->[$_]</li>" for 0..3;
+    $self->{text} .= "<li>$base_names->[$_].$ext_names->[$_]</li>" for 0 .. 3;
     $self->{text} .= "</ul>";
 }
 

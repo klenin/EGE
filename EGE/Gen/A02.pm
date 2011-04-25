@@ -11,6 +11,8 @@ use utf8;
 use EGE::Random;
 use EGE::NumText;
 
+use POSIX qw(ceil);
+
 sub sport {
     my ($self) = @_;
     my $flavour = rnd->pick(
@@ -69,7 +71,7 @@ sub max_pow_contained {
 
 sub car_numbers {
     my ($self) = @_;
-    my $obj_name = choose_obg();rnd->pick(
+    my $obj_name = rnd->pick(
         { long => 'автомобильный номер', short => 'номер',
                forms => ['номерa', 'номеров', 'номеров'] },
         { long => 'телефонный номер', short => 'номер',
