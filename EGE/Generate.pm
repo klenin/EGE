@@ -33,6 +33,9 @@ use EGE::Gen::B02;
 use EGE::Gen::B03;
 use EGE::Gen::B04;
 use EGE::Gen::B05;
+use EGE::Gen::B06;
+use EGE::Gen::B07;
+use EGE::Gen::B08;
 
 sub one {
     my ($package, $method) = @_;
@@ -69,7 +72,7 @@ sub all {[
     gg('A10', qw(graph_by_matrix)),
     gg('A11', qw(variable_length fixed_length)),
     gg('A12', qw(beads)),
-    gg('A13', qw(file_mask)),
+    gg('A13', qw(file_mask file_mask2 file_mask3)),
     gg('A14', qw(database)),
     gg('A15', qw(rgb)),
     gg('A16', qw(spreadsheet)),
@@ -80,6 +83,9 @@ sub all {[
     gg('B03', qw(q1234 last_digit count_digits)),
     gg('B04', qw(impl_border)),
     gg('B05', qw(calculator)),
+    gg('B07', qw(who_is_right)),
+    gg('B06', qw(solve)),
+    gg('B08', qw(identify_letter))
 ]}
 
 1;
