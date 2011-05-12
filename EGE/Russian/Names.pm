@@ -288,16 +288,29 @@ our @female = qw(
 
 our @list = (@male, @female);
 
-my $h;
+my ($h, $hm, $hf);
+
+sub different_males {
+    my ($count) = @_;
+    unless ($hm) {
+        $hm = { map { $_, [] } 'А' .. 'Я' };
+        for (@male) {
+            push @{$hm->{substr($_, 0, 1)}}, $_;
+        }
+    }
+    map { rnd->pick(@{$hm->{$_}}) } rnd->pick_n($count, keys %{$hm});
+}
 
 sub different_names {
     my ($count) = @_;
-    $h ||= { map { $_, [] } 'А' .. 'Я' };
-    for (@EGE::Russian::Names::male) {
-        push @{$h->{substr($_, 0, 1)}}, { name => $_, gender => 0 };
-    }
-    for (@EGE::Russian::Names::female) {
-        push @{$h->{substr($_, 0, 1)}}, { name => $_, gender => 1 }
+    unless ($h) {
+        $h = { map { $_, [] } 'А' .. 'Я' };
+        for (@male) {
+            push @{$h->{substr($_, 0, 1)}}, { name => $_, gender => 0 };
+        }
+        for (@female) {
+            push @{$h->{substr($_, 0, 1)}}, { name => $_, gender => 1 }
+        }
     }
     map { rnd->pick(@{$h->{$_}}) } rnd->pick_n($count, keys %{$h});
 }

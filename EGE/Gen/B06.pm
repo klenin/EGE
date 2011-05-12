@@ -9,10 +9,11 @@ use warnings;
 use utf8;
 
 use EGE::Random;
-use EGE::Russian::SimpleNames;
+use EGE::Russian::Names;
+use EGE::Russian::Jobs;
 use Data::Dumper;
 
-use Storable qw/ dclone /;
+use Storable qw(dclone);
 use Switch;
 
 sub all_perm {
@@ -62,14 +63,14 @@ sub all_pairs {
 
 sub AddRelation {
     my ($i, $j, $h, $sym) = @_;
-    $h->{$i}->{$j} = 1;
-    $h->{$j}->{$i} = 1 if $sym;
+    $h->{$i}{$j} = 1;
+    $h->{$j}{$i} = 1 if $sym;
 }
 
 sub RmRelation {
     my ($i, $j, $h, $sym) = @_;
-    delete $h->{$i}->{$j};
-    delete $h->{$j}->{$i} if $sym;
+    delete $h->{$i}{$j};
+    delete $h->{$j}{$i} if $sym;
 }
 
 #(правее какой вершины)
@@ -87,12 +88,13 @@ my $d_t = { 0 => {}, 1 => {}, 2 => {}, 3 => {} };
 #не на каком месте
 my $d_n = { 0 => {}, 1 => {}, 2 => {}, 3 => {} };
 
-#todo добавить стрелочки на нижний уровень "рядом" "не рядом"
-
-# [container, is_symmetrical]
+# [контейнер, симметричное ли отношение]
 my @relations = ( [$p, 0], [$t, 1], [$n, 1], [$d_left, 0], [$d_right, 0],
                   [$d_t, 0], [$d_n, 0] );
 
+# Все варианты сделать топологическую сортировку учитывая ограничения "правее"
+# Изначально была идея написать такую процедуру, которая учитывает все
+# ограничения. Идея провалилась, но её происки далее просматриваются в коде.
 sub all_top {
     our $ans = [];
 
@@ -103,17 +105,15 @@ sub all_top {
             push @$ans, $_ for @$results;
         }
         my @to_go = grep { !@{$path->{$_}} } keys %{$path};
-        if (@to_go) {
-            for my $i (@to_go) {
-                my $nr = dclone($results);
-                my $np = dclone($path);
-                push_each($nr, $i);
-                delete $np->{$i};
-                while (my ($k, $v) = each %{$np}) {
-                    $np->{$k} = [ grep { $_ != $i } @$v ];
-                }
-                $rec->($np, $nr, $n - 1);
+        for my $i (@to_go) {
+            my $nr = dclone($results);
+            my $np = dclone($path);
+            push_each($nr, $i);
+            delete $np->{$i};
+            while (my ($k, $v) = each %{$np}) {
+                $np->{$k} = [ grep { $_ != $i } @$v ];
             }
+            $rec->($np, $nr, $n - 1);
         }
     };
 
@@ -129,13 +129,13 @@ sub check {
     for my $i (0 .. $#{$r}) {
         my ($pred, $curr, $nxt) = @{$r}[$i-1 .. $i+1];
         for (keys %{$t->{$curr}}) {
-            unless (($i > 0 && $t->{$curr}->{$pred}) ||
-                ($i < $#{$r} && $t->{$curr}->{$nxt})) {
+            unless (($i > 0 && $t->{$curr}{$pred}) ||
+                ($i < $#{$r} && $t->{$curr}{$nxt})) {
                 return 0;
             }
         }
-        if ($i > 0 && $n->{$curr}->{$pred} ||
-            $i < $#{$r} && $n->{$curr}->{$nxt}) {
+        if ($i > 0 && $n->{$curr}{$pred} ||
+            $i < $#{$r} && $n->{$curr}{$nxt}) {
             return 0;
         }
         for (keys %{$d_left->{$curr}}) {
@@ -154,7 +154,7 @@ sub check {
     1;
 }
 
-sub filter {
+sub filter { # не учитывется ограничения "правее"
     my ($r, $t, $n) = @_;
     grep { check($_, $t, $n) } @$r;
 }
@@ -171,7 +171,7 @@ sub total_check {
     1;
 }
 
-sub total_filter {
+sub total_filter { # учитываются все ограничения
     my ($r, $t, $n) = @_;
     grep { total_check($_, $t, $n) && check($_, $t, $n) } @$r;
 }
@@ -209,12 +209,12 @@ sub create_cond {
     @{$answers[0]};
 }
 
-sub create_init_cond {
+sub create_init_cond { # создать ограничения "правее"
     my ($cnt) = @_;
     my @edgees = rnd->pick_n($cnt, unique_pairs(4) );
     for (@edgees) {
         my ($i, $j) = @$_;
-        $p->{$j}->{$i} = 1;
+        $p->{$j}{$i} = 1;
     }
 }
 
@@ -294,8 +294,8 @@ sub not_together {
 
 sub solve {
     my ($self) = @_;
-    my @names = qw/ Александр Борис Геннадий Денис /;
-    my @prof = qw/ Автомеханик Банкир Водитель Геолог /;
+    my @names = EGE::Russian::Names::different_males(4);
+    my @prof = EGE::Russian::Jobs::different_jobes(4);
 
     create_init_cond(rnd->pick(2, 2, 3));
     my @prof_order = create_cond(@relations[1 .. 2]);

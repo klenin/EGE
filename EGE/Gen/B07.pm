@@ -15,16 +15,6 @@ use EGE::NumText qw(num_by_words);
 use POSIX qw(ceil);
 use Data::Dumper;
 
-# хак для того, чтобы Dumper не экранировал символы строк из
-# других модулей перед выводом
-$Data::Dumper::Useqq = 1;
-{ no warnings 'redefine';
-    sub Data::Dumper::qquote {
-        my $s = shift;
-        return "'$s'";
-    }
-}
-
 sub positive_stmt {
     my ($p, $me) = (shift, shift);
     return "никто не разбил" unless (@_);
@@ -49,13 +39,25 @@ sub negative_stmt {
     ucfirst($s) . " " . $neg->[@_ > 1 ? 2 : $p->[$_[0]]->{gender}];
 }
 
+sub make_powers {
+    # придумать подходящее для задачи распределение: много к границам, мало
+    # к середине, при этом нет нулей или $n
+    my ($n) = @_;
+    my $ans_pow = rnd->in_range(1, $n-1);
+    my $ans_index = rnd->in_range(0, $n - 1);
+    my @powers = map { rnd->in_range(0, $n - 3) } 0 .. $n - 1;
+    @powers = map { $_ >= $ans_pow ? $_ + 2 : $_ + 1 } @powers;
+    $powers[$ans_index] = $ans_pow;
+    \@powers;
+}
+
 sub make_stmts {
     my ($n) = @_;
     my $row_powers = make_powers($n);
     my $ans = {};
     for my $i (0 .. $n) {
         my @select = rnd->pick_n($row_powers->[$i], 0 .. $n-1);
-        $ans->{$i}->{$_} = 1 for @select;
+        $ans->{$i}{$_} = 1 for @select;
     }
     my @col_powers = ((0) x $n);
     for my $i (0 .. $n-1) {
@@ -83,36 +85,6 @@ sub make_stmts {
         ++$n;
     }
     ($n, $col_powers[$ans_index], $ans_index, $ans);
-}
-
-sub make_powers {
-    # придумать подходящее для задачи распределение: много к границам, мало
-    # к середине, при этом нет нулей или $n
-    my ($n) = @_;
-    my $ans_pow = rnd->in_range(1, $n-1);
-    my $ans_index = rnd->in_range(0, $n - 1);
-    my @powers = map { rnd->in_range(0, $n - 3) } 0 .. $n - 1;
-    @powers = map { $_ >= $ans_pow ? $_ + 2 : $_ + 1 } @powers;
-    $powers[$ans_index] = $ans_pow;
-    \@powers;
-}
-
-sub print_matr { # debug
-    my ($a, $n) = @_;
-    my $res = "<style>td { border : 1px solid black } </style>";
-    $res .= "<table style=\"border: 1px solid black; border-collapse: collapse\">";
-    $res .= "<tr><td></td>";
-    $res .= "<th>$_</th>" for 0 .. $n-1;
-    for my $i (0 .. $n-1) {
-        $res .= "<tr><th>$i</th>";
-        for my $j (0 .. $n-1) {
-            $res .= "<td>" .
-              ($a->{$i}->{$j} ? 1 : "-" ) .
-              "</td>";
-        }
-        $res .= "<tr>";
-    }
-    "$res</table>";
 }
 
 sub who_is_right {
