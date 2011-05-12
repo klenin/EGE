@@ -147,7 +147,7 @@ qw(
 
 my $h;
 
-sub different_jobes {
+sub different_jobs {
     my ($count) = @_;
     unless ($h) {
         $h = { map { $_, [] } 'А' .. 'Я' };

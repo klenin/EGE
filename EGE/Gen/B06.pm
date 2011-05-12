@@ -296,7 +296,7 @@ sub not_together {
 sub solve {
     my ($self) = @_;
     my @names = EGE::Russian::Names::different_males(4);
-    my @prof = EGE::Russian::Jobs::different_jobes(4);
+    my @prof = EGE::Russian::Jobs::different_jobs(4);
 
     create_init_cond(rnd->pick(2, 2, 3));
     my @prof_order = create_cond(@relations[1 .. 2]);
