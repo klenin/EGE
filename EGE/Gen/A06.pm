@@ -1,4 +1,5 @@
-# Copyright © 2010 Alexander S. Klenin
+# Copyright © 2010-2011 Alexander S. Klenin
+# Copyright © 2011 V. Kevroletin
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
 package EGE::Gen::A06;
