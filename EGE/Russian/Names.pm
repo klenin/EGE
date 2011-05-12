@@ -4,8 +4,9 @@ use strict;
 use warnings;
 use utf8;
 
-our @list =
-qw(
+use EGE::Random;
+
+our @male = qw(
 Августин
 Авдей
 Авраам
@@ -129,7 +130,9 @@ qw(
 Ян
 Яромир
 Ярослав
+);
 
+our @female = qw(
 Аврора
 Агата
 Агнесса
@@ -282,3 +285,34 @@ qw(
 Яна
 Ярослава
 );
+
+our @list = (@male, @female);
+
+my ($h, $hm, $hf);
+
+sub different_males {
+    my ($count) = @_;
+    unless ($hm) {
+        $hm = { map { $_, [] } 'А' .. 'Я' };
+        for (@male) {
+            push @{$hm->{substr($_, 0, 1)}}, $_;
+        }
+    }
+    map { rnd->pick(@{$hm->{$_}}) } rnd->pick_n($count, keys %{$hm});
+}
+
+sub different_names {
+    my ($count) = @_;
+    unless ($h) {
+        $h = { map { $_, [] } 'А' .. 'Я' };
+        for (@male) {
+            push @{$h->{substr($_, 0, 1)}}, { name => $_, gender => 0 };
+        }
+        for (@female) {
+            push @{$h->{substr($_, 0, 1)}}, { name => $_, gender => 1 }
+        }
+    }
+    map { rnd->pick(@{$h->{$_}}) } rnd->pick_n($count, keys %{$h});
+}
+
+1;

@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use utf8;
 
+use EGE::Random;
+
 our @list =
 qw(
 Автомеханик
@@ -142,3 +144,18 @@ qw(
 Ювелир
 Юрист
 );
+
+my $h;
+
+sub different_jobes {
+    my ($count) = @_;
+    unless ($h) {
+        $h = { map { $_, [] } 'А' .. 'Я' };
+        for (@list) {
+            push @{$h->{substr($_, 0, 1)}}, $_;
+        }
+    }
+    map { rnd->pick(@{$h->{$_}}) } rnd->pick_n($count, keys %{$h});
+}
+
+1;

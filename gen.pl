@@ -30,17 +30,19 @@ sub print_dump {
 }
 
 sub print_html {
-    print q~<html xmlns="http://www.w3.org/1999/xhtml">
+    print q~<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ru" xml:lang="ru">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-  <style>li.correct { color: red; }</style>
+  <style type="text/css">li.correct { color: red; }</style>
 </head>
 <body>
 ~;
     for my $q (@$questions) {
         print qq~
 <div>
-<p>$q->{text}</p>
+$q->{text}
 <ol>
 ~;
         my (@v, $correct);
@@ -88,6 +90,7 @@ binmode STDOUT, ':utf8';
 #g('A1', 'recode');
 #g('A1', 'simple');
 #g('A2', 'sport');
+#g('A2', 'car_numbers');
 #g('A2', 'database');
 #g('A2', 'units');
 #g('A3', 'ones');
@@ -99,6 +102,7 @@ binmode STDOUT, ':utf8';
 #g('A5', 'div_mod_10');
 #g('A5', 'div_mod_rotate');
 #g('A6', 'count_by_sign');
+#g('A6', 'bus_station');
 #g('A6', 'find_min_max');
 #g('A6', 'count_odd_even');
 #g('A6', 'alg_min_max');
@@ -126,9 +130,10 @@ binmode STDOUT, ':utf8';
 #g('B03', 'count_digits');
 #g('B04', 'impl_border');
 #g('B05', 'calculator');
-#$questions = EGE::Generate::all;
 
-push @$questions, EGE::Math::Summer::g($_) for qw(p1 p2 p3 p4 p5 p6 p7);
+$questions = EGE::Generate::all;
+
+#push @$questions, EGE::Math::Summer::g($_) for qw(p1 p2 p3 p4 p5 p6 p7);
 
 print_html;
 #print_json;

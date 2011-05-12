@@ -33,6 +33,9 @@ use EGE::Gen::B02;
 use EGE::Gen::B03;
 use EGE::Gen::B04;
 use EGE::Gen::B05;
+use EGE::Gen::B06;
+use EGE::Gen::B07;
+use EGE::Gen::B08;
 
 sub one {
     my ($package, $method) = @_;
@@ -57,29 +60,32 @@ sub gg {
 }
 
 sub all {[
-    g('A1', qw(recode simple)),
-    g('A2', qw(sport database units)),
-    g('A3', qw(ones zeroes convert range)),
-    g('A4', qw(sum)),
-    g('A5', qw(arith div_mod_10 div_mod_rotate)),
-    g('A6', qw(count_by_sign find_min_max count_odd_even alg_min_max alg_avg)),
-    g('A7', qw(names animals random_sequences)),
-    g('A8', qw(equiv_3 equiv_4)),
-    g('A9', qw(truth_table_fragment)),
-    g('A10', qw(graph_by_matrix)),
-    g('A11', qw(variable_length fixed_length)),
-    g('A12', qw(beads)),
-    g('A13', qw(file_mask)),
-    g('A14', qw(database)),
-    g('A15', qw(rgb)),
-    g('A16', qw(spreadsheet)),
-    g('A17', qw(diagram)),
-    g('A18', qw(robot_loop)),
-    g('B01', qw(direct)),
-    g('B02', qw(flowchart)),
-    g('B03', qw(q1234 last_digit count_digits)),
-    g('B04', qw(impl_border)),
-    g('B05', qw(calculator)),
+    gg('A1', qw(recode simple)),
+    gg('A2', qw(sport car_numbers database units)),
+    gg('A3', qw(ones zeroes convert range)),
+    gg('A4', qw(sum)),
+    gg('A5', qw(arith div_mod_10 div_mod_rotate)),
+    gg('A6', qw(count_by_sign find_min_max count_odd_even alg_min_max alg_avg bus_station)),
+    gg('A7', qw(names animals random_sequences restore_password)),
+    gg('A8', qw(equiv_3 equiv_4)),
+    gg('A9', qw(truth_table_fragment)),
+    gg('A10', qw(graph_by_matrix)),
+    gg('A11', qw(variable_length fixed_length)),
+    gg('A12', qw(beads)),
+    gg('A13', qw(file_mask file_mask2 file_mask3)),
+    gg('A14', qw(database)),
+    gg('A15', qw(rgb)),
+    gg('A16', qw(spreadsheet)),
+    gg('A17', qw(diagram)),
+    gg('A18', qw(robot_loop)),
+    gg('B01', qw(direct)),
+    gg('B02', qw(flowchart)),
+    gg('B03', qw(q1234 last_digit count_digits)),
+    gg('B04', qw(impl_border)),
+    gg('B05', qw(calculator)),
+    gg('B07', qw(who_is_right)),
+    gg('B06', qw(solve)),
+    gg('B08', qw(identify_letter))
 ]}
 
 1;
