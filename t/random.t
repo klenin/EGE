@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 10;
+use Test::More tests => 11;
 use List::Util qw(sum);
 
 use lib '..';
@@ -29,6 +29,9 @@ ok $v =~ /^[a-z]$/, 'pick';
     @v = rnd->shuffle('a' .. 'z');
     ok @v == 26 && join('', sort @v) =~ join('', 'a' .. 'z'), 'shuffle';
 }
+
+eval { rnd->pick() };
+like $@, qr/empty/, 'pick from empty';
 
 eval { rnd->pick_n(3, 1, 2) };
 like $@, qr/^pick_n/, 'pick_n too many';

@@ -30,6 +30,7 @@ sub in_range {
 
 sub pick {
     my ($self, @array) = @_;
+    @array or die 'pick from empty array';
     @array[rand @array];
 }
 
