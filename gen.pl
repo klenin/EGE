@@ -130,6 +130,9 @@ binmode STDOUT, ':utf8';
 #g('B03', 'count_digits');
 #g('B04', 'impl_border');
 #g('B05', 'calculator');
+#g('B06', 'solve');
+#g('B07', 'who_is_right');
+#g('B08', 'identify_letter');
 
 $questions = EGE::Generate::all;
 
