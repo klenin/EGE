@@ -61,7 +61,7 @@ sub gg {
 
 sub all {[
     gg('A1', qw(recode simple)),
-    gg('A2', qw(sport car_numbers database units)),
+    gg('A2', qw(sport car_numbers database units min_routes)),
     gg('A3', qw(ones zeroes convert range)),
     gg('A4', qw(sum)),
     gg('A5', qw(arith div_mod_10 div_mod_rotate)),

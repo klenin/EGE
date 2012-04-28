@@ -10,8 +10,13 @@ use utf8;
 
 use EGE::Random;
 use EGE::NumText;
+use EGE::Html;
 
-use POSIX qw(ceil);
+use POSIX q(ceil);
+use Storable q(dclone);
+use List::Util q(reduce);
+
+sub _assert { die ($_[1] // '')  unless $_[0] }
 
 sub sport {
     my ($self) = @_;
@@ -165,4 +170,229 @@ sub units {
     );
 }
 
+sub _gen_params {
+    my ($c) = @_;
+    $c->{n} = $c->{towns_cnt} = 6;
+    $c->{e} = $c->{edges_cnt} = rnd->in_range(5, 10);
+    $c->{weights_range} = [1, 10];
+}
+
+sub _init_tables {
+    my ($c) = @_;
+    $c->{towns} = [ @{['A' .. 'Z']}[0 .. $c->{n} - 1] ];
+    for my $i (0 .. $c->{n}- 1 ) {
+        for my $j (0 .. $c->{n}- 1 ) {
+            $c->{alt_routes}[$i][$j] = [];
+            $c->{routes}[$i][$j] = undef;
+        }
+    }
+}
+
+sub _gen_init_routes {
+    my ($c) = @_;
+    _init_tables($c);
+
+    my $n = $c->{towns_cnt};
+    my @b = rnd->pick_n($c->{edges_cnt}, 0 .. $n*($n - 1)/2 );
+    my $k = 0;
+    for my $i (0 .. $c->{n} - 1) {
+        for my $j ($i + 1 .. $c->{n} - 1) {
+            if ($k ~~ @b) {
+                my $weight = rnd->in_range(@{$c->{weights_range}});
+                $c->{routes}[$i][$j] = $c->{routes}[$j][$i] = $weight;
+            }
+            ++$k;
+        }
+    }
+
+    $c->{init_routes} = dclone($c->{routes});
+}
+
+sub _find_all_dists {
+    my ($c) = @_;
+    my $n = $c->{towns_cnt} - 1;
+    my $r = $c->{routes};
+    my $ar = $c->{alt_routes};
+    my $relax = sub {
+        my ($i, $j, $k) = @_;
+        my ($a, $b, $c) = ($r->[$i][$k], $r->[$k][$j], $r->[$i][$j]);
+        if (defined $a && defined $b) {
+            $r->[$i][$j] = $a + $b if !defined $c || $c > $a + $b;
+            push @{$ar->[$i][$j]}, $a + $b unless $a + $b ~~ @{$ar->[$i][$j]}
+        }
+    };
+    for my $k (0 .. $n) {
+        for my $i (0 .. $n) {
+            for my $j (0 .. $n) {
+                $relax->($i, $j, $k) if $i != $j
+            }
+        }
+    }
+}
+
+sub _choose_from_to {
+    my ($c) = @_;
+    my ($first, $mi, $mj) = (1, 0, 0);
+    for my $i (0 .. $c->{n} - 1) {
+        for my $j (0 .. $c->{n} - 1) {
+            if (($first  && defined $c->{routes}[$i][$j]) ||
+                (!$first && @{$c->{alt_routes}[$i][$j]} > @{$c->{alt_routes}[$mi][$mj]}))
+            {
+                ($first, $mi, $mj) = (0, $i, $j)
+            }
+        }
+    }
+    @{$c}{qw(ans_from ans_to)} = ($mi, $mj);
+}
+
+sub _gen_task_and_answers {
+    my ($c) = @_;
+    _choose_from_to($c);
+    my ($i, $j) = @{$c}{qw(ans_from ans_to)};
+    $c->{ans} = [ $c->{routes}[$i][$j] ];
+    for (@{$c->{alt_routes}[$i][$j]}) {
+        push @{$c->{ans}}, $_ unless $_ ~~ $c->{ans};
+    }
+    for my $k (0 .. $c->{n} - 1) {
+        $_ = $c->{routes}[$k][$j];
+        push @{$c->{ans}}, $_ if defined $_ && !($_ ~~ $c->{ans});
+    }
+
+    while (@{$c->{ans}} < 4) {
+        my $x = rnd->in_range($c->{weights_range}[0],
+                              $c->{weights_range}[1]*$c->{towns_cnt});
+        push @{$c->{ans}}, $x unless $x ~~ $c->{ans};
+    }
+}
+
+sub _gen_text {
+    my ($c) = @_;
+    my $towns = join ', ', @{$c->{towns}};
+    my $from  = $c->{towns}[$c->{ans_from}];
+    my $to    = $c->{towns}[$c->{ans_to}];
+    my $r =
+        "Между населёнными пунктами $towns построены дороги, протяжённость" .
+        "которых приведена в таблице. (Отсутствие числа в таблице означает" .
+        ", что прямой дороги между пунктами нет.) " ;
+
+    my $t = html->row_n('th', '&nbsp;', @{$c->{towns}});
+    for my $i (0 .. $#{$c->{init_routes}} ) {
+        $t .= html->row_n('td', "<strong>$c->{towns}[$i]</strong>",
+                          map { $_ // '&nbsp;' } @{$c->{init_routes}[$i] });
+    }
+    $r .= html->table($t, { border => 1 });
+    $r .= "Определите длину кратчайшего пути между пунктами $from и $to " .
+          "(при условии, что передвигаться можно только по построенным дорогам)";
+    $c->{text} = $r;
+}
+
+sub _dijkstra {
+    my ($c, $from, $to) = @_;
+    my (@q, @st, @d);
+    push @q, $from;
+    $d[$from] = 0;
+    $st[$from] = 'visited';
+    my @v;
+    do {
+        @v = grep { defined $st[$_] && $st[$_] eq 'visited' } 0 .. $c->{n} - 1;
+        if (@v) {
+            my $v = reduce { defined $b ? ($d[$a] < $d[$b] ? $a : $b) : $a } @v;
+
+            $st[$v] = 'finished';
+            for my $i (0 .. $c->{n} - 1) {
+                $_ = $c->{routes}[$v][$i];
+                if (defined $_ &&
+                    (!defined $st[$i] || $st[$i] ne 'finished' && $d[$i] > $d[$v] + $_))
+                {
+                    $d[$i] = $d[$v] + $_;
+                    $st[$i] = 'visited';
+                }
+            }
+        }
+    } while (@v);
+    $d[$to]
+}
+
+sub _validate {
+    my ($c) = @_;
+    $_ = _dijkstra($c, $c->{ans_from}, $c->{ans_to}, 0);
+    _assert(defined $_ && $_ == $c->{ans}[0]);
+    _assert(@{$c->{ans}} >= 3);
+    for my $i (0 .. $#{$c->{ans}} - 1) {
+        _assert(!($c->{ans}[$i] ~~ [@{$c->{ans}}[$i + 1 .. $#{$c->{ans}}]]))
+    }
+}
+
+sub min_routes {
+    my ($self) = @_;
+
+    my $context = {};
+    _gen_params($context);
+    _gen_init_routes($context);
+    _find_all_dists($context);
+    _gen_task_and_answers($context);
+    _gen_text($context);
+    _validate($context);
+
+    $self->{text} = $context->{text};
+    $self->variants( @{$context->{ans}}[0 .. 3] );
+}
+
 1;
+
+__END__
+
+=pod
+
+=head1 Список генераторов
+
+=over
+
+=item sport
+
+=item car_numbers
+
+=item database
+
+=item units
+
+=item min_routes
+
+=back
+
+
+=head2 Генератор min_routes
+
+=head3 Источник
+
+Демонстрационные варианты ЕГЭ по информатике 2012, официальный информационный
+портал ЕГЭ. Задание A2.
+
+=head3 Описание
+
+=over
+
+=item *
+
+Выбираются количество городов и количество дорог.
+
+=item *
+
+Генерируется матрица смежности для неориентированного графа без петель (возможно)
+с циклами.
+
+=item *
+
+Использоуется алгоритмом Флойда-Уоршолла для поиска расстояний между вершинами.
+Причем во время работы алгоритма при улучшшении существующих значений в таблице
+маршрутов запоминаются предыдущие значения(будут использованы в качестве
+деструкторов).
+
+=item *
+
+Выбираются 2 вершины между которыми существует маршрут с наибольшим числом
+деструкторов. В качестве недостающих вариантов ответов берутся длины маршрутов
+из других вершин в конечную и случайные числа.
+
+=back
+
