@@ -71,7 +71,7 @@ sub all {[
     gg('A9', qw(truth_table_fragment find_var_len_code)),
     gg('A10', qw(graph_by_matrix)),
     gg('A11', qw(variable_length fixed_length password_length)),
-    gg('A12', qw(beads)),
+    gg('A12', qw(beads array_flip)),
     gg('A13', qw(file_mask file_mask2 file_mask3)),
     gg('A14', qw(database)),
     gg('A15', qw(rgb)),
