@@ -49,7 +49,8 @@ QUESTION
     );
 }
 
-sub make_alphabet {
+sub _car_num_make_alphabet {
+    my ($c) = @_;
     my $char_cnt = rnd->in_range(1, 33);
     my $base = rnd->pick(
         [2, 'двоичные'],
@@ -59,7 +60,7 @@ sub make_alphabet {
     );
     my $text = num_text($char_cnt, ['букву', 'различные буквы', 'различных букв']);
     $text .= ' и ' . $base->[1] . ' цифры' if ($base->[0]);
-    ($char_cnt + $base->[0], $text);
+    @{$c}{qw(alph_length alph_text)} = ($char_cnt + $base->[0], $text);
 }
 
 sub max_pow_contained {
@@ -74,8 +75,28 @@ sub max_pow_contained {
     $pow;
 }
 
-sub car_numbers {
-    my ($self) = @_;
+sub _car_num_gen_params {
+    my ($c) = @_;
+    $c->{sym_cnt} = rnd->in_range(1, 20);
+    $c->{items_cnt} = rnd->in_range(1, 20);
+    _car_num_make_alphabet($c);
+}
+
+sub _car_num_gen_task {
+    my ($c) = @_;
+    my $bit_per_item = max_pow_contained($c->{alph_length}, 2) * $c->{sym_cnt};
+
+    my @ans = (
+        ceil( $bit_per_item / 8 ) * $c->{items_cnt},
+        ceil( $bit_per_item / 8 - 1 ) * $c->{items_cnt},
+        $bit_per_item * $c->{items_cnt},
+        $c->{alph_length} * $c->{items_cnt}
+    );
+    $c->{result} = [map num_text($_, ['байт', 'байта', 'байт']), @ans]
+}
+
+sub _car_num_gen_text {
+    my ($c) = @_;
     my $obj_name = rnd->pick(
         { long => 'автомобильный номер', short => 'номер',
                forms => ['номерa', 'номеров', 'номеров'] },
@@ -88,29 +109,28 @@ sub car_numbers {
         { long => 'номер медецинской страховки', short => 'номер',
                forms => ['номерa', 'номеров', 'номеров'] }
     );
-    my $sym_cnt = rnd->in_range(1, 20);
-    my $items_cnt = rnd->in_range(1, 20);
-    my $sym_cnt_text = num_text( $sym_cnt, ['символа', 'символов', 'символов'] );
-    my ($alph_length, $alph_text) = make_alphabet();
-    my $items_cnt_text = num_text( $items_cnt, $obj_name->{forms} );
-    my $text = <<QUESTION
+    my $items_cnt_text = num_text( $c->{items_cnt}, $obj_name->{forms} );
+    my $sym_cnt_text = num_text( $c->{sym_cnt}, ['символа', 'символов', 'символов'] );
+    $c->{text} = <<QUESTION
 В некоторой стране $obj_name->{long} состоит из $sym_cnt_text. В качестве символов
-используют $alph_text. Каждый такой $obj_name->{short} в компьютерной программе
+используют $c->{alph_text}. Каждый такой $obj_name->{short} в компьютерной программе
 записывается минимально возможным и одинаковым целым количеством байтов, при этом
 используют посимвольное кодирование и все символы кодируются одинаковым и минимально
 возможным количеством битов. Определите объем памяти, отводимый этой программой для
 записи $items_cnt_text.
 QUESTION
-;
-    my $bit_per_item = max_pow_contained($alph_length, 2) * $sym_cnt;
-    my @ans = (
-        ceil( $bit_per_item / 8 ) * $items_cnt,
-        ceil( $bit_per_item / 8 - 1 ) * $items_cnt,
-        $bit_per_item * $items_cnt,
-        $alph_length * $items_cnt
-    );
-    $self->{text} = $text;
-    $self->variants(map num_text($_, ['байт', 'байта', 'байт']), @ans);
+}
+
+sub car_numbers {
+    my ($self) = @_;
+
+    my $context = {};
+    _car_num_gen_params($context);
+    _car_num_gen_task($context);
+    _car_num_gen_text($context);
+
+    $self->{text} = $context->{text};
+    $self->variants(@{$context->{result}});
 }
 
 sub bits_or_bytes { rnd->pick(bits_and_bytes($_[0])) }
