@@ -19,7 +19,6 @@ use EGE::Russian::SimpleNames;
 use EGE::Russian::Animals;
 use EGE::Bits;
 
-use Data::Dumper;
 
 sub make_condition() {
     {
@@ -198,7 +197,7 @@ sub restore_password {
     }
     $str =~ s/$sub_init/$sub_good/;
 
-    # Удалив полностью и частично чифры из строк получим варианты ответов
+    # Удалив полностью и частично цифры из строк получим варианты ответов
     my ($good_variants, $bad_variants) = delete_nums($str);
     my ($bad_variants2, $bad_variants3) = delete_nums($init_str);
 
@@ -227,4 +226,145 @@ sub restore_password {
       "будет паролем: ";
 }
 
+sub _move {
+    my ($ceil, $hold_x, $hold_y, $dx, $dy) = @_;
+    my ($x, $y) = @{$ceil}{qw(x y)};
+    $x += $dx unless $hold_x;
+    $y += $dy unless $hold_y;
+    {x => $x, y => $y}
+}
+
+sub _all_moves {
+    my ($ceil, $hold_x, $hold_y, $dx, $dy) = @_;
+    my @res = (_move($ceil, $hold_x, $hold_y, $dx, $dy));
+    if ($dx) {
+        push @res, _move($ceil, !$hold_x, $hold_y, $dx, $dy);
+    }
+    if ($dy) {
+        push @res, _move($ceil, $hold_x, !$hold_y, $dx, $dy);
+    }
+    if ($dx && $dy) {
+        push @res, _move($ceil, !$hold_x, !$hold_y, $dx, $dy);
+    }
+    \@res
+}
+
+my @alph = ('A' .. 'Z');
+
+sub _print_ceil {
+    my ($ceil, $hold_x, $hold_y, $suffix) = @_;
+    join '', ($hold_y ? '$' : ''), $alph[$ceil->{y}],
+             ($hold_x ? '$' : ''), $ceil->{x},
+             ($suffix // '')
+}
+
+sub _rnd_ceil { { x => rnd->in_range(4, 10), y => rnd->in_range(4, 10) } }
+
+sub _ceil_eq { $_[0]->{x} == $_[1]->{x} && $_[0]->{y} == $_[1]->{y} }
+
+sub _gen_params {
+    my ($c) = @_;
+    my $d = rnd->in_range(1, 3);
+
+    $c->{moves} = [ rnd->shuffle([$d, $d], [-$d, $d], [$d, -$d], [-$d, -$d],
+                                 [$d, 0], [-$d, 0], [0, $d], [0, -$d]) ];
+
+    my ($hold_x, $hold_y);
+    do {
+        ($hold_x, $hold_y) = (rnd->coin(), rnd->coin())
+    } while (!$hold_x && !$hold_y);
+    @{$c}{qw(ceil hold_x hold_y)} = (_rnd_ceil(), $hold_x, $hold_y);
+    my ($from_ceil, $to_ceil);
+    do {
+        $c->{from_ceil} = _rnd_ceil();
+        $c->{to_ceil} = _move($c->{from_ceil}, 0, 0, @{ $c->{moves}[0] });
+    } while (_ceil_eq($c->{ceil}, $c->{from_ceil}) |
+             _ceil_eq($c->{ceil}, $c->{to_ceil}));
+
+    $c->{suffix} = rnd->pick(' + ', ' - ', ' * ', ' / ') .
+                   rnd->in_range(1 .. 9);
+}
+
+sub _gen_task {
+    my ($c) = @_;
+    my @res;
+    my $i = 0;
+    while (@res < 4) {
+        for my $p (@{ _all_moves(@{$c}{qw(ceil hold_x hold_y)},
+                                 @{ $c->{moves}[$i] }) })
+        {
+            push @res, $p unless grep { _ceil_eq($p, $_) } @res
+        }
+        ++$i;
+    }
+    $c->{result} = [@res[0 .. 3]]
+}
+
+sub spreadsheet_shift {
+    my ($self) = @_;
+
+    my $context = {};
+    _gen_params($context);
+    _gen_task($context);
+
+    $self->variants(
+        map { _print_ceil($_, @{$context}{qw(hold_x hold_y suffix)}) }
+            @{$context->{result}}
+    );
+
+    $self->{text} .= sprintf
+        'В ячейке %s электронной таблицы записана формула = %s. Какой вид ' .
+        'приобретет формула, после того как ячейку %s скопируют в ячейку %s?' .
+        'Примечание: знак $ используется для обозначения абсолютной адресации.',
+        _print_ceil($context->{from_ceil}),
+        _print_ceil(@{$context}{qw(ceil hold_x hold_y suffix)}),
+        _print_ceil($context->{from_ceil}),
+        _print_ceil($context->{to_ceil})
+}
+
 1;
+
+__END__
+
+=pod
+
+=head1 Список генераторов
+
+=over
+
+=item names
+
+=item animals
+
+=item random_sequences
+
+=item restore_password
+
+=item spreadsheet_shift
+
+=back
+
+
+=head2 Генератор spreadsheet_shift
+
+=head3 Источник
+
+Демонстрационные варианты ЕГЭ по информатике 2012, официальный информационный
+портал ЕГЭ. Задание A07.
+
+=head3 Описание
+
+=over
+
+=item *
+
+Выбираются начальные параметры:
+Какие координаты зафиксированы; направление сдвига из 8ми возможных (4 по горизонтали, 4 по диагонали).
+
+=item *
+
+Производится сдвиг. Варируя фиксаторы координат получается еще несколько
+неверных значений. Если значений не хватает выбирается другое направление
+сдвига и таким же образом генерируются неверные результаты.
+
+=back
