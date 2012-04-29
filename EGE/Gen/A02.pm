@@ -59,7 +59,13 @@ sub _car_num_make_alphabet {
         [16, 'шеснадцатиричные']
     );
     my $text = num_text($char_cnt, ['букву', 'различные буквы', 'различных букв']);
-    $text .= ' и ' . $base->[1] . ' цифры' if ($base->[0]);
+    if ($c->{case_sensetive}) {
+        $text = $base->[1] . ' цифры и ' . $text .
+            ' местного алфавита, причём все буквы используются в двух начертаниях' .
+            ': как строчные, так и заглавные (регистр буквы имеет значение!)';
+    } else {
+        $text .= ' и ' . $base->[1] . ' цифры' if ($base->[0]);
+    }
     @{$c}{qw(alph_length alph_text)} = ($char_cnt + $base->[0], $text);
 }
 
@@ -124,7 +130,7 @@ QUESTION
 sub car_numbers {
     my ($self) = @_;
 
-    my $context = {};
+    my $context = { case_sensetive => 0 };
     _car_num_gen_params($context);
     _car_num_gen_task($context);
     _car_num_gen_text($context);
