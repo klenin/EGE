@@ -64,7 +64,7 @@ sub all {[
     gg('A2', qw(sport car_numbers database units min_routes)),
     gg('A3', qw(ones zeroes convert range)),
     gg('A4', qw(sum)),
-    gg('A5', qw(arith div_mod_10 div_mod_rotate)),
+    gg('A5', qw(arith div_mod_10 div_mod_rotate digit_by_digit)),
     gg('A6', qw(count_by_sign find_min_max count_odd_even alg_min_max alg_avg bus_station)),
     gg('A7', qw(names animals random_sequences restore_password)),
     gg('A8', qw(equiv_3 equiv_4)),
