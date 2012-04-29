@@ -67,7 +67,7 @@ sub all {[
     gg('A5', qw(arith div_mod_10 div_mod_rotate digit_by_digit)),
     gg('A6', qw(count_by_sign find_min_max count_odd_even alg_min_max alg_avg bus_station)),
     gg('A7', qw(names animals random_sequences restore_password spreadsheet_shift)),
-    gg('A8', qw(equiv_3 equiv_4)),
+    gg('A8', qw(equiv_3 equiv_4 audio_sampling)),
     gg('A9', qw(truth_table_fragment)),
     gg('A10', qw(graph_by_matrix)),
     gg('A11', qw(variable_length fixed_length)),
