@@ -86,15 +86,6 @@ sub _ptrn_to_str {
     join '', map { $alph->[$_] } @$ptrn
 }
 
-sub _lex_order_validate {
-    my ($ptr, $alph, $pos) = @_;
-    my $new_p = [(0) x @$ptr];
-    _next_ptrn_lex($new_p, int(@$alph)) for 1 .. $pos - 1; #since already 1st pos
-    $a = join '', @$new_p;
-    $b = join '', @$ptr;
-    die "$a != $b" unless $a eq $b ;
-}
-
 sub lex_order {
     my ($self) = @_;
     my $alph_len = rnd->in_range(3, 5);
@@ -106,7 +97,6 @@ sub lex_order {
     _prev_ptrn_lex($ptrn, $alph_len) for 1 .. $delta;
     $self->{correct} = _ptrn_to_str($ptrn, $alph);
     my $pos = $alph_len**$ptrn_len - $delta;
-    _lex_order_validate($ptrn, $alph, $pos);
 
     $ptrn = [(0) x $ptrn_len];
     my $ptrn_list = html->li( _ptrn_to_str($ptrn, $alph) );
