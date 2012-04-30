@@ -82,7 +82,7 @@ sub all {[
     gg('B02', qw(flowchart)),
     gg('B03', qw(q1234 last_digit count_digits)),
     gg('B04', qw(impl_border lex_order)),
-    gg('B05', qw(calculator)),
+    gg('B05', qw(calculator complete_spreadsheet)),
     gg('B06', qw(solve)),
     gg('B07', qw(who_is_right)),
     gg('B08', qw(identify_letter))
