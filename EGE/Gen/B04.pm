@@ -61,4 +61,66 @@ sub impl_border {
     $self->accept_number;
 }
 
+sub _next_ptrn_lex {
+    my ($ptrn, $alph_len) = @_;
+    my $i = $#$ptrn;
+    while ($i > -1 && $ptrn->[$i] == $alph_len - 1) {
+        $ptrn->[$i--] = 0
+    }
+    ++$ptrn->[$i] if $i > -1;
+    $i == -1 ? undef : $ptrn
+}
+
+sub _prev_ptrn_lex {
+    my ($ptrn, $alph_len) = @_;
+    my $i = $#$ptrn;
+    while ($i > -1 && !$ptrn->[$i]) {
+        $ptrn->[$i--] = $alph_len - 1
+    }
+    --$ptrn->[$i] if $i > -1;
+    $i == -1 ? undef : $ptrn
+}
+
+sub _ptrn_to_str {
+    my ($ptrn, $alph) = @_;
+    join '', map { $alph->[$_] } @$ptrn
+}
+
+sub _lex_order_validate {
+    my ($ptr, $alph, $pos) = @_;
+    my $new_p = [(0) x @$ptr];
+    _next_ptrn_lex($new_p, int(@$alph)) for 1 .. $pos - 1; #since already 1st pos
+    $a = join '', @$new_p;
+    $b = join '', @$ptr;
+    die "$a != $b" unless $a eq $b ;
+}
+
+sub lex_order {
+    my ($self) = @_;
+    my $alph_len = rnd->in_range(3, 5);
+    my $ptrn_len = rnd->in_range(4, 6);
+    my $delta = rnd->in_range(1, $alph_len);
+    my $alph = [sort( rnd()->pick_n($alph_len, qw(А Е И О У Э Ю Я)) )];
+
+    my $ptrn = [($alph_len - 1) x $ptrn_len];
+    _prev_ptrn_lex($ptrn, $alph_len) for 1 .. $delta;
+    $self->{correct} = _ptrn_to_str($ptrn, $alph);
+    my $pos = $alph_len**$ptrn_len - $delta;
+    _lex_order_validate($ptrn, $alph, $pos);
+
+    $ptrn = [(0) x $ptrn_len];
+    my $ptrn_list = html->li( _ptrn_to_str($ptrn, $alph) );
+    for (0 .. $alph_len - 1) {
+        _next_ptrn_lex($ptrn, $alph_len);
+        $ptrn_list .= html->li( _ptrn_to_str($ptrn, $alph) );
+    }
+    $ptrn_list = html->ol( $ptrn_list . html->li('...') );
+
+    my $alph_text = (join ', ', @$alph);
+    $self->{text} =
+        "Все $ptrn_len-буквенные слова, составленные из букв $alph_text, записаны" .
+        " в алфавитном порядке.<br/>Вот начало списка: $ptrn_list Запишите слово," .
+        " которое стоит на <strong>$pos-м месте</strong> от начала списка."
+}
+
 1;
