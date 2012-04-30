@@ -78,7 +78,7 @@ sub all {[
     gg('A16', qw(spreadsheet)),
     gg('A17', qw(diagram)),
     gg('A18', qw(robot_loop)),
-    gg('B01', qw(direct)),
+    gg('B01', qw(direct recode2)),
     gg('B02', qw(flowchart)),
     gg('B03', qw(q1234 last_digit count_digits)),
     gg('B04', qw(impl_border)),
