@@ -85,7 +85,7 @@ sub all {[
     gg('B05', qw(calculator complete_spreadsheet)),
     gg('B06', qw(solve)),
     gg('B07', qw(who_is_right)),
-    gg('B08', qw(identify_letter))
+    gg('B08', qw(identify_letter find_calc_system))
 ]}
 
 1;
