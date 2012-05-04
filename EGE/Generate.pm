@@ -39,6 +39,7 @@ use EGE::Gen::B08;
 use EGE::Gen::B11;
 use EGE::Gen::B12;
 use EGE::Gen::B13;
+use EGE::Gen::B15;
 
 sub one {
     my ($package, $method) = @_;
@@ -92,6 +93,7 @@ sub all {[
     gg('B11', qw(ip_mask)),
     gg('B12', qw(search_query)),
     gg('B13', qw(plus_minus)),
+    gg('B15', qw(logic_var_set)),
 ]}
 
 1;
