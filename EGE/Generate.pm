@@ -36,6 +36,8 @@ use EGE::Gen::B05;
 use EGE::Gen::B06;
 use EGE::Gen::B07;
 use EGE::Gen::B08;
+use EGE::Gen::B11;
+
 
 sub one {
     my ($package, $method) = @_;
@@ -85,7 +87,8 @@ sub all {[
     gg('B05', qw(calculator complete_spreadsheet)),
     gg('B06', qw(solve)),
     gg('B07', qw(who_is_right)),
-    gg('B08', qw(identify_letter find_calc_system))
+    gg('B08', qw(identify_letter find_calc_system)),
+    gg('B11', qw(ip_mask)),
 ]}
 
 1;
