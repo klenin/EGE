@@ -11,6 +11,24 @@ use utf8;
 use EGE::Random;
 use EGE::NumText;
 
+use EGE::Gen::A01;
+
+sub recode2 {
+    my ($self) = @_;
+    my $delta = rnd->pick(8, 16, 32, map $_ * 10, 1..10);
+    my $dir =
+        EGE::Gen::A01::_recode_get_encodings(rnd->coin(), 'увеличилась', 'уменьшилась');
+    my $ans_in_bytes = rnd->coin();
+    my $delta_text = $ans_in_bytes ? 'байт' : 'бит';
+    $self->{text} =
+        "Автоматическое устройство осуществило перекодировку информационного " .
+        "сообщения на русском языке длиной в $delta символов, первоначально " .
+        "записанного в $dir->{from}, в $dir->{to}. На сколько $delta_text " .
+        "$dir->{change} длина сообщения? В ответе запишите только число.";
+    $self->{correct} = $ans_in_bytes ? $delta : $delta*8;
+    $self->accept_number;
+}
+
 sub direct {
     my ($self) = @_;
     my $sig_n = rnd->in_range(2, 5);

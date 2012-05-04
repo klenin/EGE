@@ -10,6 +10,9 @@ use utf8;
 
 use EGE::Random;
 use EGE::Bits;
+use EGE::NumText;
+
+use EGE::Gen::A02;
 
 sub variable_length {
     my ($self) = @_;
@@ -66,4 +69,69 @@ sub fixed_length {
     $self->variants($good, @bad);
 }
 
+sub _password_length_gen_params {
+    my ($c) = @_;
+    $c->{sym_cnt} = rnd->in_range(1, 20);
+    $c->{items_cnt} = rnd->in_range(1, 10) * 10;
+    EGE::Gen::A02::_car_num_make_alphabet($c);
+}
+
+sub _password_length_text {
+    my ($c) = @_;
+    $c->{text} = sprintf <<QUESTION
+Для регистрации на сайте некоторой страны пользователю требуется придумать пароль.
+Длина пароля – ровно %s. В качестве символов используются %s.
+Под хранение каждого такого пароля на компьютере отводится минимально возможное и
+одинаковое целое количество байтов, при этом используется посимвольное кодирование
+и все символы кодируются одинаковым и минимально возможным количеством битов.
+Определите объём памяти, который занимает хранение %s.
+QUESTION
+        , num_text($c->{sym_cnt}, ['символ', 'символа', 'символов'] ),
+          $c->{alph_text},
+          num_text($c->{items_cnt},['пароля', ('паролей') x 2])
+}
+
+sub password_length {
+    my ($self) = @_;
+
+    my $context = { case_sensetive => 1 };
+    _password_length_gen_params($context);
+    EGE::Gen::A02::_car_num_gen_task($context);
+    _password_length_text($context);
+
+    $self->{text} = $context->{text};
+    $self->variants(@{$context->{result}});
+}
+
 1;
+
+
+__END__
+
+=pod
+
+=head1 Список генераторов
+
+=over
+
+=item variable_length
+
+=item fixed_length
+
+=item password_length
+
+=back
+
+
+=head2 Генератор password_length
+
+=head3 Источник
+
+Демонстрационные варианты ЕГЭ по информатике 2012, официальный информационный
+портал ЕГЭ. Задание A11.
+
+=head3 Описание
+
+Модифицированное задание A02 car_numbers. Вводится дополнительная сложность -
+буквы алфавита используются в 2х начертаниях: строчные и прописные, что добавляет
+одну арифмитическую операция при вычисления.

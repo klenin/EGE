@@ -64,7 +64,7 @@ sub div_xy {
 }
 
 BEGIN {
-    for my $tag (qw(td th table div)) {
+    for my $tag (qw(td th table div ol ul li)) {
         no strict 'refs';
         *$tag = sub {
             my $self = shift;
