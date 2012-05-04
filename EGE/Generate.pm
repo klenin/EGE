@@ -44,6 +44,7 @@ use EGE::Gen::B15;
 sub one {
     my ($package, $method) = @_;
     no strict 'refs';
+    local $_;
     my $g = "EGE::Gen::$package"->new;
     $g->$method;
     $g->post_process;
