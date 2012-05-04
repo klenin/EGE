@@ -160,7 +160,7 @@ sub complete_spreadsheet {
     $new_table->{1}[$new_table->{find}] = '';
     my $empty_ceil_text = ['A' .. 'Z']->[$new_table->{find}] . 1;
 
-    $_  = html->row('th', '&nbsp;', 'A' .. chr(ord('A') + $n - 1));
+    $_  = html->row('th', html->nbsp, 'A' .. chr(ord('A') + $n - 1));
     $_ .= html->row('td', '<strong>1</strong>', @{$new_table->{1}});
     $_ .= html->row('td', '<strong>2</strong>',
                     map { _to_formula($_, $perm_alph) } @{$new_table->{2}});

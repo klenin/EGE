@@ -301,10 +301,10 @@ sub _gen_text {
         "которых приведена в таблице. (Отсутствие числа в таблице означает" .
         ", что прямой дороги между пунктами нет.) " ;
 
-    my $t = html->row_n('th', '&nbsp;', @{$c->{towns}});
+    my $t = html->row_n('th', html->nbsp, @{$c->{towns}});
     for my $i (0 .. $#{$c->{init_routes}} ) {
         $t .= html->row_n('td', "<strong>$c->{towns}[$i]</strong>",
-                          map { $_ // '&nbsp;' } @{$c->{init_routes}[$i] });
+                          map { $_ // html->nbsp } @{$c->{init_routes}[$i] });
     }
     $r .= html->table($t, { border => 1 });
     $r .= "Определите длину кратчайшего пути между пунктами $from и $to " .
