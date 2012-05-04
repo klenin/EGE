@@ -36,10 +36,15 @@ use EGE::Gen::B05;
 use EGE::Gen::B06;
 use EGE::Gen::B07;
 use EGE::Gen::B08;
+use EGE::Gen::B11;
+use EGE::Gen::B12;
+use EGE::Gen::B13;
+use EGE::Gen::B15;
 
 sub one {
     my ($package, $method) = @_;
     no strict 'refs';
+    local $_;
     my $g = "EGE::Gen::$package"->new;
     $g->$method;
     $g->post_process;
@@ -61,31 +66,35 @@ sub gg {
 
 sub all {[
     gg('A1', qw(recode simple)),
-    gg('A2', qw(sport car_numbers database units)),
+    gg('A2', qw(sport car_numbers database units min_routes)),
     gg('A3', qw(ones zeroes convert range)),
     gg('A4', qw(sum)),
-    gg('A5', qw(arith div_mod_10 div_mod_rotate)),
+    gg('A5', qw(arith div_mod_10 div_mod_rotate digit_by_digit)),
     gg('A6', qw(count_by_sign find_min_max count_odd_even alg_min_max alg_avg bus_station)),
-    gg('A7', qw(names animals random_sequences restore_password)),
-    gg('A8', qw(equiv_3 equiv_4)),
-    gg('A9', qw(truth_table_fragment)),
+    gg('A7', qw(names animals random_sequences restore_password spreadsheet_shift)),
+    gg('A8', qw(equiv_3 equiv_4 audio_sampling)),
+    gg('A9', qw(truth_table_fragment find_var_len_code)),
     gg('A10', qw(graph_by_matrix)),
-    gg('A11', qw(variable_length fixed_length)),
-    gg('A12', qw(beads)),
+    gg('A11', qw(variable_length fixed_length password_length)),
+    gg('A12', qw(beads array_flip)),
     gg('A13', qw(file_mask file_mask2 file_mask3)),
     gg('A14', qw(database)),
     gg('A15', qw(rgb)),
     gg('A16', qw(spreadsheet)),
     gg('A17', qw(diagram)),
     gg('A18', qw(robot_loop)),
-    gg('B01', qw(direct)),
+    gg('B01', qw(direct recode2)),
     gg('B02', qw(flowchart)),
     gg('B03', qw(q1234 last_digit count_digits)),
-    gg('B04', qw(impl_border)),
-    gg('B05', qw(calculator)),
+    gg('B04', qw(impl_border lex_order)),
+    gg('B05', qw(calculator complete_spreadsheet)),
     gg('B06', qw(solve)),
     gg('B07', qw(who_is_right)),
-    gg('B08', qw(identify_letter))
+    gg('B08', qw(identify_letter find_calc_system)),
+    gg('B11', qw(ip_mask)),
+    gg('B12', qw(search_query)),
+    gg('B13', qw(plus_minus)),
+    gg('B15', qw(logic_var_set)),
 ]}
 
 1;
