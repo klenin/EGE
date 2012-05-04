@@ -38,6 +38,7 @@ use EGE::Gen::B07;
 use EGE::Gen::B08;
 use EGE::Gen::B11;
 use EGE::Gen::B12;
+use EGE::Gen::B13;
 
 sub one {
     my ($package, $method) = @_;
@@ -90,6 +91,7 @@ sub all {[
     gg('B08', qw(identify_letter find_calc_system)),
     gg('B11', qw(ip_mask)),
     gg('B12', qw(search_query)),
+    gg('B13', qw(plus_minus)),
 ]}
 
 1;
