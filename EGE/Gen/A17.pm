@@ -35,7 +35,7 @@ sub regions() {qw(
     Чувашия
 )}
 
-my @colors = qw(red green blue gray pink teal skyblue);
+my @colors = qw(red green blue);
 
 use constant SZ => 350;
 use constant STEP => 10;
@@ -131,9 +131,10 @@ use constant DEFAULT_PIE_SZ => 40;
 use constant PI => 3.141592653589793238;
 
 sub pie_chart {
-    my ($data, $pie_sz) = @_;
-    $pie_sz //= DEFAULT_PIE_SZ;
-    die 'not enouth colors defined' unless @colors >= @$data;
+    my ($data, $params) = @_;
+    my $colors =  $params->{colors} // \@colors;
+    my $pie_sz = $params->{size} // DEFAULT_PIE_SZ;
+    die 'not enouth colors defined' unless @$colors >= @$data;
     my $r = svg->start([ 0, 0, $pie_sz, $pie_sz ]).
         html->open_tag('g', { stroke => 'black' });
     my $radius = $pie_sz / 2 - 5;
@@ -148,7 +149,7 @@ sub pie_chart {
         my $y = sprintf '%.5f', $radius * sin($angle) + $cy;
         $r.= svg->path(
             d=> "M$cx,$cy L$prev_x,$prev_y A$radius,$radius 0 $large_arc,1 $x,$y Z ",
-            fill => $colors[$color++]);
+            fill => $colors->[$color++]);
         $prev_x = $x;
         $prev_y = $y;
     }
