@@ -85,37 +85,28 @@ sub relation_rm {
 
 sub check {
     my ($c) = @_;
-
     my %pos = map { $c->[$_] => $_ } 0 .. 3;
-
-    for my $i (1 .. $#{$c} - 1) {
-        my ($pred, $curr, $nxt) = @{$c}[$i-1 .. $i+1];
-        for (keys %{$relations{Together}->{v}->{$curr}}) {
-            unless ($_ == $pred || $_ == $nxt) {
-                return 0;
-            }
-        }
-        if ($relations{NotTogether}->{v}->{$curr}{$pred} ||
-            $relations{NotTogether}->{v}->{$curr}{$nxt}) {
-            return 0;
-        }
-    }
-
     for my $i (0 .. $#{$c}) {
         my $curr = $c->[$i];
-        for (keys %{$relations{ToRight}->{v}->{$curr}}) {
+        for (keys %{$relations{Together}->{v}{$curr}}) {
+            return 0 unless $pos{$_} ~~ [$i - 1, $i + 1]
+        }
+        for (keys %{$relations{NotTogether}->{v}{$curr}}) {
+            return 0 if $pos{$_} ~~ [$i - 1, $i + 1]
+        }
+        for (keys %{$relations{ToRight}->{v}{$curr}}) {
             return 0 if $i <= $pos{$_};
         }
-        for (keys %{$relations{PosLeft}->{v}->{$curr}}) {
+        for (keys %{$relations{PosLeft}->{v}{$curr}}) {
             return 0 if $_ <= $i;
         }
-        for (keys %{$relations{PosRight}->{v}->{$curr}}) {
+        for (keys %{$relations{PosRight}->{v}{$curr}}) {
             return 0 if $_ >= $i;
         }
-        for (keys %{$relations{Pos}->{v}->{$curr}}) {
+        for (keys %{$relations{Pos}->{v}{$curr}}) {
             return 0 if $_ != $i;
         }
-        for (keys %{$relations{NotPos}->{v}->{$curr}}) {
+        for (keys %{$relations{NotPos}->{v}{$curr}}) {
             return 0 if $_ == $i;
         }
     }
@@ -129,6 +120,7 @@ sub filter {
 
 sub try_new_cond {
     my ($cond, $answers) = @_;
+    return if $relations{$cond->[2]}->{v}{$cond->[0]}{$cond->[1]};
     relation_add(@$cond);
     my @new_ans = filter($answers);
     if (@new_ans == @$answers || !@new_ans) {
@@ -162,11 +154,13 @@ sub create_cond {
         rnd->shuffle(@pairs);
     }
     my @pairs = make_pairs();
-    create_init_cond(rnd->pick(2, 2, 3));
-    my @answers = filter( all_perm(0 .. 3) );
-    my $ok = !@answers;
-    while (!$ok) {
-        $ok |= try_new_cond(pop @pairs, \@answers);
+    my @answers;
+    do {
+        create_init_cond(rnd->pick(2, 2, 3));
+        @answers = filter( all_perm(0 .. 3) );
+    } while (@answers == 0);
+    while (@answers != 1) {
+        try_new_cond(pop @pairs, \@answers);
         @pairs = make_pairs unless @pairs;
     }
     clear_cond();
@@ -181,7 +175,6 @@ sub clear_cond {
         $ok = 0;
         for my $rel (keys %relations) {
             for my $i (0 .. 3) {
-#                for my $j (keys %{$relations->{$rel}->{v}->{$i}}) {
                 for my $j (keys %{$relations{$rel}->{v}->{$i}}) {
                     relation_rm($i, $j, $rel);
                     if (filter($var) != $ans_orig) {
