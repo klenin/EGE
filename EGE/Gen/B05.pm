@@ -115,7 +115,7 @@ sub _char_to_int {
 
 sub _to_formula {
     my ($str, $perm_alph) = @_;
-    $str =~ s/(\%\w+)/$perm_alph->[_char_to_int($1)]/ge;
+    $str =~ s/(\%\w+)/$perm_alph->[_char_to_int($1)] . '1'/ge;
     '=' . $str
 }
 
@@ -140,7 +140,15 @@ sub complete_spreadsheet {
         { 1    => [3, 2, 3, 2],
           2    => ["(%C+%A)/2", "%C-%D", "%A-%D", "%B/2"],
           ans  => [3, 1, 1, 1],
-          find => 1 }
+          find => 1 },
+        { 1    => [1, 2, 3],
+          2    => ["(%A+%B+%C)/2", "%C", "3*%B-%C"],
+          ans  => [3, 3, 3],
+          find => 0 },
+        { 1    => [2, 3, 0, 3],
+          2    => ["%A", "(%B+%D)/3", "2*%C", "2*(%B-%A)"],
+          ans  => [2, 2, 0, 2],
+          find => 2 }
     );
 
     my $n = @{$table->{1}};
@@ -164,7 +172,8 @@ sub complete_spreadsheet {
     $_ .= html->row('td', '<strong>1</strong>', @{$new_table->{1}});
     $_ .= html->row('td', '<strong>2</strong>',
                     map { _to_formula($_, $perm_alph) } @{$new_table->{2}});
-    my $table_text = html->table($_, {border => 1});
+    my $table_text =
+        html->table($_, {border => 1, style => 'text-align: center'});
     my $chart = EGE::Gen::A17::pie_chart($new_table->{ans}, 100);
     my $last_letter = ['A' .. 'Z']->[$n - 1];
     $self->{text} = "Дан фрагмент электронной таблицы: $table_text" .
