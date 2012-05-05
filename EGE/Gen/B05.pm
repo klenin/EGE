@@ -72,7 +72,9 @@ sub calculator {
         $arg = rnd->in_range(2, 10);
         $prg = [ (0) x $num ];
         my %results;
-        ++$results{apply($cmd, $prg, $arg)} while next_prg($cmd, $prg);
+        do {
+            ++$results{apply($cmd, $prg, $arg)}
+        } while next_prg($cmd, $prg);
         my @r = grep 50 < $_ && $_ < 1000 && $results{$_} == 1, keys %results;
         $result = rnd->pick(@r) if @r;
     } until $result;
