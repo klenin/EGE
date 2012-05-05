@@ -16,7 +16,7 @@ sub ones {
     my ($self) = @_;
     my $npower = rnd->in_range(5, 10);
     my $case = rnd->pick(
-        { d => 0, a => 0 }, { d => 1, a => 1 }, { d => -1, a => 2 },
+        { d => 0, a => 0 }, { d => 1, a => 1 }, { d => -1, a => 3 },
     );
     my $n = 2 ** $npower + $case->{d};
 
