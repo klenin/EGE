@@ -174,7 +174,9 @@ sub complete_spreadsheet {
                     map { _to_formula($_, $perm_alph) } @{$new_table->{2}});
     my $table_text =
         html->table($_, {border => 1, style => 'text-align: center'});
-    my $chart = EGE::Gen::A17::pie_chart($new_table->{ans}, 100);
+    my $colors = [qw(red green blue orange gray yellow brown)];
+    my $chart = EGE::Gen::A17::pie_chart($new_table->{ans},
+                                         { size => 100, colors => $colors} );
     my $last_letter = ['A' .. 'Z']->[$n - 1];
     $self->{text} = "Дан фрагмент электронной таблицы: $table_text" .
         "Какое число  должно быть записано в ячейке $empty_ceil_text, чтобы " .
