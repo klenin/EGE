@@ -205,14 +205,13 @@ sub restore_password {
     my $ans = shift @{$good_variants};
 
     @{$self->{variants}} = (
-       $ans->[0],
        @{$bad_variants},
        (map {$_->[0]} @{$good_variants}),
        @{$bad_variants3},
        (map {$_->[0]} @{$bad_variants2})
    );
 
-    @{$self->{variants}} = rnd->pick_n(4, @{$self->{variants}});
+    @{$self->{variants}} = ($ans->[0], rnd->pick_n(3, @{$self->{variants}}));
 
     my $OS = rnd->pick("Windows XP", "GNU/Linux", "почтовый аккаунт");
     $self->{text} .=
