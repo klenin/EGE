@@ -42,6 +42,7 @@ use EGE::Gen::B13;
 use EGE::Gen::B15;
 
 use EGE::Gen::Arch01;
+use EGE::Gen::Arch02;
 
 sub one {
     my ($package, $method) = @_;
