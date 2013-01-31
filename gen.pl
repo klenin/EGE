@@ -133,8 +133,12 @@ binmode STDOUT, ':utf8';
 #g('B06', 'solve');
 #g('B07', 'who_is_right');
 #g('B08', 'identify_letter');
+g('Arch1', 'reg_value_add');
+g('Arch1', 'reg_value_logic');
+g('Arch1', 'reg_value_shift');
+g('Arch1', 'reg_value_convert');
 
-$questions = EGE::Generate::all;
+#$questions = EGE::Generate::all;
 
 #push @$questions, EGE::Math::Summer::g($_) for qw(p1 p2 p3 p4 p5 p6 p7);
 
