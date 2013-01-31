@@ -77,6 +77,26 @@ sub run_cmd {
 	$self;
 }
 
+sub run_code {
+	my ($self, $code) = @_;
+	$self->init();
+	my %labels = ();
+	for my $i (0..$#{$code}) {
+		my $label = substr($code->[$i]->[0], 0, -1);
+		$labels{$label} = $i if ($self->is_label($code->[$i]->[0]));
+	}
+	my $i = -1;
+	while ($i < $#{$code}) {
+		$i++;
+		next if ($self->is_label($code->[$i]->[0]));
+		my $is_jump = $self->is_jump($code->[$i]->[0]);
+		$i = $labels{$code->[$i]->[1]} - 1 if ($is_jump && $self->{eflags}->valid_jump($code->[$i]->[0]));
+		next if ($is_jump);
+		$self->run_cmd($code->[$i]->[0], $code->[$i]->[1], $code->[$i]->[2]);
+	}
+	$self;
+}
+
 sub stc {
 	my $self = shift;
 	$self->{eflags}->{CF} = 1;
