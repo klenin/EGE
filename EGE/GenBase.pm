@@ -61,4 +61,26 @@ sub post_process {
         die 'Correct answer is not acceptable in ', ref $_[0], ': ', $_[0]->{correct};
 }
 
+package EGE::GenBase::MultipleChoice;
+use base 'EGE::GenBase::SingleChoice';
+
+use EGE::Random;
+
+sub init {
+    $_[0]->{type} = 'mc';
+    $_[0]->{correct} = [];
+}
+
+sub shuffle_variants {
+    my ($self)= @_;
+    $self->{variants} or die;
+    my @order = rnd->shuffle(0 .. @{$self->{variants}} - 1);
+	for my $i (0..$#{$self->{correct}}) {
+		$self->{correct}->[$i] = $order[$self->{correct}->[$i]] ;
+	}
+    my @v;
+    $v[$order[$_]] = $self->{variants}->[$_] for @order;
+    $self->{variants} = \@v;
+}
+
 1;
