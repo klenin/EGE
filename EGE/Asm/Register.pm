@@ -120,7 +120,7 @@ sub sub {
 	$val = $a + $val if ($val < 0);
 	my $regval = $self->get_value();
 	$eflags->{CF} = 0;
-	$eflags->{CF} = 1 if ($regval < $val);
+	$eflags->{CF} = 1 if ($regval < $val || $regval < $val+1 && $cf && $oldcf);
 	$regval = $regval - $a if ($regval >= $a/2);
 	$val = $val - $a if ($val >= $a/2);
 	my $newval = $regval - $val;
