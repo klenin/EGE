@@ -128,4 +128,22 @@ sub is_jump {
 	$hash{$cmd};
 }
 
+sub print_state {
+	my $self = shift;
+	print "eax = ".$self->{eax}->get_value('eax')."\n";
+	print "ebx = ".$self->{ebx}->get_value('ebx')."\n";
+	print "ecx = ".$self->{ecx}->get_value('ecx')."\n";
+	print "edx = ".$self->{edx}->get_value('edx')."\n";
+	print "esp = ".$self->{esp}->get_value('esp')."\n";
+	print "ebp = ".$self->{ebp}->get_value('ebp')."\n";
+	print $self->{eflags}->{ZF} ? "ZF = 1\n" : "ZF = 0\n";
+	print $self->{eflags}->{SF} ? "SF = 1\n" : "SF = 0\n";
+	print $self->{eflags}->{PF} ? "PF = 1\n" : "PF = 0\n";
+	print $self->{eflags}->{CF} ? "CF = 1\n" : "CF = 0\n";
+	print $self->{eflags}->{OF} ? "OF = 1\n" : "OF = 0\n";
+	print "stack:\n";
+	print $_."\n" for (@{$self->{stack}});
+	$self;
+}
+
 1;

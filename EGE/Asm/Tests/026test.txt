@@ -1,0 +1,2 @@
+mov al 15
+sub al -7

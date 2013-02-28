@@ -1,0 +1,3 @@
+mov al 15
+clc
+sbb al 7

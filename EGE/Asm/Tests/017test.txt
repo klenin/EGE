@@ -1,0 +1,3 @@
+mov al 15
+stc
+adc al 7

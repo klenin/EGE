@@ -1,0 +1,2 @@
+mov al 64
+add al 64
