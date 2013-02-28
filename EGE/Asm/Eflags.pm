@@ -6,6 +6,7 @@ package EGE::Asm::Eflags;
 use strict;
 use warnings;
 
+my $flags = ['ZF', 'SF', 'PF', 'CF', 'OF'];
 
 sub new {
 	my ($class, %init) = @_;
@@ -17,11 +18,7 @@ sub new {
 
 sub init {
 	my $self = shift;
-	$self->{ZF} = 0;
-	$self->{SF} = 0;
-	$self->{PF} = 0;
-	$self->{CF} = 0;
-	$self->{OF} = 0;
+	$self->{$_} = 0 for (@$flags);
 }
 
 sub valid_jump {
@@ -48,13 +45,10 @@ sub valid_jump {
 
 sub get_set_flags {
 	my $self = shift;
-	my $flags = ['ZF', 'SF', 'PF', 'CF', 'OF'];
 	my $arr = [];
-	push($arr, 0) if ($self->{ZF});
-	push($arr, 1) if ($self->{SF});
-	push($arr, 2) if ($self->{PF});
-	push($arr, 3) if ($self->{CF});
-	push($arr, 4) if ($self->{OF});
+	for my $i (0..$#{$flags}) {
+		push ($arr, $i) if ($self->{$flags->[$i]});
+	}
 	{'flags', $flags, 'set', $arr};
 }
 

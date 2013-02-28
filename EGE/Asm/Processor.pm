@@ -14,7 +14,7 @@ use EGE::Asm::Register;
 use EGE::Asm::Eflags;
 
 my $proc;
-
+my $registers = ['eax', 'ebx', 'ecx', 'edx', 'esp', 'ebp'];
 
 sub proc {
     $proc ||= EGE::Asm::Processor->new;
@@ -22,26 +22,16 @@ sub proc {
 
 sub new {
     my $self = {
-		eax => EGE::Asm::Register->new,
-		ebx => EGE::Asm::Register->new,
-		ecx => EGE::Asm::Register->new,
-		edx => EGE::Asm::Register->new,
-		esp => EGE::Asm::Register->new,
-		ebp => EGE::Asm::Register->new,
 		eflags => EGE::Asm::Eflags->new
 	};
+	$self->{$_} = EGE::Asm::Register->new for (@$registers);
     bless $self, shift;
     $self;
 }
 
 sub init {
 	my $self = shift;
-	$self->{eax}->mov($self->{eflags}, 'eax', 0);
-	$self->{ebx}->mov($self->{eflags}, 'ebx', 0);
-	$self->{ecx}->mov($self->{eflags}, 'ecx', 0);
-	$self->{edx}->mov($self->{eflags}, 'edx', 0);
-	$self->{esp}->mov($self->{eflags}, 'esp', 0);
-	$self->{ebp}->mov($self->{eflags}, 'ebp', 0);
+	$self->{$_}->mov($self->{eflags}, $_, 0) for (@$registers);
 	$self->{eflags}->init;
 	$self->{stack} = [];
 }
@@ -130,17 +120,8 @@ sub is_jump {
 
 sub print_state {
 	my $self = shift;
-	print "eax = ".$self->{eax}->get_value('eax')."\n";
-	print "ebx = ".$self->{ebx}->get_value('ebx')."\n";
-	print "ecx = ".$self->{ecx}->get_value('ecx')."\n";
-	print "edx = ".$self->{edx}->get_value('edx')."\n";
-	print "esp = ".$self->{esp}->get_value('esp')."\n";
-	print "ebp = ".$self->{ebp}->get_value('ebp')."\n";
-	print $self->{eflags}->{ZF} ? "ZF = 1\n" : "ZF = 0\n";
-	print $self->{eflags}->{SF} ? "SF = 1\n" : "SF = 0\n";
-	print $self->{eflags}->{PF} ? "PF = 1\n" : "PF = 0\n";
-	print $self->{eflags}->{CF} ? "CF = 1\n" : "CF = 0\n";
-	print $self->{eflags}->{OF} ? "OF = 1\n" : "OF = 0\n";
+	print $_." = ".$self->{$_}->get_value($_)."\n" for (@$registers);
+	print $self->{eflags}->{$_} ? $_." = 1\n" : $_." = 0\n" for (@{EGE::Asm::Eflags::flags});
 	print "stack:\n";
 	print $_."\n" for (@{$self->{stack}});
 	$self;
