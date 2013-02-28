@@ -43,7 +43,7 @@ sub valid_jump {
 	$cmd eq 'jge' || $cmd eq 'jnl' ? $self->{SF} == $self->{OF} :
 	$cmd eq 'jbe' || $cmd eq 'jna' ? $self->{CF} || $self->{ZF} :
 	$cmd eq 'ja' || $cmd eq 'jnbe' ? !$self->{CF} && !$self->{ZF} :
-	'';
+	$cmd eq 'jmp' ? 1 : '';
 }
 
 sub get_set_flags {
