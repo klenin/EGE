@@ -40,7 +40,7 @@ sub generate_command {
 		$cmd = rnd->pick('and', 'or', 'xor', 'test', 'not');
 	}
 	if ($type eq 'shift') {
-		$lo = 1, $hi = 7 if (!defined $lo);
+		$lo = 1, $hi = 4 if (!defined $lo);
 		$cmd = rnd->pick('shl', 'shr', 'sal', 'sar', 'rol', 'ror', 'rcl', 'rcr');
 	}
 	if ($type eq 'convert') {

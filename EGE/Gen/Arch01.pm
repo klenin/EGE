@@ -42,27 +42,46 @@ sub reg_value_logic {
 
 sub reg_value_shift {
 	my $self = shift;
-	my $reg = $self->get_reg('shift');
+	cgen->{code} = [];
+	my $reg = cgen->get_reg(8);
+	my $arg = rnd->in_range(1, 15) * 16 + rnd->in_range(1, 15);
+	cgen->generate_command('mov', $reg, $arg);
+	cgen->generate_command('shift', $reg);
 	my $res = $self->get_res($reg);
 	my ($res1, $res2, $res3);
-	my $id;
-	if (cgen->{code}->[1]->[0] eq 'stc' || cgen->{code}->[1]->[0] eq 'clc') {
-		s/c/o/ for (cgen->{code}->[2]->[0]);
+	my $id = 1;
+	my $sgn = $arg >= 128;
+	my $use_cf = cgen->{code}->[1]->[0] eq 'stc' || cgen->{code}->[1]->[0] eq 'clc';
+	my $shift_right = (cgen->{code}->[1]->[0] eq 'shr' || cgen->{code}->[1]->[0] eq 'sar') && $sgn;
+	my $other = !$use_cf && !$shift_right;
+	if ($use_cf) {
+		$id = 2;
+		s/c/o/ for (cgen->{code}->[$id]->[0]);
 		proc->run_code(cgen->{code});
 		$res1 = proc->get_val($reg);
-		s/o/c/ for (cgen->{code}->[2]->[0]);
-		$id = 2;
+		s/o/c/ for (cgen->{code}->[$id]->[0]);
 	}
-	else {
-		$id = 1;
-		$res1 = proc->get_wrong_val($reg);
+	$res1 = proc->get_wrong_val($reg) if ($other);
+	if (!$shift_right) {
+		cgen->{code}->[$id]->[2] = (cgen->{code}->[$id]->[2] + 1) % 8;
+		proc->run_code(cgen->{code});
+		$res2 = proc->get_val($reg);
+		cgen->{code}->[$id]->[2] = (cgen->{code}->[$id]->[2] - 2) % 8;
+		proc->run_code(cgen->{code});
+		$res3 = proc->get_val($reg);
 	}
-	cgen->{code}->[$id]->[2] = (cgen->{code}->[$id]->[2] + 1) % 8;
-	proc->run_code(cgen->{code});
-	$res2 = proc->get_val($reg);
-	cgen->{code}->[$id]->[2] = (cgen->{code}->[$id]->[2] - 2) % 8;
-	proc->run_code(cgen->{code});
-	$res3 = proc->get_val($reg);
+	if ($shift_right) {
+		cgen->{code}->[$id]->[0] = {'sar' => 'shr', 'shr' => 'sar'}->{cgen->{code}->[$id]->[0]};
+		proc->run_code(cgen->{code});
+		$res1 = proc->get_val($reg);
+		my $shift = cgen->{code}->[$id]->[2];
+		cgen->{code}->[$id]->[2] += $shift == 1 ? 1 : rnd->pick(1, -1);
+		proc->run_code(cgen->{code});
+		$res2 = proc->get_val($reg);
+		cgen->{code}->[$id]->[0] = {'sar' => 'shr', 'shr' => 'sar'}->{cgen->{code}->[$id]->[0]};
+		proc->run_code(cgen->{code});
+		$res3 = proc->get_val($reg);
+	}
 	$self->variants($res, $res1, $res2, $res3);
 	$self->{correct} = 0;
 }
