@@ -58,13 +58,16 @@ sub add_command {
 }
 
 sub get_code_txt {
-	my $self = shift;
-	my $res = '<code>';
-	for (@{$self->{code}}) {
-		$res .= $_->[0];
-		$res .= ' '.$_->[1] if ($_->[1]);
-		$res .= ', '.$_->[2] if ($_->[2]);
-		$res .= ' ';
+	my ($self, $type) = @_;
+	my $res = '<code><br>';
+	for my $str (@{$self->{code}}) {
+		my $i=0;
+		for (grep {!($_ eq '')} @$str) {
+			$res .= $i == 0 ? '' : $i == 1 ? ' ' : ', ';
+			$res .= (m/^-?(\d*)$/ && $type eq 'hex') ? sprintf '%08Xh', $_ : sprintf '%s', $_;
+			$i++;
+		}
+		$res .= '<br>';
 	}
 	$res .= '</code>';
 	$res;

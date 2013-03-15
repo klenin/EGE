@@ -34,7 +34,7 @@ sub flags_value {
 	cgen->generate_command('mov', $reg);
 	cgen->generate_command($type, $reg);
 	proc->run_code(cgen->{code});
-	my $code_txt = cgen->get_code_txt();
+	my $code_txt = cgen->get_code_txt('dec');
 	$self->{text} = <<QUESTION
 В результате выполнения кода $code_txt будут установлены флаги:
 QUESTION
