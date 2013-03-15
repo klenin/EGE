@@ -82,7 +82,7 @@ sub reg_value_shift {
 		cgen->{code}->[$id]->[0] = {'sar' => 'shr', 'shr' => 'sar'}->{cgen->{code}->[$id]->[0]};
 		proc->run_code(cgen->{code});
 		$res1 = proc->get_val($reg);
-		cgen->{code}->[$id]->[2] = cgen->{code}->[$id]->[2] + 4;
+		cgen->{code}->[$id]->[2] += cgen->{code}->[$id]->[2] == 4 ? 4 : rnd->pick(4, -4);
 		proc->run_code(cgen->{code});
 		$res2 = proc->get_val($reg);
 		cgen->{code}->[$id]->[0] = {'sar' => 'shr', 'shr' => 'sar'}->{cgen->{code}->[$id]->[0]};
