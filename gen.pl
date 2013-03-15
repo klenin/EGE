@@ -144,6 +144,12 @@ g('Arch1', 'reg_value_convert');
 g('Arch2', 'flags_value_add');
 g('Arch2', 'flags_value_logic');
 g('Arch2', 'flags_value_shift');
+g('Arch3', 'reg_value_add');
+g('Arch3', 'reg_value_logic');
+g('Arch3', 'reg_value_shift');
+g('Arch4', 'flags_value_add');
+g('Arch4', 'flags_value_logic');
+g('Arch4', 'flags_value_shift');
 
 #$questions = EGE::Generate::all;
 
