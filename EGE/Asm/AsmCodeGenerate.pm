@@ -59,7 +59,7 @@ sub add_command {
 
 sub get_code_txt {
 	my ($self, $type) = @_;
-	my $res = '<code><br>';
+	my $res = '<br></br><code>';
 	for my $str (@{$self->{code}}) {
 		my $i=0;
 		for (grep {!($_ eq '')} @$str) {
@@ -67,7 +67,7 @@ sub get_code_txt {
 			$res .= (m/^-?(\d*)$/ && $type eq 'hex') ? sprintf '%08Xh', $_ : sprintf '%s', $_;
 			$i++;
 		}
-		$res .= '<br>';
+		$res .= '<br></br>';
 	}
 	$res .= '</code>';
 	$res;
