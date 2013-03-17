@@ -75,12 +75,10 @@ sub shuffle_variants {
     my ($self)= @_;
     $self->{variants} or die;
     my @order = rnd->shuffle(0 .. @{$self->{variants}} - 1);
-	for my $i (0..$#{$self->{correct}}) {
-		$self->{correct}->[$i] = $order[$self->{correct}->[$i]] ;
-	}
-    my @v;
-    $v[$order[$_]] = $self->{variants}->[$_] for @order;
+    my (@v, @c);
+    $v[$order[$_]] = $self->{variants}->[$_], $c[$order[$_]] = $self->{correct}->[$_] for @order;
     $self->{variants} = \@v;
+	$self->{correct} = \@c;
 }
 
 1;

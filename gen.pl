@@ -81,10 +81,14 @@ sub print_json {
     for my $q (@$questions) {
         print '{';
         print
-            join ', ', map qq~"$_":~ . quote($q->{$_}), qw(type text correct);
-        print ', "variants": [', join(', ', map quote($_), @{$q->{variants}}), '], '
+            join ', ', map qq~"$_":~ . quote($q->{$_}), qw(type text);
+		print
+			', "correct":'.$q->{correct} if ($q->{type} eq 'sc' || $q->{type} eq 'di');
+        print 
+			', "correct": [', join(', ', map quote($_), @{$q->{correct}}), ']' if $q->{type} eq 'mc';
+        print ', "variants": [', join(', ', map quote($_), @{$q->{variants}}), '] '
             if $q->{variants};
-        print " },\n";
+        print $q eq $questions->[$#$questions] ? " }\n" : " },\n";
     }
     print "]\n";
 }
