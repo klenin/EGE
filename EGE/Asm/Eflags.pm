@@ -46,9 +46,7 @@ sub valid_jump {
 sub get_set_flags {
 	my $self = shift;
 	my $arr = [];
-	for my $i (0..$#{$flags}) {
-		push ($arr, $i) if ($self->{$flags->[$i]});
-	}
+	push($arr, $self->{$_}) for (@{$flags});
 	{'flags', $flags, 'set', $arr};
 }
 

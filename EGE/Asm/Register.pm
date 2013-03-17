@@ -50,12 +50,14 @@ sub get_value {
 sub set_ZSPF {
 	my ($self, $eflags) = @_;
 	$eflags->{ZF} = $self->get_value() == 0;
+	$eflags->{ZF} = 0 if (!$eflags->{ZF});
 	$eflags->{SF} = $self->{bits}->{v}[$self->{id_from}];
 	my $num1 = 0;
 	for (24 .. 31) {
 		$num1++ if ($self->{bits}->{v}[$_]);
 	}
 	$eflags->{PF} = !($num1 % 2);
+	$eflags->{PF} = 0 if (!$eflags->{PF});
 	$self;
 }
 
