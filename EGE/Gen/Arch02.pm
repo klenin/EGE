@@ -42,6 +42,7 @@ QUESTION
 	my $flags = proc->{eflags}->get_set_flags();
 	$self->variants(@{$flags->{flags}});
     $self->{correct} = $flags->{set};
+	$self->flags_value($type) if !(grep $_, @{$flags->{set}});
 }
 
 1;
