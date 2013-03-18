@@ -58,10 +58,9 @@ $q->{text}
             @v = ($q->{correct});
             @correct = (0);
         }
-        my $i = 0;
-        for (@v) {
-            my $style = $i++ ~~ @correct ? ' class="correct"' : '';
-            print "<li$style>$_</li>\n";
+        for my $i (0..$#v) {
+            my $style = $correct[$i] ? ' class="correct"' : '';
+            print "<li$style>$v[$i]</li>\n";
         }
         print "</ol>\n</div>\n";
     }
