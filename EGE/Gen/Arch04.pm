@@ -11,28 +11,25 @@ use utf8;
 use EGE::Random;
 use EGE::Asm::Processor;
 use EGE::Asm::AsmCodeGenerate;
-use EGE::Gen::Arch03;
 
 sub flags_value_add {
 	my $self = shift;
-	my ($arg1, $arg2) = EGE::Gen::Arch03->get_args_add();
-	$self->flags_value('add', $arg1, $arg2);
+	$self->flags_value('add');
 }
 
 sub flags_value_logic {
 	my $self = shift;
-	my ($arg1, $arg2) = EGE::Gen::Arch03->get_args_logic();
-	$self->flags_value('logic', $arg1, $arg2);
+	$self->flags_value('logic');
 }
 
 sub flags_value_shift {
 	my $self = shift;
-	my ($arg1, $arg2) = EGE::Gen::Arch03->get_args_shift();
-	$self->flags_value('shift', $arg1, $arg2);
+	$self->flags_value('shift');
 }
 
 sub flags_value {
-	my ($self, $type, $arg1, $arg2) = @_;
+	my ($self, $type) = @_;
+	my ($arg1, $arg2) = cgen->get_hex_args($type);
 	cgen->{code} = [];
 	my $reg = cgen->get_reg(32);
 	cgen->generate_command('mov', $reg, $arg1);

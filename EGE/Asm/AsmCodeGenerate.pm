@@ -7,6 +7,7 @@ use strict;
 use warnings;
 
 use EGE::Random;
+use POSIX qw/ceil/;
 
 use Exporter;
 our @ISA = qw(Exporter);
@@ -88,6 +89,43 @@ sub use_cf {
 	my ($self, $cmd) = @_;
 	my %hash = (adc => 1, sbb => 1, rcl => 1, rcr => 1);
 	$hash{$cmd};
+}
+
+sub get_hex_args {
+	my($self, $type) = @_;
+	no strict 'refs';
+	&{"get_hex_args_".$type}();
+}
+
+sub get_hex_args_add {
+	my ($arg1, $arg2) = (0, 0);
+	for (1..7) {
+		my $sum = rnd->in_range(0, 15);
+		my $n = rnd->in_range(ceil($sum/2), $sum);
+		$arg1 = $arg1*16 + $n;
+		$arg2 = $arg2*16 + $sum - $n;
+	}
+	$arg1 += rnd->in_range(0, 15) * 16**7;
+	$arg2 += rnd->in_range(0, 15) * 16**7;
+	($arg1, $arg2);
+}
+
+sub get_hex_args_logic {
+	my @arr = (0, 0);
+	for (1..8) {
+		my $n1 = rnd->pick(0, 15);
+		my $n2 = rnd->in_range(0, 15);
+		my ($i, $j) = rnd->pick_n(2, (0, 1));
+		$arr[$i] = $arr[$i]*16 + $n1;
+		$arr[$j] = $arr[$j]*16 + $n2;
+	}
+	@arr;
+}
+
+sub get_hex_args_shift {
+	my $arg = 0;
+	$arg = $arg*16 + rnd->in_range(0, 15) for (1..8);
+	($arg, rnd->pick(4,8,12,16));
 }
 
 
