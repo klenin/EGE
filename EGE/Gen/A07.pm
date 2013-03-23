@@ -145,7 +145,7 @@ sub random_sequences {
 }
 
 sub rnd_subpattern {
-    my ($last_prn) = $_[0] || '';
+    my $last_prn = $_[0] || '';
     my $res;
     do {
         $res = uc(rnd->english_letter()) . rnd->in_range(0, 9)
@@ -198,7 +198,7 @@ sub restore_password {
     }
     $str =~ s/$sub_init/$sub_good/;
 
-    # Удалив полностью и частично чифры из строк получим варианты ответов
+    # Удалив полностью и частично цифры из строк получим варианты ответов
     my ($good_variants, $bad_variants) = delete_nums($str);
     my ($bad_variants2, $bad_variants3) = delete_nums($init_str);
 
