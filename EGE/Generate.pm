@@ -41,6 +41,11 @@ use EGE::Gen::B12;
 use EGE::Gen::B13;
 use EGE::Gen::B15;
 
+use EGE::Gen::Arch01;
+use EGE::Gen::Arch02;
+use EGE::Gen::Arch03;
+use EGE::Gen::Arch04;
+
 sub one {
     my ($package, $method) = @_;
     no strict 'refs';
@@ -53,7 +58,7 @@ sub one {
 
 sub g {
     my $unit = shift;
-    my ($p, $n) = ($unit =~ /^(\w)(\d+)$/);
+    my ($p, $n) = ($unit =~ /^(\w+)(\d+)$/);
     my $q = one sprintf('%s%02d', $p, $n), rnd->pick(@_);
     $q->{text} = "<h3>$unit</h3>\n$q->{text}";
     $q;

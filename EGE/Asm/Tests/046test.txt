@@ -1,0 +1,2 @@
+mov al 209
+shl al 2

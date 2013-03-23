@@ -199,4 +199,27 @@ sub scan_left {
     $pos;
 }
 
+sub logic_op {
+	my ($self, $_, $val, $id_from, $id_to) = @_;
+	$id_from = 0 if (!$id_from);
+	$id_to = $self->get_size if (!$id_to);
+	my $len = $id_to - $id_from;
+	my $tmp = EGE::Bits->new->set_size($len);
+	$tmp->set_dec($val);
+	for my $i (0 .. $len - 1) {
+		$self->{v}[$id_from+$i] &= $tmp->{v}[$i] if (m/^and$/);
+		$self->{v}[$id_from+$i] |= $tmp->{v}[$i] if (m/^or$/);
+		$self->{v}[$id_from+$i] ^= $tmp->{v}[$i] if (m/^xor$/);
+	}
+	$self;
+}
+
+sub invert {
+	my ($self, $id_from, $id_to) = @_;
+	$id_from = 0 if (!$id_from);
+	$id_to = $self->get_size if (!$id_to);
+	$self->{v}[$_] ^= 1 for ($id_from..$id_to-1);
+	$self;
+}
+
 1;

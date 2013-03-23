@@ -1,0 +1,5 @@
+mov ax -2
+sub ax -2
+jl m
+mov ax 3
+m:

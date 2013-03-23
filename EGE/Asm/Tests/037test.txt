@@ -1,0 +1,2 @@
+mov al 7
+neg al

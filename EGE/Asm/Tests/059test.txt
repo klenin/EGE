@@ -1,0 +1,3 @@
+mov al 55
+add al 15
+sub al 4

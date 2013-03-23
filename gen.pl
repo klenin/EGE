@@ -45,19 +45,22 @@ sub print_html {
 $q->{text}
 <ol>
 ~;
-        my (@v, $correct);
+        my (@v, @correct);
         if ($q->{type} eq 'sc') {
             @v = @{$q->{variants}};
-            $correct = $q->{correct}
+            @correct = ($q->{correct});
         }
+		elsif ($q->{type} eq 'mc') {
+			@v = @{$q->{variants}};
+            @correct = @{$q->{correct}};
+		}
         else {
             @v = ($q->{correct});
-            $correct = 0;
+            @correct = (0);
         }
-        my $i = 0;
-        for (@v) {
-            my $style = $i++ == $correct ? ' class="correct"' : '';
-            print "<li$style>$_</li>\n";
+        for my $i (0..$#v) {
+            my $style = $correct[$i] ? ' class="correct"' : '';
+            print "<li$style>$v[$i]</li>\n";
         }
         print "</ol>\n</div>\n";
     }
@@ -77,10 +80,14 @@ sub print_json {
     for my $q (@$questions) {
         print '{';
         print
-            join ', ', map qq~"$_":~ . quote($q->{$_}), qw(type text correct);
-        print ', "variants": [', join(', ', map quote($_), @{$q->{variants}}), '], '
+            join ', ', map qq~"$_":~ . quote($q->{$_}), qw(type text);
+		print
+			', "correct":'.$q->{correct} if ($q->{type} eq 'sc' || $q->{type} eq 'di');
+        print 
+			', "correct": [', join(', ', map quote($_), @{$q->{correct}}), ']' if $q->{type} eq 'mc';
+        print ', "variants": [', join(', ', map quote($_), @{$q->{variants}}), '] '
             if $q->{variants};
-        print " },\n";
+        print $q eq $questions->[$#$questions] ? " }\n" : " },\n";
     }
     print "]\n";
 }
@@ -133,8 +140,21 @@ binmode STDOUT, ':utf8';
 #g('B06', 'solve');
 #g('B07', 'who_is_right');
 #g('B08', 'identify_letter');
+g('Arch1', 'reg_value_add');
+g('Arch1', 'reg_value_logic');
+g('Arch1', 'reg_value_shift');
+g('Arch1', 'reg_value_convert');
+g('Arch2', 'flags_value_add');
+g('Arch2', 'flags_value_logic');
+g('Arch2', 'flags_value_shift');
+g('Arch3', 'reg_value_add');
+g('Arch3', 'reg_value_logic');
+g('Arch3', 'reg_value_shift');
+g('Arch4', 'flags_value_add');
+g('Arch4', 'flags_value_logic');
+g('Arch4', 'flags_value_shift');
 
-$questions = EGE::Generate::all;
+#$questions = EGE::Generate::all;
 
 #push @$questions, EGE::Math::Summer::g($_) for qw(p1 p2 p3 p4 p5 p6 p7);
 

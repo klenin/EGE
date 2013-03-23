@@ -1,0 +1,5 @@
+mov al 165
+sub al 165
+jnae m
+mov al 3
+m:
