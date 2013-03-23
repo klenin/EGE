@@ -1,0 +1,2 @@
+mov al 209
+ror al 2

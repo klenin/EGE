@@ -1,0 +1,4 @@
+mov ax 1
+jmp m
+mov ax 3
+m:

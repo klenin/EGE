@@ -1,0 +1,2 @@
+mov al 15
+add al -7

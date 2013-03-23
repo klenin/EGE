@@ -1,0 +1,3 @@
+mov al 209
+stc
+or al 141
