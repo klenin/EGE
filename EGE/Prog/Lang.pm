@@ -172,6 +172,10 @@ sub until_end_fmt { "\n}" }
 package EGE::Prog::Lang::Logic;
 use base 'EGE::Prog::Lang';
 
+sub prio_list {
+    [ ops::mult ], [ ops::add ], [ ops::comp ], ['&&'], ['||', '^'], ['=>']
+}
+
 sub translate_op {{
     '-' => '−', '*' => '⋅',
     '!=' => '≠', '>=' => '≥', '<=' => '≤',

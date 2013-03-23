@@ -63,8 +63,10 @@ sub div_xy {
     $self->div($text, { $self->style(width => "${x}px", height => "${y}px") });
 }
 
+sub nbsp { ' ' }
+
 BEGIN {
-    for my $tag (qw(td th table div)) {
+    for my $tag (qw(td th table div ol ul li)) {
         no strict 'refs';
         *$tag = sub {
             my $self = shift;

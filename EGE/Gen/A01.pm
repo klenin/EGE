@@ -15,13 +15,24 @@ use EGE::NumText;
 
 sub bits_or_bytes { rnd->pick(bits_and_bytes($_[0])) }
 
+sub _recode_get_encodings {
+    my $change = shift;
+    my $big = rnd->pick(
+        { from => '16-битной кодировке UCS-2', to => '16-битную кодировку UCS-2' },
+        { from => '2-байтном коде Unicode', to => '2-байтный код Unicode' }
+    );
+    my $little = rnd->pick(
+      { from => '8-битной кодировке КОИ-8', to => '8-битную кодировке КОИ-8'},
+    );
+    { from => ($change ? $big : $little)->{from},
+      to   => ($change ? $little : $big)->{to},
+      change => $_[$change] }
+}
+
 sub recode {
     my ($self) = @_;
     my $delta = rnd->pick(8, 16, 32, map $_ * 10, 1..10);
-    my $dir = rnd->pick(
-      { from => '16-битной кодировке UCS-2', to => '8-битную кодировку КОИ-8', change => 'уменьшилось' },
-      { from => '8-битной кодировке КОИ-8', to => '16-битную кодировку UCS-2', change => 'увеличилось' },
-    );
+    my $dir = _recode_get_encodings(rnd->coin(), 'увеличилось', 'уменьшилось');
     my $delta_text = bits_or_bytes($delta);
     $self->{text} = <<QUESTION
 Автоматическое устройство осуществило перекодировку информационного сообщения,

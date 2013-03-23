@@ -9,6 +9,9 @@ use warnings;
 use utf8;
 
 use EGE::Random;
+use EGE::Html;
+
+use EGE::Gen::A17;
 
 my @commands = (
     sub {
@@ -69,7 +72,9 @@ sub calculator {
         $arg = rnd->in_range(2, 10);
         $prg = [ (0) x $num ];
         my %results;
-        ++$results{apply($cmd, $prg, $arg)} while next_prg($cmd, $prg);
+        do {
+            ++$results{apply($cmd, $prg, $arg)}
+        } while next_prg($cmd, $prg);
         my @r = grep 50 < $_ && $_ < 1000 && $results{$_} == 1, keys %results;
         $result = rnd->pick(@r) if @r;
     } until $result;
@@ -104,4 +109,144 @@ sub calculator {
     $self->accept_number;
 }
 
+sub _char_to_int {
+    ord(substr($_[0], 1, length($_[0]) - 1)) - ord('A');
+}
+
+sub _to_formula {
+    my ($str, $perm_alph) = @_;
+    $str =~ s/(\%\w+)/$perm_alph->[_char_to_int($1)] . '1'/ge;
+    '=' . $str
+}
+
+sub _apply_perm {
+    my ($array, $perm) = @_;
+    [map { $array->[$_] } @$perm];
+}
+
+sub _back_perm {
+    my ($perm) = @_;
+    my %h;
+    for my $i (0 .. $#{$perm}) {
+        $h{$perm->[$i]} = $i
+    }
+    [ map { $h{$_} } sort { $a <=> $b } keys %h ]
+}
+
+sub complete_spreadsheet {
+    my ($self) = @_;
+
+    my $table = rnd->pick(
+        { 1    => [3, 2, 3, 2],
+          2    => ["(%C+%A)/2", "%C-%D", "%A-%D", "%B/2"],
+          ans  => [3, 1, 1, 1],
+          find => 1 },
+        { 1    => [1, 2, 3],
+          2    => ["(%A+%B+%C)/2", "%C", "3*%B-%C"],
+          ans  => [3, 3, 3],
+          find => 0 },
+        { 1    => [2, 3, 0, 3],
+          2    => ["%A", "(%B+%D)/3", "2*%C", "2*(%B-%A)"],
+          ans  => [2, 2, 0, 2],
+          find => 2 }
+    );
+
+    my $n = @{$table->{1}};
+    my $perm_1 = [rnd->shuffle(0 .. $n -1)];
+    my $perm_1_back = _back_perm($perm_1);
+    my $perm_2 = [rnd->shuffle(0 .. $n -1)];
+    my $perm_alph = _apply_perm(['A' .. 'Z'], $perm_1_back);
+
+    my $new_table =
+    {
+       1    => _apply_perm($table->{1}, $perm_1),
+       2    => _apply_perm($table->{2}, $perm_2),
+       ans  => _apply_perm($table->{ans}, $perm_2),
+       find => $perm_1_back->[$table->{find}]
+    };
+    $self->{correct} = $new_table->{1}[$new_table->{find}];
+    $new_table->{1}[$new_table->{find}] = '';
+    my $empty_ceil_text = ['A' .. 'Z']->[$new_table->{find}] . 1;
+
+    $_  = html->row('th', html->nbsp, 'A' .. chr(ord('A') + $n - 1));
+    $_ .= html->row('td', '<strong>1</strong>', @{$new_table->{1}});
+    $_ .= html->row('td', '<strong>2</strong>',
+                    map { _to_formula($_, $perm_alph) } @{$new_table->{2}});
+    my $table_text =
+        html->table($_, {border => 1, style => 'text-align: center'});
+    my $colors = [qw(red green blue orange gray yellow brown)];
+    my $chart = EGE::Gen::A17::pie_chart($new_table->{ans},
+                                         { size => 100, colors => $colors} );
+    my $last_letter = ['A' .. 'Z']->[$n - 1];
+    $self->{text} = "Дан фрагмент электронной таблицы: $table_text" .
+        "Какое число  должно быть записано в ячейке $empty_ceil_text, чтобы " .
+        "построенная после выполнения вычислений диаграмма по значениям " .
+        "диапазона ячеек A2:${last_letter}2 соответствовала рисунку? $chart";
+}
+
 1;
+
+__END__
+
+=pod
+
+=head1 Список генераторов
+
+=over
+
+=item calculator
+
+=item min_routes
+
+=back
+
+
+=head2 Генератор complete_spreadsheet
+
+=head3 Источник
+
+Демонстрационные варианты ЕГЭ по информатике 2012, официальный информационный
+портал ЕГЭ. Задание B5.
+
+=head3 Описание
+
+Разные вариатны задания (значения в ячейках и формулы) составляются вручную.
+Чтобы разнообразить получаемый текст, значений в 1й и 2й строках таблицы
+перемешиваются, в соответствии с этим автоматически меняются буквы в формулах.
+
+=head2 Формат варианта задания
+
+    { 1    => [3, 2, 3, 2],
+      2    => ["(%C+%A)/2", "%C-%D", "%A-%D", "%B/2"],
+      ans  => [3, 1, 1, 1],
+      find => 1 }
+
+=over
+
+Подробнее:
+
+=item Числовые значения в первой строке
+
+    { 1    => [3, 2, 3, 2],
+
+Одно значение, являющееся ответом, будет скрыто
+
+=item Формулы во второй строке
+
+      2    => ["(%C+%A)/2", "%C-%D", "%A-%D", "%B/2"],
+
+Символами %A, %B, ... обозначаются ссылки на 1ю, 2ю, ...  ячейки в 1й строке.
+
+=item Результаты вычисления формул во 2й строке
+
+      ans  => [3, 1, 1, 1],
+
+По этим значениям строится диаграмма.
+
+=item Номер(с нуля) ячейки из 1й строку, которую нужно скрыть
+
+      find => 1 }
+
+=back
+
+Размерность раблицы по горизонтали: от 1 до 26.
