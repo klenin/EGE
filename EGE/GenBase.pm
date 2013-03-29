@@ -1,4 +1,5 @@
 # Copyright © 2010 Alexander S. Klenin
+# Copyright © 2013 Natalia D. Zemlyannikova
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
 
@@ -79,6 +80,42 @@ sub shuffle_variants {
     $v[$order[$_]] = $self->{variants}->[$_], $c[$order[$_]] = $self->{correct}->[$_] for @order;
     $self->{variants} = \@v;
 	$self->{correct} = \@c;
+}
+
+package EGE::GenBase::Sortable;
+use base 'EGE::GenBase::SingleChoice';
+
+use EGE::Random;
+
+sub init {
+    $_[0]->{type} = 'sr';
+    $_[0]->{correct} = [];
+}
+
+sub shuffle_variants {
+    my ($self)= @_;
+    $self->{variants} or die;
+    my @order = rnd->shuffle(0 .. @{$self->{variants}} - 1);
+    my (@v, @c);
+	for my $o (@order) {
+		$v[$order[$o]] = $self->{variants}->[$o];
+		my $id = -1;
+		for my $i (0..$#{$self->{correct}}) {
+			$id = $i if ($self->{correct}->[$i] == $o);
+		}
+		$c[$id] = $order[$o];
+	}
+    $self->{variants} = \@v;
+	$self->{correct} = \@c;
+}
+
+package EGE::GenBase::Match;
+use base 'EGE::GenBase::Sortable';
+
+sub init {
+    $_[0]->{type} = 'mt';
+    $_[0]->{correct} = [];
+	$_[0]->{left_column} = [];
 }
 
 1;
