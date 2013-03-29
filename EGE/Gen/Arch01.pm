@@ -116,7 +116,7 @@ sub get_res {
 	my ($self, $reg) = @_;
 	proc->run_code(cgen->{code});
 	my $res = proc->get_val($reg);
-	my $code_txt = cgen->get_code_txt('dec');
+	my $code_txt = cgen->get_code_txt('%s');
 	$self->{text} = <<QUESTION
 В результате выполнения кода $code_txt в $reg будет содержаться значение:
 QUESTION

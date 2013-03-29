@@ -99,7 +99,7 @@ sub get_res {
 	cgen->generate_command($type, $reg, $arg2);
 	proc->run_code(cgen->{code});
 	my $res = proc->get_val($reg);
-	my $code_txt = cgen->get_code_txt('hex');
+	my $code_txt = cgen->get_code_txt('%08Xh');
 	$self->{text} = <<QUESTION
 В результате выполнения кода $code_txt в $reg будет содержаться значение:
 QUESTION
