@@ -157,6 +157,8 @@ g('Arch3', 'reg_value_shift');
 g('Arch4', 'flags_value_add');
 g('Arch4', 'flags_value_logic');
 g('Arch4', 'flags_value_shift');
+g('Arch5', 'sort_commands');
+g('Arch6', 'match_values');
 
 #$questions = EGE::Generate::all;
 
