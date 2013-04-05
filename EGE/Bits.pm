@@ -200,18 +200,20 @@ sub scan_left {
 }
 
 sub logic_op {
-	my ($self, $_, $val, $id_from, $id_to) = @_;
-	$id_from = 0 if (!$id_from);
-	$id_to = $self->get_size if (!$id_to);
-	my $len = $id_to - $id_from;
-	my $tmp = EGE::Bits->new->set_size($len);
-	$tmp->set_dec($val);
-	for my $i (0 .. $len - 1) {
-		$self->{v}[$id_from+$i] &= $tmp->{v}[$i] if (m/^and$/);
-		$self->{v}[$id_from+$i] |= $tmp->{v}[$i] if (m/^or$/);
-		$self->{v}[$id_from+$i] ^= $tmp->{v}[$i] if (m/^xor$/);
-	}
-	$self;
+    my ($self, $opname, $val, $idx_from, $idx_to) = @_;
+    $idx_from //= 0;
+    $idx_to //= $self->get_size; #/
+    my $len = $idx_to - $idx_from;
+    my $right = $val ? EGE::Bits->new->set_size($len)->set_dec($val)->{v} : [];
+    my $op = {
+        'and' => sub { $_[0] &= $_[1] },
+        'or' => sub { $_[0] |= $_[1] },
+        'xor' => sub { $_[0] ^= $_[1] },
+        'not' => sub { $_[0] ^= 1 },
+    }->{$opname} or die "Unknown op $opname";
+    my $v = $self->{v};
+    $op->($v->[$idx_from + $_], $right->[$_]) for 0 .. $len - 1;
+    $self;
 }
 
 sub invert {

@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 47;
+use Test::More tests => 49;
 
 use lib '..';
 use EGE::Bits;
@@ -115,9 +115,11 @@ use EGE::Bits;
     is $logic_op_test->('0101', 'and', '1100'), '0100', 'and 1';
     is $logic_op_test->('0101', 'or', '1100'), '1101', 'or 1';
     is $logic_op_test->('0101', 'xor', '1100'), '1001', 'xor 1';
+    is $logic_op_test->('0101', 'not', ''), '1010', 'not 1';
 
     is $logic_op_test->('1111111', 'and', '010', 2, 5), '1101011', 'and 2';
     is $logic_op_test->('0000000', 'or', '101', 1, 4), '0101000', 'or 2';
     is $logic_op_test->('0', 'xor', '1', 0, 1), '1', 'xor 2';
+    is $logic_op_test->('0101', 'not', '', 1, 3), '0011', 'not 2';
 }
 
