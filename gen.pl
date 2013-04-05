@@ -45,21 +45,21 @@ sub print_html {
 $q->{text}
 <ol>
 ~;
-        my (@v, @correct);
+        my (@v, %correct);
         if ($q->{type} eq 'sc') {
             @v = @{$q->{variants}};
-            @correct = ($q->{correct});
+            $correct{$q->{correct}} = undef;
         }
 		elsif ($q->{type} eq 'mc') {
 			@v = @{$q->{variants}};
-            @correct = @{$q->{correct}};
+            @correct{@{$q->{correct}}} = undef;
 		}
         else {
             @v = ($q->{correct});
-            @correct = (0);
+            %correct = (0 => undef);
         }
         for my $i (0..$#v) {
-            my $style = $correct[$i] ? ' class="correct"' : '';
+            my $style = exists $correct{$i} ? ' class="correct"' : '';
             print "<li$style>$v[$i]</li>\n";
         }
         print "</ol>\n</div>\n";
