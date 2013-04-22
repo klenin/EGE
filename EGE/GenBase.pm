@@ -79,7 +79,7 @@ sub shuffle_variants {
     my (@v, @c);
     $v[$order[$_]] = $self->{variants}->[$_], $c[$order[$_]] = $self->{correct}->[$_] for @order;
     $self->{variants} = \@v;
-	$self->{correct} = \@c;
+    $self->{correct} = \@c;
 }
 
 package EGE::GenBase::Sortable;
@@ -97,16 +97,16 @@ sub shuffle_variants {
     $self->{variants} or die;
     my @order = rnd->shuffle(0 .. @{$self->{variants}} - 1);
     my (@v, @c);
-	for my $o (@order) {
-		$v[$order[$o]] = $self->{variants}->[$o];
-		my $id = -1;
-		for my $i (0..$#{$self->{correct}}) {
-			$id = $i if ($self->{correct}->[$i] == $o);
-		}
-		$c[$id] = $order[$o];
-	}
+    for my $o (@order) {
+        $v[$order[$o]] = $self->{variants}->[$o];
+        my $id = -1;
+        for my $i (0..$#{$self->{correct}}) {
+            $id = $i if ($self->{correct}->[$i] == $o);
+        }
+        $c[$id] = $order[$o];
+    }
     $self->{variants} = \@v;
-	$self->{correct} = \@c;
+    $self->{correct} = \@c;
 }
 
 package EGE::GenBase::Match;
@@ -115,7 +115,7 @@ use base 'EGE::GenBase::Sortable';
 sub init {
     $_[0]->{type} = 'mt';
     $_[0]->{correct} = [];
-	$_[0]->{left_column} = [];
+    $_[0]->{left_column} = [];
 }
 
 1;

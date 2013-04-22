@@ -50,19 +50,19 @@ $q->{text}
             @v = @{$q->{variants}};
             @correct = ($q->{correct});
         }
-		elsif ($q->{type} eq 'mc' || $q->{type} eq 'sr' || $q->{type} eq 'mt') {
-			@v = @{$q->{variants}};
+        elsif ($q->{type} eq 'mc' || $q->{type} eq 'sr' || $q->{type} eq 'mt') {
+            @v = @{$q->{variants}};
             @correct = @{$q->{correct}};
-		}
+        }
         else {
             @v = ($q->{correct});
             @correct = (0);
         }
         for my $i (0..$#v) {
             my $style = $correct[$i] ? ' class="correct"' : '';
-			print $q->{type} eq 'sr' ? "<li>$v[$i] ($correct[$i])</li>\n" :
-				$q->{type} eq 'mt' ? "<li>$q->{left_column}->[$i] - $v[$i] ($correct[$i])</li>\n" :
-				"<li$style>$v[$i]</li>\n";
+            print $q->{type} eq 'sr' ? "<li>$v[$i] ($correct[$i])</li>\n" :
+                $q->{type} eq 'mt' ? "<li>$q->{left_column}->[$i] - $v[$i] ($correct[$i])</li>\n" :
+                "<li$style>$v[$i]</li>\n";
         }
         print "</ol>\n</div>\n";
     }
@@ -83,14 +83,14 @@ sub print_json {
         print '{';
         print
             join ', ', map qq~"$_":~ . quote($q->{$_}), qw(type text);
-		print
-			', "correct":'.$q->{correct} if ($q->{type} eq 'sc' || $q->{type} eq 'di');
+        print
+            ', "correct":'.$q->{correct} if ($q->{type} eq 'sc' || $q->{type} eq 'di');
         print 
-			', "correct": [', join(', ', map quote($_), @{$q->{correct}}), ']' if ($q->{type} eq 'mc' || $q->{type} eq 'sr' || $q->{type} eq 'mt');
-		if ($q->{variants}) {
-			my $variants = '['.join(', ', map quote($_), @{$q->{variants}}).']';
-			print $q->{left_column} ? ', "variants": [['.join(', ', map quote($_), @{$q->{left_column}}).'], '.$variants.']' : ', "variants": '.$variants;
-		}
+            ', "correct": [', join(', ', map quote($_), @{$q->{correct}}), ']' if ($q->{type} eq 'mc' || $q->{type} eq 'sr' || $q->{type} eq 'mt');
+        if ($q->{variants}) {
+            my $variants = '['.join(', ', map quote($_), @{$q->{variants}}).']';
+            print $q->{left_column} ? ', "variants": [['.join(', ', map quote($_), @{$q->{left_column}}).'], '.$variants.']' : ', "variants": '.$variants;
+        }
         print $q eq $questions->[$#$questions] ? " }\n" : " },\n";
     }
     print "]\n";
