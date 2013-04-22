@@ -192,7 +192,7 @@ sub test {
 sub not {
 	my ($self, $eflags, $reg) = @_;
 	$self->set_indexes($reg);
-	$self->{bits}->invert($self->{id_from}, $self->{id_to});
+	$self->{bits}->logic_op('not', '', $self->{id_from}, $self->{id_to});
 	$self;
 }
 
