@@ -48,7 +48,7 @@ $q->{text}
         my (@v, @correct);
         if ($q->{type} eq 'sc') {
             @v = @{$q->{variants}};
-            @correct = ($q->{correct});
+            $correct[$q->{correct}] = 1;
         }
         elsif ($q->{type} eq 'mc' || $q->{type} eq 'sr' || $q->{type} eq 'mt') {
             @v = @{$q->{variants}};
