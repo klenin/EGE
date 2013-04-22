@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 41;
+use Test::More tests => 49;
 
 use lib '..';
 use EGE::Bits;
@@ -105,4 +105,20 @@ use EGE::Bits;
     is $b->scan_left(0), 4, 'scan_left 1';
     is $b->scan_left(4), 7, 'scan_left 2';
     is $b->scan_left(7), 8, 'scan_left 3';
+}
+
+{
+    my $logic_op_test = sub {
+        my ($arg1, $op, $arg2) = (shift, shift, shift);
+        EGE::Bits->new->set_bin($arg1)->logic_op($op, oct("0b$arg2"), @_)->get_bin;
+    };
+    is $logic_op_test->('0101', 'and', '1100'), '0100', 'and 1';
+    is $logic_op_test->('0101', 'or', '1100'), '1101', 'or 1';
+    is $logic_op_test->('0101', 'xor', '1100'), '1001', 'xor 1';
+    is $logic_op_test->('0101', 'not', ''), '1010', 'not 1';
+
+    is $logic_op_test->('1111111', 'and', '010', 2, 5), '1101011', 'and 2';
+    is $logic_op_test->('0000000', 'or', '101', 1, 4), '0101000', 'or 2';
+    is $logic_op_test->('0', 'xor', '1', 0, 1), '1', 'xor 2';
+    is $logic_op_test->('0101', 'not', '', 1, 3), '0011', 'not 2';
 }
