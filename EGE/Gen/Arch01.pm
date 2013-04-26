@@ -103,6 +103,20 @@ sub reg_value_convert {
 	$self->{correct} = 0;
 }
 
+sub reg_value_jump {
+	my $self = shift;
+	my $reg = $self->get_reg('add');
+	my $l = 'L';
+	my $jmp = 'j'.{1 => 'n', 0 => ''}->{rnd->pick(0,1)}.rnd->pick(qw(c p z o s e g l ge le a b ae be));
+	cgen->add_command($jmp, $l);
+	cgen->add_command('add', $reg, 1);
+	cgen->add_command($l.':');
+	my $res = $self->get_res($reg);
+	my $res1 = rnd->pick($res+2, $res-2) % 256;
+	$self->variants($res, $res1, ($res+1) % 256, ($res-1) % 256);
+	$self->{correct} = 0;
+}
+
 sub get_reg {
 	my ($self, $type) = @_;
 	cgen->{code} = [];
