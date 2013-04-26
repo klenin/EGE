@@ -60,7 +60,7 @@ sub one {
 
 sub g {
     my $unit = shift;
-    my ($p, $n) = ($unit =~ /^(\w+)(\d+)$/);
+    my ($p, $n) = ($unit =~ /^([A-Za-z]+)(\d+)$/);
     my $q = one sprintf('%s%02d', $p, $n), rnd->pick(@_);
     $q->{text} = "<h3>$unit</h3>\n$q->{text}";
     $q;
