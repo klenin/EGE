@@ -124,7 +124,7 @@ sub get_hex_args_logic {
 
 sub get_hex_args_shift {
 	my $arg = 0;
-	$arg = $arg*16 + rnd->in_range(0, 15) for (1..8);
+	$arg = $arg*16 + rnd->in_range(1, 15) for (1..8);
 	($arg, rnd->pick(4,8,12,16));
 }
 
