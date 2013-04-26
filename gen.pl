@@ -148,17 +148,26 @@ g('Arch1', 'reg_value_add');
 g('Arch1', 'reg_value_logic');
 g('Arch1', 'reg_value_shift');
 g('Arch1', 'reg_value_convert');
+g('Arch1', 'reg_value_jump');
 g('Arch2', 'flags_value_add');
 g('Arch2', 'flags_value_logic');
 g('Arch2', 'flags_value_shift');
 g('Arch3', 'reg_value_add');
 g('Arch3', 'reg_value_logic');
 g('Arch3', 'reg_value_shift');
+g('Arch3', 'reg_value_convert');
 g('Arch4', 'flags_value_add');
 g('Arch4', 'flags_value_logic');
 g('Arch4', 'flags_value_shift');
 g('Arch5', 'sort_commands');
 g('Arch6', 'match_values');
+g('Arch7', 'loop_number');
+g('Arch8', 'choose_jump');
+g('Arch9', 'reg_value_before_loopz');
+g('Arch9', 'zero_fill');
+g('Arch9', 'stack');
+g('Arch10', 'jcc_check_flags');
+g('Arch10', 'cmovcc');
 
 #$questions = EGE::Generate::all;
 

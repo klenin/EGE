@@ -107,4 +107,28 @@ QUESTION
 	$res;
 }
 
+sub reg_value_convert {
+	my $self = shift;
+	cgen->{code} = [];
+	my $reg = cgen->get_reg(32);
+	my $reg1 = cgen->get_reg(16);
+	cgen->add_command('mov', $reg1, 15*2**12 + rnd->in_range(0, 2**12-1));
+	cgen->generate_command('convert', $reg, $reg1);
+	proc->run_code(cgen->{code});
+	my $res = proc->get_val($reg);
+	my $code_txt = cgen->get_code_txt('%04Xh');
+	$self->{text} = <<QUESTION
+В результате выполнения кода $code_txt в $reg будет содержаться значение:
+QUESTION
+;
+	my ($res1, $res2, $res3);
+	cgen->{code}->[1]->[0] = cgen->{code}->[1]->[0] eq 'movsx' ? 'movzx' : 'movsx';
+	proc->run_code(cgen->{code});
+	$res1 = proc->get_val($reg);
+	$res2 = cgen->{code}->[1]->[0] eq 'movzx' ? 15*2**28 + $res1 : 15*2**28 + $res;
+	$res3 = cgen->{code}->[1]->[0] eq 'movzx' ? 2**31 + $res1 : 2**31 + $res;
+	$self->variants(map {sprintf '%08Xh', $_} ($res, $res1, $res2, $res3));
+	$self->{correct} = 0;
+}
+
 1;
