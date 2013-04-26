@@ -204,7 +204,7 @@ sub logic_op {
     $idx_from //= 0;
     $idx_to //= $self->get_size;
     my $len = $idx_to - $idx_from;
-    my $right = $val ? EGE::Bits->new->set_size($len)->set_dec($val)->{v} : [];
+    my $right = $val || $val == 0 ? EGE::Bits->new->set_size($len)->set_dec($val)->{v} : [];
     my $op = {
         'and' => sub { $_[0] &= $_[1] },
         'or' => sub { $_[0] |= $_[1] },
