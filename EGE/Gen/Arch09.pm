@@ -12,7 +12,7 @@ use EGE::Random;
 use EGE::Asm::Processor;
 use EGE::Asm::AsmCodeGenerate;
 
-sub reg_value_before_loopz {
+sub reg_value_before_loopnz {
 	my $self = shift;
 	cgen->{code} = [];
 	my $reg = cgen->get_reg(8);
@@ -23,7 +23,7 @@ sub reg_value_before_loopz {
 	my $l = 'L';
 	cgen->add_command($l.":");
 	cgen->add_command('sub', $reg, 1);
-	cgen->add_command('loopz', $l);
+	cgen->add_command('loopnz', $l);
 	my $cor = $arg - $res;
 	$self->variants($cor, $cor+1, $cor-1, rnd->pick($cor+2, $cor-2));
 	$self->{correct} = 0;
