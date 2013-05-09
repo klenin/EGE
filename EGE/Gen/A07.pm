@@ -144,7 +144,7 @@ sub random_sequences {
 }
 
 sub rnd_subpattern {
-    my ($last_prn) = $_[0] || '';
+    my $last_prn = $_[0] || '';
     my $res;
     do {
         $res = uc(rnd->english_letter()) . rnd->in_range(0, 9)
