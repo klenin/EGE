@@ -163,7 +163,7 @@ g('Arch5', 'sort_commands');
 g('Arch6', 'match_values');
 g('Arch7', 'loop_number');
 g('Arch8', 'choose_jump');
-g('Arch9', 'reg_value_before_loopz');
+g('Arch9', 'reg_value_before_loopnz');
 g('Arch9', 'zero_fill');
 g('Arch9', 'stack');
 g('Arch10', 'jcc_check_flags');
