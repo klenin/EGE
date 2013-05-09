@@ -20,7 +20,7 @@ sub sort_commands {
 	my $cmd_shift = rnd->pick('shl', 'shr', 'sal', 'sar', 'rol', 'ror');
 	my $cmd = rnd->pick('add', 'sub', 'and', 'or', 'xor');
 	my $hex_val = sprintf '%02Xh', $arg;
-	$self->variants("mov $reg1, $hex_val", "$cmd_shift $reg1, 4", "mov $reg2, $reg1", "$cmd $reg1, $reg2");
+	$self->variants(map { $_ = "<code>$_</code>" } ("mov $reg1, $hex_val", "$cmd_shift $reg1, 4", "mov $reg2, $reg1", "$cmd $reg1, $reg2"));
 	my @res_arr = ();
 	my @correct_arr = ();
 	cgen->{code} = [];
