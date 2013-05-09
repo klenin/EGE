@@ -32,10 +32,10 @@ sub choose_jump {
 		proc->run_code(cgen->{code});
 		$correct[$i] = proc->get_val($reg) == $res ? 1 : 0;
 	}
-	cgen->{code}->[2]->[0] = "jcc";
+	cgen->{code}->[2]->[0] = "<i>jcc</i>";
 	my $code_txt = cgen->get_code_txt('%s');
 	$self->{text} = <<QUESTION
-В результате выполнения кода $code_txt в $reg будет содержаться значение $res. jcc можно заменить на:
+В результате выполнения кода $code_txt в $reg будет содержаться значение $res, если <i>jcc</i> заменить на:
 QUESTION
 ;
 	my $flags = proc->{eflags}->get_set_flags();
