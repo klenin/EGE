@@ -60,8 +60,8 @@ $q->{text}
         }
         for my $i (0..$#v) {
             my $style = $correct[$i] ? ' class="correct"' : '';
-            print $q->{type} eq 'sr' ? "<li>$v[$i] ($correct[$i])</li>\n" :
-                $q->{type} eq 'mt' ? "<li>$q->{left_column}->[$i] - $v[$i] ($correct[$i])</li>\n" :
+            print $q->{type} eq 'sr' ? "<li>$v[$i] ($v[$correct[$i]])</li>\n" :
+                $q->{type} eq 'mt' ? "<li>$q->{left_column}->[$i] - $v[$i] ($v[$correct[$i]])</li>\n" :
                 "<li$style>$v[$i]</li>\n";
         }
         print "</ol>\n</div>\n";
