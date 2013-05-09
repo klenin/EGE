@@ -202,15 +202,9 @@ sub scan_left {
 sub logic_op {
     my ($self, $opname, $val, $idx_from, $idx_to) = @_;
     $idx_from //= 0;
-<<<<<<< HEAD
     $idx_to //= $self->get_size;
     my $len = $idx_to - $idx_from;
     my $right = $val || $val == 0 ? EGE::Bits->new->set_size($len)->set_dec($val)->{v} : [];
-=======
-    $idx_to //= $self->get_size; #/
-    my $len = $idx_to - $idx_from;
-    my $right = $val ? EGE::Bits->new->set_size($len)->set_dec($val)->{v} : [];
->>>>>>> upstream/master
     my $op = {
         'and' => sub { $_[0] &= $_[1] },
         'or' => sub { $_[0] |= $_[1] },
@@ -220,17 +214,6 @@ sub logic_op {
     my $v = $self->{v};
     $op->($v->[$idx_from + $_], $right->[$_]) for 0 .. $len - 1;
     $self;
-<<<<<<< HEAD
-=======
-}
-
-sub invert {
-	my ($self, $id_from, $id_to) = @_;
-	$id_from = 0 if (!$id_from);
-	$id_to = $self->get_size if (!$id_to);
-	$self->{v}[$_] ^= 1 for ($id_from..$id_to-1);
-	$self;
->>>>>>> upstream/master
 }
 
 1;
