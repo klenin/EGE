@@ -30,8 +30,7 @@ QUESTION
 sub cmovcc {
 	my $self = shift;
 	cgen->{code} = [];
-	my ($reg1, $reg2) = (cgen->get_reg(32), cgen->get_reg(32));
-	$reg2 = cgen->get_reg(32) while $reg2 eq $reg1;
+	my ($reg1, $reg2) = cgen->get_regs(32, 32);
 	my $cc = {1 => 'n', 0 => ''}->{rnd->pick(0,1)}.rnd->pick(qw(c p z o s e g l ge le a b ae be));
 	my $l = 'L';
 	cgen->add_command('j'.$cc, $l);

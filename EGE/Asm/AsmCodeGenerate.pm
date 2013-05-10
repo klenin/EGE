@@ -75,8 +75,20 @@ sub get_code_txt {
 }
 
 sub get_reg {
-	my ($self, $size) = @_;
-	sprintf { 32 => 'e%sx', 16 => '%sx', 8 => '%s'.rnd->pick('h', 'l') }->{$size}, rnd->pick('a'..'d');
+	my ($self, $size, $not_ecx) = @_;
+	my $letter = $not_ecx ? rnd->pick('a', 'b', 'd') : rnd->pick('a'..'d');
+	sprintf { 32 => 'e%sx', 16 => '%sx', 8 => '%s'.rnd->pick('h', 'l') }->{$size}, $letter;
+}
+
+sub get_regs {
+	my $self = shift;
+	my @sizes = @_;
+	my @letters = rnd->pick_n($#sizes+1, ('a'..'d'));
+	my @res = ();
+	for my $i (0..$#letters) {
+		push @res, sprintf { 32 => 'e%sx', 16 => '%sx', 8 => '%s'.rnd->pick('h', 'l') }->{$sizes[$i]}, $letters[$i];
+	}
+	@res;
 }
 
 sub single_arg {

@@ -110,8 +110,7 @@ QUESTION
 sub reg_value_convert {
 	my $self = shift;
 	cgen->{code} = [];
-	my $reg = cgen->get_reg(32);
-	my $reg1 = cgen->get_reg(16);
+	my ($reg, $reg1) = cgen->get_regs(32, 16);
 	cgen->add_command('mov', $reg1, 15*2**12 + rnd->in_range(0, 2**12-1));
 	cgen->generate_command('convert', $reg, $reg1);
 	proc->run_code(cgen->{code});

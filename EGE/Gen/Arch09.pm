@@ -15,8 +15,7 @@ use EGE::Asm::AsmCodeGenerate;
 sub reg_value_before_loopnz {
 	my $self = shift;
 	cgen->{code} = [];
-	my $reg = cgen->get_reg(8);
-	$reg = cgen->get_reg(8) while $reg eq 'cl' || $reg eq 'ch';
+	my $reg = cgen->get_reg(8, 'not_ecx');
 	my $arg = rnd->in_range(3, 254);
 	my $res = rnd->in_range(1, $arg-1);
 	cgen->add_command('mov', 'cl', $arg);
@@ -37,8 +36,7 @@ QUESTION
 sub zero_fill {
 	my $self = shift;
 	cgen->{code} = [];
-	my $reg = cgen->get_reg(32);
-	$reg = cgen->get_reg(32) while $reg eq 'ecx';
+	my $reg = cgen->get_reg(32, 'not_ecx');
 	my $arg = rnd->in_range(1, 25)*10;
 	cgen->add_command('mov', 'ecx', $arg);
 	cgen->add_command('mov', $reg, 0);
@@ -56,8 +54,7 @@ QUESTION
 sub stack {
 	my $self = shift;
 	cgen->{code} = [];
-	my $reg = cgen->get_reg(32);
-	$reg = cgen->get_reg(32) while $reg eq 'ecx';
+	my $reg = cgen->get_reg(32, 'not_ecx');
 	my $arg = rnd->in_range(10, 255);
 	my $off = rnd->in_range(1, $arg/2-2);
 	cgen->add_command('mov', 'ecx', $arg);

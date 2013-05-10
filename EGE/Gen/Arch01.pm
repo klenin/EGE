@@ -89,8 +89,7 @@ sub reg_value_shift {
 sub reg_value_convert {
 	my $self = shift;
 	cgen->{code} = [];
-	my $reg = cgen->get_reg(16);
-	my $reg1 = cgen->get_reg(8);
+	my ($reg, $reg1) = cgen->get_regs(16, 8);
 	cgen->generate_command('mov', $reg1, 128, 255);
 	cgen->generate_command('convert', $reg, $reg1);
 	my $res = $self->get_res($reg);
