@@ -38,8 +38,7 @@ QUESTION
 		}
 		else {
 			cgen->add_command('add', $reg2, 1);
-			cgen->swap_commands(3,4);
-			cgen->swap_commands(2,3);
+			cgen->move_command(4,2);
 			proc->run_code(cgen->{code});
 			$self->{correct} = proc->get_val($reg2) - 1;
 		}
