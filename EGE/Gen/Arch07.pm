@@ -15,8 +15,7 @@ use EGE::Asm::AsmCodeGenerate;
 sub loop_number {
 	my $self = shift;
 	cgen->{code} = [];
-	my ($reg, $reg2) = (cgen->get_reg(8), cgen->get_reg(8));
-	$reg2 = cgen->get_reg(8) while $reg2 eq $reg;
+	my ($reg, $reg2) = cgen->get_regs(8, 8);
 	my $arg = rnd->pick(1..126, 128..254);
 	cgen->add_command('mov', $reg, $arg);
 	my $l = 'L';

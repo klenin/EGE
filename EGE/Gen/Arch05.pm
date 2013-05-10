@@ -14,8 +14,7 @@ use EGE::Asm::AsmCodeGenerate;
 
 sub sort_commands {
 	my $self = shift;
-	my ($reg1, $reg2) = (cgen->get_reg(8), cgen->get_reg(8));
-	$reg2 = cgen->get_reg(8) while $reg2 eq $reg1;
+	my ($reg1, $reg2) = cgen->get_regs(8, 8);
 	my $arg = rnd->in_range(1, 15) * 16 + rnd->in_range(1, 15);
 	my $cmd_shift = rnd->pick('shl', 'shr', 'sal', 'sar', 'rol', 'ror');
 	my $cmd = rnd->pick('add', 'sub', 'and', 'or', 'xor');
