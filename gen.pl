@@ -160,6 +160,7 @@ g('Arch4', 'flags_value_add');
 g('Arch4', 'flags_value_logic');
 g('Arch4', 'flags_value_shift');
 g('Arch5', 'sort_commands');
+g('Arch5', 'sort_commands_stack');
 g('Arch6', 'match_values');
 g('Arch7', 'loop_number');
 g('Arch8', 'choose_jump');
