@@ -148,4 +148,15 @@ sub swap_commands {
 	$self;
 }
 
+sub move_command {
+	my ($self, $from, $to) = @_;
+	my $c = $self->{code}->[$from];
+	my $i = $from;
+	while ($i != $to) {
+		($self->{code}->[$i], $i) = $from < $to ? ($self->{code}->[$i+1], $i+1) : ($self->{code}->[$i-1], $i-1);
+	}
+	$self->{code}->[$to] = $c;
+	$self;
+}
+
 1;
