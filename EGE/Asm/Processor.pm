@@ -61,7 +61,7 @@ sub get_wrong_val {
 sub run_cmd {
 	my ($self, $cmd, $reg, $arg) = @_;
 	$arg = 'cl' if ($self->is_shift($cmd) && !defined $arg);
-	my $val = $self->get_val($arg);
+	my $val = $self->is_stack_command($cmd) ? $self->{stack} : $self->get_val($arg);
 	no strict 'refs';
 	$self->get_register($reg)->$cmd($self->{eflags}, $reg, $val);
 	$self;
@@ -115,6 +115,12 @@ sub is_jump {
 	my %hash = (jc => 1, jp => 1, jz => 1, jo => 1, js => 1, jnc => 1, jnp => 1, jnz => 1, jno => 1, jns => 1,
 	je => 1, jne => 1, jl => 1, jnge => 1, jle => 1, jng => 1, jg => 1, jnle => 1, jge => 1, jnl => 1,
 	jb => 1, jnae => 1, jbe => 1, jna => 1, ja => 1, jnbe => 1, jae => 1, jnb => 1, jmp => 1);
+	$hash{$cmd};
+}
+
+sub is_stack_command {
+	my ($self, $cmd) = @_;
+	my %hash = (push => 1, pop => 1);
 	$hash{$cmd};
 }
 
