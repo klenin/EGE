@@ -296,4 +296,16 @@ sub rcr {
 	$self;
 }
 
+sub push {
+	my ($self, $eflags, $reg, $stack) = @_;
+	unshift @{$stack}, $self->get_value($reg);
+	$self;
+}
+
+sub pop {
+	my ($self, $eflags, $reg, $stack) = @_;
+	$self->mov($eflags, $reg, shift @{$stack});
+	$self;
+}
+
 1;
