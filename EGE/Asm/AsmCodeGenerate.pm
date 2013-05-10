@@ -55,7 +55,7 @@ sub generate_command {
 
 sub add_command {
 	my $self = shift;
-	push $self->{code}, [ @_ ];
+	push @{$self->{code}}, [ @_ ];
 }
 
 sub get_code_txt {
