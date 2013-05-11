@@ -159,4 +159,22 @@ sub move_command {
 	$self;
 }
 
+sub init_params {
+	my ($self, $type) = @_;
+	my ($format, $n) = (rnd->pick(0,1)) ? ('%s', 8) : ('%08Xh', 32);
+	my $reg = $self->get_reg($n);
+	$self->{code} = [];
+	if ($n == 8) {
+		$self->generate_command('mov', $reg);
+		$self->generate_command($type, $reg);
+	}
+	else {
+		my ($arg1, $arg2) = $self->get_hex_args($type);
+		$self->generate_command('mov', $reg, $arg1);
+		$self->generate_command($type, $reg, $arg2);
+	}
+	$self->{code}->[0]->[2] = rnd->in_range(1, 15) * 16 + rnd->in_range(1, 15) if ($type eq 'logic');
+	($reg, $format, $n, cgen->{code}->[0]->[2]);
+}
+
 1;
