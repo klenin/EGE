@@ -29,12 +29,9 @@ sub flags_value_shift {
 
 sub flags_value {
 	my ($self, $type) = @_;
-	cgen->{code} = [];
-	my $reg = cgen->get_reg(8);
-	cgen->generate_command('mov', $reg);
-	cgen->generate_command($type, $reg);
+	my ($reg, $format) = cgen->init_params($type);
 	proc->run_code(cgen->{code});
-	my $code_txt = cgen->get_code_txt('%s');
+	my $code_txt = cgen->get_code_txt($format);
 	$self->{text} = <<QUESTION
 В результате выполнения кода $code_txt будут установлены флаги:
 QUESTION
