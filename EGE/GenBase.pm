@@ -82,6 +82,12 @@ sub shuffle_variants {
     $self->{correct} = \@c;
 }
 
+package EGE::GenBase::MultipleChoiceFixedVariants;
+use base 'EGE::GenBase::MultipleChoice';
+
+sub shuffle_variants {
+}
+
 package EGE::GenBase::Sortable;
 use base 'EGE::GenBase::SingleChoice';
 
