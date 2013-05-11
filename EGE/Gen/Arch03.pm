@@ -17,7 +17,7 @@ sub choose_commands {
 	cgen->{code} = [];
 	my $reg = cgen->get_reg(8);
 	my $jmp = rnd->pick('jnc', 'jns', 'js');
-	my $arg = { jnc => rnd->pick(1..20, 22..41)*6 + 3, jns => rnd->pick(1..20)*6 + 1, js => rnd->pick(22..41)*6 + 3 }->{$jmp};
+	my $arg = { jnc => rnd->pick(0..41)*6 + 3, jns => rnd->pick(0..20)*6 + 1, js => rnd->pick(21..41)*6 + 3 }->{$jmp};
 	my $l = 'L';
 	my $val_add = rnd->in_range(1, 3);
 	cgen->add_command('mov', $reg, $arg);
@@ -29,7 +29,7 @@ sub choose_commands {
 	proc->run_code(cgen->{code});
 	my $res = proc->get_val($reg);
 	$self->{text} = <<QUESTION
-Отметьте команды так, чтобы после выполнения полученного кода в $reg содержалось значение $res:
+Отметьте команды так, чтобы после выполнения полученного кода в регистре $reg содержалось значение $res
 QUESTION
 ;
 }
