@@ -159,6 +159,13 @@ sub move_command {
 	$self;
 }
 
+sub remove_command {
+	my ($self, $id) = @_;
+	$self->{code}->[$_] = $self->{code}->[$_+1] for ($id..$#{$self->{code}}-1);
+	pop @{$self->{code}};
+	$self;
+}
+
 sub init_params {
 	my ($self, $type) = @_;
 	my ($format, $n) = (rnd->pick(0,1)) ? ('%s', 8) : ('%08Xh', 32);
