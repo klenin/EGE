@@ -153,6 +153,7 @@ g('Arch2', 'flags_value_add');
 g('Arch2', 'flags_value_logic');
 g('Arch2', 'flags_value_shift');
 g('Arch3', 'choose_commands');
+g('Arch4', 'choose_commands_stack');
 g('Arch5', 'sort_commands');
 g('Arch5', 'sort_commands_stack');
 g('Arch6', 'match_values');
