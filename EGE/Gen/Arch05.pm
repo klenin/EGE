@@ -14,7 +14,7 @@ use EGE::Asm::AsmCodeGenerate;
 
 sub sort_commands {
 	my $self = shift;
-	my ($reg1, $reg2, $arg, $cmd_shift, $hex_val) = $self->init_params();
+	my ($reg1, $reg2, $arg, $cmd_shift, $hex_val) = $self->init_params(8);
 	my $cmd = rnd->pick('add', 'sub', 'and', 'or', 'xor');
 	$self->variants(map { $_ = "<code>$_</code>" } ("mov $reg1, $hex_val", "$cmd_shift $reg1, 4", "mov $reg2, $reg1", "$cmd $reg1, $reg2"));
 	my @res_arr = ();
@@ -35,12 +35,12 @@ sub sort_commands {
 	proc->run_code(cgen->{code});
 	push @res_arr, proc->get_val($reg1);
 	push @correct_arr, [0,2,3,1];
-	$self->sort_commands if (!$self->choose_correct($reg1, \@res_arr, \@correct_arr));
+	$self->sort_commands if (!$self->choose_correct($reg1, \@res_arr, \@correct_arr, '%02Xh'));
 }
 
 sub sort_commands_stack {
 	my $self = shift;
-	my ($reg1, $reg2, $arg, $cmd_shift, $hex_val) = $self->init_params();
+	my ($reg1, $reg2, $arg, $cmd_shift, $hex_val) = $self->init_params(16);
 	$self->variants(map { $_ = "<code>$_</code>" } ("mov $reg1, $hex_val", "$cmd_shift $reg1, 4", "push $reg1", "pop $reg2", "add $reg1, $reg2"));
 	my @res_arr = ();
 	my @correct_arr = ();
@@ -61,12 +61,12 @@ sub sort_commands_stack {
 	proc->run_code(cgen->{code});
 	# данный вариант не может являться правильным, т.к. дублируется другой последовательностью команд, но должен не дублировать предыдущие варианты
 	push @res_arr, proc->get_val($reg1);
-	$self->sort_commands_stack if (!$self->choose_correct($reg1, \@res_arr, \@correct_arr));
+	$self->sort_commands_stack if (!$self->choose_correct($reg1, \@res_arr, \@correct_arr, '%04Xh'));
 }
 
 sub init_params {
-	my $self = shift;
-	my ($reg1, $reg2) = cgen->get_regs(8, 8);
+	my ($self, $n) = @_;
+	my ($reg1, $reg2) = cgen->get_regs($n, $n);
 	my $arg = rnd->in_range(1, 15) * 16 + rnd->in_range(1, 15);
 	my $cmd_shift = rnd->pick('shl', 'shr', 'sal', 'sar', 'rol', 'ror');
 	my $hex_val = sprintf '%02Xh', $arg;
@@ -74,14 +74,14 @@ sub init_params {
 }
 
 sub choose_correct {
-	my ($self, $reg1, $res_arr, $correct_arr) = @_;
+	my ($self, $reg1, $res_arr, $correct_arr, $format) = @_;
 	my @ids = ();
 	for (0..$#{$correct_arr}) {
 		push @ids, $_ if ($res_arr->[$_] != $res_arr->[($_+1)%3] && $res_arr->[$_] != $res_arr->[($_+2)%3]);
 	}
 	return '' if ($#ids == -1);
 	my $id = rnd->pick(@ids);
-	my $hex_val = sprintf '%02Xh', $res_arr->[$id];
+	my $hex_val = sprintf $format, $res_arr->[$id];
 	$self->{text} = <<QUESTION
 Расположите команды в такой последовательности, чтобы после их выполнения в регистре $reg1 содержалось значение $hex_val:
 QUESTION
