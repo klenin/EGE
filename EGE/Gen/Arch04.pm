@@ -15,11 +15,13 @@ use EGE::Asm::AsmCodeGenerate;
 sub choose_commands_stack {
 	my $self = shift;
 	my ($reg1, $reg2) = cgen->get_regs(8, 8);
+	my ($reg3, $reg4) = ($reg1, $reg2);
+	s/h|l/x/ for ($reg3, $reg4);
 	my ($arg1, $arg2, $arg3, $cmd1, $cmd2, $cmd3);
 	map { $_ = rnd->in_range(1, 255) } ($arg1, $arg2, $arg3);
 	map { $_ = rnd->pick('add', 'sub') } ($cmd1, $cmd2, $cmd3);
 	$self->variants(map { $_ = "<code>$_</code>" } ("mov $reg1, $arg1", "$cmd1 $reg1, $arg2",
-		"push $reg1", "$cmd2 $reg1, $arg3", "pop $reg2", "$cmd3 $reg1, $reg2"));
+		"push $reg3", "$cmd2 $reg1, $arg3", "pop $reg4", "$cmd3 $reg1, $reg2"));
 	my $commands = [ ['mov', $reg1, $arg1],
 					[$cmd1, $reg1, $arg2],
 					['push', $reg1],
