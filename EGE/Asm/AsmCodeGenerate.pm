@@ -60,7 +60,7 @@ sub add_command {
 
 sub get_code_txt {
 	my ($self, $num_format) = @_;
-	my $res = '<br></br><code>';
+	my $res = '<br></br><div id=\'code\'><code>';
 	for my $str (@{$self->{code}}) {
 		my $i=0;
 		for (grep {!($_ eq '')} @$str) {
@@ -70,7 +70,7 @@ sub get_code_txt {
 		}
 		$res .= '<br></br>';
 	}
-	$res .= '</code>';
+	$res .= '</code></div>';
 	$res;
 }
 
