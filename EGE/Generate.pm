@@ -62,6 +62,12 @@ sub one {
     $g;
 }
 
+sub g1 {
+    my $unit = shift;
+    my $q = one($unit, rnd->pick(@_));
+    $q;
+}
+
 sub g {
     my $unit = shift;
     my ($p, $n) = ($unit =~ /^([A-Za-z]+)(\d+)$/);

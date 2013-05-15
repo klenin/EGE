@@ -20,6 +20,7 @@ use EGE::Math::Summer;
 my $questions;
 
 sub g { push @$questions, EGE::Generate::g(@_); }
+sub g1 { push @$questions, EGE::Generate::g1(@_); }
 
 sub print_dump {
     for (@$questions) {
@@ -144,26 +145,26 @@ binmode STDOUT, ':utf8';
 #g('B06', 'solve');
 #g('B07', 'who_is_right');
 #g('B08', 'identify_letter');
-g('Arch1', 'reg_value_add');
-g('Arch1', 'reg_value_logic');
-g('Arch1', 'reg_value_shift');
-g('Arch1', 'reg_value_convert');
-g('Arch1', 'reg_value_jump');
-g('Arch2', 'flags_value_add');
-g('Arch2', 'flags_value_logic');
-g('Arch2', 'flags_value_shift');
-g('Arch3', 'choose_commands');
-g('Arch4', 'choose_commands_stack');
-g('Arch5', 'sort_commands');
-g('Arch5', 'sort_commands_stack');
-g('Arch6', 'match_values');
-g('Arch7', 'loop_number');
-g('Arch8', 'choose_jump');
-g('Arch9', 'reg_value_before_loopnz');
-g('Arch9', 'zero_fill');
-g('Arch9', 'stack');
-g('Arch10', 'jcc_check_flags');
-g('Arch10', 'cmovcc');
+g1('Arch01', 'reg_value_add');
+g1('Arch01', 'reg_value_logic');
+g1('Arch01', 'reg_value_shift');
+g1('Arch01', 'reg_value_convert');
+g1('Arch01', 'reg_value_jump');
+g1('Arch02', 'flags_value_add');
+g1('Arch02', 'flags_value_logic');
+g1('Arch02', 'flags_value_shift');
+g1('Arch03', 'choose_commands');
+g1('Arch04', 'choose_commands_stack');
+g1('Arch05', 'sort_commands');
+g1('Arch05', 'sort_commands_stack');
+g1('Arch06', 'match_values');
+g1('Arch07', 'loop_number');
+g1('Arch08', 'choose_jump');
+g1('Arch09', 'reg_value_before_loopnz');
+g1('Arch09', 'zero_fill');
+g1('Arch09', 'stack');
+g1('Arch10', 'jcc_check_flags');
+g1('Arch10', 'cmovcc');
 
 #$questions = EGE::Generate::all;
 
