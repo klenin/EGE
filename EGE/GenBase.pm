@@ -33,6 +33,11 @@ sub variants {
     $self->{variants} = [ @_ ];
 }
 
+sub formated_variants {
+    my ($self, $format) = (shift, shift);
+    $self->variants(map {sprintf $format, $_} @_);
+}
+
 sub shuffle_variants {
     my ($self)= @_;
     $self->{variants} or die;

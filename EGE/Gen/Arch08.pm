@@ -18,15 +18,15 @@ sub choose_jump {
 	my $reg = cgen->get_reg(8);
 	cgen->generate_command('mov', $reg);
 	rnd->pick(0,1) ? cgen->add_command('sub', $reg, rnd->in_range(1, 255)) : cgen->add_command('neg', $reg);
-	my $l = 'L';
+	my $label = 'L';
 	my @jumps = rnd->pick_n(2, qw(jc jz jo js jnc jnz jno jns));
 	push @jumps, rnd->pick_n(2, qw(je jne jl jnge jle jng jg jnle jge jnl jb jnae jbe jna ja jnbe jae jnb));
-	cgen->add_command($jumps[rnd->pick(0..3)], $l);
+	cgen->add_command(rnd->pick(@jumps), $label);
 	cgen->add_command('add', $reg, 1);
-	cgen->add_command($l.':');
+	cgen->add_command($label.':');
 	proc->run_code(cgen->{code});
 	my $res = proc->get_val($reg);
-	my @correct = ();
+	my @correct;
 	for (@jumps) {
 		cgen->{code}->[2]->[0] = $_;
 		proc->run_code(cgen->{code});

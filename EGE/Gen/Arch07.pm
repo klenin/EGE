@@ -18,13 +18,13 @@ sub loop_number {
 	my ($reg, $reg2) = cgen->get_regs(8, 8);
 	my $arg = rnd->pick(1..126, 128..254);
 	cgen->add_command('mov', $reg, $arg);
-	my $l = 'L';
-	cgen->add_command($l.':');
+	my $label = 'L';
+	cgen->add_command($label.':');
 	cgen->add_command('add', $reg, 1);
 	my $jmp = 'j'.rnd->pick(qw(p o s nc np nz no ns));
 	$jmp = 'jns' if ($jmp eq 'js' && $arg < 128);
 	$jmp = 'js' if ($jmp eq 'jns' && $arg >= 128);
-	cgen->add_command($jmp, $l);
+	cgen->add_command($jmp, $label);
 	my $code_txt = cgen->get_code_txt('%s');
 	$self->{text} = <<QUESTION
 При выполнении кода $code_txt в команда <code>add $reg, 1</code> будет выполнена раз:
@@ -38,13 +38,13 @@ QUESTION
 		}
 		else {
 			cgen->add_command('add', $reg2, 1);
-			cgen->move_command(4,2);
+			cgen->move_command(4, 2);
 			proc->run_code(cgen->{code});
 			$self->{correct} = proc->get_val($reg2) - 1;
 		}
 	}
 	elsif ($jmp eq 'jo') {
-		$self->variants(1, 256 - $arg, (128 - $arg)%256, "бесконечное число (программа зациклится)");
+		$self->variants(1, 256 - $arg, (128 - $arg + 256)%256, "бесконечное число (программа зациклится)");
 		$self->{correct} = 0;
 	}
 	else {
