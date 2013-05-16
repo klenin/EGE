@@ -21,16 +21,16 @@ sub choose_jump {
 	my $l = 'L';
 	my @jumps = rnd->pick_n(2, qw(jc jz jo js jnc jnz jno jns));
 	push @jumps, rnd->pick_n(2, qw(je jne jl jnge jle jng jg jnle jge jnl jb jnae jbe jna ja jnbe jae jnb));
-	cgen->add_command($jumps[0], $l);
+	cgen->add_command($jumps[rnd->pick(0..3)], $l);
 	cgen->add_command('add', $reg, 1);
 	cgen->add_command($l.':');
 	proc->run_code(cgen->{code});
 	my $res = proc->get_val($reg);
-	my @correct = (1);
-	for my $i (1..$#jumps) {
-		cgen->{code}->[2]->[0] = $jumps[$i];
+	my @correct = ();
+	for (@jumps) {
+		cgen->{code}->[2]->[0] = $_;
 		proc->run_code(cgen->{code});
-		$correct[$i] = proc->get_val($reg) == $res ? 1 : 0;
+		push @correct, proc->get_val($reg) == $res ? 1 : 0;
 	}
 	cgen->{code}->[2]->[0] = "<i>jcc</i>";
 	my $code_txt = cgen->get_code_txt('%s');
