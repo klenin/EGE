@@ -12,7 +12,7 @@ use EGE::Random;
 use EGE::Asm::Processor;
 use EGE::Asm::AsmCodeGenerate;
 
-sub choose_commands {
+sub choose_commands_mod_3 {
 	my $self = shift;
 	cgen->{code} = [];
 	my $reg = cgen->get_reg(8);
@@ -29,7 +29,7 @@ sub choose_commands {
 	proc->run_code(cgen->{code});
 	my $res = proc->get_val($reg);
 	$self->{text} = <<QUESTION
-Отметьте команды так, чтобы после выполнения полученного кода в регистре $reg содержалось значение $res
+Выделите подмножество команд так, чтобы после выполнения полученного кода в регистре $reg содержалось значение $res
 QUESTION
 ;
 }

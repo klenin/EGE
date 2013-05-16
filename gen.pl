@@ -153,7 +153,7 @@ g1('Arch01', 'reg_value_jump');
 g1('Arch02', 'flags_value_add');
 g1('Arch02', 'flags_value_logic');
 g1('Arch02', 'flags_value_shift');
-g1('Arch03', 'choose_commands');
+g1('Arch03', 'choose_commands_mod_3');
 g1('Arch04', 'choose_commands_stack');
 g1('Arch05', 'sort_commands');
 g1('Arch05', 'sort_commands_stack');
