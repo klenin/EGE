@@ -12,43 +12,39 @@ use EGE::Random;
 use EGE::Asm::Processor;
 use EGE::Asm::AsmCodeGenerate;
 
-sub choose_commands_stack {
+sub choose_commands {
 	my $self = shift;
 	my ($reg1, $reg2) = cgen->get_regs(8, 8);
-	my ($reg3, $reg4) = ($reg1, $reg2);
-	s/h|l/x/ for ($reg3, $reg4);
 	my ($arg1, $arg2, $arg3, $cmd1, $cmd2, $cmd3);
 	map { $_ = rnd->in_range(1, 255) } ($arg1, $arg2, $arg3);
 	map { $_ = rnd->pick('add', 'sub') } ($cmd1, $cmd2, $cmd3);
 	$self->variants(map { $_ = "<code>$_</code>" } ("mov $reg1, $arg1", "$cmd1 $reg1, $arg2",
-		"push $reg3", "$cmd2 $reg1, $arg3", "pop $reg4", "$cmd3 $reg1, $reg2"));
+		"mov $reg2, $reg1", "$cmd2 $reg1, $arg3", "$cmd3 $reg1, $reg2"));
 	my $commands = [ ['mov', $reg1, $arg1],
 					[$cmd1, $reg1, $arg2],
-					['push', $reg1],
+					['mov', $reg2, $reg1],
 					[$cmd2, $reg1, $arg3],
-					['pop', $reg2],
 					[$cmd3, $reg1, $reg2]
 					];
 	my @res_arr = ();
-	my @correct_arr = ( [1, 1, 1, 1, 1, 1],
-						[1, 0, 1, 1, 1, 1],
-						[1, 1, 1, 0, 1, 1],
-						[1, 0, 1, 0, 1, 1]
+	my @correct_arr = ( [1, 0, 1, 1, 1],
+						[1, 1, 1, 0, 1],
+						[1, 0, 1, 0, 1]
 					);
-	my @incorrect_arr = ( [1, 0, 0, 0, 0, 0],
-						[1, 1, 0, 0, 0, 0],
-						[1, 1, 0, 1, 0, 0]
+	my @incorrect_arr = ( [1, 1, 1, 1, 1],
+						[1, 0, 0, 0, 0],
+						[1, 1, 0, 0, 0],
+						[1, 1, 0, 1, 0]
 					);
-	push @res_arr, $self->get_res($commands, $_, $reg1) for (@correct_arr);
-	push @res_arr, $self->get_res($commands, $_, $reg1) for (@incorrect_arr);
+	push @res_arr, $self->get_res($commands, $_, $reg1) for (@correct_arr, @incorrect_arr);
 	my @ids = ();
 	for my $i (0..$#correct_arr) {
 		push @ids, $i if (! grep {$res_arr[$i] == $res_arr[$_] && $i != $_ } (0..$#res_arr));
 	}
-	$self->choose_commands_stack(), return if ($#ids == -1);
+	$self->choose_commands(), return if ($#ids == -1);
 	my $id = rnd->pick(@ids);
 	$self->{text} = <<QUESTION
-Отметьте команды так, чтобы после выполнения полученного кода в регистре $reg1 содержалось значение $res_arr[$id]
+Выделите подмножество команд так, чтобы после выполнения полученного кода в регистре $reg1 содержалось значение $res_arr[$id]
 QUESTION
 ;
 	$self->{correct} = $correct_arr[$id];
