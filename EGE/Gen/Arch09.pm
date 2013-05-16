@@ -9,7 +9,6 @@ use warnings;
 use utf8;
 
 use EGE::Random;
-use EGE::Asm::Processor;
 use EGE::Asm::AsmCodeGenerate;
 
 sub reg_value_before_loopnz {
@@ -19,10 +18,10 @@ sub reg_value_before_loopnz {
 	my $arg = rnd->in_range(3, 254);
 	my $res = rnd->in_range(1, $arg-1);
 	cgen->add_command('mov', 'cl', $arg);
-	my $l = 'L';
-	cgen->add_command($l.":");
+	my $label = 'L';
+	cgen->add_command($label.":");
 	cgen->add_command('sub', $reg, 1);
-	cgen->add_command('loopnz', $l);
+	cgen->add_command('loopnz', $label);
 	my $cor = $arg - $res;
 	$self->variants($cor, $cor+1, $cor-1, rnd->pick($cor+2, $cor-2));
 	$self->{correct} = 0;
@@ -47,7 +46,7 @@ sub zero_fill {
 Последовательность команд $code_txt заполнит нулями:
 QUESTION
 ;
-	$self->variants(map {$_." байт"} (0, $arg, $arg*2, $arg*4));
+	$self->formated_variants('%s байт', 0, $arg, $arg*2, $arg*4);
 	$self->{correct} = {stosb => 1, stosw => 2, stosd => 3}->{$cmd};
 }
 
@@ -58,10 +57,10 @@ sub stack {
 	my $arg = rnd->in_range(10, 255);
 	my $off = rnd->in_range(1, $arg/2-2);
 	cgen->add_command('mov', 'ecx', $arg);
-	my $l = 'L';
-	cgen->add_command($l.":");
+	my $label = 'L';
+	cgen->add_command($label.":");
 	cgen->add_command('push', 'ecx');
-	cgen->add_command('loop', $l);
+	cgen->add_command('loop', $label);
 	cgen->add_command('mov', $reg, "[esp+$off*4]");
 	my $code_txt = cgen->get_code_txt('%s');
 	$self->{text} = <<QUESTION

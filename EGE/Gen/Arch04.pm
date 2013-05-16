@@ -18,24 +18,27 @@ sub choose_commands {
 	my ($arg1, $arg2, $arg3, $cmd1, $cmd2, $cmd3);
 	map { $_ = rnd->in_range(1, 255) } ($arg1, $arg2, $arg3);
 	map { $_ = rnd->pick('add', 'sub') } ($cmd1, $cmd2, $cmd3);
-	$self->variants(map { $_ = "<code>$_</code>" } ("mov $reg1, $arg1", "$cmd1 $reg1, $arg2",
-		"mov $reg2, $reg1", "$cmd2 $reg1, $arg3", "$cmd3 $reg1, $reg2"));
-	my $commands = [ ['mov', $reg1, $arg1],
-					[$cmd1, $reg1, $arg2],
-					['mov', $reg2, $reg1],
-					[$cmd2, $reg1, $arg3],
-					[$cmd3, $reg1, $reg2]
-					];
-	my @res_arr = ();
-	my @correct_arr = ( [1, 0, 1, 1, 1],
-						[1, 1, 1, 0, 1],
-						[1, 0, 1, 0, 1]
-					);
-	my @incorrect_arr = ( [1, 1, 1, 1, 1],
-						[1, 0, 0, 0, 0],
-						[1, 1, 0, 0, 0],
-						[1, 1, 0, 1, 0]
-					);
+	$self->formated_variants('<code>%s</code>', "mov $reg1, $arg1", "$cmd1 $reg1, $arg2",
+		"mov $reg2, $reg1", "$cmd2 $reg1, $arg3", "$cmd3 $reg1, $reg2");
+	my $commands = [
+		['mov', $reg1, $arg1],
+		[$cmd1, $reg1, $arg2],
+		['mov', $reg2, $reg1],
+		[$cmd2, $reg1, $arg3],
+		[$cmd3, $reg1, $reg2]
+	];
+	my @res_arr;
+	my @correct_arr = (
+		[1, 0, 1, 1, 1],
+		[1, 1, 1, 0, 1],
+		[1, 0, 1, 0, 1]
+	);
+	my @incorrect_arr = (
+		[1, 1, 1, 1, 1],
+		[1, 0, 0, 0, 0],
+		[1, 1, 0, 0, 0],
+		[1, 1, 0, 1, 0]
+	);
 	push @res_arr, $self->get_res($commands, $_, $reg1) for (@correct_arr, @incorrect_arr);
 	my @ids = ();
 	for my $i (0..$#correct_arr) {

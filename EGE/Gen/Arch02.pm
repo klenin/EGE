@@ -29,7 +29,7 @@ sub flags_value_shift {
 
 sub flags_value {
 	my ($self, $type) = @_;
-	my ($reg, $format) = cgen->init_params($type);
+	my ($reg, $format) = cgen->generate_simple_code($type);
 	proc->run_code(cgen->{code});
 	my $code_txt = cgen->get_code_txt($format);
 	$self->{text} = <<QUESTION

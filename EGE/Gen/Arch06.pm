@@ -30,17 +30,16 @@ sub match_values {
 QUESTION
 ;
 	$self->{left_column} = \@regs8;
-	$self->variants(map {sprintf '%02Xh', $_} @vals);
-    $self->{correct} = [0,1,2,3];
+	$self->formated_variants('%02Xh', @vals);
+	$self->{correct} = [0, 1, 2, 3];
 	my $unique_vals = 1;
-	for my $i (0..3) {
+	for my $i (0..$#vals) {
 		$unique_vals = '' if ((grep $_ == $vals[$i], @vals) > 1);
 	}
 	$self->match_values if (!$unique_vals);
 }
 
 sub get_8b_val {
-	my $self = shift;
 	rnd->pick(0,1) ? rnd->pick(0,15) * 16 + rnd->in_range(1,14) : rnd->in_range(1,14) * 16 + rnd->pick(0,15);
 }
 

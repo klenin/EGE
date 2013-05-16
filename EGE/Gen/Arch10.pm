@@ -9,7 +9,6 @@ use warnings;
 use utf8;
 
 use EGE::Random;
-use EGE::Asm::Processor;
 use EGE::Asm::AsmCodeGenerate;
 
 sub jcc_check_flags {
@@ -32,10 +31,10 @@ sub cmovcc {
 	cgen->{code} = [];
 	my ($reg1, $reg2) = cgen->get_regs(32, 32);
 	my $cc = {1 => 'n', 0 => ''}->{rnd->pick(0,1)}.rnd->pick(qw(c p z o s e g l ge le a b ae be));
-	my $l = 'L';
-	cgen->add_command('j'.$cc, $l);
+	my $label = 'L';
+	cgen->add_command('j'.$cc, $label);
 	cgen->add_command('mov', $reg1, $reg2);
-	cgen->add_command($l.':');
+	cgen->add_command($label.':');
 	my $code_txt = cgen->get_code_txt('%s');
 	$self->{text} = <<QUESTION
 Последовательность команд $code_txt эквивалентна команде:
@@ -59,8 +58,7 @@ QUESTION
 		$self->{correct} = [1, 1, 0, 0];
 	}
 	else {
-		$_ = $cc;
-		push @variants, m/^n\w+$/ ? substr($cc, 1) : 'n'.$cc;
+		push @variants, $cc =~ /^n\w+$/ ? substr($cc, 1) : 'n'.$cc;
 		$self->{correct} = [1, 0, 0, 0];
 	}
 	push @variants, $cc;
@@ -68,7 +66,7 @@ QUESTION
 		my $v = {1 => 'n', 0 => ''}->{rnd->pick(0,1)}.rnd->pick(qw(c p z o s e g l ge le a b ae be));
 		push @variants, $v if !(grep {$_ eq $v} @variants);
 	}
-	$self->variants(grep { $_ = "cmov$_ $reg1, $reg2" } @variants);
+	$self->formated_variants("cmov%s $reg1, $reg2", @variants);
 }
 
 1;
