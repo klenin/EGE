@@ -42,7 +42,7 @@ sub generate_command {
 		$cmd = rnd->pick('and', 'or', 'xor', 'test', 'not');
 	}
 	if ($type eq 'shift') {
-		$arg = rnd->in_range(1, 4) if (!defined $lo);
+		$arg = rnd->in_range(1, 3) if (!defined $lo);
 		$cmd = rnd->pick('shl', 'shr', 'sal', 'sar', 'rol', 'ror', 'rcl', 'rcr');
 	}
 	if ($type eq 'convert') {
@@ -135,7 +135,7 @@ sub get_hex_args_logic {
 sub get_hex_args_shift {
 	my $arg = 0;
 	$arg = $arg*16 + rnd->in_range(1, 15) for (1..8);
-	($arg, rnd->pick(4,8,12,16));
+	($arg, rnd->pick(4, 8, 12));
 }
 
 sub swap_commands {
