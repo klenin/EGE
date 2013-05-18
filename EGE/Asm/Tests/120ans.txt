@@ -1,0 +1,14 @@
+eax = 2
+ebx = 0
+ecx = 0
+edx = 0
+esp = 0
+ebp = 0
+ZF = 0
+SF = 0
+PF = 0
+CF = 0
+OF = 0
+stack:
+2
+1

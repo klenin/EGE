@@ -122,4 +122,3 @@ use EGE::Bits;
     is $logic_op_test->('0', 'xor', '1', 0, 1), '1', 'xor 2';
     is $logic_op_test->('0101', 'not', '', 1, 3), '0011', 'not 2';
 }
-

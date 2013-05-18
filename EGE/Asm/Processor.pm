@@ -37,20 +37,15 @@ sub init {
 }
 
 sub get_register {
-	my ($self, $_) = @_;
-	return $self if (!defined $_);
-	return $self->{eax} if (m/^al|ah|ax|eax$/);
-	return $self->{ebx} if (m/^bl|bh|bx|ebx$/);
-	return $self->{ecx} if (m/^cl|ch|cx|ecx$/);
-	return $self->{edx} if (m/^dl|dh|dx|edx$/);
-	return $self->{ebp} if (m/^ebp$/);
-	return $self->{esp} if (m/^esp$/);
+	my ($self, $reg) = @_;
+	return $self if (!defined $reg);
+	return ($reg =~ /^(e?)([a-d])(l|h|x)$/) ? $self->{"e$2x"} : $self->{$reg};
 }
 
 sub get_val {
-	my ($self, $_) = @_;
-	$_ = '' if (!defined $_);
-	m/^-?(\d*)$/ ? $_ : $self->get_register($_)->get_value($_);
+	my ($self, $arg) = @_;
+	$arg //= '';
+	$arg =~ /^-?(\d*)$/ ? $arg : $self->get_register($arg)->get_value($arg);
 }
 
 sub get_wrong_val {
@@ -61,7 +56,7 @@ sub get_wrong_val {
 sub run_cmd {
 	my ($self, $cmd, $reg, $arg) = @_;
 	$arg = 'cl' if ($self->is_shift($cmd) && !defined $arg);
-	my $val = $self->get_val($arg);
+	my $val = $self->is_stack_command($cmd) ? $self->{stack} : $self->get_val($arg);
 	no strict 'refs';
 	$self->get_register($reg)->$cmd($self->{eflags}, $reg, $val);
 	$self;
@@ -70,7 +65,7 @@ sub run_cmd {
 sub run_code {
 	my ($self, $code) = @_;
 	$self->init();
-	my %labels = ();
+	my %labels;
 	for my $i (0..$#{$code}) {
 		my $label = substr($code->[$i]->[0], 0, -1);
 		$labels{$label} = $i if ($self->is_label($code->[$i]->[0]));
@@ -78,11 +73,12 @@ sub run_code {
 	my $i = -1;
 	while ($i < $#{$code}) {
 		$i++;
-		next if ($self->is_label($code->[$i]->[0]));
-		my $is_jump = $self->is_jump($code->[$i]->[0]);
-		$i = $labels{$code->[$i]->[1]} - 1 if ($is_jump && $self->{eflags}->valid_jump($code->[$i]->[0]));
+		my $str = $code->[$i];
+		next if ($self->is_label($str->[0]));
+		my $is_jump = $self->is_jump($str->[0]);
+		$i = $labels{$str->[1]} - 1 if ($is_jump && $self->{eflags}->valid_jump($str->[0]));
 		next if ($is_jump);
-		$self->run_cmd($code->[$i]->[0], $code->[$i]->[1], $code->[$i]->[2]);
+		$self->run_cmd(@$str);
 	}
 	$self;
 }
@@ -101,21 +97,24 @@ sub clc {
 
 sub is_shift {
 	my ($self, $cmd) = @_;
-	my %hash = (shl => 1, shr => 1, sal => 1, sar => 1, rol => 1, ror => 1, rcl => 1, rcr => 1);
-	$hash{$cmd};
+	{ shl => 1, shr => 1, sal => 1, sar => 1, rol => 1, ror => 1, rcl => 1, rcr => 1 }->{$cmd};
 }
 
 sub is_label {
-	my ($self, $_) = @_;
-	m/^(\w+):$/;
+	my ($self, $l) = @_;
+	$l =~ /^(\w+):$/;
 }
 
 sub is_jump {
 	my ($self, $cmd) = @_;
-	my %hash = (jc => 1, jp => 1, jz => 1, jo => 1, js => 1, jnc => 1, jnp => 1, jnz => 1, jno => 1, jns => 1,
+	{ jc => 1, jp => 1, jz => 1, jo => 1, js => 1, jnc => 1, jnp => 1, jnz => 1, jno => 1, jns => 1,
 	je => 1, jne => 1, jl => 1, jnge => 1, jle => 1, jng => 1, jg => 1, jnle => 1, jge => 1, jnl => 1,
-	jb => 1, jnae => 1, jbe => 1, jna => 1, ja => 1, jnbe => 1, jae => 1, jnb => 1, jmp => 1);
-	$hash{$cmd};
+	jb => 1, jnae => 1, jbe => 1, jna => 1, ja => 1, jnbe => 1, jae => 1, jnb => 1, jmp => 1 }->{$cmd};
+}
+
+sub is_stack_command {
+	my ($self, $cmd) = @_;
+	{ push => 1, pop => 1 }->{$cmd};
 }
 
 sub print_state {
