@@ -20,7 +20,7 @@ use EGE::Math::Summer;
 my $questions;
 
 sub g { push @$questions, EGE::Generate::g(@_); }
-sub g1 { push @$questions, EGE::Generate::g1(@_); }
+sub g1 { push @$questions, EGE::AsmGenerate::g(@_); }
 
 sub print_dump {
     for (@$questions) {
@@ -167,6 +167,7 @@ g1('Arch10', 'jcc_check_flags');
 g1('Arch10', 'cmovcc');
 
 #$questions = EGE::Generate::all;
+$questions = EGE::AsmGenerate::all;
 
 #push @$questions, EGE::Math::Summer::g($_) for qw(p1 p2 p3 p4 p5 p6 p7);
 
