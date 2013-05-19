@@ -1,4 +1,4 @@
-# Copyright © 2010 Alexander S. Klenin
+# Copyright © 2010-2013 Alexander S. Klenin
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
 package EGE::Gen::A11;
@@ -69,16 +69,21 @@ sub fixed_length {
     $self->variants($good, @bad);
 }
 
-sub _password_length_gen_params {
-    my ($c) = @_;
-    $c->{sym_cnt} = rnd->in_range(1, 20);
-    $c->{items_cnt} = rnd->in_range(1, 10) * 10;
-    EGE::Gen::A02::_car_num_make_alphabet($c);
-}
-
 sub _password_length_text {
     my ($c) = @_;
-    $c->{text} = sprintf <<QUESTION
+}
+
+sub password_length {
+    my ($self) = @_;
+
+    my $context = {
+        case_sensitive => 1,
+        sym_cnt => rnd->in_range(1, 20),
+        items_cnt => rnd->in_range(1, 10) * 10,
+    };
+    EGE::Gen::A02::_car_num_make_alphabet($context);
+    EGE::Gen::A02::_car_num_gen_task($context);
+    my $fmt = <<QUESTION
 Для регистрации на сайте некоторой страны пользователю требуется придумать пароль.
 Длина пароля – ровно %s. В качестве символов используются %s.
 Под хранение каждого такого пароля на компьютере отводится минимально возможное и
@@ -86,21 +91,12 @@ sub _password_length_text {
 и все символы кодируются одинаковым и минимально возможным количеством битов.
 Определите объём памяти, который занимает хранение %s.
 QUESTION
-        , num_text($c->{sym_cnt}, ['символ', 'символа', 'символов'] ),
-          $c->{alph_text},
-          num_text($c->{items_cnt},['пароля', ('паролей') x 2])
-}
-
-sub password_length {
-    my ($self) = @_;
-
-    my $context = { case_sensetive => 1 };
-    _password_length_gen_params($context);
-    EGE::Gen::A02::_car_num_gen_task($context);
-    _password_length_text($context);
-
-    $self->{text} = $context->{text};
-    $self->variants(@{$context->{result}});
+;
+    $self->{text} = sprintf $fmt,
+        num_text($context->{sym_cnt}, [ 'символ', 'символа', 'символов' ]),
+        $context->{alph_text},
+        num_text($context->{items_cnt}, [ 'пароля', ('паролей') x 2 ]);
+    $self->{variants} = $context->{result};
 }
 
 1;

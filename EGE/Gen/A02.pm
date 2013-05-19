@@ -1,4 +1,4 @@
-# Copyright © 2010 Alexander S. Klenin
+# Copyright © 2010-2013 Alexander S. Klenin
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
 package EGE::Gen::A02;
@@ -51,73 +51,47 @@ QUESTION
 
 sub _car_num_make_alphabet {
     my ($c) = @_;
-    my $char_cnt = rnd->in_range(1, 33);
-    my $base = rnd->pick(
-        [2, 'двоичные'],
-        [8, 'восьмеричные'],
-        [10, 'десятичные'],
-        [16, 'шеснадцатиричные']
-    );
-    my $text = num_text($char_cnt, ['букву', 'различные буквы', 'различных букв']);
-    if ($c->{case_sensetive}) {
-        $text = $base->[1] . ' цифры и ' . $text .
-            ' местного алфавита, причём все буквы используются в двух начертаниях' .
-            ': как строчные, так и заглавные (регистр буквы имеет значение!)';
-    } else {
-        $text .= ' и ' . $base->[1] . ' цифры' if ($base->[0]);
-    }
-    @{$c}{qw(alph_length alph_text)} = ($char_cnt + $base->[0], $text);
-}
-
-sub max_pow_contained {
-    my ($n, $base) =  @_;
-    return 1 if $n <= $base;
-    my $pow = 0;
-    --$n;
-    while ($n) {
-        $n = int($n / $base);
-        ++$pow;
-    }
-    $pow;
-}
-
-sub _car_num_gen_params {
-    my ($c) = @_;
-    $c->{sym_cnt} = rnd->in_range(1, 20);
-    $c->{items_cnt} = rnd->in_range(1, 20);
-    _car_num_make_alphabet($c);
+    my $char_cnt = rnd->in_range(2, 33);
+    (my $base, my $base_name) = @{rnd->pick(
+        [ 2, 'двоичные' ],
+        [ 8, 'восьмеричные' ],
+        [ 10, 'десятичные' ],
+        [ 16, 'шестнадцатиричные' ],
+    )};
+    my $letters = num_text($char_cnt, [ 'различную букву', 'различные буквы', 'различных букв' ]);
+    $c->{alph_text} = $c->{case_sensitive} ?
+        "$base_name цифры и $letters " .
+        'местного алфавита, причём все буквы используются в двух начертаниях: ' .
+        'как строчные, так и заглавные (регистр буквы имеет значение!)'
+    :
+        "$letters и $base_name цифры";
+    $c->{alph_length} = $char_cnt * ($c->{case_sensitive} ? 2 : 1) + $base;
 }
 
 sub _car_num_gen_task {
     my ($c) = @_;
-    my $bit_per_item = max_pow_contained($c->{alph_length}, 2) * $c->{sym_cnt};
-
-    my @ans = (
-        ceil( $bit_per_item / 8 ) * $c->{items_cnt},
-        ceil( $bit_per_item / 8 - 1 ) * $c->{items_cnt},
-        $bit_per_item * $c->{items_cnt},
-        $c->{alph_length} * $c->{items_cnt}
-    );
-    $c->{result} = [map num_text($_, ['байт', 'байта', 'байт']), @ans]
+    my $bits_per_item = ceil(log($c->{alph_length}) / log(2)) * $c->{sym_cnt};
+    $c->{result} = [ map num_bytes($_ * $c->{items_cnt}),
+        ceil($bits_per_item / 8),
+        ceil($bits_per_item / 8 - 1),
+        $bits_per_item,
+        $c->{alph_length},
+    ];
 }
 
 sub _car_num_gen_text {
     my ($c) = @_;
+    my %number = (short => 'номер', forms => [ 'номерa', 'номеров', 'номеров' ]);
     my $obj_name = rnd->pick(
-        { long => 'автомобильный номер', short => 'номер',
-               forms => ['номерa', 'номеров', 'номеров'] },
-        { long => 'телефонный номер', short => 'номер',
-               forms => ['номерa', 'номеров', 'номеров'] },
-        { long => 'почтовый индекс', short => 'индекс',
-               forms => ['индекса', 'индексов', 'индексов'] },
-        { long => 'почтовый адрес', short => 'адрес',
-               forms => ['адреса', 'адресов', 'адресов'] },
-        { long => 'номер медецинской страховки', short => 'номер',
-               forms => ['номерa', 'номеров', 'номеров'] }
+        { long => 'автомобильный номер', %number },
+        { long => 'телефонный номер', %number },
+        { long => 'почтовый индекс', short => 'индекс', forms => ['индекса', 'индексов', 'индексов'] },
+        { long => 'почтовый адрес', short => 'адрес', forms => ['адреса', 'адресов', 'адресов'] },
+        { long => 'номер медицинской страховки', %number }
     );
-    my $items_cnt_text = num_text( $c->{items_cnt}, $obj_name->{forms} );
-    my $sym_cnt_text = num_text( $c->{sym_cnt}, ['символа', 'символов', 'символов'] );
-    $c->{text} = <<QUESTION
+    my $items_cnt_text = num_text($c->{items_cnt}, $obj_name->{forms});
+    my $sym_cnt_text = num_text($c->{sym_cnt}, [ 'символа', 'символов', 'символов' ]);
+    <<QUESTION
 В некоторой стране $obj_name->{long} состоит из $sym_cnt_text. В качестве символов
 используют $c->{alph_text}. Каждый такой $obj_name->{short} в компьютерной программе
 записывается минимально возможным и одинаковым целым количеством байтов, при этом
@@ -130,12 +104,15 @@ QUESTION
 sub car_numbers {
     my ($self) = @_;
 
-    my $context = { case_sensetive => 0 };
-    _car_num_gen_params($context);
+    my $context = {
+        case_sensitive => 0,
+        sym_cnt => rnd->in_range(4, 20),
+        items_cnt => rnd->in_range(2, 20),
+    };
+    _car_num_make_alphabet($context);
     _car_num_gen_task($context);
-    _car_num_gen_text($context);
 
-    $self->{text} = $context->{text};
+    $self->{text} = _car_num_gen_text($context);
     $self->variants(@{$context->{result}});
 }
 
