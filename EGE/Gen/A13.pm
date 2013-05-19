@@ -67,14 +67,11 @@ sub exact_gen_file {
     $fn;
 }
 
-sub masks_to_re {
-    my @res = @_;
-    for (@res) {
-        s/\*/\.\*/g;
-        s/\?/\./g;
-        $_ = "^$_\$";
-    }
-    @res;
+sub mask_to_regexp {
+    my ($mask) = @_;
+    $mask =~ s/\*/.*/g;
+    $mask =~ s/\?/./g;
+    "^$mask\$";
 }
 
 sub gen_names {
@@ -130,27 +127,18 @@ sub gen_masks {
     map { put_mask_to_s($s, $_, \@pos) } @res;
 }
 
-sub join_arr {
-    my ($a, $b) = @_;
-    my @res;
-    for my $i (@$a) {
-        for my $j (@$b) {
-            push @res, "$i.$j";
-        }
-    }
-    @res;
+sub join_arr { map { my $i = $_; map "$i.$_", @{$_[1]} } @{$_[0]}; }
+
+sub gen_good_bad_names {
+    my ($s, $metachars) = @_;
+    my @masks = gen_masks($s, $metachars);
+    my @patterns = map mask_to_regexp($_), @masks;
+    my @good = gen_names(\@masks, \@patterns, 1, 1);
+    my @bad = gen_names(\@masks, \@patterns, 0, 2);
+    (\@masks, \@good, \@bad);
 }
 
 sub file_mask2 {
-    sub gen_good_bad_names {
-        my ($s, $metachars) = @_;
-        my @masks = gen_masks($s, $metachars);
-        my @patterns = masks_to_re(@masks);
-        my @good = gen_names(\@masks, \@patterns, 1, 1);
-        my @bad = gen_names(\@masks, \@patterns, 0, 2);
-        (\@masks, \@good, \@bad);
-    }
-
     my ($self) = @_;
     my $s = random_str(rnd->in_range(5, 8));
     my $ext = rnd->pick(@extensions);
@@ -159,17 +147,17 @@ sub file_mask2 {
     my ($ext_masks, $good_ext, $bad_ext) = gen_good_bad_names($ext, 1);
 
     my @good_ans = join_arr $good_base, $good_ext;
-    my @bad_ans = ( (join_arr $good_base, $bad_ext),
-                    (join_arr $bad_base, $good_ext),
-                    (join_arr $bad_base, $bad_ext) );
-    $self->{variants} = [@good_ans, rnd->pick_n(3, @bad_ans)];
+    my @bad_ans = (
+        join_arr($good_base, $bad_ext),
+        join_arr($bad_base, $good_ext),
+        join_arr($bad_base, $bad_ext));
+    $self->variants(@good_ans, rnd->pick_n(3, @bad_ans));
 
     my $t = $q ||= do { undef local $/; <DATA>; };
-    $self->{text} = "$t Определите, какой из указынный файлов удовлетворяет всем маскам:<ul>";
-    for my $i (0 .. 3) {
-        $self->{text} .= "<li>$base_masks->[$i].$ext_masks->[$i] </li>";
-    }
-    $self->{text} .= "</ul>";
+    $self->{text} = join '',
+        $t, ' Определите, какой из указанных файлов удовлетворяет всем маскам:<ul>',
+        map("<li>$base_masks->[$_].$ext_masks->[$_] </li>", 0..3),
+        '</ul>';
 }
 
 sub file_mask3 {
