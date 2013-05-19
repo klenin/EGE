@@ -44,7 +44,7 @@ sub flowchart {
     my $vars = { $va => 0, $vb => 0 };
     $b->run($vars);
     $self->{correct} = $vars->{$vb};
-    $self->accept_number;
+    $self->{accept} = qr/^\-?\d+/;
 }
 
 1;
