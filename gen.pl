@@ -92,6 +92,33 @@ sub print_json {
     print "]\n";
 }
 
+sub print_elt {
+    print <<EOT
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<ELT-Test name="EGE sample">
+EOT
+;
+    for my $q (@$questions) {
+        my $type = {
+            'sc' => 'singlechoice',
+            'mc' => 'multichoice',
+            'di' => 'input',
+        }->{$q->{type}};
+        my $mode =
+            $type ne 'input' ? '' :
+            $q->{correct} =~ /^\d+$/ ? 'number' :
+            $q->{correct} =~ /^\w+$/ ? 'word' :
+            'any';
+        $mode &&= qq~ mode="$mode"~;
+        print qq~<question type="$type"$mode>\n~;
+        print '<text>', $q->{text}, "</text>\n";
+        print '<answer value="1">', $q->{correct}, "</answer>\n";
+        print qq~<answer value="0">$_</answer>\n~ for @{$q->{variants}};
+        print "</question>\n";
+    }
+    print "</ELT-Test>\n";
+}
+
 binmode STDOUT, ':utf8';
 
 #g('A1', 'recode');
@@ -160,3 +187,4 @@ g('Arch4', 'flags_value_shift');
 
 print_html;
 #print_json;
+#print_elt;
