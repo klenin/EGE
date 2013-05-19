@@ -1,4 +1,4 @@
-# Copyright © 2010-2011 Alexander S. Klenin
+# Copyright © 2010-2013 Alexander S. Klenin
 # Copyright © 2011 V. Kevroletin
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
@@ -8,6 +8,8 @@ use base 'EGE::GenBase::DirectInput';
 use strict;
 use warnings;
 use utf8;
+
+use POSIX qw(ceil);
 
 use EGE::Random;
 use EGE::NumText;
@@ -45,32 +47,21 @@ QUESTION
     $self->{correct} = ['A' .. 'Z']->[$n - $dn - $dx];
 }
 
-sub _dec_to_n {
-    my ($num, $n) = @_;
-    my $res = '';
-    do {
-        $res = ($num % $n) . $res;
-        $num = int($num / $n);
-    } while ($num);
-    $res
-}
-
 sub _len_last {
     my ($num, $base) = @_;
-    $_ = _dec_to_n($num, $base);
-    (length($_), substr($_, length($_) - 1, 1))
+    $num ? (ceil(log($num) / log($base)), $num % $base) : (0, 0);
 }
 
 sub _check_uniq {
     my ($num, $base) = @_;
     my ($len, $last) = _len_last($num, $base);
-    for my $n (2 .. 9) {
-        if ($n != $base) {
-            my ($len2, $last2) = _len_last($num, $n);
-            return 0 if $len == $len2 && $last == $last2
-        }
+    for (my $base2 = 2; ; ++$base2) {
+        next if $base2 == $base;
+        my ($len2, $last2) = _len_last($num, $base2);
+        return 0 if $len == $len2 && $last == $last2;
+        last if $len2 < $len;
     }
-    1
+    1;
 }
 
 sub find_calc_system {
@@ -81,12 +72,13 @@ sub find_calc_system {
     } while (!_check_uniq($num, $base));
 
     my ($len, $last) = _len_last($num, $base);
-    my $len_text = num_text($len, ['цифру', 'цифры', 'цифр']);
-    $self->{text} = "Запись числа $num<sub>10</sub> в системе счисления с " .
-        "основанием N оканчивается на $last и содержит $len_text. Чему равно " .
-        "основание этой системы счисления N?";
+    my $len_text = num_text($len, [ 'цифру', 'цифры', 'цифр' ]);
+    $self->{text} =
+        "Запись числа $num<sub>10</sub> в системе счисления с " .
+        "основанием <em>N</em> оканчивается на $last и содержит $len_text. " .
+        'Чему равно основание этой системы счисления <em>N</em>?';
     $self->{correct} = $base;
-    $self->accept_number();
+    $self->accept_number;
 }
 
 1;
@@ -104,7 +96,7 @@ sub find_calc_system {
 =back
 
 
-=head2 Генератор min_routes
+=head2 Генератор find_calc_system
 
 =head3 Источник
 
@@ -121,7 +113,7 @@ sub find_calc_system {
 
 =item *
 
-Вибираются параметры - чило(10 .. 100) и основание системы исчисления (2 .. 9)
+Выбираются параметры - число(10 .. 100) и основание системы исчисления (2 .. 9)
 
 =item *
 
