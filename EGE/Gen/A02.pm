@@ -181,18 +181,18 @@ sub units {
     my ($self) = @_;
     my $npower = rnd->in_range(1, 4);
     my $n = 2 ** $npower;
-    my $unit = rnd->pick(
+    my $small_unit_name = qw(байт бит)[$self->{correct} = rnd->coin];
+    my $large_unit = rnd->pick(
         { name => 'Кбайт', power2 => 10, power10 => 3 },
         { name => 'Мбайт', power2 => 20, power10 => 6 },
         { name => 'Гбайт', power2 => 30, power10 => 9 },
     );
-
-    $self->{text} = "Сколько бит содержит $n $unit->{name}?";
+    $self->{text} = "Сколько $small_unit_name содержит $n $large_unit->{name}?";
     $self->variants(
-        sprintf('2<sup>%d</sup>', $npower + $unit->{power2}),
-        sprintf('2<sup>%d</sup>', $npower + $unit->{power2} + 3),
-        sprintf('%d × 10<sup>%d</sup>', $n, $unit->{power10}),
-        sprintf('%d × 10<sup>%d</sup>', 8 * $n, $unit->{power10}),
+        sprintf('2<sup>%d</sup>', $npower + $large_unit->{power2}),
+        sprintf('2<sup>%d</sup>', $npower + $large_unit->{power2} + 3),
+        sprintf('%d × 10<sup>%d</sup>', $n, $large_unit->{power10}),
+        sprintf('%d × 10<sup>%d</sup>', 8 * $n, $large_unit->{power10}),
     );
 }
 
