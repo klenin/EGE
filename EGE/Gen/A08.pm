@@ -44,9 +44,9 @@ sub equiv_common {
     $self->variants($good[0], @bad[0..2]);
 }
 
-sub equiv_3 { $_[0]->equiv_common qw(A B C) }
+sub equiv_3 { $_[0]->equiv_common(qw(A B C)) }
 
-sub equiv_4 { $_[0]->equiv_common qw(A B C D) }
+sub equiv_4 { $_[0]->equiv_common(qw(A B C D)) }
 
 sub audio_sampling {
     my ($self) = @_;
