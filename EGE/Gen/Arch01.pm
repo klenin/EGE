@@ -65,6 +65,7 @@ sub reg_value_shift {
 	$make_wrong_answer->(sub { $str->[0] =~ /^(\w\w)(l|r)$/; $str->[0] = $1.($2 eq 'l' ? 'r' : 'l') });
 	$self->formated_variants($format, @variants);
 	$self->{correct} = 0;
+	$self->reg_value_shift() if (grep { $variants[$_] == $variants[0] } 1..$#variants);
 }
 
 sub reg_value_convert {
