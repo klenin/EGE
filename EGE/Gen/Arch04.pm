@@ -47,7 +47,7 @@ sub choose_commands {
 	$self->choose_commands(), return if ($#ids == -1);
 	my $id = rnd->pick(@ids);
 	$self->{text} = <<QUESTION
-Выделите подмножество команд так, чтобы после выполнения полученного кода в регистре $reg1 содержалось значение $res_arr[$id]
+Выделите команды, которые следует оставить в программе, чтобы после выполнения полученного кода в регистре $reg1 содержалось значение $res_arr[$id]
 QUESTION
 ;
 	$self->{correct} = $correct_arr[$id];
