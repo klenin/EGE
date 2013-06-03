@@ -1,5 +1,0 @@
-mov al 165
-sub al 165
-jbe m
-mov al 3
-m:

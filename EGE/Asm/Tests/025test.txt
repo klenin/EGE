@@ -1,2 +1,0 @@
-mov al -3
-sub al -1

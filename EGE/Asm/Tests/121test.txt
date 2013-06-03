@@ -1,3 +1,0 @@
-mov al 1
-push al
-pop bl

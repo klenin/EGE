@@ -1,2 +1,0 @@
-mov al -64
-sub al 65

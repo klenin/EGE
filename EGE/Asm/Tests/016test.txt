@@ -1,3 +1,0 @@
-mov al 15
-clc
-adc al 7

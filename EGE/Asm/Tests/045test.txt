@@ -1,2 +1,0 @@
-mov al 13
-not al

@@ -1,2 +1,0 @@
-mov al 209
-sal al 2

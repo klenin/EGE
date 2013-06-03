@@ -1,5 +1,0 @@
-mov ax 1
-stc
-jc m
-mov ax 3
-m:
