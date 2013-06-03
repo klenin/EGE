@@ -7,13 +7,10 @@ use lib '..';
 use EGE::Asm::Processor;
 
 sub check_flags_set {
-    my $flags_set = proc->{eflags}->get_set_flags();
-    my @set_only = @_;
-    my @flags = @{$flags_set->{flags}};
-    my @set = @{$flags_set->{set}};
+    my @set = @_;
     my $res = 1;
-    for my $i (0..$#flags) {
-        $res = '' if $flags[$i] ~~ @set_only xor $set[$i];
+    for (keys %{proc->{eflags}}) {
+        $res = '' if $_ ~~ @set xor proc->{eflags}->{$_};
     }
     $res;
 }

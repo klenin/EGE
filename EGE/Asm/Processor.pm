@@ -120,12 +120,7 @@ sub is_stack_command {
 sub print_state {
 	my $self = shift;
 	print $_." = ".$self->{$_}->get_value($_)."\n" for (@$registers);
-	my $flags = $self->{eflags}->get_set_flags();
-	my @variants = @{$flags->{flags}};
-    my @set = @{$flags->{set}};
-	for my $i (0..$#variants) {
-		print $variants[$i]." = ".$set[$i]."\n";
-	}
+	print $_." = ".$self->{eflags}->{$_}."\n" for (keys %{$self->{eflags}});
 	print "stack:\n";
 	print $_."\n" for (@{$self->{stack}});
 	$self;

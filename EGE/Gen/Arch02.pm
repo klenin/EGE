@@ -36,10 +36,10 @@ sub flags_value {
 В результате выполнения кода $code_txt будут установлены флаги:
 QUESTION
 ;
-	my $flags = proc->{eflags}->get_set_flags();
-	$self->variants(@{$flags->{flags}});
-    $self->{correct} = $flags->{set};
-	$self->flags_value($type) if !(grep $_, @{$flags->{set}});
+	my @flags = keys %{proc->{eflags}};
+	$self->variants(@flags);
+	$self->{correct} = [ map proc->{eflags}->{$_}, @flags ];
+	$self->flags_value($type) if !(grep $_, @{$self->{correct}});
 }
 
 1;

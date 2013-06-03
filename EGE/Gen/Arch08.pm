@@ -38,7 +38,6 @@ sub choose_jump {
 В результате выполнения кода $code_txt в $reg будет содержаться значение $res, если <i>jcc</i> заменить на:
 QUESTION
 ;
-	my $flags = proc->{eflags}->get_set_flags();
 	$self->variants(@jumps);
     $self->{correct} = \@correct;
 }
