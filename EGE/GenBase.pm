@@ -129,4 +129,9 @@ sub init {
     $_[0]->{left_column} = [];
 }
 
+sub post_process {
+    $_[0]->shuffle_variants;
+    $_[0]->{variants} = [ $_[0]->{left_column}, $_[0]->{variants} ];
+}
+
 1;
