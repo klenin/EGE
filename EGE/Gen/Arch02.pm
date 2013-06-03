@@ -29,20 +29,17 @@ sub flags_value_shift {
 
 sub flags_value {
 	my ($self, $type) = @_;
-	cgen->{code} = [];
-	my $reg = cgen->get_reg(8);
-	cgen->generate_command('mov', $reg);
-	cgen->generate_command($type, $reg);
+	my ($reg, $format) = cgen->generate_simple_code($type);
 	proc->run_code(cgen->{code});
-	my $code_txt = cgen->get_code_txt('dec');
+	my $code_txt = cgen->get_code_txt($format);
 	$self->{text} = <<QUESTION
 В результате выполнения кода $code_txt будут установлены флаги:
 QUESTION
 ;
-	my $flags = proc->{eflags}->get_set_flags();
-	$self->variants(@{$flags->{flags}});
-    $self->{correct} = $flags->{set};
-	$self->flags_value($type) if !(grep $_, @{$flags->{set}});
+	my @flags = keys %{proc->{eflags}};
+	$self->variants(@flags);
+	$self->{correct} = [ map proc->{eflags}->{$_}, @flags ];
+	$self->flags_value($type) if !(grep $_, @{$self->{correct}});
 }
 
 1;

@@ -43,11 +43,4 @@ sub valid_jump {
 	$cmd eq 'jmp' ? 1 : '';
 }
 
-sub get_set_flags {
-	my $self = shift;
-	my $arr = [];
-	push($arr, $self->{$_}) for (@{$flags});
-	{'flags', $flags, 'set', $arr};
-}
-
 1;

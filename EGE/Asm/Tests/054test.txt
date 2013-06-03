@@ -1,3 +1,0 @@
-mov al 209
-clc
-rcr al 2

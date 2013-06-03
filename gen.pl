@@ -20,6 +20,7 @@ use EGE::Math::Summer;
 my $questions;
 
 sub g { push @$questions, EGE::Generate::g(@_); }
+sub g1 { push @$questions, EGE::AsmGenerate::g(@_); }
 
 sub print_dump {
     for (@$questions) {
@@ -45,22 +46,24 @@ sub print_html {
 $q->{text}
 <ol>
 ~;
-        my (@v, %correct);
+        my (@v, @correct);
         if ($q->{type} eq 'sc') {
             @v = @{$q->{variants}};
-            $correct{$q->{correct}} = undef;
+            $correct[$q->{correct}] = 1;
         }
-		elsif ($q->{type} eq 'mc') {
-			@v = @{$q->{variants}};
-            @correct{@{$q->{correct}}} = undef;
-		}
+        elsif ($q->{type} eq 'mc' || $q->{type} eq 'sr' || $q->{type} eq 'mt') {
+            @v = @{$q->{variants}};
+            @correct = @{$q->{correct}};
+        }
         else {
             @v = ($q->{correct});
-            %correct = (0 => undef);
+            @correct = (0);
         }
         for my $i (0..$#v) {
-            my $style = exists $correct{$i} ? ' class="correct"' : '';
-            print "<li$style>$v[$i]</li>\n";
+            my $style = $correct[$i] ? ' class="correct"' : '';
+            print $q->{type} eq 'sr' ? "<li>$v[$i] ($v[$correct[$i]])</li>\n" :
+                $q->{type} eq 'mt' ? "<li>$q->{left_column}->[$i] - $v[$i] ($v[$correct[$i]])</li>\n" :
+                "<li$style>$v[$i]</li>\n";
         }
         print "</ol>\n</div>\n";
     }
@@ -81,12 +84,14 @@ sub print_json {
         print '{';
         print
             join ', ', map qq~"$_":~ . quote($q->{$_}), qw(type text);
-		print
-			', "correct":'.$q->{correct} if ($q->{type} eq 'sc' || $q->{type} eq 'di');
+        print
+            ', "correct":'.$q->{correct} if ($q->{type} eq 'sc' || $q->{type} eq 'di');
         print 
-			', "correct": [', join(', ', map quote($_), @{$q->{correct}}), ']' if $q->{type} eq 'mc';
-        print ', "variants": [', join(', ', map quote($_), @{$q->{variants}}), '] '
-            if $q->{variants};
+            ', "correct": [', join(', ', map quote($_), @{$q->{correct}}), ']' if ($q->{type} eq 'mc' || $q->{type} eq 'sr' || $q->{type} eq 'mt');
+        if ($q->{variants}) {
+            my $variants = '['.join(', ', map quote($_), @{$q->{variants}}).']';
+            print $q->{left_column} ? ', "variants": [['.join(', ', map quote($_), @{$q->{left_column}}).'], '.$variants.']' : ', "variants": '.$variants;
+        }
         print $q eq $questions->[$#$questions] ? " }\n" : " },\n";
     }
     print "]\n";
@@ -167,21 +172,29 @@ binmode STDOUT, ':utf8';
 #g('B06', 'solve');
 #g('B07', 'who_is_right');
 #g('B08', 'identify_letter');
-g('Arch1', 'reg_value_add');
-g('Arch1', 'reg_value_logic');
-g('Arch1', 'reg_value_shift');
-g('Arch1', 'reg_value_convert');
-g('Arch2', 'flags_value_add');
-g('Arch2', 'flags_value_logic');
-g('Arch2', 'flags_value_shift');
-g('Arch3', 'reg_value_add');
-g('Arch3', 'reg_value_logic');
-g('Arch3', 'reg_value_shift');
-g('Arch4', 'flags_value_add');
-g('Arch4', 'flags_value_logic');
-g('Arch4', 'flags_value_shift');
+g1('Arch01', 'reg_value_add');
+g1('Arch01', 'reg_value_logic');
+g1('Arch01', 'reg_value_shift');
+g1('Arch01', 'reg_value_convert');
+g1('Arch01', 'reg_value_jump');
+g1('Arch02', 'flags_value_add');
+g1('Arch02', 'flags_value_logic');
+g1('Arch02', 'flags_value_shift');
+g1('Arch03', 'choose_commands_mod_3');
+g1('Arch04', 'choose_commands');
+g1('Arch05', 'sort_commands');
+g1('Arch05', 'sort_commands_stack');
+g1('Arch06', 'match_values');
+g1('Arch07', 'loop_number');
+g1('Arch08', 'choose_jump');
+g1('Arch09', 'reg_value_before_loopnz');
+g1('Arch09', 'zero_fill');
+g1('Arch09', 'stack');
+g1('Arch10', 'jcc_check_flags');
+g1('Arch10', 'cmovcc');
 
 #$questions = EGE::Generate::all;
+$questions = EGE::AsmGenerate::all;
 
 #push @$questions, EGE::Math::Summer::g($_) for qw(p1 p2 p3 p4 p5 p6 p7);
 

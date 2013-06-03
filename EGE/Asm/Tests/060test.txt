@@ -1,4 +1,0 @@
-mov al 178
-sub al 21
-mov dh 5
-add al dh

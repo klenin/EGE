@@ -1,5 +1,0 @@
-mov al 64
-add al 1
-jno m
-mov ax 3
-m:

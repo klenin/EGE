@@ -1,11 +1,26 @@
 # Copyright © 2010 Alexander S. Klenin
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
-package EGE::Generate;
 
 use strict;
 use warnings;
 use utf8;
+
+package EGE::GenerateBase;
+
+use EGE::Random;
+
+sub one {
+    my ($package, $method) = @_;
+    no strict 'refs';
+    local $_;
+    my $g = "EGE::Gen::$package"->new;
+    $g->$method;
+    $g->post_process;
+    $g;
+}
+
+package EGE::Generate;
 
 use EGE::Random;
 
@@ -41,25 +56,10 @@ use EGE::Gen::B12;
 use EGE::Gen::B13;
 use EGE::Gen::B15;
 
-use EGE::Gen::Arch01;
-use EGE::Gen::Arch02;
-use EGE::Gen::Arch03;
-use EGE::Gen::Arch04;
-
-sub one {
-    my ($package, $method) = @_;
-    no strict 'refs';
-    local $_;
-    my $g = "EGE::Gen::$package"->new;
-    $g->$method;
-    $g->post_process;
-    $g;
-}
-
 sub g {
     my $unit = shift;
-    my ($p, $n) = ($unit =~ /^(\w+)(\d+)$/);
-    my $q = one sprintf('%s%02d', $p, $n), rnd->pick(@_);
+    my ($p, $n) = ($unit =~ /^([A-Za-z]+)(\d+)$/);
+    my $q = EGE::GenerateBase::one( sprintf('%s%02d', $p, $n), rnd->pick(@_) );
     $q->{text} = "<h3>$unit</h3>\n$q->{text}";
     $q;
 }
@@ -100,6 +100,46 @@ sub all {[
     gg('B12', qw(search_query)),
     gg('B13', qw(plus_minus)),
     gg('B15', qw(logic_var_set)),
+]}
+
+package EGE::AsmGenerate;
+
+use EGE::Random;
+
+use EGE::GenBase;
+use EGE::Gen::Arch01;
+use EGE::Gen::Arch02;
+use EGE::Gen::Arch03;
+use EGE::Gen::Arch04;
+use EGE::Gen::Arch05;
+use EGE::Gen::Arch06;
+use EGE::Gen::Arch07;
+use EGE::Gen::Arch08;
+use EGE::Gen::Arch09;
+use EGE::Gen::Arch10;
+
+sub g {
+    my $unit = shift;
+    my $q = EGE::GenerateBase::one($unit, rnd->pick(@_));
+    $q;
+}
+
+sub gg {
+    my $unit = shift;
+    map g($unit, $_), @_;
+}
+
+sub all {[
+    gg('Arch01', qw(reg_value_add reg_value_logic reg_value_shift reg_value_convert reg_value_jump)),
+    gg('Arch02', qw(flags_value_add flags_value_logic flags_value_shift)),
+    gg('Arch03', qw(choose_commands_mod_3)),
+    gg('Arch04', qw(choose_commands)),
+    gg('Arch05', qw(sort_commands sort_commands_stack)),
+    gg('Arch06', qw(match_values)),
+    gg('Arch07', qw(loop_number)),
+    gg('Arch08', qw(choose_jump)),
+    gg('Arch09', qw(reg_value_before_loopnz zero_fill stack)),
+    gg('Arch10', qw(jcc_check_flags cmovcc)),
 ]}
 
 1;

@@ -1,3 +1,0 @@
-mov al 250
-clc
-adc al 10
