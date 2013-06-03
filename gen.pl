@@ -61,8 +61,9 @@ $q->{text}
         }
         for my $i (0..$#v) {
             my $style = $correct[$i] ? ' class="correct"' : '';
-            print $q->{type} eq 'sr' ? "<li>$v[$i] ($v[$correct[$i]])</li>\n" :
-                $q->{type} eq 'mt' ? "<li>$q->{left_column}->[$i] - $v[$i] ($v[$correct[$i]])</li>\n" :
+            print
+                $q->{type} eq 'sr' ? "<li>$v[$i] ($v[$correct[$i]])</li>\n" :
+                $q->{type} eq 'mt' ? "<li>$v[0]->[$i] - $v[1]->[$i] ($v[1]->[$correct[$i]])</li>\n" :
                 "<li$style>$v[$i]</li>\n";
         }
         print "</ol>\n</div>\n";
@@ -78,21 +79,24 @@ sub quote {
     $s =~ /^\d+$/ ? $s : qq~"$s"~;
 }
 
+sub json {
+    !ref $_[0] ? quote($_[0]) :
+    ref $_[0] eq 'ARRAY' ? '[' . join(', ', map(json($_), @{$_[0]})) . ']' :
+    ref $_[0] eq 'HASH' ? '{' . join(', ', map(qq~"$_":~ . json($_[0]->{$_}), keys %{$_[0]})) . '}' :
+    die ref $_[0];
+}
+
+sub filter_hash {
+    my ($hash, $keys) = @_;
+    map { exists $hash->{$_} ? ($_ => $hash->{$_}) : () } @$keys;
+}
+
 sub print_json {
     print "[\n";
     for my $q (@$questions) {
-        print '{';
         print
-            join ', ', map qq~"$_":~ . quote($q->{$_}), qw(type text);
-        print
-            ', "correct":'.$q->{correct} if ($q->{type} eq 'sc' || $q->{type} eq 'di');
-        print 
-            ', "correct": [', join(', ', map quote($_), @{$q->{correct}}), ']' if ($q->{type} eq 'mc' || $q->{type} eq 'sr' || $q->{type} eq 'mt');
-        if ($q->{variants}) {
-            my $variants = '['.join(', ', map quote($_), @{$q->{variants}}).']';
-            print $q->{left_column} ? ', "variants": [['.join(', ', map quote($_), @{$q->{left_column}}).'], '.$variants.']' : ', "variants": '.$variants;
-        }
-        print $q eq $questions->[$#$questions] ? " }\n" : " },\n";
+            json({ filter_hash($q, [qw(type text correct variants)]) }),
+            $q eq $questions->[$#$questions] ? "\n" : ",\n";
     }
     print "]\n";
 }
