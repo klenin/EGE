@@ -86,20 +86,16 @@ sub reg_value_convert {
 }
 
 sub reg_value_jump {
-	my $self = shift;
-	cgen->{code} = [];
-	my $reg = cgen->get_reg(8);
-	cgen->generate_command('mov', $reg);
-	cgen->generate_command('add', $reg);
-	my $label = 'L';
-	my $jmp = 'j'.{1 => 'n', 0 => ''}->{rnd->pick(0,1)}.rnd->pick(qw(c p z o s e g l ge le a b ae be));
-	cgen->add_command($jmp, $label);
-	cgen->add_command('add', $reg, 1);
-	cgen->add_command($label.':');
-	my $res = $self->get_res($reg, '%s');
-	my @variants = ($res, rnd->pick($res+2, $res-2+256) % 256, ($res+1) % 256, ($res-1+256) % 256);
-	$self->variants(@variants);
-	$self->{correct} = 0;
+    my $self = shift;
+    cgen->{code} = [];
+    my $reg = cgen->get_reg(8);
+    cgen->generate_command('mov', $reg);
+    cgen->generate_command('add', $reg);
+    my $label = 'L';
+    my $jmp = 'j' . rnd->pick('n', '') . rnd->pick(qw(c p z o s e g l ge le a b ae be));
+    cgen->add_commands([ $jmp, $label ], [ 'add', $reg, 1 ], [ "$label:" ]);
+    my $res = $self->get_res($reg, '%s');
+    $self->variants($res, map { ($res + $_ + 256) % 256 } 1, -1, rnd->pick(2, -2));
 }
 
 sub get_res {
