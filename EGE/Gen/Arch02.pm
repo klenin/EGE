@@ -12,34 +12,25 @@ use EGE::Random;
 use EGE::Asm::Processor;
 use EGE::Asm::AsmCodeGenerate;
 
-sub flags_value_add {
-	my $self = shift;
-	$self->flags_value('add');
-}
-
-sub flags_value_logic {
-	my $self = shift;
-	$self->flags_value('logic');
-}
-
-sub flags_value_shift {
-	my $self = shift;
-	$self->flags_value('shift');
+BEGIN {
+    no strict 'refs';
+    for my $type (qw(add logic shift)) {
+        *{"flags_value_$type"} = sub { $_[0]->flags_value($type); };
+    }
 }
 
 sub flags_value {
-	my ($self, $type) = @_;
-	my ($reg, $format) = cgen->generate_simple_code($type);
-	proc->run_code(cgen->{code});
-	my $code_txt = cgen->get_code_txt($format);
-	$self->{text} = <<QUESTION
-В результате выполнения кода $code_txt будут установлены флаги:
-QUESTION
-;
-	my @flags = keys %{proc->{eflags}};
-	$self->variants(@flags);
-	$self->{correct} = [ map proc->{eflags}->{$_}, @flags ];
-	$self->flags_value($type) if !(grep $_, @{$self->{correct}});
+    my ($self, $type) = @_;
+    my $format;
+    do {
+        (undef, $format) = cgen->generate_simple_code($type);
+        proc->run_code(cgen->{code});
+    } until grep $_, values %{proc->{eflags}};
+
+    my $code_txt = cgen->get_code_txt($format);
+    $self->{text} = "В результате выполнения кода $code_txt будут установлены флаги:";
+    $self->variants(keys %{proc->{eflags}});
+    $self->{correct} = [ values %{proc->{eflags}} ];
 }
 
 1;
