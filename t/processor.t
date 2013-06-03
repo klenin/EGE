@@ -1,12 +1,12 @@
 use strict;
 use warnings;
 
-use Test::More tests => 9;
+use Test::More tests => 163;
 
 use lib '..';
 use EGE::Asm::Processor;
 
-sub set_only {
+sub check_flags_set {
     my $flags_set = proc->{eflags}->get_set_flags();
     my @set_only = @_;
     my @flags = @{$flags_set->{flags}};
@@ -14,6 +14,16 @@ sub set_only {
     my $res = 1;
     for my $i (0..$#flags) {
         $res = '' if $flags[$i] ~~ @set_only xor $set[$i];
+    }
+    $res;
+}
+
+sub check_stack {
+    my @stack = @_;
+    return '' if $#{proc->{stack}} != $#stack;
+    my $res = 1;
+    for my $i (0..$#stack) {
+        $res = '' if ($stack[$i] !=  proc->{stack}->[$i])
     }
     $res;
 }
@@ -27,15 +37,309 @@ sub set_only {
     is proc->get_val('eax'), 200, 'mov negative number';
     proc->run_code([ ['mov', 'al', 256] ]);
     is proc->get_val('eax'), 0, 'mov overflow number';
-    is set_only(), 1, 'mov set flags';
+    ok check_flags_set(), 'mov set flags';
     proc->run_code([ ['mov', 'ax', 256] ]);
     is proc->get_val('eax'), 256, 'mov ax';
     proc->run_code([ ['mov', 'eax', 256] ]);
     is proc->get_val('eax'), 256, 'mov eax';
+    proc->run_code([ ['mov', 'al', 209], ['movzx', 'ax', 'al'] ]);
+    is proc->get_val('eax'), 209, 'movzx';
+    proc->run_code([ ['mov', 'al', 209], ['movsx', 'ax', 'al'] ]);
+    is proc->get_val('eax'), 65489, 'movsx';
 }
 
 {
     proc->run_code([ ['mov', 'al', 15], ['add', 'al', 7] ]);
     is proc->get_val('eax'), 22, 'add positive number';
-    is set_only(), 1, 'add set flags';
+    ok check_flags_set(), 'add set flags';
+    proc->run_code([ ['mov', 'al', 15], ['add', 'al', -7] ]);
+    is proc->get_val('eax'), 8, 'add negative less number';
+    ok check_flags_set('CF'), 'add negative less number set flags';
+    proc->run_code([ ['mov', 'al', 15], ['add', 'al', -17] ]);
+    is proc->get_val('eax'), 254, 'add negative greater number';
+    ok check_flags_set('SF'), 'add negative greater number set flags';
+    proc->run_code([ ['mov', 'al', 129], ['add', 'al', 127] ]);
+    is proc->get_val('eax'), 0, 'add negative and positive numbers to receive positive';
+    ok check_flags_set('ZF', 'PF', 'CF'), 'add negative and positive numbers to receive positive set flags';
+    proc->run_code([ ['mov', 'al', 128], ['add', 'al', 128] ]);
+    is proc->get_val('eax'), 0, 'add negative numbers to receive positive';
+    ok check_flags_set('ZF', 'PF', 'CF', 'OF'), 'add negative numbers to receive positive set flags';
+    proc->run_code([ ['mov', 'al', 64], ['add', 'al', 63] ]);
+    is proc->get_val('eax'), 127, 'add positive numbers to receive positive';
+    ok check_flags_set(), 'add positive numbers to receive positive set flags';
+    proc->run_code([ ['mov', 'al', 64], ['add', 'al', 64] ]);
+    is proc->get_val('eax'), 128, 'add positive numbers to receive negative';
+    ok check_flags_set('SF', 'OF'), 'add positive numbers to receive negative set flags';
+}
+
+{
+    proc->run_code([ ['stc'] ]);
+    ok check_flags_set('CF'), 'stc';
+    proc->run_code([ ['stc'], ['clc'] ]);
+    ok check_flags_set(), 'clc';
+    proc->run_code([ ['mov', 'al', 15], ['stc'], ['adc', 'al', 7] ]);
+    is proc->get_val('eax'), 23, 'stc adc';
+    proc->run_code([ ['mov', 'al', 15], ['clc'], ['adc', 'al', 7] ]);
+    is proc->get_val('eax'), 22, 'clc adc';
+    proc->run_code([ ['mov', 'al', 250], ['clc'], ['adc', 'al', 10] ]);
+    is proc->get_val('eax'), 4, 'clc adc set CF';
+    ok check_flags_set('CF'), 'clc adc set CF flags';
+    proc->run_code([ ['mov', 'al', 250], ['stc'], ['adc', 'al', 10] ]);
+    is proc->get_val('eax'), 5, 'stc adc set CF';
+    ok check_flags_set('CF', 'PF'), 'stc adc set CF flags';
+    proc->run_code([ ['mov', 'al', 250], ['stc'], ['adc', 'al', 5] ]);
+    is proc->get_val('eax'), 0, 'stc adc to 0';
+    ok check_flags_set('CF', 'PF', 'ZF'), 'stc adc to 0 flags';
+}
+
+{
+    proc->run_code([ ['mov', 'al', 15], ['sub', 'al', 7] ]);
+    is proc->get_val('eax'), 8, 'sub positive numbers to receive positive';
+    ok check_flags_set(), 'sub positive numbers to receive positive flags';
+    proc->run_code([ ['mov', 'al', 7], ['sub', 'al', 15] ]);
+    is proc->get_val('eax'), 248, 'sub positive numbers to receive negative';
+    ok check_flags_set('CF', 'SF'), 'sub positive numbers to receive positive flags';
+    proc->run_code([ ['mov', 'al', 7], ['sub', 'al', 7] ]);
+    is proc->get_val('eax'), 0, 'sub positive numbers to receive zero';
+    ok check_flags_set('ZF', 'PF'), 'sub positive numbers to receive zero flags';
+    proc->run_code([ ['mov', 'al', -1], ['sub', 'al', -3] ]);
+    is proc->get_val('eax'), 2, 'sub negative numbers to receive positive';
+    ok check_flags_set(), 'sub negative numbers to receive positive flags';
+    proc->run_code([ ['mov', 'al', -3], ['sub', 'al', -1] ]);
+    is proc->get_val('eax'), 254, 'sub negative numbers to receive negative';
+    ok check_flags_set('CF', 'SF'), 'sub negative numbers to receive positive flags';
+    proc->run_code([ ['mov', 'al', 15], ['sub', 'al', -7] ]);
+    is proc->get_val('eax'), 22, 'sub positive and negative numbers';
+    ok check_flags_set('CF'), 'sub positive and negative numbers flags';
+    proc->run_code([ ['mov', 'al', -7], ['sub', 'al', 15] ]);
+    is proc->get_val('eax'), 234, 'sub negative and positive numbers';
+    ok check_flags_set('SF'), 'sub negative and positive numbers flags';
+    proc->run_code([ ['mov', 'al', 64], ['sub', 'al', -63] ]);
+    is proc->get_val('eax'), 127, 'sub do not set OF';
+    ok check_flags_set('CF'), 'sub do not set OF flags';
+    proc->run_code([ ['mov', 'al', 64], ['sub', 'al', -64] ]);
+    is proc->get_val('eax'), 128, 'sub set OF';
+    ok check_flags_set('CF', 'SF', 'OF'), 'sub set OF flags';
+    proc->run_code([ ['mov', 'al', -64], ['sub', 'al', 64] ]);
+    is proc->get_val('eax'), 128, 'sub do not set OF';
+    ok check_flags_set('SF'), 'sub do not set OF flags';
+    proc->run_code([ ['mov', 'al', -64], ['sub', 'al', 65] ]);
+    is proc->get_val('eax'), 127, 'sub set OF';
+    ok check_flags_set('OF'), 'sub set OF flags';
+}
+
+{
+    proc->run_code([ ['mov', 'al', 15], ['stc'], ['sbb', 'al', 7] ]);
+    is proc->get_val('eax'), 7, 'stc sbb to recieve positive';
+    proc->run_code([ ['mov', 'al', 15], ['clc'], ['sbb', 'al', 7] ]);
+    is proc->get_val('eax'), 8, 'clc sbb to recieve positive';
+    proc->run_code([ ['mov', 'al', 7], ['stc'], ['sbb', 'al', 15] ]);
+    is proc->get_val('eax'), 247, 'stc sbb to recieve negative';
+    proc->run_code([ ['mov', 'al', 7], ['clc'], ['sbb', 'al', 15] ]);
+    is proc->get_val('eax'), 248, 'clc sbb to recieve negative';
+    proc->run_code([ ['mov', 'al', 7], ['stc'], ['sbb', 'al', 7] ]);
+    is proc->get_val('eax'), 255, 'stc sbb equal numbers';
+    ok check_flags_set('CF', 'PF', 'SF'), 'stc sbb equal numbers flags';
+}
+
+{
+    proc->run_code([ ['mov', 'al', 7], ['neg', 'al'] ]);
+    is proc->get_val('eax'), 249, 'neg positive';
+    ok check_flags_set('CF', 'PF', 'SF'), 'neg positive flags';
+    proc->run_code([ ['mov', 'al', -7], ['neg', 'al'] ]);
+    is proc->get_val('eax'), 7, 'neg negative';
+    ok check_flags_set('CF'), 'neg negative flags';
+    proc->run_code([ ['mov', 'al', 0], ['neg', 'al'] ]);
+    is proc->get_val('eax'), 0, 'neg zero';
+    ok check_flags_set('ZF', 'PF'), 'neg zero flags';
+}
+
+{
+    proc->run_code([ ['mov', 'al', 209], ['mov', 'bh', 10], ['add', 'al', 'bh'] ]);
+    is proc->get_val('eax'), 219, 'add regisrer';
+    proc->run_code([ ['mov', 'al', 55], ['add', 'al', 15], ['sub', 'al', 4] ]);
+    is proc->get_val('eax'), 66, 'add sub';
+    proc->run_code([ ['mov', 'al', 178], ['sub', 'al', 21], ['mov', 'dh', 5], ['add', 'al', 'dh'] ]);
+    is proc->get_val('eax'), 162, 'sub add register';
+}
+
+{
+    proc->run_code([ ['mov', 'al', 209], ['stc'], ['and', 'al', 237] ]);
+    is proc->get_val('eax'), 193, 'and';
+    ok check_flags_set('SF'), 'and flags';
+    proc->run_code([ ['mov', 'al', 209], ['stc'], ['or', 'al', 141] ]);
+    is proc->get_val('eax'), 221, 'or';
+    ok check_flags_set('SF', 'PF'), 'or flags';
+    proc->run_code([ ['mov', 'al', 209], ['stc'], ['xor', 'al', 13] ]);
+    is proc->get_val('eax'), 220, 'xor';
+    ok check_flags_set('SF'), 'xor flags';
+    proc->run_code([ ['mov', 'al', 209], ['stc'], ['test', 'al', 2] ]);
+    is proc->get_val('eax'), 209, 'test';
+    ok check_flags_set('ZF', 'PF'), 'test flags';
+    proc->run_code([ ['mov', 'al', 13], ['not', 'al'] ]);
+    is proc->get_val('eax'), 242, 'not';
+    ok check_flags_set(), 'not flags';
+}
+
+{
+    proc->run_code([ ['mov', 'al', 209], ['shl', 'al', 2] ]);
+    is proc->get_val('eax'), 68, 'shl';
+    ok check_flags_set('CF', 'PF'), 'shl flags';
+    proc->run_code([ ['mov', 'al', 209], ['shr', 'al', 2] ]);
+    is proc->get_val('eax'), 52, 'shr';
+    ok check_flags_set(), 'shr flags';
+    proc->run_code([ ['mov', 'al', 209], ['sal', 'al', 2] ]);
+    is proc->get_val('eax'), 68, 'sal';
+    ok check_flags_set('CF', 'PF', 'OF'), 'sal flags';
+    proc->run_code([ ['mov', 'al', 209], ['sar', 'al', 2] ]);
+    is proc->get_val('eax'), 244, 'sar';
+    ok check_flags_set('SF'), 'sar flags';
+    proc->run_code([ ['mov', 'al', 209], ['rol', 'al', 2] ]);
+    is proc->get_val('eax'), 71, 'rol';
+    ok check_flags_set('CF', 'PF'), 'rol flags';
+    proc->run_code([ ['mov', 'al', 209], ['ror', 'al', 2] ]);
+    is proc->get_val('eax'), 116, 'ror';
+    ok check_flags_set('PF'), 'ror flags';
+    proc->run_code([ ['mov', 'al', 209], ['clc'], ['rcl', 'al', 2] ]);
+    is proc->get_val('eax'), 69, 'clc rcl';
+    ok check_flags_set('CF'), 'clc rcl flags';
+    proc->run_code([ ['mov', 'al', 209], ['stc'], ['rcl', 'al', 2] ]);
+    is proc->get_val('eax'), 71, 'stc rcl';
+    ok check_flags_set('CF', 'PF'), 'stc rcl flags';
+    proc->run_code([ ['mov', 'al', 209], ['clc'], ['rcr', 'al', 2] ]);
+    is proc->get_val('eax'), 180, 'clc rcr';
+    ok check_flags_set('SF', 'PF'), 'clc rcr flags';
+    proc->run_code([ ['mov', 'al', 209], ['stc'], ['rcr', 'al', 2] ]);
+    is proc->get_val('eax'), 244, 'stc rcr';
+    ok check_flags_set('SF'), 'stc rcr flags';
+}
+
+{
+    proc->run_code([ ['mov', 'al', 1], ['jmp', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 1, 'jmp';
+    proc->run_code([ ['mov', 'al', 1], ['stc'], ['jc', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 1, 'jc pass';
+    proc->run_code([ ['mov', 'al', 1], ['clc'], ['jc', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'jc not pass';
+    proc->run_code([ ['mov', 'al', 1], ['stc'], ['jnc', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'jnc not pass';
+    proc->run_code([ ['mov', 'al', 1], ['clc'], ['jnc', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 1, 'jnc pass';
+    proc->run_code([ ['mov', 'al', 1], ['add', 'al', 4], ['jp', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 5, 'jp pass';
+    proc->run_code([ ['mov', 'al', 1], ['add', 'al', 1], ['jp', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'jp not pass';
+    proc->run_code([ ['mov', 'al', 1], ['add', 'al', 4], ['jnp', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'jnp not pass';
+    proc->run_code([ ['mov', 'al', 1], ['add', 'al', 1], ['jnp', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 2, 'jnp pass';
+    proc->run_code([ ['mov', 'al', 1], ['sub', 'al', 1], ['jz', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 0, 'jz pass';
+    proc->run_code([ ['mov', 'al', 1], ['sub', 'al', 0], ['jz', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'jz not pass';
+    proc->run_code([ ['mov', 'al', 1], ['sub', 'al', 1], ['jnz', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'jnz not pass';
+    proc->run_code([ ['mov', 'al', 1], ['sub', 'al', 0], ['jnz', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 1, 'jnz pass';
+    proc->run_code([ ['mov', 'al', 64], ['add', 'al', 64], ['js', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 128, 'js pass';
+    proc->run_code([ ['mov', 'al', 64], ['add', 'al', 1], ['js', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'js not pass';
+    proc->run_code([ ['mov', 'al', 64], ['add', 'al', 64], ['jns', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'jns not pass';
+    proc->run_code([ ['mov', 'al', 64], ['add', 'al', 1], ['jns', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 65, 'jns pass';
+    proc->run_code([ ['mov', 'al', 64], ['add', 'al', 64], ['jo', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 128, 'jo pass';
+    proc->run_code([ ['mov', 'al', 64], ['add', 'al', 1], ['jo', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'jo not pass';
+    proc->run_code([ ['mov', 'al', 64], ['add', 'al', 64], ['jno', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'jno not pass';
+    proc->run_code([ ['mov', 'al', 64], ['add', 'al', 1], ['jno', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 65, 'jno pass';
+    proc->run_code([ ['mov', 'al', 1], ['sub', 'al', 1], ['je', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 0, 'je pass';
+    proc->run_code([ ['mov', 'al', 1], ['sub', 'al', 0], ['je', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'je not pass';
+    proc->run_code([ ['mov', 'al', 1], ['sub', 'al', 1], ['jne', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'jne not pass';
+    proc->run_code([ ['mov', 'al', 1], ['sub', 'al', 0], ['jne', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 1, 'jne pass';
+    proc->run_code([ ['mov', 'al', -2], ['sub', 'al', 1], ['jl', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 253, 'jl pass';
+    proc->run_code([ ['mov', 'al', -2], ['sub', 'al', -2], ['jl', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'jl not pass';
+    proc->run_code([ ['mov', 'al', -2], ['sub', 'al', 1], ['jnl', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'jnl not pass';
+    proc->run_code([ ['mov', 'al', -2], ['sub', 'al', -2], ['jnl', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 0, 'jnl pass';
+    proc->run_code([ ['mov', 'al', -2], ['sub', 'al', -2], ['jle', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 0, 'jle pass';
+    proc->run_code([ ['mov', 'al', -2], ['sub', 'al', -3], ['jle', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'jle not pass';
+    proc->run_code([ ['mov', 'al', -2], ['sub', 'al', -2], ['jnle', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'jnle not pass';
+    proc->run_code([ ['mov', 'al', -2], ['sub', 'al', -3], ['jnle', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 1, 'jnle pass';
+    proc->run_code([ ['mov', 'al', -2], ['sub', 'al', -3], ['jg', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 1, 'jg pass';
+    proc->run_code([ ['mov', 'al', -2], ['sub', 'al', -2], ['jg', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'jg not pass';
+    proc->run_code([ ['mov', 'al', -2], ['sub', 'al', -3], ['jng', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'jng not pass';
+    proc->run_code([ ['mov', 'al', -2], ['sub', 'al', -2], ['jng', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 0, 'jng pass';
+    proc->run_code([ ['mov', 'al', -2], ['sub', 'al', -2], ['jge', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 0, 'jge pass';
+    proc->run_code([ ['mov', 'al', -2], ['sub', 'al', -1], ['jge', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'jge not pass';
+    proc->run_code([ ['mov', 'al', -2], ['sub', 'al', -2], ['jnge', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'jnge not pass';
+    proc->run_code([ ['mov', 'al', -2], ['sub', 'al', -1], ['jnge', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 255, 'jnge pass';
+    proc->run_code([ ['mov', 'al', 165], ['sub', 'al', 1], ['ja', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 164, 'ja pass';
+    proc->run_code([ ['mov', 'al', 165], ['sub', 'al', 165], ['ja', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'ja not pass';
+    proc->run_code([ ['mov', 'al', 165], ['sub', 'al', 1], ['jna', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'jna not pass';
+    proc->run_code([ ['mov', 'al', 165], ['sub', 'al', 165], ['jna', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 0, 'jna pass';
+    proc->run_code([ ['mov', 'al', 165], ['sub', 'al', 165], ['jae', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 0, 'jae pass';
+    proc->run_code([ ['mov', 'al', 165], ['sub', 'al', 166], ['jae', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'jae not pass';
+    proc->run_code([ ['mov', 'al', 165], ['sub', 'al', 165], ['jnae', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'jnae not pass';
+    proc->run_code([ ['mov', 'al', 165], ['sub', 'al', 166], ['jnae', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 255, 'jnae pass';
+    proc->run_code([ ['mov', 'al', 1], ['sub', 'al', 165], ['jb', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 92, 'jb pass';
+    proc->run_code([ ['mov', 'al', 165], ['sub', 'al', 165], ['jb', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'jb not pass';
+    proc->run_code([ ['mov', 'al', 1], ['sub', 'al', 165], ['jnb', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'jnb not pass';
+    proc->run_code([ ['mov', 'al', 165], ['sub', 'al', 165], ['jnb', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 0, 'jnb pass';
+    proc->run_code([ ['mov', 'al', 165], ['sub', 'al', 165], ['jbe', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 0, 'jbe pass';
+    proc->run_code([ ['mov', 'al', 165], ['sub', 'al', 1], ['jbe', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'jbe not pass';
+    proc->run_code([ ['mov', 'al', 165], ['sub', 'al', 165], ['jnbe', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 3, 'jnbe not pass';
+    proc->run_code([ ['mov', 'al', 165], ['sub', 'al', 1], ['jnbe', 'm'], ['mov', 'al', 3], ['m:'] ]);
+    is proc->get_val('eax'), 164, 'jnbe pass';
+}
+
+{
+    proc->run_code([ ['mov', 'al', 1], ['push', 'al'] ]);
+    ok check_stack(1), 'push';
+    proc->run_code([ ['mov', 'al', 1], ['push', 'al'], ['mov', 'al', 2], ['push', 'al'] ]);
+    ok check_stack(2, 1), 'double push';
+    proc->run_code([ ['mov', 'al', 1], ['push', 'al'], ['pop', 'bl'] ]);
+    is proc->get_val('ebx'), 1, 'pop';
+    ok check_stack(), 'pop stack';
+    proc->run_code([ ['mov', 'al', 1], ['push', 'al'], ['mov', 'al', 2], ['push', 'al'], ['pop', 'bl'] ]);
+    is proc->get_val('ebx'), 2, 'double push pop';
+    ok check_stack(1), 'double push pop stack';
 }
