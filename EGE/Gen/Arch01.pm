@@ -40,32 +40,37 @@ sub reg_value_logic {
 	$self->{correct} = 0;
 }
 
+sub try_reg_value_shift {
+    my $self = shift;
+    my ($reg, $format, $n, $arg) = cgen->generate_simple_code('shift');
+    my @variants = $self->get_res($reg, $format);
+    my $str = cgen->{code}->[1];
+    my $use_cf = $str->[0] =~ /^(stc|clc)$/;
+    $str = cgen->{code}->[2] if $use_cf;
+
+    my $make_wrong_answer = sub {
+        my @old_cmd = @$str;
+        $_[0]->();
+        proc->run_code(cgen->{code});
+        push @variants, proc->get_val($reg);
+        $str->[$_] = $old_cmd[$_] for 0..$#old_cmd;
+    };
+
+    my $sgn = $arg >= 2 ** ($n - 1);
+    my $shift_right = ($str->[0] =~ /^(shr|sar)$/) && $sgn;
+    $make_wrong_answer->(sub { $str->[0] =~ s/^rc/ro/ }) if $use_cf;
+    $make_wrong_answer->(sub { $str->[0] = { sar => 'shr', shr => 'sar' }->{$str->[0]} }) if $shift_right;
+    push @variants, proc->get_wrong_val($reg) if !$use_cf && !$shift_right;
+    $make_wrong_answer->(sub { $str->[2] += $str->[2] == $n / 8 ? $n / 8 : rnd->pick($n / 8, -$n / 8) });
+    $make_wrong_answer->(sub { $str->[0] =~ /^(\w\w)(l|r)$/; $str->[0] = $1 . ($2 eq 'l' ? 'r' : 'l') });
+    $self->formated_variants($format, @variants);
+}
+
 sub reg_value_shift {
-	my $self = shift;
-	my ($reg, $format, $n, $arg) = cgen->generate_simple_code('shift');
-	my @variants = ($self->get_res($reg, $format));
-	my $str = cgen->{code}->[1];
-	my $use_cf = $str->[0] =~ /^(stc|clc)$/;
-	$str = cgen->{code}->[2] if ($use_cf);
-
-	my $make_wrong_answer = sub {
-		my @old_cmd = @$str;
-		$_[0]->();
-		proc->run_code(cgen->{code});
-		push @variants, proc->get_val($reg);
-		$str->[$_] = $old_cmd[$_] for 0..$#old_cmd;
-	};
-
-	my $sgn = $arg >= 2 ** ($n-1);
-	my $shift_right = ($str->[0] =~ /^(shr|sar)$/) && $sgn;
-	$make_wrong_answer->(sub { $str->[0] =~ s/^rc/ro/ }) if ($use_cf);
-	$make_wrong_answer->(sub { $str->[0] = {'sar' => 'shr', 'shr' => 'sar'}->{$str->[0]} }) if ($shift_right);
-	push @variants, proc->get_wrong_val($reg) if (!$use_cf && !$shift_right);
-	$make_wrong_answer->(sub { $str->[2] += $str->[2] == $n/8 ? $n/8 : rnd->pick($n/8, -$n/8) });
-	$make_wrong_answer->(sub { $str->[0] =~ /^(\w\w)(l|r)$/; $str->[0] = $1.($2 eq 'l' ? 'r' : 'l') });
-	$self->formated_variants($format, @variants);
-	$self->{correct} = 0;
-	$self->reg_value_shift() if (grep { $variants[$_] == $variants[0] } 1..$#variants);
+    my $self = shift;
+    do {
+        $self->try_reg_value_shift;
+    } until 1 == grep { $self->{variants}->[0] eq $_ } @{$self->{variants}};
 }
 
 sub reg_value_convert {
