@@ -27,17 +27,16 @@ sub reg_value_add {
 }
 
 sub reg_value_logic {
-	my $self = shift;
-	my ($reg, $format, $n) = cgen->generate_simple_code('logic');
-	my @variants = ($self->get_res($reg, $format));
-	if (cgen->{code}->[1]->[0] eq 'test') {
-		cgen->{code}->[1]->[0] = 'and';
-		proc->run_code(cgen->{code});
-		push @variants, proc->get_val($reg);
-	}
-	push @variants, proc->get_wrong_val($reg) while ($#variants < 3);
-	$self->formated_variants($format, @variants);
-	$self->{correct} = 0;
+    my $self = shift;
+    my ($reg, $format, $n) = cgen->generate_simple_code('logic');
+    my @variants = $self->get_res($reg, $format);
+    if (cgen->{code}->[1]->[0] eq 'test') {
+        cgen->{code}->[1]->[0] = 'and';
+        proc->run_code(cgen->{code});
+        push @variants, proc->get_val($reg);
+    }
+    push @variants, proc->get_wrong_val($reg) until @variants == 4;
+    $self->formated_variants($format, @variants);
 }
 
 sub try_reg_value_shift {
