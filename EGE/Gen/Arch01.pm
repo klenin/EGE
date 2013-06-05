@@ -69,20 +69,19 @@ sub reg_value_shift {
 }
 
 sub reg_value_convert {
-	my $self = shift;
-	my ($reg, $reg1) = cgen->get_regs(32, 16);
-	cgen->{code} = [];
-	cgen->add_command('mov', $reg1, 15*2**12 + rnd->in_range(0, 2**12-1));
-	cgen->generate_command('convert', $reg, $reg1);
-	my @variants = ($self->get_res($reg, '%04Xh'));
-	my $str = cgen->{code}->[1];
-	$str->[0] = $str->[0] eq 'movsx' ? 'movzx' : 'movsx';
-	proc->run_code(cgen->{code});
-	push @variants, proc->get_val($reg);
-	my $resz = $str->[0] eq 'movsx' ? $variants[0] : $variants[1] ;
-	push @variants, 15*2**28 + $resz, 2**31 + $resz;
-	$self->formated_variants('%08Xh', @variants);
-	$self->{correct} = 0;
+    my $self = shift;
+    my ($reg32, $reg16) = cgen->get_regs(32, 16);
+    cgen->{code} = [];
+    my ($cmd, $bad_cmd) = rnd->shuffle(qw(movzx movsx));
+    cgen->add_commands(
+        [ 'mov', $reg16, 15 * 2**12 + rnd->in_range(0, 2**12 - 1) ],
+        [ $cmd, $reg32, $reg16 ]);
+    my @variants = $self->get_res($reg32, '%04Xh');
+    cgen->{code}->[1]->[0] = $bad_cmd;
+    proc->run_code(cgen->{code});
+    push @variants, proc->get_val($reg32);
+    my $resz = $variants[$cmd eq 'movzx' ? 0 : 1];
+    $self->formated_variants('%08Xh', @variants, 15 * 2**28 + $resz, 2**31 + $resz);
 }
 
 sub reg_value_jump {

@@ -45,10 +45,6 @@ sub generate_command {
 		$arg = rnd->in_range(1, 3) if (!defined $lo);
 		$cmd = rnd->pick('shl', 'shr', 'sal', 'sar', 'rol', 'ror', 'rcl', 'rcr');
 	}
-	if ($type eq 'convert') {
-		$arg = rnd->in_range(1, 255) if (!defined $lo);
-		$cmd = rnd->pick('movzx', 'movsx');
-	}
 	$self->add_command(rnd->pick('stc', 'clc')) if $self->use_cf($cmd);
 	$arg = '' if $self->single_arg($cmd);
 	$self->add_command($cmd, $reg, $arg);
