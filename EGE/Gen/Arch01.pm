@@ -103,15 +103,11 @@ sub reg_value_jump {
 }
 
 sub get_res {
-	my ($self, $reg, $format) = @_;
-	proc->run_code(cgen->{code});
-	my $res = proc->get_val($reg);
-	my $code_txt = cgen->get_code_txt($format);
-	$self->{text} = <<QUESTION
-В результате выполнения кода $code_txt в $reg будет содержаться значение:
-QUESTION
-;
-	$res;
+    my ($self, $reg, $format) = @_;
+    my $code_txt = cgen->get_code_txt($format);
+    $self->{text} = "В результате выполнения кода $code_txt в регистре $reg будет содержаться значение:";
+    proc->run_code(cgen->{code});
+    proc->get_val($reg);
 }
 
 1;
