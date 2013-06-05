@@ -12,18 +12,20 @@ use EGE::Random;
 use EGE::Asm::Processor;
 use EGE::Asm::AsmCodeGenerate;
 
+sub offs_modulo {
+    my ($val, $modulo, @offs) = @_;
+    map { ($val + $_ + $modulo) % $modulo } @offs;
+}
+
 sub reg_value_add {
-	my $self = shift;
-	my ($reg, $format, $n) = cgen->generate_simple_code('add');
-	my @variants = ($self->get_res($reg, $format));
-	if ($n == 8 || cgen->{code}->[1]->[0] =~ /^(stc|clc)$/) {
-		my $a = 2 ** $n;
-		my $res = $variants[0];
-		push @variants, rnd->pick($res+2, $res-2+$a) % $a, ($res+1) % $a, ($res-1+$a) % $a;
-	}
-	push @variants, proc->get_wrong_val($reg) while ($#variants < 3);
-	$self->formated_variants($format, @variants);
-	$self->{correct} = 0;
+    my $self = shift;
+    my ($reg, $format, $n) = cgen->generate_simple_code('add');
+    my @variants = $self->get_res($reg, $format);
+    if ($n == 8 || cgen->{code}->[1]->[0] =~ /^(stc|clc)$/) {
+        push @variants, offs_modulo($variants[0], 2 ** $n, rnd->pick(2, -2), 1, - 1);
+    }
+    push @variants, proc->get_wrong_val($reg) until @variants == 4;
+    $self->formated_variants($format, @variants);
 }
 
 sub reg_value_logic {
@@ -98,7 +100,7 @@ sub reg_value_jump {
     my $jmp = 'j' . rnd->pick('n', '') . rnd->pick(qw(c p z o s e g l ge le a b ae be));
     cgen->add_commands([ $jmp, $label ], [ 'add', $reg, 1 ], [ "$label:" ]);
     my $res = $self->get_res($reg, '%s');
-    $self->variants($res, map { ($res + $_ + 256) % 256 } 1, -1, rnd->pick(2, -2));
+    $self->variants($res, offs_modulo($res, 256, rnd->pick(2, -2), 1, -1));
 }
 
 sub get_res {
