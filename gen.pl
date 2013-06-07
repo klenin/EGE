@@ -36,13 +36,13 @@ sub print_html {
 <html xmlns="http://www.w3.org/1999/xhtml" lang="ru" xml:lang="ru">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-  <style type="text/css">li.correct { color: red; }</style>
+  <style type="text/css">li.correct { color: red; } div.q { border-bottom: 1px solid black; } </style>
 </head>
 <body>
 ~;
     for my $q (@$questions) {
         print qq~
-<div>
+<div class="q">
 $q->{text}
 <ol>
 ~;
