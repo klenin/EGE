@@ -17,13 +17,20 @@ sub offs_modulo {
     map { ($val + $_ + $modulo) % $modulo } @offs;
 }
 
+sub run_modified {
+    my ($idx, $modify, $get) = @_;
+    $_ = local cgen->{code}->[$idx] = cgen->{code}->[$idx];
+    $modify->();
+    proc->run_code(cgen->{code});
+    proc->get_val($get);
+}
+
 sub reg_value_add {
     my $self = shift;
     my ($reg, $format, $n) = cgen->generate_simple_code('add');
     my @variants = $self->get_res($reg, $format);
-    if ($n == 8 || cgen->{code}->[1]->[0] =~ /^(stc|clc)$/) {
-        push @variants, offs_modulo($variants[0], 2 ** $n, rnd->pick(2, -2), 1, - 1);
-    }
+    push @variants, offs_modulo($variants[0], 2 ** $n, rnd->pick(2, -2), 1, - 1)
+        if $n == 8 || cgen->{code}->[1]->[0] =~ /^(stc|clc)$/;
     push @variants, proc->get_wrong_val($reg) until @variants == 4;
     $self->formated_variants($format, @variants);
 }
@@ -32,11 +39,8 @@ sub reg_value_logic {
     my $self = shift;
     my ($reg, $format, $n) = cgen->generate_simple_code('logic');
     my @variants = $self->get_res($reg, $format);
-    if (cgen->{code}->[1]->[0] eq 'test') {
-        cgen->{code}->[1]->[0] = 'and';
-        proc->run_code(cgen->{code});
-        push @variants, proc->get_val($reg);
-    }
+    push @variants, run_modified 1, sub { $_->[0] = 'and' }, $reg
+        if cgen->{code}->[1]->[0] eq 'test';
     push @variants, proc->get_wrong_val($reg) until @variants == 4;
     $self->formated_variants($format, @variants);
 }
@@ -44,26 +48,21 @@ sub reg_value_logic {
 sub try_reg_value_shift {
     my $self = shift;
     my ($reg, $format, $n, $arg) = cgen->generate_simple_code('shift');
-    my @variants = $self->get_res($reg, $format);
     my $str = cgen->{code}->[1];
     my $use_cf = $str->[0] =~ /^(stc|clc)$/;
     $str = cgen->{code}->[2] if $use_cf;
 
-    my $make_wrong_answer = sub {
-        my @old_cmd = @$str;
-        $_[0]->();
-        proc->run_code(cgen->{code});
-        push @variants, proc->get_val($reg);
-        $str->[$_] = $old_cmd[$_] for 0..$#old_cmd;
-    };
-
+    my $make_wa = sub { run_modified(($use_cf ? 2 : 1), $_[0], $reg) };
     my $sgn = $arg >= 2 ** ($n - 1);
     my $shift_right = ($str->[0] =~ /^(shr|sar)$/) && $sgn;
-    $make_wrong_answer->(sub { $str->[0] =~ s/^rc/ro/ }) if $use_cf;
-    $make_wrong_answer->(sub { $str->[0] = { sar => 'shr', shr => 'sar' }->{$str->[0]} }) if $shift_right;
-    push @variants, proc->get_wrong_val($reg) if !$use_cf && !$shift_right;
-    $make_wrong_answer->(sub { $str->[2] += $str->[2] == $n / 8 ? $n / 8 : rnd->pick($n / 8, -$n / 8) });
-    $make_wrong_answer->(sub { $str->[0] =~ /^(\w\w)(l|r)$/; $str->[0] = $1 . ($2 eq 'l' ? 'r' : 'l') });
+
+    my @variants = (
+        $self->get_res($reg, $format),
+        ($use_cf ? $make_wa->(sub { $_->[0] =~ s/^rc/ro/ }) : ()),
+        ($shift_right ? $make_wa->(sub { $_->[0] = { sar => 'shr', shr => 'sar' }->{$_->[0]} }) : ()),
+        (!$use_cf && !$shift_right ? proc->get_wrong_val($reg) : ()),
+        $make_wa->(sub { $_->[2] += $_->[2] == $n / 8 ? $n / 8 : rnd->pick($n / 8, -$n / 8) }),
+        $make_wa->(sub { $_->[0] =~ /^(\w\w)(l|r)$/; $_->[0] = $1 . ($2 eq 'l' ? 'r' : 'l') }));
     $self->formated_variants($format, @variants);
 }
 
@@ -82,10 +81,9 @@ sub reg_value_convert {
     cgen->add_commands(
         [ 'mov', $reg16, 15 * 2**12 + rnd->in_range(0, 2**12 - 1) ],
         [ $cmd, $reg32, $reg16 ]);
-    my @variants = $self->get_res($reg32, '%04Xh');
-    cgen->{code}->[1]->[0] = $bad_cmd;
-    proc->run_code(cgen->{code});
-    push @variants, proc->get_val($reg32);
+    my @variants = (
+        $self->get_res($reg32, '%04Xh'),
+        run_modified 1, sub { $_->[0] = $bad_cmd }, $reg32);
     my $resz = $variants[$cmd eq 'movzx' ? 0 : 1];
     $self->formated_variants('%08Xh', @variants, 15 * 2**28 + $resz, 2**31 + $resz);
 }
