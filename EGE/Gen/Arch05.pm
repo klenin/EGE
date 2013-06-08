@@ -13,24 +13,24 @@ use EGE::Asm::Processor;
 use EGE::Asm::AsmCodeGenerate;
 
 sub sort_commands {
-	my $self = shift;
-	my ($reg1, $reg2, $arg, $cmd_shift, $hex_val) = $self->init_params(8);
-	my $cmd = rnd->pick('add', 'sub', 'and', 'or', 'xor');
-	$self->formated_variants('<code>%s</code>', "mov $reg1, $hex_val", "$cmd_shift $reg1, 4", "mov $reg2, $reg1", "$cmd $reg1, $reg2");
-	my $commands = [
-		['mov', $reg1, $arg],
-		[$cmd_shift, $reg1, 4],
-		['mov', $reg2, $reg1],
-		[$cmd, $reg1, $reg2]
-	];
-	my @correct_arr = (
-		[0, 1, 2, 3],
-		[0, 2, 1, 3],
-		[0, 2, 3, 1]
-	);
-	my @res_arr;
-	push @res_arr, $self->get_res($commands, $_, $reg1) for (@correct_arr);
-	$self->sort_commands if (!$self->choose_correct($reg1, \@res_arr, \@correct_arr, '%02Xh'));
+    my $self = shift;
+    my ($reg1, $reg2, $arg, $cmd_shift, $hex_val) = $self->init_params(8);
+    my $cmd = rnd->pick(qw(add sub and or xor));
+    my $commands = [
+        [ 'mov', $reg1, $arg ],
+        [ $cmd_shift, $reg1, 4 ],
+        [ 'mov', $reg2, $reg1 ],
+        [ $cmd, $reg1, $reg2 ],
+    ];
+    $self->formated_variants('<code>%s</code>',
+        map cgen->format_command($_, $_->[2] eq '4' ? '%d' : '%02Xh'), @$commands);
+    my @good = (
+        [ 0, 1, 2, 3 ],
+        [ 0, 2, 1, 3 ],
+        [ 0, 2, 3, 1 ],
+    );
+    my @res = map $self->get_res($commands, $_, $reg1), @good;
+    $self->sort_commands if !$self->choose_correct($reg1, \@res, \@good, '%02Xh');
 }
 
 sub sort_commands_stack {
