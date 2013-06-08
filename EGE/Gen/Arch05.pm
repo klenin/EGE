@@ -63,7 +63,7 @@ sub try_gen_sort {
     my $cmd_shift = rnd->pick(qw(shl shr sal sar rol ror));
     my $commands = [ $p{commands}->($reg1, $reg2, $arg, $cmd_shift) ];
 
-    my @res = map $self->run_ordered($commands, $_, $reg1), @{$p{good}}, @{$p{bad}};
+    my @res = map run_ordered($commands, $_, $reg1), @{$p{good}}, @{$p{bad}};
     my %res_idx;
     ++$res_idx{$_} for @res;
     return if grep $res_idx{$res[$_]} > 1, 0 .. $#{$p{good}};
@@ -79,7 +79,7 @@ sub try_gen_sort {
 }
 
 sub run_ordered {
-    my ($self, $commands, $order, $reg) = @_;
+    my ($commands, $order, $reg) = @_;
     cgen->clear;
     cgen->add_commands($commands->[$_]) for @$order;
     proc->run_code(cgen->{code})->get_val($reg);

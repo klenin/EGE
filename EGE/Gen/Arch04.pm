@@ -13,7 +13,7 @@ use EGE::Asm::Processor;
 use EGE::Asm::AsmCodeGenerate;
 
 sub run_selected {
-    my ($self, $commands, $selected, $reg) = @_;
+    my ($commands, $selected, $reg) = @_;
     cgen->clear;
     for my $i (0..$#$commands) {
         cgen->add_commands($commands->[$i]) if $selected->[$i];
@@ -45,8 +45,8 @@ sub try_choose_commands {
         [ 1, 1, 0, 1, 0 ],
     );
 
-    my @res_good = map $self->run_selected($commands, $_, $reg1), @good;
-    my @res_bad = map $self->run_selected($commands, $_, $reg1), @bad;
+    my @res_good = map run_selected($commands, $_, $reg1), @good;
+    my @res_bad = map run_selected($commands, $_, $reg1), @bad;
 
     my %res_idx = ();
     ++$res_idx{$_} for @res_good, @res_bad;
