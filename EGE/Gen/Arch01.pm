@@ -26,14 +26,23 @@ sub run_modified {
 
 sub toggle { $_[0] eq $_[1] ? $_[2] : $_[1]; }
 
+sub make_wrongs {
+    my ($reg, $upto, @variants) = @_;
+    my @wrongs;
+    for (my $i = 0; @variants + @wrongs < $upto && $i < 100; ++$i) {
+        my $res = proc->get_wrong_val($reg);
+        push @wrongs, $res unless grep { $res eq $_ } @variants, @wrongs;
+    }
+    @wrongs;
+}
+
 sub reg_value_add {
     my $self = shift;
     my ($reg, $format, $n) = cgen->generate_simple_code('add');
     my @variants = $self->get_res($reg, $format);
     push @variants, offs_modulo($variants[0], 2 ** $n, rnd->pick(2, -2), 1, - 1)
         if $n == 8 || cgen->cmd(1) =~ /^(stc|clc)$/;
-    push @variants, proc->get_wrong_val($reg) until @variants == 4;
-    $self->formated_variants($format, @variants);
+    $self->formated_variants($format, @variants, make_wrongs($reg, 4, @variants));
 }
 
 sub reg_value_logic {
@@ -42,8 +51,7 @@ sub reg_value_logic {
     my @variants = $self->get_res($reg, $format);
     push @variants, run_modified 1, sub { $_->[0] = 'and' }, $reg
         if cgen->cmd(1) eq 'test';
-    push @variants, proc->get_wrong_val($reg) until @variants == 4;
-    $self->formated_variants($format, @variants);
+    $self->formated_variants($format, @variants, make_wrongs($reg, 4, @variants));
 }
 
 sub try_reg_value_shift {
@@ -59,10 +67,10 @@ sub try_reg_value_shift {
         $self->get_res($reg, $format),
         ($use_cf ? $make_wa->(sub { $_->[0] =~ s/^rc/ro/ }) : ()),
         ($shift_right ? $make_wa->(sub { $_->[0] = toggle($_->[0], 'shr', 'sar') }) : ()),
-        (!$use_cf && !$shift_right ? proc->get_wrong_val($reg) : ()),
         $make_wa->(sub { $_->[2] += $_->[2] == $n / 8 ? $n / 8 : rnd->pick($n / 8, -$n / 8) }),
-        $make_wa->(sub { $_->[0] =~ s/^(\w\w)(l|r)$/$1 . toggle($2, 'r', 'l')/e }));
-    $self->formated_variants($format, @variants);
+        $make_wa->(sub { $_->[0] =~ s/^(\w\w)(l|r)$/$1 . toggle($2, 'r', 'l')/e })
+    );
+    $self->formated_variants($format, @variants, make_wrongs($reg, 4, @variants));
 }
 
 sub reg_value_shift {
