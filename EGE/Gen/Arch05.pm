@@ -14,65 +14,68 @@ use EGE::Asm::AsmCodeGenerate;
 
 sub sort_commands {
     my $self = shift;
-    my ($reg1, $reg2, $arg, $cmd_shift) = $self->init_params(8);
-    my $cmd = rnd->pick(qw(add sub and or xor));
-    my $commands = [
-        [ 'mov', $reg1, $arg ],
-        [ $cmd_shift, $reg1, 4 ],
-        [ 'mov', $reg2, $reg1 ],
-        [ $cmd, $reg1, $reg2 ],
-    ];
-    $self->formated_variants('<code>%s</code>',
-        map cgen->format_command($_, $_->[2] eq '4' ? '%d' : '%02Xh'), @$commands);
-    my @good = (
-        [ 0, 1, 2, 3 ],
-        [ 0, 2, 1, 3 ],
-        [ 0, 2, 3, 1 ],
+    1 until $self->try_gen_sort(
+        bits => 8, res_format => '%02Xh',
+        commands => sub {
+            my ($reg1, $reg2, $arg, $cmd_shift) = @_;
+            [ 'mov', $reg1, $arg ],
+            [ $cmd_shift, $reg1, 4 ],
+            [ 'mov', $reg2, $reg1 ],
+            [ rnd->pick(qw(add sub and or xor)), $reg1, $reg2 ],
+        },
+        good => [
+            [ 0, 1, 2, 3 ],
+            [ 0, 2, 1, 3 ],
+            [ 0, 2, 3, 1 ],
+        ],
+        bad => [],
     );
-    my @res = map $self->run_ordered($commands, $_, $reg1), @good;
-    $self->sort_commands if !$self->choose_correct($reg1, \@res, \@good, '%02Xh');
+    $self;
 }
 
 sub sort_commands_stack {
     my $self = shift;
-    my ($reg1, $reg2, $arg, $cmd_shift) = $self->init_params(16);
-    my $commands = [
-        [ 'mov', $reg1, $arg ],
-        [ $cmd_shift, $reg1, 4 ],
-        [ 'push', $reg1 ],
-        [ 'pop', $reg2 ],
-        [ 'add', $reg1, $reg2 ],
-    ];
-    $self->formated_variants('<code>%s</code>',
-        map cgen->format_command($_, ($_->[2] // '') eq '4' ? '%d' : '%02Xh'), @$commands);
-    my @good = (
-        [ 0, 1, 2, 3, 4 ],
-        [ 0, 2, 3, 4, 1 ],
+
+    1 until $self->try_gen_sort(
+        bits => 16, res_format => '%04Xh',
+        commands => sub {
+            my ($reg1, $reg2, $arg, $cmd_shift) = @_;
+            [ 'mov', $reg1, $arg ],
+            [ $cmd_shift, $reg1, 4 ],
+            [ 'push', $reg1 ],
+            [ 'pop', $reg2 ],
+            [ 'add', $reg1, $reg2 ],
+        },
+        good => [
+            [ 0, 1, 2, 3, 4 ],
+            [ 0, 2, 3, 4, 1 ],
+        ],
+        bad => [ [ 0, 2, 3, 1, 4 ] ],
     );
-    my @bad = ([ 0, 2, 3, 1, 4 ]);
-    my @res = map $self->run_ordered($commands, $_, $reg1), @good, @bad;
-    $self->sort_commands_stack if !$self->choose_correct($reg1, \@res, \@good, '%04Xh');
+    $self;
 }
 
-sub init_params {
-    my ($self, $bits) = @_;
-    my ($reg1, $reg2) = cgen->get_regs($bits, $bits);
+sub try_gen_sort {
+    my ($self, %p) = @_;
+
+    my ($reg1, $reg2) = cgen->get_regs($p{bits}, $p{bits});
     my $arg = rnd->in_range(1, 15) * 16 + rnd->in_range(1, 15);
     my $cmd_shift = rnd->pick(qw(shl shr sal sar rol ror));
-    ($reg1, $reg2, $arg, $cmd_shift);
-}
+    my $commands = [ $p{commands}->($reg1, $reg2, $arg, $cmd_shift) ];
 
-sub choose_correct {
-    my ($self, $reg1, $res, $correct, $format) = @_;
+    my @res = map $self->run_ordered($commands, $_, $reg1), @{$p{good}}, @{$p{bad}};
     my %res_idx;
-    ++$res_idx{$_} for @$res;
-    return if grep $res_idx{$res->[$_]} > 1, 0 .. $#$correct;
-    my $idx = rnd->in_range(0, $#$correct);
-    my $hex_val = sprintf $format, $res->[$idx];
+    ++$res_idx{$_} for @res;
+    return if grep $res_idx{$res[$_]} > 1, 0 .. $#{$p{good}};
+
+    my $idx = rnd->in_range(0, $#{$p{good}});
+    my $hex_val = sprintf $p{res_format}, $res[$idx];
     $self->{text} =
         'Расположите команды в такой последовательности, ' .
         "чтобы после их выполнения в регистре $reg1 содержалось значение $hex_val:";
-    $self->{correct} = $correct->[$idx];
+    $self->formated_variants('<code>%s</code>',
+        map cgen->format_command($_, ($_->[2] // '') eq '4' ? '%d' : '%02Xh'), @$commands);
+    $self->{correct} = $p{good}->[$idx];
 }
 
 sub run_ordered {
