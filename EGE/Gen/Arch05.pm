@@ -34,24 +34,24 @@ sub sort_commands {
 }
 
 sub sort_commands_stack {
-	my $self = shift;
-	my ($reg1, $reg2, $arg, $cmd_shift, $hex_val) = $self->init_params(16);
-	$self->formated_variants('<code>%s</code>', "mov $reg1, $hex_val", "$cmd_shift $reg1, 4", "push $reg1", "pop $reg2", "add $reg1, $reg2");
-	my $commands = [
-		['mov', $reg1, $arg],
-		[$cmd_shift, $reg1, 4],
-		['push', $reg1],
-		['pop', $reg2],
-		['add', $reg1, $reg2]
-	];
-	my @correct_arr = (
-		[0, 1, 2, 3, 4],
-		[0, 2, 3, 4, 1]
-	);
-	my @incorrect_arr = ( [0, 2, 3, 1, 4] );
-	my @res_arr;
-	push @res_arr, $self->get_res($commands, $_, $reg1) for (@correct_arr, @incorrect_arr);
-	$self->sort_commands_stack if (!$self->choose_correct($reg1, \@res_arr, \@correct_arr, '%04Xh'));
+    my $self = shift;
+    my ($reg1, $reg2, $arg, $cmd_shift, $hex_val) = $self->init_params(16);
+    my $commands = [
+        [ 'mov', $reg1, $arg ],
+        [ $cmd_shift, $reg1, 4 ],
+        [ 'push', $reg1 ],
+        [ 'pop', $reg2 ],
+        [ 'add', $reg1, $reg2 ],
+    ];
+    $self->formated_variants('<code>%s</code>',
+        map cgen->format_command($_, ($_->[2] // '') eq '4' ? '%d' : '%02Xh'), @$commands);
+    my @good = (
+        [ 0, 1, 2, 3, 4 ],
+        [ 0, 2, 3, 4, 1 ],
+    );
+    my @bad = ([ 0, 2, 3, 1, 4 ]);
+    my @res = map $self->get_res($commands, $_, $reg1), @good, @bad;
+    $self->sort_commands_stack if !$self->choose_correct($reg1, \@res, \@good, '%04Xh');
 }
 
 sub init_params {
