@@ -21,9 +21,10 @@ sub run_modified {
     my ($idx, $modify, $get) = @_;
     $_ = local cgen->{code}->[$idx] = cgen->{code}->[$idx];
     $modify->();
-    proc->run_code(cgen->{code});
-    proc->get_val($get);
+    proc->run_code(cgen->{code})->get_val($get);
 }
+
+sub toggle { $_[0] eq $_[1] ? $_[2] : $_[1]; }
 
 sub reg_value_add {
     my $self = shift;
@@ -48,21 +49,19 @@ sub reg_value_logic {
 sub try_reg_value_shift {
     my $self = shift;
     my ($reg, $format, $n, $arg) = cgen->generate_simple_code('shift');
-    my $str = cgen->{code}->[1];
-    my $use_cf = $str->[0] =~ /^(stc|clc)$/;
-    $str = cgen->{code}->[2] if $use_cf;
+    my $use_cf = cgen->{code}->[1]->[0] =~ /^(stc|clc)$/;
+    my $shift_idx = $use_cf ? 2 : 1;
 
-    my $make_wa = sub { run_modified(($use_cf ? 2 : 1), $_[0], $reg) };
-    my $sgn = $arg >= 2 ** ($n - 1);
-    my $shift_right = ($str->[0] =~ /^(shr|sar)$/) && $sgn;
+    my $make_wa = sub { run_modified($shift_idx, $_[0], $reg) };
+    my $shift_right = $arg >= 2 ** ($n - 1) && (cgen->{code}->[$shift_idx]->[0] =~ /^(shr|sar)$/);
 
     my @variants = (
         $self->get_res($reg, $format),
         ($use_cf ? $make_wa->(sub { $_->[0] =~ s/^rc/ro/ }) : ()),
-        ($shift_right ? $make_wa->(sub { $_->[0] = { sar => 'shr', shr => 'sar' }->{$_->[0]} }) : ()),
+        ($shift_right ? $make_wa->(sub { $_->[0] = toggle($_->[0], 'shr', 'sar') }) : ()),
         (!$use_cf && !$shift_right ? proc->get_wrong_val($reg) : ()),
         $make_wa->(sub { $_->[2] += $_->[2] == $n / 8 ? $n / 8 : rnd->pick($n / 8, -$n / 8) }),
-        $make_wa->(sub { $_->[0] =~ /^(\w\w)(l|r)$/; $_->[0] = $1 . ($2 eq 'l' ? 'r' : 'l') }));
+        $make_wa->(sub { $_->[0] =~ s/^(\w\w)(l|r)$/$1 . toggle($2, 'r', 'l')/e }));
     $self->formated_variants($format, @variants);
 }
 
@@ -105,8 +104,7 @@ sub get_res {
     my ($self, $reg, $format) = @_;
     my $code_txt = cgen->get_code_txt($format);
     $self->{text} = "В результате выполнения кода $code_txt в регистре $reg будет содержаться значение:";
-    proc->run_code(cgen->{code});
-    proc->get_val($reg);
+    proc->run_code(cgen->{code})->get_val($reg);
 }
 
 1;
