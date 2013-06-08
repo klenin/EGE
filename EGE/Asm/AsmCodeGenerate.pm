@@ -60,20 +60,16 @@ sub add_commands {
     push @{$self->{code}}, @_;
 }
 
+sub format_command {
+    my ($self, $command, $num_format) = @_;
+    my ($cmd, @args) = @$command;
+    "$cmd " . join ', ', map { m/^-?(\d+)$/ ? sprintf $num_format, $_ : $_ } grep { @_ ne '' } @args;
+}
+
 sub get_code_txt {
-	my ($self, $num_format) = @_;
-	my $res = '<br></br><div id=\'code\'><code>';
-	for my $str (@{$self->{code}}) {
-		my $i=0;
-		for (grep {!($_ eq '')} @$str) {
-			$res .= $i == 0 ? '' : $i == 1 ? ' ' : ', ';
-			$res .= (m/^-?(\d*)$/) ? sprintf $num_format, $_ : sprintf '%s', $_;
-			$i++;
-		}
-		$res .= '<br></br>';
-	}
-	$res .= '</code></div>';
-	$res;
+    my ($self, $num_format) = @_;
+    my $cmd_list = join('<br></br>', map $self->format_command($_, $num_format), @{$self->{code}});
+    qq~<br></br><div id="code"><code>$cmd_list</code></div>~;
 }
 
 sub make_reg {
