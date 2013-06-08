@@ -51,19 +51,23 @@ $q->{text}
             @v = @{$q->{variants}};
             $correct[$q->{correct}] = 1;
         }
-        elsif ($q->{type} eq 'mc' || $q->{type} eq 'sr' || $q->{type} eq 'mt') {
+        elsif ($q->{type} eq 'mc' || $q->{type} eq 'sr') {
             @v = @{$q->{variants}};
+            @correct = @{$q->{correct}};
+        }
+        elsif ($q->{type} eq 'mt') {
+            @v = @{$q->{variants}->[0]};
             @correct = @{$q->{correct}};
         }
         else {
             @v = ($q->{correct});
-            @correct = (0);
+            @correct = ();
         }
         for my $i (0..$#v) {
             my $style = $correct[$i] ? ' class="correct"' : '';
             print
                 $q->{type} eq 'sr' ? "<li>$v[$i] ($v[$correct[$i]])</li>\n" :
-                $q->{type} eq 'mt' ? "<li>$v[0]->[$i] - $v[1]->[$i] ($v[1]->[$correct[$i]])</li>\n" :
+                $q->{type} eq 'mt' ? "<li>$v[$i] - $q->{variants}->[1]->[$i] ($q->{variants}->[1]->[$correct[$i]])</li>\n" :
                 "<li$style>$v[$i]</li>\n";
         }
         print "</ol>\n</div>\n";
