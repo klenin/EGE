@@ -14,7 +14,7 @@ use EGE::Asm::AsmCodeGenerate;
 
 sub sort_commands {
     my $self = shift;
-    my ($reg1, $reg2, $arg, $cmd_shift, $hex_val) = $self->init_params(8);
+    my ($reg1, $reg2, $arg, $cmd_shift) = $self->init_params(8);
     my $cmd = rnd->pick(qw(add sub and or xor));
     my $commands = [
         [ 'mov', $reg1, $arg ],
@@ -29,13 +29,13 @@ sub sort_commands {
         [ 0, 2, 1, 3 ],
         [ 0, 2, 3, 1 ],
     );
-    my @res = map $self->get_res($commands, $_, $reg1), @good;
+    my @res = map $self->run_ordered($commands, $_, $reg1), @good;
     $self->sort_commands if !$self->choose_correct($reg1, \@res, \@good, '%02Xh');
 }
 
 sub sort_commands_stack {
     my $self = shift;
-    my ($reg1, $reg2, $arg, $cmd_shift, $hex_val) = $self->init_params(16);
+    my ($reg1, $reg2, $arg, $cmd_shift) = $self->init_params(16);
     my $commands = [
         [ 'mov', $reg1, $arg ],
         [ $cmd_shift, $reg1, 4 ],
@@ -50,42 +50,36 @@ sub sort_commands_stack {
         [ 0, 2, 3, 4, 1 ],
     );
     my @bad = ([ 0, 2, 3, 1, 4 ]);
-    my @res = map $self->get_res($commands, $_, $reg1), @good, @bad;
+    my @res = map $self->run_ordered($commands, $_, $reg1), @good, @bad;
     $self->sort_commands_stack if !$self->choose_correct($reg1, \@res, \@good, '%04Xh');
 }
 
 sub init_params {
-	my ($self, $n) = @_;
-	my ($reg1, $reg2) = cgen->get_regs($n, $n);
-	my $arg = rnd->in_range(1, 15) * 16 + rnd->in_range(1, 15);
-	my $cmd_shift = rnd->pick('shl', 'shr', 'sal', 'sar', 'rol', 'ror');
-	my $hex_val = sprintf '%02Xh', $arg;
-	($reg1, $reg2, $arg, $cmd_shift, $hex_val);
+    my ($self, $bits) = @_;
+    my ($reg1, $reg2) = cgen->get_regs($bits, $bits);
+    my $arg = rnd->in_range(1, 15) * 16 + rnd->in_range(1, 15);
+    my $cmd_shift = rnd->pick(qw(shl shr sal sar rol ror));
+    ($reg1, $reg2, $arg, $cmd_shift);
 }
 
 sub choose_correct {
-	my ($self, $reg1, $res_arr, $correct_arr, $format) = @_;
-	my @ids;
-	for my $i (0..$#{$correct_arr}) {
-		push @ids, $i if (! grep {$res_arr->[$i] == $res_arr->[$_] && $i != $_ } (0..$#{$res_arr}));
-	}
-	return '' if ($#ids == -1);
-	my $id = rnd->pick(@ids);
-	my $hex_val = sprintf $format, $res_arr->[$id];
-	$self->{text} = <<QUESTION
-Расположите команды в такой последовательности, чтобы после их выполнения в регистре $reg1 содержалось значение $hex_val:
-QUESTION
-;
-	$self->{correct} = $correct_arr->[$id];
-	$self;
+    my ($self, $reg1, $res, $correct, $format) = @_;
+    my %res_idx;
+    ++$res_idx{$_} for @$res;
+    return if grep $res_idx{$res->[$_]} > 1, 0 .. $#$correct;
+    my $idx = rnd->in_range(0, $#$correct);
+    my $hex_val = sprintf $format, $res->[$idx];
+    $self->{text} =
+        'Расположите команды в такой последовательности, ' .
+        "чтобы после их выполнения в регистре $reg1 содержалось значение $hex_val:";
+    $self->{correct} = $correct->[$idx];
 }
 
-sub get_res {
-	my ($self, $commands, $arr, $reg) = @_;
-	cgen->{code} = [];
-	cgen->add_command(@{$commands->[$_]}) for (@$arr);
-	proc->run_code(cgen->{code});
-	proc->get_val($reg);
+sub run_ordered {
+    my ($self, $commands, $order, $reg) = @_;
+    cgen->clear;
+    cgen->add_commands($commands->[$_]) for @$order;
+    proc->run_code(cgen->{code})->get_val($reg);
 }
 
 1;
