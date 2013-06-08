@@ -31,7 +31,7 @@ sub reg_value_add {
     my ($reg, $format, $n) = cgen->generate_simple_code('add');
     my @variants = $self->get_res($reg, $format);
     push @variants, offs_modulo($variants[0], 2 ** $n, rnd->pick(2, -2), 1, - 1)
-        if $n == 8 || cgen->{code}->[1]->[0] =~ /^(stc|clc)$/;
+        if $n == 8 || cgen->cmd(1) =~ /^(stc|clc)$/;
     push @variants, proc->get_wrong_val($reg) until @variants == 4;
     $self->formated_variants($format, @variants);
 }
@@ -41,7 +41,7 @@ sub reg_value_logic {
     my ($reg, $format, $n) = cgen->generate_simple_code('logic');
     my @variants = $self->get_res($reg, $format);
     push @variants, run_modified 1, sub { $_->[0] = 'and' }, $reg
-        if cgen->{code}->[1]->[0] eq 'test';
+        if cgen->cmd(1) eq 'test';
     push @variants, proc->get_wrong_val($reg) until @variants == 4;
     $self->formated_variants($format, @variants);
 }
@@ -49,11 +49,11 @@ sub reg_value_logic {
 sub try_reg_value_shift {
     my $self = shift;
     my ($reg, $format, $n, $arg) = cgen->generate_simple_code('shift');
-    my $use_cf = cgen->{code}->[1]->[0] =~ /^(stc|clc)$/;
+    my $use_cf = cgen->cmd(1) =~ /^(stc|clc)$/;
     my $shift_idx = $use_cf ? 2 : 1;
 
     my $make_wa = sub { run_modified($shift_idx, $_[0], $reg) };
-    my $shift_right = $arg >= 2 ** ($n - 1) && (cgen->{code}->[$shift_idx]->[0] =~ /^(shr|sar)$/);
+    my $shift_right = $arg >= 2 ** ($n - 1) && (cgen->cmd($shift_idx) =~ /^(shr|sar)$/);
 
     my @variants = (
         $self->get_res($reg, $format),
@@ -75,7 +75,7 @@ sub reg_value_shift {
 sub reg_value_convert {
     my $self = shift;
     my ($reg32, $reg16) = cgen->get_regs(32, 16);
-    cgen->{code} = [];
+    cgen->clear;
     my ($cmd, $bad_cmd) = rnd->shuffle(qw(movzx movsx));
     cgen->add_commands(
         [ 'mov', $reg16, 15 * 2**12 + rnd->in_range(0, 2**12 - 1) ],
@@ -89,7 +89,7 @@ sub reg_value_convert {
 
 sub reg_value_jump {
     my $self = shift;
-    cgen->{code} = [];
+    cgen->clear;
     my $reg = cgen->get_reg(8);
     cgen->generate_command('mov', $reg);
     cgen->generate_command('add', $reg);

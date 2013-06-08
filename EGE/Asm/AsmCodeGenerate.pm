@@ -182,4 +182,8 @@ sub generate_simple_code {
 	($reg, $format, $n, cgen->{code}->[0]->[2]);
 }
 
+sub cmd { $_[0]->{code}->[$_[1]]->[0] }
+
+sub clear { $_[0]->{code} = [] }
+
 1;

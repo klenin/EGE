@@ -14,7 +14,7 @@ use EGE::Asm::AsmCodeGenerate;
 
 sub choose_commands_mod_3 {
     my $self = shift;
-    cgen->{code} = [];
+    cgen->clear;
     my $reg = cgen->get_reg(8);
     my ($jmp, $arg) = @{rnd->pick(
         [ jnc => rnd->in_range(0, 41) * 6 + 3 ],
@@ -38,11 +38,10 @@ sub choose_commands_mod_3 {
         "add $reg, 1",
         "add $reg, 2",
         "$jmp $label");
-    proc->run_code(cgen->{code});
-    my $res = proc->get_val($reg);
     $self->{text} =
         'Выделите команды, которые следует оставить в программе, ' .
-        "чтобы после выполнения полученного кода в регистре $reg содержалось значение $res";
+        "чтобы после выполнения полученного кода в регистре $reg содержалось значение " .
+        proc->run_code(cgen->{code})->get_val($reg);
 }
 
 1;
