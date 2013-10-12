@@ -33,12 +33,16 @@ sub prepare_jumps {
     while (my ($jumps, $flags) = each %jumps) {
         (my $cond = $flags) =~ s/(\wF)/\$_[0]->{$1}/g;
         my $code = eval "sub { $cond }";
-        $jump_conds->{$_} = $code for split ':', $jumps;
+        $jump_conds->{$_} = [ $flags, $code ] for split ':', $jumps;
     }
     $jump_conds;
 }
 
 sub flags_text { join ' ', sort grep $_[0]->{$_}, @$flags }
+
+sub flags { @$flags }
+
+sub jump_checks_flag { 0 <= index $jump_conds->{$_[1]}->[0], $_[2] }
 
 sub new {
     my ($class, %init) = @_;
@@ -55,7 +59,7 @@ sub init {
 
 sub valid_jump {
     my ($self, $cmd) = @_;
-    $jump_conds->{$cmd}->($self);
+    $jump_conds->{$cmd}->[1]->($self);
 }
 
 1;

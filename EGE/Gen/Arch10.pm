@@ -12,18 +12,13 @@ use EGE::Random;
 use EGE::Asm::AsmCodeGenerate;
 
 sub jcc_check_flags {
-	my $self = shift;
-	my $jmp = 'j'.{1 => 'n', 0 => ''}->{rnd->pick(0,1)}.rnd->pick(qw(e g l ge le a b ae be));
-	$self->{text} = <<QUESTION
-Команда $jmp проверяет флаги:
-QUESTION
-;
-	$self->variants(qw(CF OF SF ZF PF));
-	$self->{correct} = $jmp eq 'je' || $jmp eq 'jne' ? [0, 0, 0, 1, 0] :
-		$jmp eq 'jl' || $jmp eq 'jnge' || $jmp eq 'jge' || $jmp eq 'jnl' ? [0, 1, 1, 0, 0] :
-		$jmp eq 'jle' || $jmp eq 'jng' || $jmp eq 'jg' || $jmp eq 'jnle' ? [0, 1, 1, 1, 0] :
-		$jmp eq 'jb' || $jmp eq 'jnae' || $jmp eq 'jae' || $jmp eq 'jnb' ? [1, 0, 0, 0, 0] :
-		$jmp eq 'jbe' || $jmp eq 'jna' || $jmp eq 'ja' || $jmp eq 'jnbe' ? [1, 0, 0, 1, 0] : '';
+    my $self = shift;
+    my $jmp = 'j' . rnd->pick('', 'n') . rnd->pick(qw(e g l ge le a b ae be));
+    my $f = EGE::Asm::Eflags->new;
+    my @flags = $f->flags;
+    $self->variants(@flags);
+    $self->{correct} = [ map $f->jump_checks_flag($jmp, $_), @flags ];
+    $self->{text} = "Команда $jmp проверяет флаги:";
 }
 
 sub cmovcc {
