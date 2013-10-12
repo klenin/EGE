@@ -9,6 +9,7 @@ use warnings;
 use utf8;
 
 use EGE::Random;
+use EGE::NumText;
 use EGE::Asm::AsmCodeGenerate;
 
 sub reg_value_before_loopnz {
@@ -32,21 +33,20 @@ sub reg_value_before_loopnz {
 }
 
 sub zero_fill {
-	my $self = shift;
-	cgen->{code} = [];
-	my $reg = cgen->get_reg(32, 'not_ecx');
-	my $arg = rnd->in_range(1, 25)*10;
-	cgen->add_command('mov', 'ecx', $arg);
-	cgen->add_command('mov', $reg, 0);
-	my $cmd = rnd->pick('stosb', 'stosw', 'stosd');
-	cgen->add_command('rep', $cmd);
-	my $code_txt = cgen->get_code_txt('%s');
-	$self->{text} = <<QUESTION
-Последовательность команд $code_txt заполнит нулями:
-QUESTION
-;
-	$self->formated_variants('%s байт', 0, $arg, $arg*2, $arg*4);
-	$self->{correct} = {stosb => 1, stosw => 2, stosd => 3}->{$cmd};
+    my $self = shift;
+    my $reg = cgen->get_reg(32, 'not_ecx');
+    my $arg = rnd->in_range(1, 25) * 10;
+    my @cmds = qw(stosb stosw stosd);
+    $self->{correct} = rnd->in_range(1, scalar @cmds);
+    cgen->clear;
+    cgen->add_commands(
+        [ 'mov', 'ecx', $arg ],
+        [ 'mov', $reg, 0 ],
+        [ 'rep', $cmds[$self->{correct} - 1] ],
+    );
+    my $code_txt = cgen->get_code_txt('%s');
+    $self->{text} = "Последовательность команд $code_txt заполнит нулями:";
+    $self->variants(map EGE::NumText::num_bytes($_), 0, map $arg * 2 ** $_, 0..$#cmds);
 }
 
 sub stack {
