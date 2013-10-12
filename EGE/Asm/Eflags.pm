@@ -38,6 +38,8 @@ sub prepare_jumps {
     $jump_conds;
 }
 
+sub flags_text { join ' ', sort grep $_[0]->{$_}, @$flags }
+
 sub new {
     my ($class, %init) = @_;
     my $self = {};

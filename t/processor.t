@@ -6,15 +6,6 @@ use Test::More tests => 163;
 use lib '..';
 use EGE::Asm::Processor;
 
-sub check_flags_set {
-    my @set = @_;
-    my $res = 1;
-    for (keys %{proc->{eflags}}) {
-        $res = '' if $_ ~~ @set xor proc->{eflags}->{$_};
-    }
-    $res;
-}
-
 sub check_stack {
     my @stack = @_;
     return '' if $#{proc->{stack}} != $#stack;
@@ -34,7 +25,7 @@ sub check_stack {
     is proc->get_val('eax'), 200, 'mov negative number';
     proc->run_code([ ['mov', 'al', 256] ]);
     is proc->get_val('eax'), 0, 'mov overflow number';
-    ok check_flags_set(), 'mov set flags';
+    is proc->{eflags}->flags_text, '', 'mov set flags';
     proc->run_code([ ['mov', 'ax', 256] ]);
     is proc->get_val('eax'), 256, 'mov ax';
     proc->run_code([ ['mov', 'eax', 256] ]);
@@ -48,81 +39,81 @@ sub check_stack {
 {
     proc->run_code([ ['mov', 'al', 15], ['add', 'al', 7] ]);
     is proc->get_val('eax'), 22, 'add positive number';
-    ok check_flags_set(), 'add set flags';
+    is proc->{eflags}->flags_text, '', 'add set flags';
     proc->run_code([ ['mov', 'al', 15], ['add', 'al', -7] ]);
     is proc->get_val('eax'), 8, 'add negative less number';
-    ok check_flags_set('CF'), 'add negative less number set flags';
+    is proc->{eflags}->flags_text, 'CF', 'add negative less number set flags';
     proc->run_code([ ['mov', 'al', 15], ['add', 'al', -17] ]);
     is proc->get_val('eax'), 254, 'add negative greater number';
-    ok check_flags_set('SF'), 'add negative greater number set flags';
+    is proc->{eflags}->flags_text, 'SF', 'add negative greater number set flags';
     proc->run_code([ ['mov', 'al', 129], ['add', 'al', 127] ]);
     is proc->get_val('eax'), 0, 'add negative and positive numbers to receive positive';
-    ok check_flags_set('ZF', 'PF', 'CF'), 'add negative and positive numbers to receive positive set flags';
+    is proc->{eflags}->flags_text, 'CF PF ZF', 'add negative and positive numbers to receive positive set flags';
     proc->run_code([ ['mov', 'al', 128], ['add', 'al', 128] ]);
     is proc->get_val('eax'), 0, 'add negative numbers to receive positive';
-    ok check_flags_set('ZF', 'PF', 'CF', 'OF'), 'add negative numbers to receive positive set flags';
+    is proc->{eflags}->flags_text, 'CF OF PF ZF', 'add negative numbers to receive positive set flags';
     proc->run_code([ ['mov', 'al', 64], ['add', 'al', 63] ]);
     is proc->get_val('eax'), 127, 'add positive numbers to receive positive';
-    ok check_flags_set(), 'add positive numbers to receive positive set flags';
+    is proc->{eflags}->flags_text, '', 'add positive numbers to receive positive set flags';
     proc->run_code([ ['mov', 'al', 64], ['add', 'al', 64] ]);
     is proc->get_val('eax'), 128, 'add positive numbers to receive negative';
-    ok check_flags_set('SF', 'OF'), 'add positive numbers to receive negative set flags';
+    is proc->{eflags}->flags_text, 'OF SF', 'add positive numbers to receive negative set flags';
 }
 
 {
     proc->run_code([ ['stc'] ]);
-    ok check_flags_set('CF'), 'stc';
+    is proc->{eflags}->flags_text, 'CF', 'stc';
     proc->run_code([ ['stc'], ['clc'] ]);
-    ok check_flags_set(), 'clc';
+    is proc->{eflags}->flags_text, '', 'clc';
     proc->run_code([ ['mov', 'al', 15], ['stc'], ['adc', 'al', 7] ]);
     is proc->get_val('eax'), 23, 'stc adc';
     proc->run_code([ ['mov', 'al', 15], ['clc'], ['adc', 'al', 7] ]);
     is proc->get_val('eax'), 22, 'clc adc';
     proc->run_code([ ['mov', 'al', 250], ['clc'], ['adc', 'al', 10] ]);
     is proc->get_val('eax'), 4, 'clc adc set CF';
-    ok check_flags_set('CF'), 'clc adc set CF flags';
+    is proc->{eflags}->flags_text, 'CF', 'clc adc set CF flags';
     proc->run_code([ ['mov', 'al', 250], ['stc'], ['adc', 'al', 10] ]);
     is proc->get_val('eax'), 5, 'stc adc set CF';
-    ok check_flags_set('CF', 'PF'), 'stc adc set CF flags';
+    is proc->{eflags}->flags_text, 'CF PF', 'stc adc set CF flags';
     proc->run_code([ ['mov', 'al', 250], ['stc'], ['adc', 'al', 5] ]);
     is proc->get_val('eax'), 0, 'stc adc to 0';
-    ok check_flags_set('CF', 'PF', 'ZF'), 'stc adc to 0 flags';
+    is proc->{eflags}->flags_text, 'CF PF ZF', 'stc adc to 0 flags';
 }
 
 {
     proc->run_code([ ['mov', 'al', 15], ['sub', 'al', 7] ]);
     is proc->get_val('eax'), 8, 'sub positive numbers to receive positive';
-    ok check_flags_set(), 'sub positive numbers to receive positive flags';
+    is proc->{eflags}->flags_text, '', 'sub positive numbers to receive positive flags';
     proc->run_code([ ['mov', 'al', 7], ['sub', 'al', 15] ]);
     is proc->get_val('eax'), 248, 'sub positive numbers to receive negative';
-    ok check_flags_set('CF', 'SF'), 'sub positive numbers to receive positive flags';
+    is proc->{eflags}->flags_text, 'CF SF', 'sub positive numbers to receive positive flags';
     proc->run_code([ ['mov', 'al', 7], ['sub', 'al', 7] ]);
     is proc->get_val('eax'), 0, 'sub positive numbers to receive zero';
-    ok check_flags_set('ZF', 'PF'), 'sub positive numbers to receive zero flags';
+    is proc->{eflags}->flags_text, 'PF ZF', 'sub positive numbers to receive zero flags';
     proc->run_code([ ['mov', 'al', -1], ['sub', 'al', -3] ]);
     is proc->get_val('eax'), 2, 'sub negative numbers to receive positive';
-    ok check_flags_set(), 'sub negative numbers to receive positive flags';
+    is proc->{eflags}->flags_text, '', 'sub negative numbers to receive positive flags';
     proc->run_code([ ['mov', 'al', -3], ['sub', 'al', -1] ]);
     is proc->get_val('eax'), 254, 'sub negative numbers to receive negative';
-    ok check_flags_set('CF', 'SF'), 'sub negative numbers to receive positive flags';
+    is proc->{eflags}->flags_text, 'CF SF', 'sub negative numbers to receive positive flags';
     proc->run_code([ ['mov', 'al', 15], ['sub', 'al', -7] ]);
     is proc->get_val('eax'), 22, 'sub positive and negative numbers';
-    ok check_flags_set('CF'), 'sub positive and negative numbers flags';
+    is proc->{eflags}->flags_text, 'CF', 'sub positive and negative numbers flags';
     proc->run_code([ ['mov', 'al', -7], ['sub', 'al', 15] ]);
     is proc->get_val('eax'), 234, 'sub negative and positive numbers';
-    ok check_flags_set('SF'), 'sub negative and positive numbers flags';
+    is proc->{eflags}->flags_text, 'SF', 'sub negative and positive numbers flags';
     proc->run_code([ ['mov', 'al', 64], ['sub', 'al', -63] ]);
     is proc->get_val('eax'), 127, 'sub do not set OF';
-    ok check_flags_set('CF'), 'sub do not set OF flags';
+    is proc->{eflags}->flags_text, 'CF', 'sub do not set OF flags';
     proc->run_code([ ['mov', 'al', 64], ['sub', 'al', -64] ]);
     is proc->get_val('eax'), 128, 'sub set OF';
-    ok check_flags_set('CF', 'SF', 'OF'), 'sub set OF flags';
+    is proc->{eflags}->flags_text, 'CF OF SF', 'sub set OF flags';
     proc->run_code([ ['mov', 'al', -64], ['sub', 'al', 64] ]);
     is proc->get_val('eax'), 128, 'sub do not set OF';
-    ok check_flags_set('SF'), 'sub do not set OF flags';
+    is proc->{eflags}->flags_text, 'SF', 'sub do not set OF flags';
     proc->run_code([ ['mov', 'al', -64], ['sub', 'al', 65] ]);
     is proc->get_val('eax'), 127, 'sub set OF';
-    ok check_flags_set('OF'), 'sub set OF flags';
+    is proc->{eflags}->flags_text, 'OF', 'sub set OF flags';
 }
 
 {
@@ -136,19 +127,19 @@ sub check_stack {
     is proc->get_val('eax'), 248, 'clc sbb to recieve negative';
     proc->run_code([ ['mov', 'al', 7], ['stc'], ['sbb', 'al', 7] ]);
     is proc->get_val('eax'), 255, 'stc sbb equal numbers';
-    ok check_flags_set('CF', 'PF', 'SF'), 'stc sbb equal numbers flags';
+    is proc->{eflags}->flags_text, 'CF PF SF', 'stc sbb equal numbers flags';
 }
 
 {
     proc->run_code([ ['mov', 'al', 7], ['neg', 'al'] ]);
     is proc->get_val('eax'), 249, 'neg positive';
-    ok check_flags_set('CF', 'PF', 'SF'), 'neg positive flags';
+    is proc->{eflags}->flags_text, 'CF PF SF', 'neg positive flags';
     proc->run_code([ ['mov', 'al', -7], ['neg', 'al'] ]);
     is proc->get_val('eax'), 7, 'neg negative';
-    ok check_flags_set('CF'), 'neg negative flags';
+    is proc->{eflags}->flags_text, 'CF', 'neg negative flags';
     proc->run_code([ ['mov', 'al', 0], ['neg', 'al'] ]);
     is proc->get_val('eax'), 0, 'neg zero';
-    ok check_flags_set('ZF', 'PF'), 'neg zero flags';
+    is proc->{eflags}->flags_text, 'PF ZF', 'neg zero flags';
 }
 
 {
@@ -163,52 +154,52 @@ sub check_stack {
 {
     proc->run_code([ ['mov', 'al', 209], ['stc'], ['and', 'al', 237] ]);
     is proc->get_val('eax'), 193, 'and';
-    ok check_flags_set('SF'), 'and flags';
+    is proc->{eflags}->flags_text, 'SF', 'and flags';
     proc->run_code([ ['mov', 'al', 209], ['stc'], ['or', 'al', 141] ]);
     is proc->get_val('eax'), 221, 'or';
-    ok check_flags_set('SF', 'PF'), 'or flags';
+    is proc->{eflags}->flags_text, 'PF SF', 'or flags';
     proc->run_code([ ['mov', 'al', 209], ['stc'], ['xor', 'al', 13] ]);
     is proc->get_val('eax'), 220, 'xor';
-    ok check_flags_set('SF'), 'xor flags';
+    is proc->{eflags}->flags_text, 'SF', 'xor flags';
     proc->run_code([ ['mov', 'al', 209], ['stc'], ['test', 'al', 2] ]);
     is proc->get_val('eax'), 209, 'test';
-    ok check_flags_set('ZF', 'PF'), 'test flags';
+    is proc->{eflags}->flags_text, 'PF ZF', 'test flags';
     proc->run_code([ ['mov', 'al', 13], ['not', 'al'] ]);
     is proc->get_val('eax'), 242, 'not';
-    ok check_flags_set(), 'not flags';
+    is proc->{eflags}->flags_text, '', 'not flags';
 }
 
 {
     proc->run_code([ ['mov', 'al', 209], ['shl', 'al', 2] ]);
     is proc->get_val('eax'), 68, 'shl';
-    ok check_flags_set('CF', 'PF'), 'shl flags';
+    is proc->{eflags}->flags_text, 'CF PF', 'shl flags';
     proc->run_code([ ['mov', 'al', 209], ['shr', 'al', 2] ]);
     is proc->get_val('eax'), 52, 'shr';
-    ok check_flags_set(), 'shr flags';
+    is proc->{eflags}->flags_text, '', 'shr flags';
     proc->run_code([ ['mov', 'al', 209], ['sal', 'al', 2] ]);
     is proc->get_val('eax'), 68, 'sal';
-    ok check_flags_set('CF', 'PF', 'OF'), 'sal flags';
+    is proc->{eflags}->flags_text, 'CF OF PF', 'sal flags';
     proc->run_code([ ['mov', 'al', 209], ['sar', 'al', 2] ]);
     is proc->get_val('eax'), 244, 'sar';
-    ok check_flags_set('SF'), 'sar flags';
+    is proc->{eflags}->flags_text, 'SF', 'sar flags';
     proc->run_code([ ['mov', 'al', 209], ['rol', 'al', 2] ]);
     is proc->get_val('eax'), 71, 'rol';
-    ok check_flags_set('CF', 'PF'), 'rol flags';
+    is proc->{eflags}->flags_text, 'CF PF', 'rol flags';
     proc->run_code([ ['mov', 'al', 209], ['ror', 'al', 2] ]);
     is proc->get_val('eax'), 116, 'ror';
-    ok check_flags_set('PF'), 'ror flags';
+    is proc->{eflags}->flags_text, 'PF', 'ror flags';
     proc->run_code([ ['mov', 'al', 209], ['clc'], ['rcl', 'al', 2] ]);
     is proc->get_val('eax'), 69, 'clc rcl';
-    ok check_flags_set('CF'), 'clc rcl flags';
+    is proc->{eflags}->flags_text, 'CF', 'clc rcl flags';
     proc->run_code([ ['mov', 'al', 209], ['stc'], ['rcl', 'al', 2] ]);
     is proc->get_val('eax'), 71, 'stc rcl';
-    ok check_flags_set('CF', 'PF'), 'stc rcl flags';
+    is proc->{eflags}->flags_text, 'CF PF', 'stc rcl flags';
     proc->run_code([ ['mov', 'al', 209], ['clc'], ['rcr', 'al', 2] ]);
     is proc->get_val('eax'), 180, 'clc rcr';
-    ok check_flags_set('SF', 'PF'), 'clc rcr flags';
+    is proc->{eflags}->flags_text, 'PF SF', 'clc rcr flags';
     proc->run_code([ ['mov', 'al', 209], ['stc'], ['rcr', 'al', 2] ]);
     is proc->get_val('eax'), 244, 'stc rcr';
-    ok check_flags_set('SF'), 'stc rcr flags';
+    is proc->{eflags}->flags_text, 'SF', 'stc rcr flags';
 }
 
 {
