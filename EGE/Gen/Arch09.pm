@@ -50,24 +50,23 @@ sub zero_fill {
 }
 
 sub stack {
-	my $self = shift;
-	cgen->{code} = [];
-	my $reg = cgen->get_reg(32, 'not_ecx');
-	my $arg = rnd->in_range(10, 255);
-	my $off = rnd->in_range(1, $arg/2-2);
-	cgen->add_command('mov', 'ecx', $arg);
-	my $label = 'L';
-	cgen->add_command($label.":");
-	cgen->add_command('push', 'ecx');
-	cgen->add_command('loop', $label);
-	cgen->add_command('mov', $reg, "[esp+$off*4]");
-	my $code_txt = cgen->get_code_txt('%s');
-	$self->{text} = <<QUESTION
-В результате выполнения кода $code_txt в $reg будет содержаться значение:
-QUESTION
-;
-	$self->variants($off + 1, $off, $arg - $off, rnd->pick($arg-$off+1, $arg-$off-1));
-	$self->{correct} = 0;
+    my $self = shift;
+    my $reg = cgen->get_reg(32, 'not_ecx');
+    my $arg = rnd->in_range(10, 255);
+    my $ofs = rnd->in_range(1, $arg / 2 - 2);
+    my $label = 'L';
+    cgen->clear;
+    cgen->add_commands(
+        [ 'mov', 'ecx', $arg ],
+        [ "$label:" ],
+        [ 'push', 'ecx' ],
+        [ 'loop', $label ],
+        [ 'mov', $reg, "[esp + $ofs * 4]" ],
+    );
+    my $code_txt = cgen->get_code_txt('%s');
+    $self->{text} =
+        "В результате выполнения кода $code_txt значение <code>$reg</code> будет равно:";
+    $self->variants($ofs + 1, $ofs, map $arg - $ofs + $_, 0, rnd->pick(+1, -1));
 }
 
 1;
