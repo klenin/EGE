@@ -6,41 +6,54 @@ package EGE::Asm::Eflags;
 use strict;
 use warnings;
 
-my $flags = ['ZF', 'SF', 'PF', 'CF', 'OF'];
+my $flags = [ qw(ZF SF PF CF OF) ];
 
-sub new {
-	my ($class, %init) = @_;
-	my $self = {};
-	bless $self, ref $class || $class;
-	$self;
+my $jump_conds;
+
+sub prepare_jumps {
+    my %jumps = qw(
+        jc:jb:jnae  CF
+        jp          PF
+        jz:je       ZF
+        js          SF
+        jo          OF
+        jnc:jae:jnb !CF
+        jnp         !PF
+        jnz:jne     !ZF
+        jns         !SF
+        jno         !OF
+        jl:jnge     SF!=OF
+        jle:jng     SF!=OF||ZF
+        jg:jnle     SF==OF&&!ZF
+        jge:jnl     SF==OF
+        jbe:jna     CF||ZF
+        ja:jnbe     !CF&&!ZF
+        jmp         1
+    );
+    while (my ($jumps, $flags) = each %jumps) {
+        (my $cond = $flags) =~ s/(\wF)/\$_[0]->{$1}/g;
+        my $code = eval "sub { $cond }";
+        $jump_conds->{$_} = $code for split ':', $jumps;
+    }
+    $jump_conds;
 }
 
+sub new {
+    my ($class, %init) = @_;
+    my $self = {};
+    $jump_conds or prepare_jumps;
+    bless $self, ref $class || $class;
+    $self;
+}
 
 sub init {
-	my $self = shift;
-	$self->{$_} = 0 for (@$flags);
+    my $self = shift;
+    $self->{$_} = 0 for @$flags;
 }
 
 sub valid_jump {
-	my ($self, $cmd) = @_;
-	return
-	$cmd eq 'jc' || $cmd eq 'jb' || $cmd eq 'jnae' ? $self->{CF} :
-	$cmd eq 'jp' ? $self->{PF} :
-	$cmd eq 'jz' || $cmd eq 'je' ? $self->{ZF} :
-	$cmd eq 'js' ? $self->{SF} :
-	$cmd eq 'jo' ? $self->{OF} :
-	$cmd eq 'jnc' || $cmd eq 'jae' || $cmd eq 'jnb' ? !$self->{CF} :
-	$cmd eq 'jnp' ? !$self->{PF} :
-	$cmd eq 'jnz' || $cmd eq 'jne' ? !$self->{ZF} :
-	$cmd eq 'jns' ? !$self->{SF} :
-	$cmd eq 'jno' ? !$self->{OF} :
-	$cmd eq 'jl' || $cmd eq 'jnge' ? $self->{SF} != $self->{OF} :
-	$cmd eq 'jle' || $cmd eq 'jng' ? $self->{SF} != $self->{OF} || $self->{ZF} :
-	$cmd eq 'jg' || $cmd eq 'jnle' ? $self->{SF} == $self->{OF} && !$self->{ZF} :
-	$cmd eq 'jge' || $cmd eq 'jnl' ? $self->{SF} == $self->{OF} :
-	$cmd eq 'jbe' || $cmd eq 'jna' ? $self->{CF} || $self->{ZF} :
-	$cmd eq 'ja' || $cmd eq 'jnbe' ? !$self->{CF} && !$self->{ZF} :
-	$cmd eq 'jmp' ? 1 : '';
+    my ($self, $cmd) = @_;
+    $jump_conds->{$cmd}->($self);
 }
 
 1;
