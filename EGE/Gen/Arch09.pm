@@ -12,24 +12,23 @@ use EGE::Random;
 use EGE::Asm::AsmCodeGenerate;
 
 sub reg_value_before_loopnz {
-	my $self = shift;
-	cgen->{code} = [];
-	my $reg = cgen->get_reg(8, 'not_ecx');
-	my $arg = rnd->in_range(3, 254);
-	my $res = rnd->in_range(1, $arg-1);
-	cgen->add_command('mov', 'cl', $arg);
-	my $label = 'L';
-	cgen->add_command($label.":");
-	cgen->add_command('sub', $reg, 1);
-	cgen->add_command('loopnz', $label);
-	my $cor = $arg - $res;
-	$self->variants($cor, $cor+1, $cor-1, rnd->pick($cor+2, $cor-2));
-	$self->{correct} = 0;
-	my $code_txt = cgen->get_code_txt('%s');
-	$self->{text} = <<QUESTION
-В результате выполнения кода $code_txt сl содержит значение $res. До выполнения кода в $reg содержалось значение:
-QUESTION
-;
+    my $self = shift;
+    my $reg = cgen->get_reg(8, 'not_ecx');
+    my $arg = rnd->in_range(3, 254);
+    my $res = rnd->in_range(1, $arg - 1);
+    my $label = 'L';
+    cgen->clear;
+    cgen->add_commands(
+        [ 'mov', 'cl', $arg ],
+        [ "$label:" ],
+        [ 'sub', $reg, 1 ],
+        [ 'loopnz', $label ],
+    );
+    $self->variants(map $arg - $res + $_, 0, +1, -1, rnd->pick(+2, -2));
+    my $code_txt = cgen->get_code_txt('%s');
+    $self->{text} =
+        "В результате выполнения кода $code_txt регистр <code>cl</code> содержит значение $res. " .
+        "До выполнения кода в <code>$reg</code> содержалось значение:";
 }
 
 sub zero_fill {
