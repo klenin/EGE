@@ -13,33 +13,34 @@ use EGE::Asm::Processor;
 use EGE::Asm::AsmCodeGenerate;
 
 sub choose_jump {
-	my $self = shift;
-	cgen->{code} = [];
-	my $reg = cgen->get_reg(8);
-	cgen->generate_command('mov', $reg);
-	rnd->pick(0,1) ? cgen->add_command('sub', $reg, rnd->in_range(1, 255)) : cgen->add_command('neg', $reg);
-	my $label = 'L';
-	my @jumps = rnd->pick_n(2, qw(jc jz jo js jnc jnz jno jns));
-	push @jumps, rnd->pick_n(2, qw(je jne jl jnge jle jng jg jnle jge jnl jb jnae jbe jna ja jnbe jae jnb));
-	cgen->add_command(rnd->pick(@jumps), $label);
-	cgen->add_command('add', $reg, 1);
-	cgen->add_command($label.':');
-	proc->run_code(cgen->{code});
-	my $res = proc->get_val($reg);
-	my @correct;
-	for (@jumps) {
-		cgen->{code}->[2]->[0] = $_;
-		proc->run_code(cgen->{code});
-		push @correct, proc->get_val($reg) == $res ? 1 : 0;
-	}
-	cgen->{code}->[2]->[0] = "<i>jcc</i>";
-	my $code_txt = cgen->get_code_txt('%s');
-	$self->{text} = <<QUESTION
-В результате выполнения кода $code_txt в $reg будет содержаться значение $res, если <i>jcc</i> заменить на:
-QUESTION
-;
-	$self->variants(@jumps);
-    $self->{correct} = \@correct;
+    my $self = shift;
+    my $reg = cgen->get_reg(8);
+    my $label = 'L';
+    my $jcc = '<i>jcc</i>';
+    cgen->clear;
+    cgen->generate_command('mov', $reg);
+    cgen->add_commands(
+        (rnd->coin ? [ 'sub', $reg, rnd->in_range(1, 255) ] : [ 'neg', $reg ]),
+        [ $jcc, $label ],
+        [ 'add', $reg, 1 ],
+        [ "$label:" ]
+    );
+    my $code_txt = cgen->get_code_txt('%s');
+
+    my @jumps = map rnd->pick_n(2, @$_),
+        [ qw(jc jz jo js jnc jnz jno jns) ],
+        [ qw(je jne jl jnge jle jng jg jnle jge jnl jb jnae jbe jna ja jnbe jae jnb) ];
+    my @res = map {
+        cgen->{code}->[2]->[0] = $_;
+        proc->run_code(cgen->{code})->get_val($reg);
+    } @jumps;
+    my $good = rnd->pick(@res);
+    $self->{correct} = [ map $_ == $good, @res ];
+
+    $self->{text} =
+        "В результате выполнения кода $code_txt в $reg " .
+        "будет содержаться значение $good, если $jcc заменить на:";
+    $self->variants(@jumps);
 }
 
 1;
