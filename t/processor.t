@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 163;
+use Test::More tests => 167;
 
 use lib '..';
 use EGE::Asm::Processor;
@@ -317,6 +317,15 @@ sub check_stack {
     is proc->get_val('eax'), 3, 'jnbe not pass';
     proc->run_code([ ['mov', 'al', 165], ['sub', 'al', 1], ['jnbe', 'm'], ['mov', 'al', 3], ['m:'] ]);
     is proc->get_val('eax'), 164, 'jnbe pass';
+}
+
+{
+    proc->run_code([ ['mov', 'al', 0], ['L1:'], ['add', 'al', 1], ['jno', 'L1'] ]);
+    is proc->get_val('eax'), 128, 'loop until OF';
+    is proc->{eflags}->flags_text, 'OF SF', 'loop until OF flags';
+    proc->run_code([ ['L1:'], ['L2:'], ['add', 'al', 8], ['jz', 'L3'], ['jp', 'L1'], ['jnp', 'L2'], ['L3:']]);
+    is proc->get_val('eax'), 0, 'double label';
+    ok !eval { proc->run_code([ ['jmp', 'L'] ]); 1 }, 'non-existing label';
 }
 
 {
