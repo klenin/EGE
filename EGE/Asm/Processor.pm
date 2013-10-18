@@ -36,6 +36,10 @@ sub init {
 	$self->{stack} = [];
 }
 
+sub shift_commands() {
+    { shl => 1, shr => 1, sal => 1, sar => 1, rol => 1, ror => 1, rcl => 1, rcr => 1 }
+}
+
 sub get_register {
 	my ($self, $reg) = @_;
 	return $self if (!defined $reg);
@@ -54,12 +58,12 @@ sub get_wrong_val {
 }
 
 sub run_cmd {
-	my ($self, $cmd, $reg, $arg) = @_;
-	$arg = 'cl' if ($self->is_shift($cmd) && !defined $arg);
-	my $val = $self->is_stack_command($cmd) ? $self->{stack} : $self->get_val($arg);
-	no strict 'refs';
-	$self->get_register($reg)->$cmd($self->{eflags}, $reg, $val);
-	$self;
+    my ($self, $cmd, $reg, $arg) = @_;
+    $arg //= 'cl' if shift_commands->{$cmd};
+    my $val = $self->is_stack_command($cmd) ? $self->{stack} : $self->get_val($arg);
+    no strict 'refs';
+    $self->get_register($reg)->$cmd($self->{eflags}, $reg, $val);
+    $self;
 }
 
 sub label_regexp() { qr/^(\w+):$/ }
@@ -83,25 +87,20 @@ sub run_code {
 }
 
 sub stc {
-	my $self = shift;
-	$self->{eflags}->{CF} = 1;
-	$self;
+    my $self = shift;
+    $self->{eflags}->{CF} = 1;
+    $self;
 }
 
 sub clc {
-	my $self = shift;
-	$self->{eflags}->{CF} = 0;
-	$self;
-}
-
-sub is_shift {
-	my ($self, $cmd) = @_;
-	{ shl => 1, shr => 1, sal => 1, sar => 1, rol => 1, ror => 1, rcl => 1, rcr => 1 }->{$cmd};
+    my $self = shift;
+    $self->{eflags}->{CF} = 0;
+    $self;
 }
 
 sub is_stack_command {
-	my ($self, $cmd) = @_;
-	{ push => 1, pop => 1 }->{$cmd};
+    my ($self, $cmd) = @_;
+    { push => 1, pop => 1 }->{$cmd};
 }
 
 sub print_state {

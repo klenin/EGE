@@ -7,6 +7,7 @@ use strict;
 use warnings;
 
 use EGE::Random;
+use EGE::Asm::Processor;
 use POSIX qw/ceil/;
 
 use Exporter;
@@ -32,7 +33,7 @@ sub random_command {
     my ($cmds, $arg_range) = @{{
         add => [ [ qw(add sub adc sbb neg) ], [65, 255] ],
         logic => [ [ qw(and or xor test not) ], [1, 255] ],
-        shift => [ [ qw(shl shr sal sar rol ror rcl rcr) ], [1, 3] ],
+        shift => [ [ keys %{EGE::Asm::Processor::shift_commands()} ], [1, 3] ],
     }->{$type}};
     my $cmd = rnd->pick(@$cmds);
     $arg //= rnd->in_range(@$arg_range);
