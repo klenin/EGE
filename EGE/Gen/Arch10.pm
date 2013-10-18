@@ -21,47 +21,36 @@ sub jcc_check_flags {
     $self->{text} = "Команда $jmp проверяет флаги:";
 }
 
+sub random_cc { rnd->pick('', 'n') . rnd->pick(qw(c p z o s e g l ge le a b ae be)) }
+
+sub invert_cc { $_[0] =~ /^n(\w+)$/ ? $1 : "n$_[0]" }
+
 sub cmovcc {
-	my $self = shift;
-	cgen->{code} = [];
-	my ($reg1, $reg2) = cgen->get_regs(32, 32);
-	my $cc = {1 => 'n', 0 => ''}->{rnd->pick(0,1)}.rnd->pick(qw(c p z o s e g l ge le a b ae be));
-	my $label = 'L';
-	cgen->add_command('j'.$cc, $label);
-	cgen->add_command('mov', $reg1, $reg2);
-	cgen->add_command($label.':');
-	my $code_txt = cgen->get_code_txt('%s');
-	$self->{text} = <<QUESTION
-Последовательность команд $code_txt эквивалентна команде:
-QUESTION
-;
-	my @variants;
-	if ($cc eq 'c' || $cc eq 'nae' || $cc eq 'b') {
-		@variants = ('nc', 'ae', 'nb');
-		$self->{correct} = [1, 1, 1, 0];
-	}
-	elsif ($cc eq 'nc' || $cc eq 'nb' || $cc eq 'ae') {
-		@variants = ('c', 'b', 'nae');
-		$self->{correct} = [1, 1, 1, 0];
-	}
-	elsif ($cc eq 'z' || $cc eq 'e') {
-		@variants = ('ne', 'nz');
-		$self->{correct} = [1, 1, 0, 0];
-	}
-	elsif ($cc eq 'nz' || $cc eq 'ne') {
-		@variants = ('e', 'z');
-		$self->{correct} = [1, 1, 0, 0];
-	}
-	else {
-		push @variants, $cc =~ /^n\w+$/ ? substr($cc, 1) : 'n'.$cc;
-		$self->{correct} = [1, 0, 0, 0];
-	}
-	push @variants, $cc;
-	while ($#variants < 3) {
-		my $v = {1 => 'n', 0 => ''}->{rnd->pick(0,1)}.rnd->pick(qw(c p z o s e g l ge le a b ae be));
-		push @variants, $v if !(grep {$_ eq $v} @variants);
-	}
-	$self->formated_variants("cmov%s $reg1, $reg2", @variants);
+    my $self = shift;
+    my ($reg1, $reg2) = cgen->get_regs(32, 32);
+    my $cc = random_cc;
+    my $label = 'L';
+    cgen->clear;
+    cgen->add_commands(
+        [ "j$cc", $label ],
+        [ 'mov', $reg1, $reg2 ],
+        [ "$label:" ],
+    );
+    my $code_txt = cgen->get_code_txt('%s');
+    $self->{text} = "Последовательность команд $code_txt эквивалентна команде:";
+
+    my $cc_variants = sub { grep $_ eq $cc, @_ and [ map invert_cc($_), @_ ] };
+    my $cc_variants_2 = sub { $cc_variants->(@_) || $cc_variants->(map invert_cc($_), @_) };
+
+    my $variants =
+        $cc_variants_2->(qw[c nae b]) || $cc_variants_2->(qw[z e]) || [ invert_cc($cc) ];
+    $self->{correct} = [ (1) x @$variants, (0) x (4 - @$variants) ];
+    push @$variants, $cc;
+    while (@$variants < 4) {
+        my $v = random_cc;
+        push @$variants, $v if 0 == grep { $_ eq $v } @$variants;
+    }
+    $self->formated_variants("cmov%s $reg1, $reg2", @$variants);
 }
 
 1;
