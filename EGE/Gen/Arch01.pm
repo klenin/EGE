@@ -99,7 +99,7 @@ sub reg_value_jump {
     my $self = shift;
     cgen->clear;
     my $reg = cgen->get_reg(8);
-    cgen->generate_command('mov', $reg);
+    cgen->add_command(@{cgen->random_mov($reg)});
     cgen->generate_command('add', $reg);
     my $label = 'L';
     my $jmp = 'j' . rnd->pick('n', '') . rnd->pick(qw(c p z o s e g l ge le a b ae be));
