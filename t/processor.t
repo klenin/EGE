@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 167;
+use Test::More tests => 168;
 
 use lib '..';
 use EGE::Asm::Processor;
@@ -200,6 +200,8 @@ sub check_stack {
     proc->run_code([ ['mov', 'al', 209], ['stc'], ['rcr', 'al', 2] ]);
     is proc->get_val('eax'), 244, 'stc rcr';
     is proc->{eflags}->flags_text, 'SF', 'stc rcr flags';
+    proc->run_code([ ['mov', 'dx', 128], ['mov', 'cl', 3], ['shr', 'dx'] ]);
+    is proc->get_val('edx'), 16, 'shr cl';
 }
 
 {
