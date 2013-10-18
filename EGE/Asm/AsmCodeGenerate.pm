@@ -27,26 +27,19 @@ sub new {
 
 sub random_mov { [ 'mov', $_[1], rnd->in_range(1, 255) ]; }
 
-sub generate_command {
-	my ($self, $type, $reg, $lo, $hi) = @_;
-	my ($cmd, $arg);
-	$arg = defined $hi ? rnd->in_range($lo, $hi) : $lo;
-	if ($type eq 'add') {
-		$arg = rnd->in_range(65, 255) if (!defined $lo);
-		$cmd = rnd->pick('add', 'sub', 'adc', 'sbb', 'neg');
-	}
-	elsif ($type eq 'logic') {
-		$arg = rnd->in_range(1, 255) if (!defined $lo);
-		$cmd = rnd->pick('and', 'or', 'xor', 'test', 'not');
-	}
-	elsif ($type eq 'shift') {
-		$arg = rnd->in_range(1, 3) if (!defined $lo);
-		$cmd = rnd->pick('shl', 'shr', 'sal', 'sar', 'rol', 'ror', 'rcl', 'rcr');
-	}
-    else { die; }
-	$self->add_command(rnd->pick('stc', 'clc')) if $self->use_cf($cmd);
-	$arg = '' if $self->single_arg($cmd);
-	$self->add_command($cmd, $reg, $arg);
+sub random_command {
+    my ($self, $type, $reg, $arg) = @_;
+    my ($cmds, $arg_range) = @{{
+        add => [ [ qw(add sub adc sbb neg) ], [65, 255] ],
+        logic => [ [ qw(and or xor test not) ], [1, 255] ],
+        shift => [ [ qw(shl shr sal sar rol ror rcl rcr) ], [1, 3] ],
+    }->{$type}};
+    my $cmd = rnd->pick(@$cmds);
+    $arg //= rnd->in_range(@$arg_range);
+    (
+        $self->use_cf($cmd) ? [ rnd->pick(qw[stc clc]) ] : (),
+        $self->single_arg($cmd) ? [ $cmd, $reg ] : [ $cmd, $reg, $arg ],
+    );
 }
 
 sub add_command {
@@ -165,14 +158,16 @@ sub generate_simple_code {
 	my $reg = $self->get_reg($n);
 	$self->{code} = [];
 	if ($n == 8) {
-        $self->add_command(@{$self->random_mov($reg)});
-		$self->generate_command($type, $reg);
+        $self->add_commands(
+            $self->random_mov($reg),
+            $self->random_command($type, $reg));
 		$self->{code}->[0]->[2] = rnd->in_range(1, 15) * 16 + rnd->in_range(1, 15) if ($type eq 'shift');
 	}
 	else {
 		my ($arg1, $arg2) = $self->get_hex_args($type);
-        $self->add_command('mov', $reg, $arg1);
-		$self->generate_command($type, $reg, $arg2);
+        $self->add_commands(
+            [ 'mov', $reg, $arg1 ],
+            $self->random_command($type, $reg, $arg2));
 	}
 	($reg, $format, $n, cgen->{code}->[0]->[2]);
 }

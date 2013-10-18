@@ -97,13 +97,17 @@ sub reg_value_convert {
 
 sub reg_value_jump {
     my $self = shift;
-    cgen->clear;
     my $reg = cgen->get_reg(8);
-    cgen->add_command(@{cgen->random_mov($reg)});
-    cgen->generate_command('add', $reg);
     my $label = 'L';
     my $jmp = 'j' . rnd->pick('n', '') . rnd->pick(qw(c p z o s e g l ge le a b ae be));
-    cgen->add_commands([ $jmp, $label ], [ 'add', $reg, 1 ], [ "$label:" ]);
+    cgen->clear;
+    cgen->add_commands(
+        cgen->random_mov($reg),
+        cgen->random_command('add', $reg),
+        [ $jmp, $label ],
+        [ 'add', $reg, 1 ],
+        [ "$label:" ],
+    );
     my $res = $self->get_res($reg, '%s');
     $self->variants($res, offs_modulo($res, 256, rnd->pick(2, -2), 1, -1));
 }
