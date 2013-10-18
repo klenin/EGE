@@ -50,4 +50,29 @@ sub cond_max_min {
     $self->variants(cartesian_join(' ', ['знаковый', 'беззнаковый'], ['минимум', 'максимум']));
 }
 
+sub divisible_by_mask {
+    my $self = shift;
+    my ($reg) = cgen->get_reg(rnd->pick(16, 32));
+    my ($n) = 2 ** rnd->in_range(2, 5);
+    my $label = 'L';
+    my $make_variant = sub {
+        my ($cmd, $m, $cc) = @_;
+        cgen->set_commands([ $cmd, $reg, $n + $m ], [ "j$cc", $label ]);
+        cgen->get_code_txt('%s');
+    };
+    my @znz = qw(z nz);
+    my $inv = rnd->coin;
+    $self->variants(
+        $make_variant->(rnd->pick(qw[test and]), -1, $znz[$inv]),
+        $make_variant->(rnd->pick(qw[test and]), -1, $znz[1 - $inv]),
+        $make_variant->(rnd->pick(qw[test and]), rnd->pick(0, +1, $n), rnd->pick(@znz)),
+        $make_variant->('or', rnd->pick(-1, 0, +1), rnd->pick(@znz)),
+        $make_variant->('or', $n, rnd->pick(@znz)),
+    );
+    $self->{text} = sprintf
+        "Чтобы осуществить переход на метку <code>$label</code> в случае, " .
+        "когда значение <code>$reg</code>%s кратно $n, нужно исполнить команды:",
+        $inv ? ' не' : '';
+}
+
 1;

@@ -141,7 +141,7 @@ sub all {[
     gg('Arch08', qw(choose_jump)),
     gg('Arch09', qw(reg_value_before_loopnz zero_fill stack)),
     gg('Arch10', qw(jcc_check_flags cmovcc)),
-    gg('Arch12', qw(cond_min_max)),
+    gg('Arch12', qw(cond_min_max divisible_by_mask)),
 ]}
 
 1;

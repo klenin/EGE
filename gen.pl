@@ -204,6 +204,7 @@ g1('Arch09', 'stack');
 g1('Arch10', 'jcc_check_flags');
 g1('Arch10', 'cmovcc');
 g1('Arch12', 'cond_max_min');
+g1('Arch12', 'divisible_by_mask');
 
 #$questions = EGE::Generate::all;
 $questions = EGE::AsmGenerate::all;
