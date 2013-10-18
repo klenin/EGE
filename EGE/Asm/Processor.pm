@@ -14,7 +14,7 @@ use EGE::Asm::Register;
 use EGE::Asm::Eflags;
 
 my $proc;
-my $registers = ['eax', 'ebx', 'ecx', 'edx', 'esp', 'ebp'];
+my @registers = qw(eax ebx ecx edx esp ebp);
 
 sub proc {
     $proc ||= EGE::Asm::Processor->new;
@@ -22,18 +22,19 @@ sub proc {
 
 sub new {
     my $self = {
-		eflags => EGE::Asm::Eflags->new
-	};
-	$self->{$_} = EGE::Asm::Register->new for (@$registers);
+        eflags => EGE::Asm::Eflags->new,
+        stack => [],
+        map { $_ => EGE::Asm::Register->new } @registers
+    };
     bless $self, shift;
     $self;
 }
 
 sub init {
-	my $self = shift;
-	$self->{$_}->mov($self->{eflags}, $_, 0) for (@$registers);
-	$self->{eflags}->init;
-	$self->{stack} = [];
+    my $self = shift;
+    $self->{$_}->mov($self->{eflags}, $_, 0) for @registers;
+    $self->{eflags}->init;
+    $self->{stack} = [];
 }
 
 sub shift_commands() {
@@ -41,20 +42,20 @@ sub shift_commands() {
 }
 
 sub get_register {
-	my ($self, $reg) = @_;
-	return $self if (!defined $reg);
-	return ($reg =~ /^(e?)([a-d])(l|h|x)$/) ? $self->{"e$2x"} : $self->{$reg};
+    my ($self, $reg) = @_;
+    $reg =~ /^e?([a-d])[lhx]$/ or die;
+    $self->{"e$1x"};
 }
 
 sub get_val {
-	my ($self, $arg) = @_;
-	$arg //= '';
-	$arg =~ /^-?(\d*)$/ ? $arg : $self->get_register($arg)->get_value($arg);
+    my ($self, $arg) = @_;
+    defined $arg or return;
+    $arg =~ /^-?\d+$/ ? $arg : $self->get_register($arg)->get_value($arg);
 }
 
 sub get_wrong_val {
-	my ($self, $reg) = @_;
-	$self->get_register($reg)->get_value($reg, 1);
+    my ($self, $reg) = @_;
+    $self->get_register($reg)->get_value($reg, 1);
 }
 
 sub run_cmd {
@@ -62,7 +63,7 @@ sub run_cmd {
     $arg //= 'cl' if shift_commands->{$cmd};
     my $val = $self->is_stack_command($cmd) ? $self->{stack} : $self->get_val($arg);
     no strict 'refs';
-    $self->get_register($reg)->$cmd($self->{eflags}, $reg, $val);
+    $reg ? $self->get_register($reg)->$cmd($self->{eflags}, $reg, $val) : $self->$cmd;
     $self;
 }
 
@@ -104,12 +105,12 @@ sub is_stack_command {
 }
 
 sub print_state {
-	my $self = shift;
-	print $_." = ".$self->{$_}->get_value($_)."\n" for (@$registers);
-	print $_." = ".$self->{eflags}->{$_}."\n" for (keys %{$self->{eflags}});
-	print "stack:\n";
-	print $_."\n" for (@{$self->{stack}});
-	$self;
+    my $self = shift;
+    print "$_ = " . $self->{$_}->get_value($_) . "\n" for @registers;
+    print "$_ = " . $self->{eflags}->{$_} . "\n" for keys %{$self->{eflags}};
+    print "stack:\n";
+    print "$_\n" for @{$self->{stack}};
+    $self;
 }
 
 1;
