@@ -22,8 +22,7 @@ sub try_match_values {
     my ($a, $b) = rnd->pick_n(2, qw(a b c d));
     my @regs8 = ($a . 'l', $a . 'h', $b . 'l', $b . 'h');
     my @regs16 = ($a . 'x', $b . 'x');
-    cgen->clear;
-    cgen->add_commands(
+    cgen->set_commands(
         map([ 'mov', $_, random_byte() * 256 + random_byte() ], @regs16),
         [ rnd->pick(qw(shl shr sal sar rol ror)), rnd->pick(@regs8), 4 ],
         [ rnd->pick(qw(and or xor)), rnd->pick_n(2, @regs8) ],

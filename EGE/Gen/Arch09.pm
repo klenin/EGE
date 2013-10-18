@@ -18,8 +18,7 @@ sub reg_value_before_loopnz {
     my $arg = rnd->in_range(3, 254);
     my $res = rnd->in_range(1, $arg - 1);
     my $label = 'L';
-    cgen->clear;
-    cgen->add_commands(
+    cgen->set_commands(
         [ 'mov', 'cl', $arg ],
         [ "$label:" ],
         [ 'sub', $reg, 1 ],
@@ -38,8 +37,7 @@ sub zero_fill {
     my $arg = rnd->in_range(1, 25) * 10;
     my @cmds = qw(stosb stosw stosd);
     $self->{correct} = rnd->in_range(1, scalar @cmds);
-    cgen->clear;
-    cgen->add_commands(
+    cgen->set_commands(
         [ 'mov', 'ecx', $arg ],
         [ 'mov', $reg, 0 ],
         [ 'rep', $cmds[$self->{correct} - 1] ],
@@ -55,8 +53,7 @@ sub stack {
     my $arg = rnd->in_range(10, 255);
     my $ofs = rnd->in_range(1, $arg / 2 - 2);
     my $label = 'L';
-    cgen->clear;
-    cgen->add_commands(
+    cgen->set_commands(
         [ 'mov', 'ecx', $arg ],
         [ "$label:" ],
         [ 'push', 'ecx' ],

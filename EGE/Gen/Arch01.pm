@@ -83,9 +83,8 @@ sub reg_value_shift {
 sub reg_value_convert {
     my $self = shift;
     my ($reg32, $reg16) = cgen->get_regs(32, 16);
-    cgen->clear;
     my ($cmd, $bad_cmd) = rnd->shuffle(qw(movzx movsx));
-    cgen->add_commands(
+    cgen->set_commands(
         [ 'mov', $reg16, 15 * 2**12 + rnd->in_range(0, 2**12 - 1) ],
         [ $cmd, $reg32, $reg16 ]);
     my @variants = (
@@ -100,8 +99,7 @@ sub reg_value_jump {
     my $reg = cgen->get_reg(8);
     my $label = 'L';
     my $jmp = 'j' . rnd->pick('n', '') . rnd->pick(qw(c p z o s e g l ge le a b ae be));
-    cgen->clear;
-    cgen->add_commands(
+    cgen->set_commands(
         cgen->random_mov($reg),
         cgen->random_command('add', $reg),
         [ $jmp, $label ],

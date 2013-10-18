@@ -30,8 +30,7 @@ sub cmovcc {
     my ($reg1, $reg2) = cgen->get_regs(32, 32);
     my $cc = random_cc;
     my $label = 'L';
-    cgen->clear;
-    cgen->add_commands(
+    cgen->set_commands(
         [ "j$cc", $label ],
         [ 'mov', $reg1, $reg2 ],
         [ "$label:" ],

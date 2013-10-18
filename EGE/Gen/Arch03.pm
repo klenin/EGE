@@ -14,7 +14,6 @@ use EGE::Asm::AsmCodeGenerate;
 
 sub choose_commands_mod_3 {
     my $self = shift;
-    cgen->clear;
     my $reg = cgen->get_reg(8);
     my ($jmp, $arg) = @{rnd->pick(
         [ jnc => rnd->in_range(0, 41) * 6 + 3 ],
@@ -27,7 +26,7 @@ sub choose_commands_mod_3 {
         [ 2 => [ 1, 1, 0, 1, 1 ] ],
         [ 3 => [ 1, 1, 1, 1, 1 ] ],
     )};
-    cgen->add_commands(
+    cgen->set_commands(
         [ 'mov', $reg, $arg ],
         [ "$label:" ],
         [ 'add', $reg, $val_add ],

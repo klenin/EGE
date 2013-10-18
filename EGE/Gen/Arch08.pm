@@ -16,8 +16,7 @@ sub choose_jump {
     my $self = shift;
     my $reg = cgen->get_reg(8);
     my $label = 'L';
-    cgen->clear;
-    cgen->add_commands(
+    cgen->set_commands(
         cgen->random_mov($reg),
         (rnd->coin ? [ 'sub', $reg, rnd->in_range(1, 255) ] : [ 'neg', $reg ]),
         [ '<i>jcc</i>', $label ],

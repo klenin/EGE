@@ -52,6 +52,11 @@ sub add_commands {
     push @{$self->{code}}, @_;
 }
 
+sub set_commands {
+    my $self = shift;
+    $self->{code} = [ @_ ];
+}
+
 sub format_command {
     my ($self, $command, $num_format) = @_;
     my ($cmd, @args) = @$command;

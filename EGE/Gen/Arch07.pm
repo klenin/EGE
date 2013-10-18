@@ -14,14 +14,13 @@ use EGE::Asm::AsmCodeGenerate;
 
 sub loop_number {
     my $self = shift;
-    cgen->clear;
     my ($reg, $reg2) = cgen->get_regs(8, 8);
     my $arg = rnd->pick(1..126, 128..254);
     my $label = 'L';
     my $jmp = 'j' . rnd->pick(qw(p o s nc np nz no ns));
     $jmp = 'jns' if $jmp eq 'js' && $arg < 128;
     $jmp = 'js' if $jmp eq 'jns' && $arg >= 128;
-    cgen->add_commands(
+    cgen->set_commands(
         [ 'mov', $reg, $arg ],
         [ "$label:" ],
         [ 'add', $reg, 1 ],
