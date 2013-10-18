@@ -117,6 +117,7 @@ use EGE::Gen::Arch07;
 use EGE::Gen::Arch08;
 use EGE::Gen::Arch09;
 use EGE::Gen::Arch10;
+use EGE::Gen::Arch12;
 
 sub g {
     my $unit = shift;
@@ -140,6 +141,7 @@ sub all {[
     gg('Arch08', qw(choose_jump)),
     gg('Arch09', qw(reg_value_before_loopnz zero_fill stack)),
     gg('Arch10', qw(jcc_check_flags cmovcc)),
+    gg('Arch12', qw(cond_min_max)),
 ]}
 
 1;
