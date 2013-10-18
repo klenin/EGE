@@ -57,6 +57,8 @@ sub init {
     $self->{$_} = 0 for @$flags;
 }
 
+sub is_jump { exists $jump_conds->{$_[1]} }
+
 sub valid_jump {
     my ($self, $cmd) = @_;
     $jump_conds->{$cmd}->[1]->($self);

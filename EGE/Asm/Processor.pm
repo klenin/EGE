@@ -62,25 +62,24 @@ sub run_cmd {
 	$self;
 }
 
+sub label_regexp() { qr/^(\w+):$/ }
+
 sub run_code {
-	my ($self, $code) = @_;
-	$self->init();
-	my %labels;
-	for my $i (0..$#{$code}) {
-		my $label = substr($code->[$i]->[0], 0, -1);
-		$labels{$label} = $i if ($self->is_label($code->[$i]->[0]));
-	}
-	my $i = -1;
-	while ($i < $#{$code}) {
-		$i++;
-		my $str = $code->[$i];
-		next if ($self->is_label($str->[0]));
-		my $is_jump = $self->is_jump($str->[0]);
-		$i = $labels{$str->[1]} - 1 if ($is_jump && $self->{eflags}->valid_jump($str->[0]));
-		next if ($is_jump);
-		$self->run_cmd(@$str);
-	}
-	$self;
+    my ($self, $code) = @_;
+    $self->init;
+    my %labels = map { $code->[$_]->[0] =~ label_regexp ? ($1 => $_) : () } 0 .. $#$code;
+    for (my $i = 0; $i < @$code; ++$i) {
+        my $cmd = $code->[$i];
+        my $op = $cmd->[0];
+        if ($op =~ label_regexp) {}
+        elsif ($self->{eflags}->is_jump($op)) {
+            $i = ($labels{$cmd->[1]} // die) - 1 if $self->{eflags}->valid_jump($op);
+        }
+        else {
+            $self->run_cmd(@$cmd);
+        }
+    }
+    $self;
 }
 
 sub stc {
@@ -98,18 +97,6 @@ sub clc {
 sub is_shift {
 	my ($self, $cmd) = @_;
 	{ shl => 1, shr => 1, sal => 1, sar => 1, rol => 1, ror => 1, rcl => 1, rcr => 1 }->{$cmd};
-}
-
-sub is_label {
-	my ($self, $l) = @_;
-	$l =~ /^(\w+):$/;
-}
-
-sub is_jump {
-	my ($self, $cmd) = @_;
-	{ jc => 1, jp => 1, jz => 1, jo => 1, js => 1, jnc => 1, jnp => 1, jnz => 1, jno => 1, jns => 1,
-	je => 1, jne => 1, jl => 1, jnge => 1, jle => 1, jng => 1, jg => 1, jnle => 1, jge => 1, jnl => 1,
-	jb => 1, jnae => 1, jbe => 1, jna => 1, ja => 1, jnbe => 1, jae => 1, jnb => 1, jmp => 1 }->{$cmd};
 }
 
 sub is_stack_command {
