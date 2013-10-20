@@ -23,11 +23,11 @@ sub new {
 }
 
 sub set_indexes {
-	my ($self, $_) = @_;
-	($self->{id_from}, $self->{id_to}) = m/^(a|b|c|d)l$/ ? (24, 32) :
-	m/^(a|b|c|d)h$/ ? (16, 24) :
-	m/^(a|b|c|d)x$/ ? (16, 32) :
-	m/^e(a|b|c|d)x|e(s|b)p$/ ? (0, 32) : 
+	my ($self, $reg) = @_;
+	($self->{id_from}, $self->{id_to}) = $reg =~ /^(a|b|c|d)l$/ ? (24, 32) :
+	$reg =~ /^(a|b|c|d)h$/ ? (16, 24) :
+	$reg =~ /^(a|b|c|d)x$/ ? (16, 32) :
+	$reg =~ /^e(a|b|c|d)x|e(s|b)p$/ ? (0, 32) :
 	(0, 0);
 	$self;
 }
@@ -192,7 +192,7 @@ sub test {
 sub not {
 	my ($self, $eflags, $reg) = @_;
 	$self->set_indexes($reg);
-	$self->{bits}->invert($self->{id_from}, $self->{id_to});
+	$self->{bits}->logic_op('not', '', $self->{id_from}, $self->{id_to});
 	$self;
 }
 
@@ -244,55 +244,63 @@ sub sar {
 
 sub rol {
 	my ($self, $eflags, $reg, $val) = @_;
-	$self->set_indexes($reg);
-	$val %= $self->{id_to} - $self->{id_from};
-	for (1..$val) {
+	$self->rotate_shift($eflags, $reg, $val, sub {
 		$self->shl($eflags, '', 1);
 		$self->{bits}->{v}[$self->{id_to} - 1] = $eflags->{CF};
-	}
-	$self->set_ZSPF($eflags);
-	$eflags->{OF} = 0;
+	});
 	$self;
 }
 
 sub rcl {
 	my ($self, $eflags, $reg, $val) = @_;
-	$self->set_indexes($reg);
-	$val %= $self->{id_to} - $self->{id_from};
-	for (1..$val) {
+	$self->rotate_shift($eflags, $reg, $val, sub {
 		my $prevc = $eflags->{CF};
 		$self->shl($eflags, '', 1);
 		$self->{bits}->{v}[$self->{id_to} - 1] = $prevc;
-	}
-	$self->set_ZSPF($eflags);
-	$eflags->{OF} = 0;
+	});
 	$self;
 }
 
 sub ror {
 	my ($self, $eflags, $reg, $val) = @_;
+	$self->rotate_shift($eflags, $reg, $val, sub {
+		$self->shr($eflags, '', 1);
+		$self->{bits}->{v}[$self->{id_from}] = $eflags->{CF};
+	});
+	$self;
+}
+
+sub rcr {
+	my ($self, $eflags, $reg, $val) = @_;
+	$self->rotate_shift($eflags, $reg, $val, sub {
+		my $prevc = $eflags->{CF};
+		$self->shr($eflags, '', 1);
+		$self->{bits}->{v}[$self->{id_from}] = $prevc;
+	});
+	$self;
+}
+
+sub rotate_shift {
+	my ($self, $eflags, $reg, $val, $sub) = @_;
 	$self->set_indexes($reg);
 	$val %= $self->{id_to} - $self->{id_from};
 	for (1..$val) {
-		$self->shr($eflags, '', 1);
-		$self->{bits}->{v}[$self->{id_from}] = $eflags->{CF};
+		$sub->();
 	}
 	$self->set_ZSPF($eflags);
 	$eflags->{OF} = 0;
 	$self;
 }
 
-sub rcr {
-	my ($self, $eflags, $reg, $val) = @_;
-	$self->set_indexes($reg);
-	$val %= $self->{id_to} - $self->{id_from};
-	for (1..$val) {
-		my $prevc = $eflags->{CF};
-		$self->shr($eflags, '', 1);
-		$self->{bits}->{v}[$self->{id_from}] = $prevc;
-	}
-	$self->set_ZSPF($eflags);
-	$eflags->{OF} = 0;
+sub push {
+	my ($self, $eflags, $reg, $stack) = @_;
+	unshift @{$stack}, $self->get_value($reg);
+	$self;
+}
+
+sub pop {
+	my ($self, $eflags, $reg, $stack) = @_;
+	$self->mov($eflags, $reg, shift @{$stack});
 	$self;
 }
 

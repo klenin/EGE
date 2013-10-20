@@ -1,5 +1,0 @@
-mov al 1
-jmp m
-mov al 3
-m:
-add al 1

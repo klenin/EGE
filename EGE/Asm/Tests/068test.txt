@@ -1,5 +1,0 @@
-mov ax 1
-add ax 1
-jnp m
-mov ax 3
-m:
