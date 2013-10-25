@@ -152,10 +152,9 @@ sub move_command {
 }
 
 sub remove_command {
-	my ($self, $id) = @_;
-	$self->{code}->[$_] = $self->{code}->[$_+1] for ($id..$#{$self->{code}}-1);
-	pop @{$self->{code}};
-	$self;
+    my ($self, $id, $count) = @_;
+    splice @{$self->{code}}, $id, $count || 1;
+    $self;
 }
 
 sub generate_simple_code {
