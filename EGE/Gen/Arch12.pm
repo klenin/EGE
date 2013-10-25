@@ -9,6 +9,7 @@ use warnings;
 use utf8;
 
 use EGE::Random;
+use EGE::Asm::Processor;
 use EGE::Asm::AsmCodeGenerate;
 
 sub cartesian_join {
@@ -24,30 +25,31 @@ sub cartesian_join {
 
 sub cond_max_min {
     my $self = shift;
-    my ($reg1, $reg2, $reg3) = cgen->get_regs((rnd->pick(16, 32)) x 3);
+    my @reg = cgen->get_regs((rnd->pick(16, 32)) x 3);
     my @ccs = (
         cartesian_join('', [ '', 'n' ], [ qw(g l ge le) ]),
         cartesian_join('', [ '', 'n' ], [ qw(a b ae be) ]));
     my $i = rnd->in_range(0, $#ccs);
-    my $signed = $i >= 8 ? 1 : 0;
     my $swap = rnd->coin;
-    my $min = ($i + $swap) % 2;
     cgen->set_commands(
-        [ 'cmp', $reg1, $reg2 ],
+        map([ 'mov', $reg[$_], 51 - $_ ], 0 .. 1),
+        [ 'cmp', @reg[0..1] ],
         [ 'j' . $ccs[$i], 'L1' ],
-        [ 'mov', $reg3, $swap ? $reg2 : $reg1 ],
+        [ 'mov', $reg[2], $reg[$swap] ],
         [ 'jmp', 'L2' ],
         [ 'L1:' ],
-        [ 'mov', $reg3, $swap ? $reg1 : $reg2 ],
+        [ 'mov', $reg[2], $reg[1 - $swap] ],
         [ 'L2:' ],
     );
-    my $code_txt = cgen->get_code_txt('%s');
-    $self->{correct} = $signed * 2 + $min;
-    $_ = "<code>$_</code>" for $reg1, $reg2, $reg3;
-    $self->{text} =
-        "По данным регистрам $reg1 и $reg2 " .
-        "последовательность команд $code_txt вычислит в регистре $reg3:";
-    $self->variants(cartesian_join(' ', ['знаковый', 'беззнаковый'], ['минимум', 'максимум']));
+    my $signed = $i >= 8 ? 1 : 0;
+    my $max = proc->run_code(cgen->{code})->get_val($reg[2]) == 51 ? 1 : 0;
+    my $code_txt = cgen->remove_command(0, 2)->get_code_txt('%s');
+    $self->{correct} = $signed * 2 + $max;
+    $_ = "<code>$_</code>" for @reg;
+    $self->{text} = sprintf
+        'По данным регистрам %s и %s последовательность команд ' .
+        "$code_txt вычислит в регистре %s:", @reg;
+    $self->variants(cartesian_join(' ', [ 'знаковый', 'беззнаковый' ], [ 'минимум', 'максимум' ]));
 }
 
 sub divisible_by_mask {
