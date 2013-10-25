@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 180;
+use Test::More tests => 181;
 
 use lib '..';
 use EGE::Asm::Processor;
@@ -34,6 +34,8 @@ sub check_stack {
     is proc->get_val('eax'), 209, 'movzx';
     proc->run_code([ ['mov', 'al', 209], ['movsx', 'ax', 'al'] ]);
     is proc->get_val('eax'), 65489, 'movsx';
+    my $w = proc->get_wrong_val('eax') ^ proc->get_val('eax');
+    ok $w && !($w & ($w - 1)), 'wrong value';
 }
 
 {
