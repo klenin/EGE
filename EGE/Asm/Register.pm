@@ -115,24 +115,19 @@ sub adc {
 }
 
 sub sub {
-	my ($self, $eflags, $reg, $val, $cf) = @_;
-	$self->set_indexes($reg) if ($reg);
-	my $oldcf = $eflags->{CF};
-	my $a = 2**($self->{id_to} - $self->{id_from});
-	$val = $a + $val if ($val < 0);
-	my $regval = $self->get_value();
-	$eflags->{CF} = 0;
-	$eflags->{CF} = 1 if ($regval < $val || $regval < $val+1 && $cf && $oldcf);
-	$regval = $regval - $a if ($regval >= $a/2);
-	$val = $val - $a if ($val >= $a/2);
-	my $newval = $regval - $val;
-	$newval-- if ($cf && $oldcf);
-	$eflags->{OF} = 0;
-	$eflags->{OF} = 1 if ($newval >= $a/2 || $newval < -$a/2);
-	$newval %= $a;
-	$self->mov($eflags, '', $newval);
-	$self->set_ZSPF($eflags);
-	$self;
+    my ($self, $eflags, $reg, $val, $use_cf) = @_;
+    $self->set_indexes($reg) if $reg;
+    my $oldcf = $use_cf ? $eflags->{CF} : 0;
+    my $a = 2 ** ($self->{id_to} - $self->{id_from});
+    $val += $a if $val < 0;
+    my $regval = $self->get_value();
+    $eflags->{CF} = $regval < $val + $oldcf ? 1 : 0;
+    $regval -= $a if $regval >= $a / 2;
+    $val -= $a if $val >= $a / 2;
+    my $newval = $regval - $val - $oldcf;
+    $eflags->{OF} = $newval >= $a / 2 || $newval < -$a / 2 ? 1 : 0;
+    $newval %= $a;
+    $self->mov($eflags, '', $newval)->set_ZSPF($eflags);
 }
 
 sub sbb {

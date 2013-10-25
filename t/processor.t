@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 170;
+use Test::More tests => 174;
 
 use lib '..';
 use EGE::Asm::Processor;
@@ -114,6 +114,9 @@ sub check_stack {
     proc->run_code([ ['mov', 'al', -64], ['sub', 'al', 65] ]);
     is proc->get_val('eax'), 127, 'sub set OF';
     is proc->{eflags}->flags_text, 'OF', 'sub set OF flags';
+    proc->run_code([ ['mov', 'eax', 1], ['sub', 'eax', 2] ]);
+    is proc->get_val('eax'), 0xFFFFFFFF, 'sub positive eax to receive negative';
+    is proc->{eflags}->flags_text, 'CF PF SF', 'sub positive eax to receive positive flags';
 }
 
 {
@@ -128,6 +131,9 @@ sub check_stack {
     proc->run_code([ ['mov', 'al', 7], ['stc'], ['sbb', 'al', 7] ]);
     is proc->get_val('eax'), 255, 'stc sbb equal numbers';
     is proc->{eflags}->flags_text, 'CF PF SF', 'stc sbb equal numbers flags';
+    proc->run_code([ ['xor', 'ebx', 'ebx'], ['stc'], ['sbb', 'eax', 'ebx'] ]);
+    is proc->get_val('eax'), 0xFFFFFFFF, 'stc sbb eax zero';
+    is proc->{eflags}->flags_text, 'CF PF SF', 'stc sbb eax zero flags';
 }
 
 {
