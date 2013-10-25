@@ -12,39 +12,38 @@ use EGE::Random;
 
 
 sub new {
-	my ($class, %init) = @_;
+    my ($class, %init) = @_;
     my $self = {
-		id_from => undef,
-		id_to => undef,
-		bits => EGE::Bits->new->set_size(32)
-	};
-   bless $self, ref $class || $class;
-   $self;
+        id_from => undef,
+        id_to => undef,
+        bits => EGE::Bits->new->set_size(32),
+        %init,
+    };
+    bless $self, ref $class || $class;
+    $self;
 }
 
+my %reg_indexes = (
+    (map { $_ . 'l' => [ 24, 32 ] } 'a'..'d'),
+    (map { $_ . 'h' => [ 16, 24 ] } 'a'..'d'),
+    (map { $_ . 'x' => [ 16, 32 ] } 'a'..'d'),
+    (map { $_ => [ 0, 32 ] } 'ebp', 'esp', map "e${_}x", 'a'..'d'),
+);
+
 sub set_indexes {
-	my ($self, $reg) = @_;
-	($self->{id_from}, $self->{id_to}) = $reg =~ /^(a|b|c|d)l$/ ? (24, 32) :
-	$reg =~ /^(a|b|c|d)h$/ ? (16, 24) :
-	$reg =~ /^(a|b|c|d)x$/ ? (16, 32) :
-	$reg =~ /^e(a|b|c|d)x|e(s|b)p$/ ? (0, 32) :
-	(0, 0);
-	$self;
+    my ($self, $reg) = @_;
+    ($self->{id_from}, $self->{id_to}) = @{$reg_indexes{$reg}};
+    $self;
 }
 
 sub get_value {
-	my ($self, $reg, $flip) = @_;
-	$self->set_indexes($reg) if ($reg);
-	my $len = $self->{id_to} - $self->{id_from};
-	my $tmp = EGE::Bits->new->set_size($len);
-	for (0 .. $len - 1) {
-		$tmp->{v}[$_] = $self->{bits}->{v}[$self->{id_from}+$_];
-	}
-	if ($flip) {
-		my $id = rnd->in_range(0, $len - 1);
-		$tmp->{v}[$id] ^= 1;
-	}
-	$tmp->get_dec();
+    my ($self, $reg, $flip) = @_;
+    $self->set_indexes($reg) if $reg;
+    my $len = $self->{id_to} - $self->{id_from};
+    my $tmp = EGE::Bits->new->
+        set_bin_array([ @{$self->{bits}->{v}}[$self->{id_from} .. $self->{id_to} - 1] ], 1);
+    $tmp->{v}[rnd->in_range(0, $len - 1)] ^= 1 if $flip;
+    $tmp->get_dec();
 }
 
 sub set_ZSPF {
