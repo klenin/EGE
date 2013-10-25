@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 168;
+use Test::More tests => 170;
 
 use lib '..';
 use EGE::Asm::Processor;
@@ -167,6 +167,9 @@ sub check_stack {
     proc->run_code([ ['mov', 'al', 13], ['not', 'al'] ]);
     is proc->get_val('eax'), 242, 'not';
     is proc->{eflags}->flags_text, '', 'not flags';
+    proc->run_code([ ['mov', 'eax', 3482736], ['mov', 'ebx', 'eax'], ['not', 'ebx'], ['and', 'ebx', 'eax'] ]);
+    is proc->get_val('ebx'), 0, 'and-not';
+    is proc->{eflags}->flags_text, 'PF ZF', 'and-not flags';
 }
 
 {
