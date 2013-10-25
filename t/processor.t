@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 174;
+use Test::More tests => 180;
 
 use lib '..';
 use EGE::Asm::Processor;
@@ -118,6 +118,21 @@ sub check_stack {
     is proc->get_val('eax'), 0xFFFFFFFF, 'sub positive eax to receive negative';
     is proc->{eflags}->flags_text, 'CF PF SF', 'sub positive eax to receive positive flags';
 }
+
+{
+    sub test_cmp {
+        my ($v1, $v2, $flags) = @_;
+        proc->run_code([ ['mov', 'al', $v1], ['cmp', 'al', $v2] ]);
+        is proc->{eflags}->flags_text, $flags, "cmp: $v1 ? $v2";
+    }
+    test_cmp(1, 1, 'PF ZF');
+    test_cmp(0, 1, 'CF PF SF');
+    test_cmp(1, 0, '');
+    test_cmp(0, -1, 'CF');
+    test_cmp(128, 127, 'OF');
+    test_cmp(64, -64, 'CF OF SF');
+}
+
 
 {
     proc->run_code([ ['mov', 'al', 15], ['stc'], ['sbb', 'al', 7] ]);

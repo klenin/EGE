@@ -132,6 +132,13 @@ sub sbb {
 	$self->sub($eflags, $reg, $val, 1);
 }
 
+sub cmp {
+    my ($self, $eflags, $reg, $val) = @_;
+    my $tmp = $self->new;
+    $tmp->{bits}->copy($self->{bits});
+    $tmp->sub($eflags, $reg, $val);
+}
+
 sub neg {
 	my ($self, $eflags, $reg) = @_;
 	my $val = $self->get_value($reg);
