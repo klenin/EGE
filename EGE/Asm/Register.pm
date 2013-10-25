@@ -48,29 +48,26 @@ sub get_value {
 }
 
 sub set_ZSPF {
-	my ($self, $eflags) = @_;
-	$eflags->{ZF} = $self->get_value() == 0;
-	$eflags->{ZF} = 0 if (!$eflags->{ZF});
-	$eflags->{SF} = $self->{bits}->{v}[$self->{id_from}];
-	my $num1 = 0;
-	for (24 .. 31) {
-		$num1++ if ($self->{bits}->{v}[$_]);
-	}
-	$eflags->{PF} = !($num1 % 2);
-	$eflags->{PF} = 0 if (!$eflags->{PF});
-	$self;
+    my ($self, $eflags) = @_;
+    $eflags->{ZF} = $self->get_value() ? 0 : 1;
+    $eflags->{SF} = $self->{bits}->{v}[$self->{id_from}];
+    $eflags->{PF} = 1 - scalar(grep $self->{bits}->{v}[$_], 24 .. 31) % 2;
+    $self;
+}
+
+sub mov_value {
+    my ($self, $val) = @_;
+    my $len = $self->{id_to} - $self->{id_from};
+    $val += 2 ** $len if $val < 0;
+    my $tmp = EGE::Bits->new->set_size($len)->set_dec($val);
+    splice @{$self->{bits}->{v}}, $self->{id_from}, $len, @{$tmp->{v}};
+    $self;
 }
 
 sub mov {
-	my ($self, $eflags, $reg, $val) = @_;
-	$self->set_indexes($reg) if ($reg);
-	$val = 2**($self->{id_to} - $self->{id_from}) + $val if ($val < 0);
-	my $tmp = EGE::Bits->new->set_size($self->{id_to} - $self->{id_from});
-	$tmp->set_dec($val);
-	for (0 .. $self->{id_to} - $self->{id_from} - 1) {
-		$self->{bits}->{v}[$self->{id_from}+$_] = $tmp->{v}[$_];
-	}
-	$self;
+    my ($self, $eflags, $reg, $val) = @_;
+    $self->set_indexes($reg) if $reg;
+    $self->mov_value($val);
 }
 
 sub movzx {
@@ -127,7 +124,7 @@ sub sub {
     my $newval = $regval - $val - $oldcf;
     $eflags->{OF} = $newval >= $a / 2 || $newval < -$a / 2 ? 1 : 0;
     $newval %= $a;
-    $self->mov($eflags, '', $newval)->set_ZSPF($eflags);
+    $self->mov_value($newval)->set_ZSPF($eflags);
 }
 
 sub sbb {
