@@ -29,7 +29,7 @@ sub cond_max_min {
         cartesian_join('', [ '', 'n' ], [ qw(g l ge le) ]),
         cartesian_join('', [ '', 'n' ], [ qw(a b ae be) ]));
     my $i = rnd->in_range(0, $#ccs);
-    my $signed = $i >= 4 ? 1 : 0;
+    my $signed = $i >= 8 ? 1 : 0;
     my $swap = rnd->coin;
     my $min = ($i + $swap) % 2;
     cgen->set_commands(
