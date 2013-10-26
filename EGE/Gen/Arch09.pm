@@ -33,13 +33,12 @@ sub reg_value_before_loopnz {
 
 sub zero_fill {
     my $self = shift;
-    my $reg = cgen->get_reg(32, 'not_ecx');
     my $arg = rnd->in_range(1, 25) * 10;
     my @cmds = qw(stosb stosw stosd);
     $self->{correct} = rnd->in_range(1, scalar @cmds);
     cgen->set_commands(
         [ 'mov', 'ecx', $arg ],
-        [ 'mov', $reg, 0 ],
+        [ 'mov', 'eax', 0 ],
         [ 'rep', $cmds[$self->{correct} - 1] ],
     );
     my $code_txt = cgen->get_code_txt('%s');
