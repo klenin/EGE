@@ -216,4 +216,11 @@ sub logic_op {
     $self;
 }
 
+sub xor_bits {
+    my ($self) = @_;
+    my $r = 0;
+    $r ^= $_ for @{$self->{v}};
+    $r;
+}
+
 1;
