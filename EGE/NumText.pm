@@ -70,7 +70,7 @@ sub num_text {
         $d =~ /^2|3|4$/ ? 1 :
         2;
    ($text_only ? '' : "$n ") . $ts->[$t];
-};
+}
 
 sub num_by_words_text {
     my ($n, $gender, $case, $forms) = @_;
