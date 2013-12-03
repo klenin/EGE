@@ -149,6 +149,7 @@ binmode STDOUT, ':utf8';
 #g('A5', 'arith');
 #g('A5', 'div_mod_10');
 #g('A5', 'div_mod_rotate');
+#g('A5', 'crc');
 #g('A6', 'count_by_sign');
 #g('A6', 'bus_station');
 #g('A6', 'find_min_max');

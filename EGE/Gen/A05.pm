@@ -1,4 +1,4 @@
-# Copyright © 2010 Alexander S. Klenin
+# Copyright © 2010-2013 Alexander S. Klenin
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
 package EGE::Gen::A05;
@@ -11,6 +11,7 @@ use utf8;
 use EGE::Random;
 use EGE::Prog;
 use EGE::LangTable;
+use EGE::Bits;
 
 sub arith {
     my ($self) = @_;
@@ -143,6 +144,60 @@ sub digit_by_digit {
 числа:  835, 196. Поразрядные суммы: 9, 12, 11. Результат: 12119</i>
 <br/>Определите, какое из следующих чисел может быть результатом работы автомата.
 EOL
+}
+
+sub random_0_1 {
+    my ($zeroes, $ones, $used, $cond) = @_;
+    $cond ||= sub { 1 };
+    my $bits = EGE::Bits->new;
+    do { $bits->set_bin([ rnd->shuffle((0) x $_[0], (1) x $_[1]) ], 1) }
+        until !$used->{$bits->get_bin} && $cond->($bits);
+    $used->{$bits->get_bin} = 1;
+    $bits;
+}
+
+sub crc {
+    my ($self) = @_;
+    my ($digits, $digits_text, $control_text) = @{rnd->pick(
+        [6, qw(шести седьмой)],
+        [7, qw(семи восьмой)],
+        [8, qw(восьми девятый)],
+    )};
+    my $zero_out = '0' x ($digits + 1);
+
+    my $ones = int($digits / 2) + int($digits / 2) % 2;
+    my $used = {};
+    my $sample_0 = random_0_1($digits - $ones, $ones, $used, sub { $_[0]->xor_bits == 0 })->get_bin;
+    my $sample_1 = random_0_1($digits - $ones + 1, $ones - 1, $used, sub { $_[0]->xor_bits == 1 })->get_bin;
+
+    my @msg = map random_0_1($digits - $ones, $ones, $used), 0 .. 2;
+    push @{$_->{v}}, $_->xor_bits for @msg;
+
+    my ($unchanged, $single, $double)= rnd->shuffle(0 .. 2);
+    my @bad = map $_->dup, @msg;
+    $bad[$single]->flip(rnd->in_range(0, $digits));
+    $bad[$double]->flip($_) for rnd->pick_n(2, 0 .. $digits);
+
+    my $msg_as_text = sub {
+        my @cmsg = @bad;
+        undef $cmsg[$_] for @_;
+        '<tt>' . join(' ', map { $_ ? $_->get_bin : $zero_out } @cmsg) . '</tt>';
+    };
+
+    $self->variants(map($msg_as_text->($_), 0 .. 2), $msg_as_text->($single, $double));
+    $self->{correct} = $single;
+    $self->{text} =
+        "<p>В не­ко­то­рой ин­фор­ма­ци­он­ной си­сте­ме ин­фор­ма­ция ко­ди­ру­ет­ся дво­ич­ны­ми ${digits_text}раз­ряд­ны­ми сло­ва­ми. " .
+        "При пе­ре­да­че дан­ных воз­мож­ны их ис­ка­же­ния, по­это­му в конец каж­до­го слова до­бав­ля­ет­ся $control_text " .
+        '(кон­троль­ный) раз­ряд таким об­ра­зом, чтобы сумма раз­ря­дов но­во­го слова, счи­тая кон­троль­ный, была чётной. ' .
+        "На­при­мер, к слову <tt>$sample_0</tt> спра­ва будет до­бав­лен <tt>0</tt>, а к слову <tt>$sample_1</tt> — <tt>1</tt>.</p>" .
+        '<p>После приёма слова про­из­во­дит­ся его об­ра­бот­ка. При этом про­ве­ря­ет­ся сумма его раз­ря­дов, вклю­чая кон­троль­ный. ' .
+        'Если она нечётна, это озна­ча­ет, что при пе­ре­да­че этого слова про­изошёл сбой, ' .
+        "и оно ав­то­ма­ти­че­ски за­ме­ня­ет­ся на за­ре­зер­ви­ро­ван­ное слово <tt>$zero_out</tt>. " .
+        'Если она чётна, это озна­ча­ет, что сбоя не было или сбоев было боль­ше од­но­го. В этом слу­чае при­ня­тое слово не из­ме­ня­ет­ся.</p>' .
+        '<p>Ис­ход­ное со­об­ще­ние</p><pre>' . join(' ', map $_->get_bin, @msg) .
+        '</pre><p>было при­ня­то в виде</p><pre>' . $msg_as_text->() .
+        '</pre><p>Как будет вы­гля­деть при­ня­тое со­об­ще­ние после об­ра­бот­ки?</p>';
 }
 
 1;
