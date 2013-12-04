@@ -69,12 +69,9 @@ sub truth_table_fragment {
 
 sub _build_tree {
     my ($len) = @_;
-    return undef unless $len;
-    if (rnd->coin()) {
-        return { l => _build_tree($len - 1), r => _build_tree($len - 1) }
-    } else {
-        return { (rnd->coin() ? 'l' : 'r') => _build_tree($len - 1)  }
-    }
+    !$len ? undef :
+    rnd->coin ? { l => _build_tree($len - 1), r => _build_tree($len - 1) } :
+    { rnd->pick(qw(l r)) => _build_tree($len - 1) };
 }
 
 sub _gain_codes {
@@ -94,9 +91,9 @@ sub _gain_codes {
 sub _build_codes {
     my ($len, $t) = @_;
     my $res = [];
-    $t //= _build_tree($len);
+    $t //= _build_tree($len); #/
     _gain_codes($t, $res, '');
-    $res
+    $res;
 }
 
 sub _get_prefix { substr($_[0], 0, length($_[0]) - 1) }
@@ -117,14 +114,14 @@ sub find_var_len_code {
 
     my @alph = ('A' .. 'H');
     $self->{text} .= sprintf
-        'Для кодирования некоторой последовательности, состоящей из букв %s' .
-        ', решили использовать неравномерный двоичный код, позволяющий ' .
-        ' однозначно декодировать двоичную последовательность, появляющуюся на ' .
-        'приёмной стороне канала связи. Использовали код: %s . Укажите, каким ' .
+        'Для кодирования некоторой последовательности, состоящей из букв %s, ' .
+        'решили использовать неравномерный двоичный код, позволяющий ' .
+        'однозначно декодировать двоичную последовательность, появляющуюся на ' .
+        'приёмной стороне канала связи. Использовали код: %s. Укажите, каким ' .
         'кодовым словом может быть закодирована буква %s. ' .
         'Код должен удовлетворять свойству однозначного декодирования.',
-        (join ', ', @alph[0 .. $#codes]),
-        (join ', ', map { shift(@alph) . '-' . $_ } @codes),
+        join(', ', @alph[0 .. $#codes]),
+        join(', ', map { shift(@alph) . '–' . $_ } @codes),
         shift(@alph);
 }
 
