@@ -11,6 +11,7 @@ use utf8;
 use EGE::Random;
 use EGE::Bits;
 use EGE::NumText;
+use EGE::Russian;
 
 use EGE::Gen::A02;
 
@@ -18,7 +19,7 @@ sub variable_length {
     my ($self) = @_;
     my %code = ( 'А' => '00', 'Б' => '11', 'В' => '010', 'Г' => '011' );
     my @letters = sort keys %code;
-    my $symt = join(', ', @letters[0 .. $#letters - 1]) . ' и ' . $letters[-1];
+    my $symt = EGE::Russian::join_comma_and(@letters);
     my $codet = join ', ', map "$_ - $code{$_}", @letters;
 
     my @msg = map rnd->pick(@letters), 1..6;
@@ -37,7 +38,7 @@ sub variable_length {
         'Для передачи по каналу связи сообщения, состоящего только из ' .
         "символов $symt, используется неравномерный (по длине) код: $codet. " .
         "Через канал связи передаётся сообщение: $msgt. " .
-        'Закодируйте соощение данным кодом. ' .
+        'Закодируйте сообщение данным кодом. ' .
         'Полученную двоичную последовательность переведите в восьмеричный вид.';
     $self->variants($bs->get_oct, $bs->get_hex, $bad_bs->get_oct, $bads);
 }

@@ -14,6 +14,7 @@ use EGE::Random;
 use EGE::Bits;
 use EGE::Logic;
 use EGE::Html;
+use EGE::Russian;
 
 sub rand_expr_text {
     my $e = EGE::Logic::random_logic_expr(@_);
@@ -125,8 +126,6 @@ sub find_var_len_code {
         shift(@alph);
 }
 
-sub join_comma_and { join(', ', @_[0 .. $#_ - 1]) . ' и ' . $_[-1] }
-
 sub error_correction_code {
     my ($self) = @_;
     my $digits = rnd->in_range(5, 6);
@@ -150,7 +149,7 @@ sub error_correction_code {
     my %correct; undef @correct{@{$error_variants[0]}, -1};
     $self->{text} =
         "<p>Для передачи данных по каналу связи используется $digits-битовый код. " .
-        'Сообщение содержит только буквы ' . join_comma_and(map $_->{letter}, @letters) .
+        'Сообщение содержит только буквы ' . EGE::Russian::join_comma_and(map $_->{letter}, @letters) .
         ', которые кодируются следующими кодовыми словами:</p><p>' .
         join(', ', map { "$_->{letter} – <tt>" . $_->{bits}->get_bin . '</tt>' } @letters) . '.</p>' .
         '<p>При передаче возможны помехи. Однако некоторые ошибки можно попытаться исправить. ' .
