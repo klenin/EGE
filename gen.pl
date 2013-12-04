@@ -163,6 +163,7 @@ binmode STDOUT, ':utf8';
 #g('A8', 'equiv_4');
 #g('A9', 'truth_table_fragment');
 #g('A9', 'find_var_len_code');
+#g('A9', 'error_correction_code');
 #g('A10', 'graph_by_matrix');
 #g('A11', 'variable_length');
 #g('A11', 'fixed_length');

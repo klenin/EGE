@@ -125,6 +125,53 @@ sub find_var_len_code {
         shift(@alph);
 }
 
+sub join_comma_and { join(', ', @_[0 .. $#_ - 1]) . ' и ' . $_[-1] }
+
+sub error_correction_code {
+    my ($self) = @_;
+    my $digits = rnd->in_range(5, 6);
+    my %used;
+    my @letters = map { bits => EGE::Bits->new->set_size($digits), letter => $_ }, qw(А Б В); 
+    for my $l (@letters) {
+        do {
+            $l->{bits}->set_dec(rnd->in_range(0, 2 ** $digits - 1));
+        } while $used{$l->{bits}->get_dec};
+        $used{$l->{bits}->get_dec} = 1;
+        $used{$l->{bits}->dup->flip($_)->get_dec} = 1 for 0 .. $digits - 1;
+    }
+    my @msg = (rnd->shuffle(@letters), rnd->pick(@letters));
+    my $sample = rnd->pick(@letters);
+    my $msg_with_errors = sub {
+        my %errors; undef @errors{@_, -1};
+        join '', map exists $errors{$_} ? 'x' : $msg[$_]->{letter}, 0 .. $#msg;
+    };
+    my @error_variants = map [ rnd->pick_n($_, 0 .. $#msg) ], rnd->pick_n(4, 0 .. @msg);
+    $self->variants(map $msg_with_errors->(@$_), @error_variants);
+    my %correct; undef @correct{@{$error_variants[0]}, -1};
+    $self->{text} =
+        "<p>Для передачи данных по каналу связи используется $digits-битовый код. " .
+        'Сообщение содержит только буквы ' . join_comma_and(map $_->{letter}, @letters) .
+        ', которые кодируются следующими кодовыми словами:</p><p>' .
+        join(', ', map { "$_->{letter} – <tt>" . $_->{bits}->get_bin . '</tt>' } @letters) . '.</p>' .
+        '<p>При передаче возможны помехи. Однако некоторые ошибки можно попытаться исправить. ' .
+        'Любые два из этих трёх кодовых слов отличаются друг от друга не менее чем в трёх позициях. ' .
+        'Поэтому если при передаче слова произошла ошибка не более чем в одной позиции, ' .
+        'то можно сделать обоснованное предположение о том, какая буква передавалась. ' .
+        '(Говорят, что «код исправляет одну ошибку».) Например, если получено кодовое слово <tt>' .
+        $sample->{bits}->dup->flip(rnd->in_range(0, $digits - 1))->get_bin . '</tt>, считается, ' .
+        "что передавалась буква $sample->{letter}. " .
+        "(Отличие от кодового слова для $sample->{letter} только в одной позиции, " .
+        'для остальных кодовых слов отличий больше.) ' .
+        'Если принятое кодовое слово отличается от кодовых слов для букв ' .
+        join(', ', map $_->{letter}, @letters) .
+        ' более чем в одной позиции, то считается, что произошла ошибка (она обозначается ‘x’).</p>' .
+        '<p>Получено сообщение <tt>' .
+        join(' ',
+            map $msg[$_]->{bits}->dup->flip(rnd->pick_n($correct{$_} ? 2 : 1, 0 .. $digits - 1))->get_bin,
+            0 .. $#msg) .
+        '</tt>. Декодируйте это сообщение — выберите правильный вариант.</p>';
+}
+
 1;
 
 __END__
