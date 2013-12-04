@@ -159,8 +159,8 @@ sub set_bit {
 }
 
 sub flip {
-    my ($self, $index) = @_;
-    $self->{v}->[-$index - 1] ^= 1;
+    my ($self, @indexes) = @_;
+    $self->{v}->[-$_ - 1] ^= 1 for @indexes;
     $self;
 }
 
