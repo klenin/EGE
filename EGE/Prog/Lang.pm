@@ -184,4 +184,14 @@ sub translate_op {{
 
 sub translate_un_op { { '!' => '¬' } }
 
+package EGE::Prog::Lang::SQL;
+use base 'EGE::Prog::Lang';
+
+sub translate_op {{
+     '==' => '=', '!=' => '<>','&&' => 'AND', '||' => 'OR'
+}}
+sub translate_un_op {{ 
+    '!' => 'not'
+}}
+
 1;

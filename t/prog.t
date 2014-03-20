@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 56;
+use Test::More tests => 60;
 use Test::Exception;
 
 use lib '..';
@@ -186,4 +186,19 @@ end;~;
     my $v = {};
     $e->gather_vars($v);
     is_deeply $v, { x => 1, y => 1 }, 'gather_vars';
+}
+
+{
+    my $e = make_expr([ '&&', [ '<=', 1, 'a' ], [ '<=', 'a', 'n' ] ]);
+    is $e->to_lang_named('SQL'), '1 <= a AND a <= n', 'logic SQL';
+}
+
+{
+    my $e = make_expr([ '||', [ '<=', 1, 'a' ], [ '<=', 'a', 'n' ] ]);
+    is $e->to_lang_named('SQL'), '1 <= a OR a <= n', 'logic SQL';
+}
+
+{
+    my $e = make_expr([ '||', [ '!=', 1, 'a' ], [ '!', 'a' ] ]);
+    is $e->to_lang_named('SQL'), '1 <> a OR not a', 'logic SQL';
 }
