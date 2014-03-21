@@ -184,6 +184,7 @@ binmode STDOUT, ':utf8';
 #g('B06', 'solve');
 #g('B07', 'who_is_right');
 #g('B08', 'identify_letter');
+#g('B11', 'ip_mask');
 g1('Arch01', 'reg_value_add');
 g1('Arch01', 'reg_value_logic');
 g1('Arch01', 'reg_value_shift');

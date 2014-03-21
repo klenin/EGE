@@ -1,4 +1,4 @@
-# Copyright © 2010-2012 Alexander S. Klenin
+# Copyright © 2010-2014 Alexander S. Klenin
 # Copyright © 2012 V. Kevroletin
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
@@ -13,93 +13,60 @@ use utf8;
 use EGE::Random;
 use EGE::Html;
 
-use List::Util qw(sum max);
-
-
-sub _bin2dec {
-    return unpack("N", pack("B32", substr("0" x 32 . shift, -32)));
+sub _bits_to_mask {
+    map oct("0b$_"), unpack 'a8' x 4, (1 x $_[0] . 0 x (32 - $_[0]))
 }
 
-sub _pack8 {
-    my (@res, $t);
-    for (@_) {
-        $t .= $_;
-        if (length($t) == 8) {
-            push @res, $t;
-            $t = '';
-        }
-    }
-    push @res, $t if $t;
-    map { _bin2dec($_) } @res
-}
-
-sub _double_map {
-    my ($funct, $ar1, $ar2) = @_;
-    my $i = 0;
-    my @res;
-    while ($i < max(int @$ar1, int @$ar2)) {
-        push @res, $funct->($ar1->[$i], $ar2->[$i]);
-        ++$i;
-    }
-    \@res
-}
-
-sub _table_text {
-    my ($table) = @_;
-    $_  = html->row('th', 'A' .. 'H');
-    $_ .= html->row('td', @{$table});
-    html->table($_, {border => 1});
+sub _prepare {
+    my ($header, $parts, $ip) = @_;
+    my $find_part = sub { (grep $parts->[$_] == $_[0], 0 .. $#$parts)[0] };
+    (
+        join('', map $header->[$find_part->($_)], @$ip),
+        html->table(html->row('th', @$header) . html->row('td', @$parts), { border => 1 }),
+    );
 }
 
 sub ip_mask {
     my ($self) = @_;
-    my $ip;
+    my @ip;
     do {
-        $ip = [map { rnd->in_range(0, 255) } 1 .. 4];
-    } while (sum @$ip == 0);
-    my $mask_ones_cnt = rnd->in_range(1, 31);
-    my $mask = [_pack8 map { $_ > $mask_ones_cnt ? 0 : 1 } 1 .. 32];
-    my $res  = _double_map( sub { $_[0] & $_[1] }, $ip, $mask );
-    my @tbl = ( @$res,
-                @{ _double_map( sub { $_[0] | $_[1] }, $ip, $mask ) },
-                reverse @$ip,
-                @$mask,
-                @{ _double_map( sub { $_[0] ^ $_[1] }, $ip, $mask ) });
+        @ip = map rnd->in_range(0, 255), 1 .. 4;
+    } while (0 == grep $_, @ip);
+    my @mask = _bits_to_mask(rnd->in_range(1, 31));
+    my @header = ('A'..'H');
+    my @masked_ip = map $ip[$_] & $mask[$_], 0 .. $#ip;
     my %seen;
-    @tbl = grep { !$seen{$_}++ } @tbl;
-    while (@tbl < 8) {
-        $_ = rnd->in_range(0, 255);
-        push @tbl, $_ unless $_ ~~ @tbl
-    }
-    @tbl = sort { $a <=> $b } @tbl[0 .. 7];
-    $self->{correct} = '';
-    for my $x (@{$res}) {
-        $self->{correct} .= join '', map { ['A' .. 'H']->[$_] }
-            grep { $tbl[$_] == $x } 0 .. $#tbl;
-    }
-
-    my ($ip_text, $mask_text) = map { join '.', @$_ } $ip, $mask;
-    my $table_text = _table_text(\@tbl); 
-    my $example_table_text = _table_text([128, 168, 255, 8, 127, 0, 17, 192]);
+    my @parts = sort { $a <=> $b } (grep !$seen{$_}++,
+        @masked_ip,
+        (map $ip[$_] & $mask[$_], 0 .. $#ip),
+        reverse @ip,
+        @mask,
+        (map $ip[$_] ^ $mask[$_], 0 .. $#ip),
+        rnd->pick_n(8, 0..255),
+    )[0..$#header];
+    ($self->{correct}, my $table_text) = _prepare(\@header, \@parts, \@masked_ip);
+    my @example_ip = (192, 168, 128, 0);
+    my ($example_answer, $example_table_text) = _prepare(\@header,
+        [ 128, 168, 255, 8, 127, 0, 17, 192 ], \@example_ip);
+    local $" = '.';
     $self->{text} = <<EOL
-В терминологии сетей TCP/IP маской сети  называется двоичное число, определяющее,
+В терминологии сетей TCP/IP маской сети называется двоичное число, определяющее,
 какая часть IP-адреса узла сети относится к адресу сети, а какая — к адресу самого
 узла в этой сети. Обычно маска записывается по тем же правилам, что и IP-адрес.
 Адрес сети получается в результате применения поразрядной конъюнкции к заданному
 IP-адресу узла и маске. <br/>
-По заданным  IP-адресу узла и маске  определите адрес сети.
+По заданным IP-адресу узла и маске определите адрес сети.
 <table>
-  <tr><td>IP –адрес узла:</td><td>$ip_text</td></tr>
-  <tr><td>Маска:</td><td>$mask_text</td></tr>
+  <tr><td>IP-адрес узла:</td><td>@ip</td></tr>
+  <tr><td>Маска:</td><td>@mask</td></tr>
 </table>
 При записи ответа выберите из приведенных в таблице чисел четыре элемента IP-адреса
 и запишите в нужном порядке соответствующие им буквы. Точки писать не нужно.
 $table_text
 <br/><i><strong>Пример</strong>.
-Пусть искомый IP-адрес  192.168.128.0, и дана таблица
+Пусть искомый IP-адрес @example_ip, и дана таблица</i>
 $example_table_text
-В этом случае правильный ответ будет записан в виде: HBAF
-</i>
+<i>В этом случае правильный ответ будет записан в виде: $example_answer</i>
 EOL
 }
 
@@ -118,7 +85,7 @@ __END__
 =back
 
 
-=head2 Генератор car_numbers
+=head2 Генератор ip_mask
 
 =head3 Источник
 
@@ -127,13 +94,13 @@ __END__
 
 =head3 Описание
 
-Деструкторы:
+Дистракторы:
 
 =over
 
 =item *
 
-Числа, полученные при применении поразрядной дизъюнкции(а не конъюнции) к
+Числа, полученные при применении поразрядной дизъюнкции (а не конъюнции) к
 заданному IP-адресу и маске.
 
 =item *
