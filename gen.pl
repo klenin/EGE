@@ -140,6 +140,7 @@ binmode STDOUT, ':utf8';
 #g('A2', 'car_numbers');
 #g('A2', 'database');
 #g('A2', 'units');
+#g('A2', 'min_routes');
 #g('A3', 'ones');
 #g('A3', 'zeroes');
 #g('A3', 'convert');
