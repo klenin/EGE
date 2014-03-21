@@ -89,10 +89,10 @@ sub check {
     for my $i (0 .. $#{$c}) {
         my $curr = $c->[$i];
         for (keys %{$relations{Together}->{v}{$curr}}) {
-            return 0 unless $pos{$_} ~~ [$i - 1, $i + 1]
+            return 0 unless abs($pos{$_} - $i) == 1
         }
         for (keys %{$relations{NotTogether}->{v}{$curr}}) {
-            return 0 if $pos{$_} ~~ [$i - 1, $i + 1]
+            return 0 if abs($pos{$_} - $i) == 1
         }
         for (keys %{$relations{ToRight}->{v}{$curr}}) {
             return 0 if $i <= $pos{$_};
@@ -221,20 +221,20 @@ sub ablative { # творительный падеж
 }
 
 sub on_right {
-    given (rnd->in_range(0, 3)) {
-        when (0) { return "$_[1] живет левее  " . genitive($_[0]) }
-        when (1) { return "$_[0] живёт правее " . genitive($_[1]) }
-        when (2) { return "$_[1] живет левее, чем  " . $_[0] }
-        when (3) { return "$_[0] живёт правее, чем " . $_[1] }
-    }
- }
+    rnd->pick(
+        sub { "$_[1] живет левее " . genitive($_[0]) },
+        sub { "$_[0] живёт правее " . genitive($_[1]) },
+        sub { "$_[1] живет левее, чем $_[0]" },
+        sub { "$_[0] живёт правее, чем $_[1]" },
+    )->(@_);
+}
 
 sub together {
-    "$_[0] живёт рядом " . "c " . ablative($_[1]);
+    "$_[0] живёт рядом c " . ablative($_[1]);
 }
 
 sub not_together {
-    "$_[0] живёт не рядом " . "c " . ablative($_[1]);
+    "$_[0] живёт не рядом c " . ablative($_[1]);
 }
 
 sub solve {
