@@ -12,10 +12,9 @@ sub new {
     my $self = {
         fields => $fields,
         data => [],
-        field_index => {},        
+        field_index => {},
     };
     my $i = 0;
-    
     $self->{field_index}->{$_} = $i++ for @$fields;
     bless $self, $class;
     $self;
@@ -38,12 +37,9 @@ sub printf {
 sub select {
     my ($self, $fields) = @_;
     my $result = EGE::SQL::Table->new($fields);
-    my $fi = $self->{field_index};
-    for my $row (@{$self->{data}}) {
-        $result->insert_row(map $row->[$fi->{$_}], @$fields);
-    }
+    my @indexes = map $self->{field_index}->{$_} // die("Unknown field $_"), @$fields;
+    $result->{data} = [ map [ @$_[@indexes] ], @{$self->{data}} ];
     $result;
 }
- 
- 
-1;    
+
+1;
