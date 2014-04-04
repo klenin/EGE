@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 56;
+use Test::More tests => 60;
 use Test::Exception;
 
 use lib '..';
@@ -187,3 +187,17 @@ end;~;
     $e->gather_vars($v);
     is_deeply $v, { x => 1, y => 1 }, 'gather_vars';
 }
+
+{
+    sub check_sql { is make_expr($_[0])->to_lang_named('SQL'), $_[1], "SQL $_[2]" }
+    check_sql(
+        [ '&&', [ '<=', 1, 'a' ], [ '<=', 'a', 'n' ] ],
+        '1 <= a AND a <= n', 'AND');
+    check_sql(
+        [ '||', [ '!=', 1, 'a' ], [ '!', 'a' ] ],
+        '1 <> a OR NOT a', 'OR NOT');
+    check_sql(
+        [ '&&', [ '||', 'x', 'y' ], [ '==', 'a', 1 ] ],
+        '(x OR y) AND a = 1', 'priorities');
+}
+

@@ -97,33 +97,24 @@ sub _build_codes {
     $res;
 }
 
-sub _get_prefix { substr($_[0], 0, length($_[0]) - 1) }
-
-sub _add_suffixes { ($_[0] . 0, $_[0] . 1) }
-
 sub find_var_len_code {
     my ($self) = @_;
-    my @codes = rnd->shuffle(@{ _build_codes(3) });
-    my $ans = shift @codes;
-    @codes = @codes[0 .. rnd->in_range(2, min($#codes, 5))];
-    my @bad = map { _add_suffixes($_) } @codes;
-    for (map { _get_prefix($_) } grep { length($_) > 1 } @codes) {
-        push @bad, $_ unless $_ ~~ @bad
-    }
-    @bad = rnd->shuffle(@bad);
-    $self->variants($ans, @bad[0 .. 2]);
+    my @codes = @{_build_codes(3)};
+    (my $ans, @codes) = rnd->pick_n(rnd->in_range(3, min(scalar @codes, 6)), @codes);
+    my @bad = map { $_ . 0, $_ . 1, length($_) > 1 ? substr($_, 0, -1) : () } @codes;
+    $self->variants($ans, rnd->pick_n(3, keys %{{ map { $_ => 1 } @bad }}));
 
-    my @alph = ('A' .. 'H');
+    my @alph = ('A' .. 'Z')[0..$#codes];
     $self->{text} .= sprintf
         'Для кодирования некоторой последовательности, состоящей из букв %s, ' .
         'решили использовать неравномерный двоичный код, позволяющий ' .
         'однозначно декодировать двоичную последовательность, появляющуюся на ' .
-        'приёмной стороне канала связи. Использовали код: %s. Укажите, каким ' .
-        'кодовым словом может быть закодирована буква %s. ' .
+        'приёмной стороне канала связи. Использовали код: %s. ' .
+        'Укажите, каким кодовым словом может быть закодирована буква %s. ' .
         'Код должен удовлетворять свойству однозначного декодирования.',
-        join(', ', @alph[0 .. $#codes]),
-        join(', ', map { shift(@alph) . '–' . $_ } @codes),
-        shift(@alph);
+        (join ', ', @alph),
+        (join ', ', map "$alph[$_]−$codes[$_]", 0..$#codes),
+        ++(my $last = $alph[-1]);
 }
 
 sub error_correction_code {

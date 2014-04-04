@@ -196,19 +196,18 @@ sub _gen_init_routes {
     _init_tables($c);
 
     my $n = $c->{towns_cnt};
-    my @b = rnd->pick_n($c->{edges_cnt}, 0 .. $n*($n - 1)/2 );
-    my $k = 0;
-    for my $i (0 .. $c->{n} - 1) {
-        for my $j ($i + 1 .. $c->{n} - 1) {
-            if ($k ~~ @b) {
-                my $weight = rnd->in_range(@{$c->{weights_range}});
-                $c->{routes}[$i][$j] = $c->{routes}[$j][$i] = $weight;
-            }
-            ++$k;
-        }
+    my @edges = map { my $i = $_; map [ $_, $i ], 0 .. $n - 1; } 0 .. $n - 1;
+    for my $e (rnd->pick_n($c->{edges_cnt}, @edges)) {
+        my ($i, $j) = @$e;
+        my $weight = rnd->in_range(@{$c->{weights_range}});
+        $c->{routes}[$i][$j] = $c->{routes}[$j][$i] = $weight;
     }
-
     $c->{init_routes} = dclone($c->{routes});
+}
+
+sub push_uniq {
+    my ($array, $value) = @_;
+    push @$array, $value unless grep $_ == $value, @$array;
 }
 
 sub _find_all_dists {
@@ -221,7 +220,7 @@ sub _find_all_dists {
         my ($a, $b, $c) = ($r->[$i][$k], $r->[$k][$j], $r->[$i][$j]);
         if (defined $a && defined $b) {
             $r->[$i][$j] = $a + $b if !defined $c || $c > $a + $b;
-            push @{$ar->[$i][$j]}, $a + $b unless $a + $b ~~ @{$ar->[$i][$j]}
+            push_uniq($ar->[$i][$j], $a, $b);
         }
     };
     for my $k (0 .. $n) {
@@ -254,17 +253,17 @@ sub _gen_task_and_answers {
     my ($i, $j) = @{$c}{qw(ans_from ans_to)};
     $c->{ans} = [ $c->{routes}[$i][$j] ];
     for (@{$c->{alt_routes}[$i][$j]}) {
-        push @{$c->{ans}}, $_ unless $_ ~~ $c->{ans};
+        push_uniq($c->{ans}, $_);
     }
     for my $k (0 .. $c->{n} - 1) {
         $_ = $c->{routes}[$k][$j];
-        push @{$c->{ans}}, $_ if defined $_ && !($_ ~~ $c->{ans});
+        push_uniq($c->{ans}, $_) if defined $_;
     }
 
     while (@{$c->{ans}} < 4) {
         my $x = rnd->in_range($c->{weights_range}[0],
                               $c->{weights_range}[1]*$c->{towns_cnt});
-        push @{$c->{ans}}, $x unless $x ~~ $c->{ans};
+        push_uniq($c->{ans}, $x);
     }
 }
 
@@ -321,9 +320,8 @@ sub _validate {
     $_ = _dijkstra($c, $c->{ans_from}, $c->{ans_to}, 0);
     _assert(defined $_ && $_ == $c->{ans}[0]);
     _assert(@{$c->{ans}} >= 3);
-    for my $i (0 .. $#{$c->{ans}} - 1) {
-        _assert(!($c->{ans}[$i] ~~ [@{$c->{ans}}[$i + 1 .. $#{$c->{ans}}]]))
-    }
+    my %seen;
+    _assert(!$seen{$_}++) for @{$c->{ans}};
 }
 
 sub min_routes {
