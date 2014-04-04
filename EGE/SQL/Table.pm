@@ -25,11 +25,18 @@ sub insert_row {
     @_ == @{$self->{fields}}
         or die sprintf "Wrong column count %d != %d", scalar @_, scalar @{$self->{fields}};
     push @{$self->{data}}, \@_;
+    $self;
+}
+
+sub insert_rows {
+    my $self = shift;
+    $self->insert_row(@$_) for @_;
+    $self;
 }
 
 sub print_row { print join("\t", @{$_[0]}), "\n"; }
 
-sub printf {
+sub print {
     my $self = shift;
     print_row $_ for $self->{fields}, @{$self->{data}};
 }
