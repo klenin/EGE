@@ -42,11 +42,26 @@ sub print {
 }
 
 sub select {
-    my ($self, $fields) = @_;
+    my ($self, $fields, $where) = @_;
     my $result = EGE::SQL::Table->new($fields);
-    my @indexes = map $self->{field_index}->{$_} // die("Unknown field $_"), @$fields;
-    $result->{data} = [ map [ @$_[@indexes] ], @{$self->{data}} ];
+    my $tab_where = $self->where($where);
+    my @indexes = map $tab_where->{field_index}->{$_} // die("Unknown field $_"), @$fields;
+    $result->{data} = [ map [ @$_[@indexes] ], @{$tab_where->{data}} ];
     $result;
+}
+
+ 
+
+sub where {
+    my ($self, $where) = @_;
+    $where or return $self;
+    my $table = EGE::SQL::Table->new($self->{fields});
+    for my $key (@{$self->{data}}) {
+        my $hash = {};
+        $hash->{$_} = @$key[$self->{field_index}->{$_}] for @{$self->{fields}};
+        push @{$table->{data}}, $key if $where->run($hash) ; 
+    }
+    $table;
 }
 
 1;
