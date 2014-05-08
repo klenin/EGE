@@ -20,6 +20,7 @@ my $questions;
 
 sub g { push @$questions, EGE::Generate::g(@_); }
 sub g1 { push @$questions, EGE::AsmGenerate::g(@_); }
+sub g2 { push @$questions, EGE::DatabaseGenerate::g(@_); }
 
 sub print_dump {
     for (@$questions) {
@@ -209,6 +210,7 @@ binmode STDOUT, ':utf8';
 #g1('Arch10', 'cmovcc');
 #g1('Arch12', 'cond_max_min');
 #g1('Arch12', 'divisible_by_mask');
+#g2('Db01', 'database');
 
 #$questions = EGE::Generate::all;
 #$questions = EGE::AsmGenerate::all;
