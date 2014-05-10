@@ -24,17 +24,11 @@ sub database {
     my $table = EGE::SQL::Table->new([ qw(Фамилия Пол), @subjects ]);
     for (@families) {
         my $sex = rnd->coin;
-        my $name = $_.($sex ? '' : 'а');
-        $table->insert_row(
-            $name,
-            $sex,
-            map rnd->in_range(50, 90), @subjects
-        );
-    }; 
-    
+        $table->insert_row($_ . ($sex ? '' : 'а'), $sex, map rnd->in_range(50, 90), @subjects);
+    }
+
     my $cond = '';
     my $count = 0;
-    my $tab;
     while (1) {
         my ($s1, $s2) = rnd->pick_n(2, 0 .. @subjects - 1);
         my $sex = rnd->coin ? 1 : 0;
@@ -43,15 +37,14 @@ sub database {
             [ '==', 'Пол', \$sex ],
             [ rnd->pick(ops::comp), @subjects[$s1, $s2] ],
         ]);
-        $tab = $table->select([], $e);
-        $count = $tab->count();
-        if ($count) {
+        $count = $table->select([], $e)->count();
+        if ($count && $count < $table->count()) {
             $sex = $sex ? q~'м'~ : q~'ж'~;
             $cond = html->cdata($e->to_lang_named('Alg'));
             last;
         }
     }
-    $table->update (["Пол"], sub {$_[0] ?'м':'ж';});
+    $table->update ([ 'Пол' ], sub { $_[0] ? 'м' : 'ж' });
     my $table_text = html->row_n('th', @{$table->{fields}});
     $table_text .= html->row_n('td', @$_) for @{$table->{data}};
     $table_text = html->table($table_text, { border => 1 });
