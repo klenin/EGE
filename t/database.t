@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 11;
+use Test::More tests => 13;
 
 use lib '..';
 use EGE::SQL::Table;
@@ -25,6 +25,21 @@ sub pack_table {
     like $@, qr/zzz/, 'bad field';
 }
 
+{
+    my $t = EGE::SQL::Table->new([ 'f' ]);
+    my $r = 1;
+    $t->insert_row($r);
+    $r = 2;
+    is pack_table($t), 'f|1', 'insert_row copies';
+}
+
+{
+    my $t = EGE::SQL::Table->new([ 'f' ]);
+    my $r = [ 1 ];
+    $t->insert_rows($r, $r);
+    $r->[0] = 2;
+    is pack_table($t), 'f|1|1', 'insert_rows copies';
+}
 
 {
     my $tab = EGE::SQL::Table->new([ qw(id name city) ]);

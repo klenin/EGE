@@ -24,7 +24,7 @@ sub insert_row {
     my $self = shift;
     @_ == @{$self->{fields}}
         or die sprintf "Wrong column count %d != %d", scalar @_, scalar @{$self->{fields}};
-    push @{$self->{data}}, \@_;
+    push @{$self->{data}}, [ @_ ];
     $self;
 }
 
