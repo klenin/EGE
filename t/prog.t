@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 60;
+use Test::More tests => 61;
 use Test::Exception;
 
 use lib '..';
@@ -20,10 +20,12 @@ use EGE::Prog qw(make_block make_expr);
         [ '||', 1, 0 ],   1,
         [ '-', 4 ],      -4,
         [ '!', 0 ],       1,
+        55,              55,
     );
-    is make_expr(shift @t)->run({}), shift @t while @t;
+    my $i = 0;
+    is make_expr(shift @t)->run({}), shift @t, 'op ' . ++$i while @t;
     my $env = { a => '2', b => '3' };
-    is make_expr([ '*', 'a', ['+', 'b', 7 ] ])->run($env), 20;
+    is make_expr([ '*', 'a', ['+', 'b', 7 ] ], 'basic env')->run($env), 20;
 }
 
 {
