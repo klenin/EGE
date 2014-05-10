@@ -40,13 +40,36 @@ sub print {
     my $self = shift;
     print_row $_ for $self->{fields}, @{$self->{data}};
 }
+sub count {
+    @{$_[0]->{data}};
+}
 
 sub select {
-    my ($self, $fields) = @_;
+    my ($self, $fields, $where) = @_;
+    my $tab_where = $self->where($where);
     my $result = EGE::SQL::Table->new($fields);
-    my @indexes = map $self->{field_index}->{$_} // die("Unknown field $_"), @$fields;
-    $result->{data} = [ map [ @$_[@indexes] ], @{$self->{data}} ];
+    my @indexes = map $tab_where->{field_index}->{$_} // die("Unknown field $_"), @$fields;
+    $result->{data} = [ map [ @$_[@indexes] ], @{$tab_where->{data}} ];
     $result;
+}
+
+
+sub where {
+    my ($self, $where) = @_;
+    $where or return $self;
+    my $table = EGE::SQL::Table->new($self->{fields});
+    for my $data (@{$self->{data}}) {
+        my $hash = {};
+        $hash->{$_} = @$data[$self->{field_index}->{$_}] for @{$self->{fields}};
+        push @{$table->{data}}, [@$data] if $where->run($hash);
+    }
+    $table;
+}
+
+sub update {
+    my ($self, $fields, $func) = @_;
+    my @indexes = map $self->{field_index}->{$_} // die("Unknown field $_"), @$fields;
+    @$_[@indexes] = $func->(@$_[@indexes]) for (@{$self->{data}}); 
 }
 
 1;

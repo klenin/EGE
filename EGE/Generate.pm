@@ -144,4 +144,25 @@ sub all {[
     gg('Arch12', qw(cond_max_min divisible_by_mask)),
 ]}
 
+package EGE::DatabaseGenerate;
+
+use EGE::Random;
+
+use EGE::GenBase;
+use EGE::Gen::Db01;
+
+
+sub g {
+   EGE::Generate::g(@_);
+}
+
+sub gg {
+    my $unit = shift;
+    map g($unit, $_), @_;
+}
+
+sub all {[
+    gg('Db01', qw(database)),
+]}
+
 1;
