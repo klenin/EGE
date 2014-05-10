@@ -210,7 +210,7 @@ binmode STDOUT, ':utf8';
 #g1('Arch10', 'cmovcc');
 #g1('Arch12', 'cond_max_min');
 #g1('Arch12', 'divisible_by_mask');
-#g2('Db01', 'database');
+#g2('Db01', 'trivial_select');
 
 #$questions = EGE::Generate::all;
 #$questions = EGE::AsmGenerate::all;

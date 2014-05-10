@@ -162,7 +162,7 @@ sub gg {
 }
 
 sub all {[
-    gg('Db01', qw(database)),
+    gg('Db01', qw(trivial_select)),
 ]}
 
 1;

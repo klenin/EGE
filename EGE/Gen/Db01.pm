@@ -17,7 +17,7 @@ use EGE::Russian::Jobs;
 use EGE::SQL::Table;
 use EGE::Utils;
 
-sub database {
+sub trivial_select {
     my ($self) = @_;
     my $table_jobs = EGE::SQL::Table->new([ qw(Профессия Зарплата) ]);
     my @jobs = rnd->pick_n(9, @EGE::Russian::Jobs::list);
