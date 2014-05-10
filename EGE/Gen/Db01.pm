@@ -13,35 +13,29 @@ use EGE::Random;
 use EGE::Prog;
 use EGE::Prog::Lang;
 use EGE::Html;
-use EGE::Russian::FamilyNames;
-use EGE::Russian::Subjects;
+use EGE::Russian::Jobs;
 use EGE::SQL::Table;
+use EGE::Utils;
 
 sub database {
     my ($self) = @_;
-    my $table_jobs = EGE::SQL::Table->new([ qw(Профессии Зарплата)]);
-    $table_jobs->insert_row($_, rnd->in_range(1000, 10000)) for rnd->pick_n(9, @EGE::Russian::Jobs::list);
-    my $cond = '';
-    my $count = 0;
-    my $select;
-    while (1) {
-        my $d = rnd->in_range(1000, 10000);
-        my $e = EGE::Prog::make_expr(
-            [ rnd->pick(ops::comp), 'Зарплата', \$d ],
-        );
-        $select = $table_jobs->select([], $e);
-        $count = $select->count();
-        if ($count && $count != $table_jobs->count()) { 
-            $cond = html->cdata($e->to_lang_named('SQL'));
-            last;
-        }
-    }
-    my $table_text = html->row_n('th', @{$table_jobs->{fields}});
+    my $table_jobs = EGE::SQL::Table->new([ qw(Профессия Зарплата) ]);
+    my @jobs = rnd->pick_n(9, @EGE::Russian::Jobs::list);
+    my @values = map rnd->in_range(10, 90) * 100, @jobs;
+    $table_jobs->insert_rows(@{EGE::Utils::transpose(\@jobs, \@values)});
+    my ($cond, $count);
+    do {
+        my $d = rnd->pick(@values) + rnd->pick(0, -50, 50);
+        $cond = EGE::Prog::make_expr([ rnd->pick(ops::comp), 'Зарплата', \$d ]);
+        $count = $table_jobs->select([], $cond)->count();
+    } until (1 < $count && $count < $table_jobs->count());
+    my $table_text =html->row_n('th', @{$table_jobs->{fields}});
     $table_text .= html->row_n('td', @$_) for @{$table_jobs->{data}};
     $table_text = html->table($table_text, { border => 1 });
+    my $cond_text = html->cdata($cond->to_lang_named('SQL'));
     $self->{text} =
-        "Заработная плата по профессиям представлена в таблице jobs: \n$table_text\n" .
-        "Сколько записей в ней удовлетворяют запросу SELECT * FROM jobs WHERE $cond?\n",
+        "Заработная плата по профессиям представлена в таблице <tt>jobs</tt>: \n$table_text\n" .
+        "Сколько записей в ней удовлетворяют запросу <tt>SELECT * FROM jobs WHERE $cond_text</tt>?",
     $self->variants($count, rnd->pick_n(3, grep $_ != $count, 1 .. $table_jobs->count()));
 }
 
