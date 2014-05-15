@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 27;
+use Test::More tests => 28;
 
 use lib '..';
 use EGE::Prog qw(make_expr make_block);
@@ -118,7 +118,7 @@ sub pack_table {
 }
 
 {
-    my $q = EGE::SQL::Update->new(undef, 'test', make_block([ '=', 'a', 1, '=', 'x', 'a' ]));
+    my $q = EGE::SQL::Update->new(undef, 'test', make_block [ '=', 'a', 1, '=', 'x', 'a' ]);
     is $q->text, 'UPDATE test SET a = 1, x = a', 'query text: update';
 }
 
@@ -126,5 +126,10 @@ sub pack_table {
     my $q = EGE::SQL::Update->new(undef, 'test',
         make_block([ '=', 'f', [ '-', 'f', 2 ] ]), make_expr [ '>', 'f', '0' ]);
     is $q->text, 'UPDATE test SET f = f - 2 WHERE f > 0', 'query text: update where';
+}
+
+{
+    my $q = EGE::SQL::Delete->new(undef, 'test', make_expr [ '>', 'f', '0' ]);
+    is $q->text, 'DELETE FROM test WHERE f > 0', 'query text: delete';
 }
 
