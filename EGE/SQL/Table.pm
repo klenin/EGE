@@ -6,6 +6,7 @@ package EGE::SQL::Table;
 use strict;
 use warnings;
 use EGE::Html;
+use EGE::Prog qw(make_expr);
 
 sub new {
     my ($class, $fields) = @_;
@@ -72,6 +73,12 @@ sub update {
     my @data = $where ? @{$self->where($where, 1)->{data}} : @{$self->{data}};
     my @indexes = map $self->{field_index}->{$_} // die("Unknown field $_"), @$fields;
     @$_[@indexes] = $exp->(@$_) for @data;
+    $self;
+}
+
+sub delete {
+    my ($self, $where) = @_; 
+    $self->{data} = $self->select( [ @{$self->{fields}} ], make_expr(['!', $where]), 1)->{data};
     $self;
 }
 

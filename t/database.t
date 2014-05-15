@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 14;
+use Test::More tests => 17;
 
 use lib '..';
 use EGE::SQL::Table;
@@ -59,5 +59,17 @@ sub pack_table {
     is pack_table($tab), 'id name city|1 aaa v|2 bbb k|3 aac k|4 bbn k', 'update field 3';
     $tab->update(['id'], sub { $$_[0] > 2? 2:$$_[0] });
     is pack_table($tab), 'id name city|1 aaa v|2 bbb k|2 aac k|2 bbn k', 'update field 1';
-
 }
+
+{
+    my $tab1 = EGE::SQL::Table->new([ qw(id city name) ]); 
+    $tab1->insert_rows ([2, 'v', 'aaa'], [1, 'k', 'bbb'], [8, 'l', 'ann'], [9, 'k', 'bnn']);
+    my $e = make_expr([ '==', 'id', 2 ]);
+    $tab1->delete($e);
+    is pack_table($tab1), 'id city name|1 k bbb|8 l ann|9 k bnn', 'delete';
+    $tab1->insert_row (2, 'v', 'aaa');
+    $tab1->delete( make_expr([ '>', 'id', 6 ]));
+    is pack_table($tab1), 'id city name|1 k bbb|2 v aaa', 'delete';
+    $tab1->delete( make_expr([ '>=', 'id', 1 ]));
+    is pack_table($tab1), 'id city name', 'delete'; 
+ }
