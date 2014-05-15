@@ -5,6 +5,7 @@ package EGE::SQL::Table;
 
 use strict;
 use warnings;
+use EGE::Html;
 
 sub new {
     my ($class, $fields) = @_;
@@ -70,6 +71,13 @@ sub update {
     my ($self, $fields, $func) = @_;
     my @indexes = map $self->{field_index}->{$_} // die("Unknown field $_"), @$fields;
     @$_[@indexes] = $func->(@$_[@indexes]) for (@{$self->{data}}); 
+}
+
+sub table_html { 
+    my ($self) = @_;
+    my $table_text = html->row_n('th', @{$self->{fields}});
+    $table_text .= html->row_n('td', @$_) for @{$self->{data}}; 
+    $table_text = html->table($table_text, { border => 1 });
 }
 
 1;
