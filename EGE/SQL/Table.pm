@@ -92,7 +92,7 @@ sub table_html {
 
 sub random_val {
    my ($self, @array) = @_;
-   rnd->pick(@{rnd->pick(@array)}) + rnd->pick(0, -50, 50); 
-} 
+   rnd->pick(@{rnd->pick(@array)}) + rnd->pick(0, -50, 50);
+}
 
 1;
