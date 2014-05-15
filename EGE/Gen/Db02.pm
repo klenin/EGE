@@ -51,7 +51,7 @@ sub select_where {
     }
     $self->{text} =
         "В таблице <tt>products</tt> представлен список товаров: \n".$table_products->select([@field])->table_html()."\n" .
-        "Какие товары в этой таблицы удовлетворяют запросу <tt>".$query->text()."</tt>?\n",
+        "Какие товары в этой таблицы удовлетворяют запросу <tt>".$query->text_html()."</tt>?\n",
     $self->variants(@candy);
     $self->{correct} = \@ans;
 }

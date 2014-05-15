@@ -2,11 +2,12 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 19;
+use Test::More tests => 22;
 
 use lib '..';
-use EGE::SQL::Table;
 use EGE::Prog qw(make_expr);
+use EGE::SQL::Table;
+use EGE::SQL::Queries;
 
 sub pack_table {
     my $self = shift;
@@ -84,3 +85,19 @@ sub pack_table {
     $tab1->delete(make_expr([ '>=', 'id', 1 ]));
     is pack_table($tab1), 'id city name', 'delete all';
 }
+
+{
+    my $q = EGE::SQL::Select->new(undef, 'test', [ qw(a b) ], make_expr [ '<', 'a', 7 ]);
+    is $q->text, 'SELECT a, b FROM test WHERE a < 7', 'query text: select where';
+}
+
+{
+    my $q = EGE::SQL::Select->new(undef, 'test', [ 'a', make_expr ['+', 'a', 'b'] ]);
+    is $q->text, 'SELECT a, a + b FROM test', 'query text: select expr';
+}
+
+{
+    my $q = EGE::SQL::Select->new(undef, 'test', []);
+    is $q->text, 'SELECT * FROM test', 'query text: select *';
+}
+

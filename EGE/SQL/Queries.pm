@@ -26,26 +26,19 @@ sub new {
 
 sub run {
     my ($self) = @_;
-    my $ans = $self->{table}->select($self->{fields}, $self->{where});
-    $ans;
+    $self->{table}->select($self->{fields}, $self->{where});
 }
+
+sub _field_sql { ref $_ ? $_->to_lang_named('SQL') : $_ }
 
 sub text {
     my ($self) = @_;
-    my $ans = "<tt>SELECT ";
-    for (@{$self->{fields}}) {
-        if (!ref ($_)) {
-            $ans .= "$_, ";
-        } else {
-            $ans .= html->cdata($_->to_lang_named('SQL')). ", ";
-        }    
-    }
-    $ans = substr($ans, 0, -2) if (${$self->{fields}}[0]);
-    $ans .= "*" if (!${$self->{fields}}[0]);
-    $ans .= " FROM ".$self->{table_name};
-    $ans .= " WHERE ". html->cdata($self->{where}->to_lang_named('SQL')) if $self->{where};
-    $ans .="</tt>";
+    my $fields = join(', ', map &_field_sql, @{$self->{fields}}) || '*';
+    my $where = $self->{where} ? ' WHERE '. $self->{where}->to_lang_named('SQL') : '';
+    my $ans = "SELECT $fields FROM $self->{table_name}$where";
 }
+
+sub text_html { html->tag('tt', html->cdata($_[0]->text)); }
 
 package EGE::SQL::Update;
 
