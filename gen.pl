@@ -211,6 +211,8 @@ binmode STDOUT, ':utf8';
 #g1('Arch12', 'cond_max_min');
 #g1('Arch12', 'divisible_by_mask');
 #g2('Db01', 'trivial_select');
+#g2('Db02', 'select_where');
+
 
 #$questions = EGE::Generate::all;
 #$questions = EGE::AsmGenerate::all;

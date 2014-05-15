@@ -150,6 +150,8 @@ use EGE::Random;
 
 use EGE::GenBase;
 use EGE::Gen::Db01;
+use EGE::Gen::Db02;
+use EGE::Gen::Db03;
 
 
 sub g {
@@ -163,6 +165,8 @@ sub gg {
 
 sub all {[
     gg('Db01', qw(trivial_select)),
+    gg('Db02', qw(select_where)),
+    gg('Db03', qw(simple_update)),
 ]}
 
 1;
