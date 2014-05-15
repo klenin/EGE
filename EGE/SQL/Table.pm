@@ -7,6 +7,7 @@ use strict;
 use warnings;
 use EGE::Html;
 use EGE::Prog qw(make_expr);
+use EGE::Random;
 
 sub new {
     my ($class, $fields) = @_;
@@ -88,5 +89,10 @@ sub table_html {
     $table_text .= html->row_n('td', @$_) for @{$self->{data}}; 
     $table_text = html->table($table_text, { border => 1 });
 }
+
+sub random_val {
+   my ($self, @array) = @_;
+   rnd->pick(@{rnd->pick(@array)}) + rnd->pick(0, -50, 50); 
+} 
 
 1;
