@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 13;
+use Test::More tests => 14;
 
 use lib '..';
 use EGE::SQL::Table;
@@ -48,8 +48,16 @@ sub pack_table {
     is pack_table($tab->where($e)), 'id name city|2 bbb 2|4 bbn 2', 'where city == 2';
     is pack_table($tab->select([ 'id', 'name' ], $e)), 'id name|2 bbb|4 bbn', 'select id, name where city == 2';
     is pack_table($tab->select([], $e)), '||', 'select where sity == 2';
-    $tab->update(['city'], sub { $_[0] == 3 ? 'v' : 'k' });
-    is pack_table($tab), 'id name city|1 aaa v|2 bbb k|3 aac k|4 bbn k', 'update field 3';
     is $tab->count(), 4, 'count';
     is $tab->where(make_expr(0))->count(), 0, 'where false';
+}
+
+{   
+    my $tab = EGE::SQL::Table->new([ qw(id name city) ]);
+    $tab->insert_rows([ 1, 'aaa', 3 ], [ 2, 'bbb', 2 ],[ 3, 'aac', 1 ], [ 4, 'bbn', 2 ]);
+    $tab->update(['city'], sub { $$_[2] == 3 ? 'v' : 'k' });
+    is pack_table($tab), 'id name city|1 aaa v|2 bbb k|3 aac k|4 bbn k', 'update field 3';
+    $tab->update(['id'], sub { $$_[0] > 2? 2:$$_[0] });
+    is pack_table($tab), 'id name city|1 aaa v|2 bbb k|2 aac k|2 bbn k', 'update field 1';
+
 }

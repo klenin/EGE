@@ -46,8 +46,8 @@ sub count {
 }
 
 sub select {
-    my ($self, $fields, $where) = @_;
-    my $tab_where = $self->where($where);
+    my ($self, $fields, $where, $ref) = @_;
+    my $tab_where = $self->where($where, $ref);
     my $result = EGE::SQL::Table->new($fields);
     my @indexes = map $tab_where->{field_index}->{$_} // die("Unknown field $_"), @$fields;
     $result->{data} = [ map [ @$_[@indexes] ], @{$tab_where->{data}} ];
@@ -56,21 +56,23 @@ sub select {
 
 
 sub where {
-    my ($self, $where) = @_;
+    my ($self, $where, $ref) = @_;
     $where or return $self;
     my $table = EGE::SQL::Table->new($self->{fields});
     for my $data (@{$self->{data}}) {
         my $hash = {};
         $hash->{$_} = @$data[$self->{field_index}->{$_}] for @{$self->{fields}};
-        push @{$table->{data}}, [@$data] if $where->run($hash);
+        push @{$table->{data}}, $ref ? $data : [ @$data ] if $where->run($hash);
     }
     $table;
 }
 
 sub update {
-    my ($self, $fields, $func) = @_;
+    my ($self, $fields, $exp, $where) = @_;
+    my @data = $where ? @{$self->where($where, 1)->{data}} : @{$self->{data}};
     my @indexes = map $self->{field_index}->{$_} // die("Unknown field $_"), @$fields;
-    @$_[@indexes] = $func->(@$_[@indexes]) for (@{$self->{data}}); 
+    @$_[@indexes] = $exp->(@$_) for @data;
+    $self;
 }
 
 sub table_html { 
