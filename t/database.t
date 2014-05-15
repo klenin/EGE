@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 24;
+use Test::More tests => 27;
 
 use lib '..';
 use EGE::Prog qw(make_expr make_block);
@@ -75,6 +75,13 @@ sub pack_table {
 }
 
 {
+    my $t = EGE::SQL::Table->new([ qw(a b c) ]);
+    $t->insert_rows([ 7, 8, 9 ]);
+    $t->update(make_block([ '=', 'c', 'a', '=', 'a', 'b', '=', 'b', 'c' ]));
+    is pack_table($t), 'a b c|8 7 7', 'update swap';
+}
+
+{
     my $tab = EGE::SQL::Table->new([ qw(id name city) ]);
     $tab->insert_rows([ 1, 'aaa', 3 ], [ 2, 'bbb', 2 ],[ 3, 'aac', 1 ], [ 4, 'bbn', 2 ]);
     $tab->update(make_block([ '=', 'city', sub { $_[0]->{city} == 3 ? 'v' : 'k' } ]));
@@ -108,5 +115,16 @@ sub pack_table {
 {
     my $q = EGE::SQL::Select->new(undef, 'test', []);
     is $q->text, 'SELECT * FROM test', 'query text: select *';
+}
+
+{
+    my $q = EGE::SQL::Update->new(undef, 'test', make_block([ '=', 'a', 1, '=', 'x', 'a' ]));
+    is $q->text, 'UPDATE test SET a = 1, x = a', 'query text: update';
+}
+
+{
+    my $q = EGE::SQL::Update->new(undef, 'test',
+        make_block([ '=', 'f', [ '-', 'f', 2 ] ]), make_expr [ '>', 'f', '0' ]);
+    is $q->text, 'UPDATE test SET f = f - 2 WHERE f > 0', 'query text: update where';
 }
 

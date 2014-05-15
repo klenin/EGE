@@ -55,6 +55,8 @@ sub prio_list { [ ops::mult ], [ ops::add ], [ ops::comp ], [ ops::logic ] }
 
 sub translate_un_op { {} }
 
+sub block_stmt_separator { "\n" }
+
 package EGE::Prog::Lang::Basic;
 use base 'EGE::Prog::Lang';
 
@@ -196,5 +198,7 @@ sub translate_un_op {{
 }}
 
 sub prio_list { [ ops::mult ], [ ops::add ], [ ops::comp ], ['&&'], ['||'] }
+sub assign_fmt { '%s = %s' }
+sub block_stmt_separator { ', ' }
 
 1;

@@ -215,7 +215,7 @@ use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang) = @_;
-    join "\n", map $_->to_lang($lang), @{$self->{statements}};
+    join $lang->block_stmt_separator, map $_->to_lang($lang), @{$self->{statements}};
 };
 
 sub run {
