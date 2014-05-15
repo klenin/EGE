@@ -213,7 +213,6 @@ binmode STDOUT, ':utf8';
 #g2('Db01', 'trivial_select');
 #g2('Db02', 'select_where');
 
-
 #$questions = EGE::Generate::all;
 #$questions = EGE::AsmGenerate::all;
 
