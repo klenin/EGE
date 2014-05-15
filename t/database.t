@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 17;
+use Test::More tests => 19;
 
 use lib '..';
 use EGE::SQL::Table;
@@ -52,24 +52,35 @@ sub pack_table {
     is $tab->where(make_expr(0))->count(), 0, 'where false';
 }
 
-{   
+{
+    my $t = EGE::SQL::Table->new([ 'id' ]);
+    $t->insert_rows(map [ $_ ], 1..5);
+    my $e = make_expr([ '==', 'id', 3 ]);
+    my $w2 = $t->where($e);
+    $w2->{data}->[0]->[0] = 9;
+    is pack_table($t), 'id|1|2|3|4|5', 'where copy';
+    my $w1 = $t->where($e, 1);
+    $w1->{data}->[0]->[0] = 9;
+    is pack_table($t), 'id|1|2|9|4|5', 'where ref';
+}
+
+{
     my $tab = EGE::SQL::Table->new([ qw(id name city) ]);
     $tab->insert_rows([ 1, 'aaa', 3 ], [ 2, 'bbb', 2 ],[ 3, 'aac', 1 ], [ 4, 'bbn', 2 ]);
     $tab->update(['city'], sub { $$_[2] == 3 ? 'v' : 'k' });
-    is pack_table($tab), 'id name city|1 aaa v|2 bbb k|3 aac k|4 bbn k', 'update field 3';
-    $tab->update(['id'], sub { $$_[0] > 2? 2:$$_[0] });
-    is pack_table($tab), 'id name city|1 aaa v|2 bbb k|2 aac k|2 bbn k', 'update field 1';
+    is pack_table($tab), 'id name city|1 aaa v|2 bbb k|3 aac k|4 bbn k', 'update city';
+    $tab->update(['id'], sub { $$_[0] > 2 ? 2 : $$_[0] });
+    is pack_table($tab), 'id name city|1 aaa v|2 bbb k|2 aac k|2 bbn k', 'update id';
 }
 
 {
     my $tab1 = EGE::SQL::Table->new([ qw(id city name) ]); 
-    $tab1->insert_rows ([2, 'v', 'aaa'], [1, 'k', 'bbb'], [8, 'l', 'ann'], [9, 'k', 'bnn']);
-    my $e = make_expr([ '==', 'id', 2 ]);
-    $tab1->delete($e);
-    is pack_table($tab1), 'id city name|1 k bbb|8 l ann|9 k bnn', 'delete';
+    $tab1->insert_rows ([ 2, 'v', 'aaa' ], [ 1, 'k', 'bbb' ], [ 8, 'l', 'ann' ], [ 9, 'k', 'bnn' ]);
+    $tab1->delete(make_expr([ '==', 'id', 2 ]));
+    is pack_table($tab1), 'id city name|1 k bbb|8 l ann|9 k bnn', 'delete 1';
     $tab1->insert_row (2, 'v', 'aaa');
-    $tab1->delete( make_expr([ '>', 'id', 6 ]));
-    is pack_table($tab1), 'id city name|1 k bbb|2 v aaa', 'delete';
-    $tab1->delete( make_expr([ '>=', 'id', 1 ]));
-    is pack_table($tab1), 'id city name', 'delete'; 
- }
+    $tab1->delete(make_expr([ '>', 'id', 6 ]));
+    is pack_table($tab1), 'id city name|1 k bbb|2 v aaa', 'delete 2';
+    $tab1->delete(make_expr([ '>=', 'id', 1 ]));
+    is pack_table($tab1), 'id city name', 'delete all';
+}
