@@ -29,12 +29,9 @@ sub trivial_select {
         $cond = EGE::Prog::make_expr([ rnd->pick(ops::comp), 'Зарплата', \$d ]);
         $count = $table_jobs->select([], $cond)->count();
     } until (1 < $count && $count < $table_jobs->count());
-    my $table_text =html->row_n('th', @{$table_jobs->{fields}});
-    $table_text .= html->row_n('td', @$_) for @{$table_jobs->{data}};
-    $table_text = html->table($table_text, { border => 1 });
     my $cond_text = html->cdata($cond->to_lang_named('SQL'));
     $self->{text} =
-        "Заработная плата по профессиям представлена в таблице <tt>jobs</tt>: \n$table_text\n" .
+        "Заработная плата по профессиям представлена в таблице <tt>jobs</tt>: \n".$table_jobs->table_html()."\n" .
         "Сколько записей в ней удовлетворяют запросу <tt>SELECT * FROM jobs WHERE $cond_text</tt>?",
     $self->variants($count, rnd->pick_n(3, grep $_ != $count, 1 .. $table_jobs->count()));
 }

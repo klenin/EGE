@@ -5,6 +5,9 @@ package EGE::SQL::Table;
 
 use strict;
 use warnings;
+use EGE::Html;
+use EGE::Prog qw(make_expr);
+use EGE::Random;
 
 sub new {
     my ($class, $fields) = @_;
@@ -45,8 +48,8 @@ sub count {
 }
 
 sub select {
-    my ($self, $fields, $where) = @_;
-    my $tab_where = $self->where($where);
+    my ($self, $fields, $where, $ref) = @_;
+    my $tab_where = $self->where($where, $ref);
     my $result = EGE::SQL::Table->new($fields);
     my @indexes = map $tab_where->{field_index}->{$_} // die("Unknown field $_"), @$fields;
     $result->{data} = [ map [ @$_[@indexes] ], @{$tab_where->{data}} ];
@@ -55,21 +58,41 @@ sub select {
 
 
 sub where {
-    my ($self, $where) = @_;
+    my ($self, $where, $ref) = @_;
     $where or return $self;
     my $table = EGE::SQL::Table->new($self->{fields});
     for my $data (@{$self->{data}}) {
         my $hash = {};
         $hash->{$_} = @$data[$self->{field_index}->{$_}] for @{$self->{fields}};
-        push @{$table->{data}}, [@$data] if $where->run($hash);
+        push @{$table->{data}}, $ref ? $data : [ @$data ] if $where->run($hash);
     }
     $table;
 }
 
 sub update {
-    my ($self, $fields, $func) = @_;
+    my ($self, $fields, $exp, $where) = @_;
+    my @data = $where ? @{$self->where($where, 1)->{data}} : @{$self->{data}};
     my @indexes = map $self->{field_index}->{$_} // die("Unknown field $_"), @$fields;
-    @$_[@indexes] = $func->(@$_[@indexes]) for (@{$self->{data}}); 
+    @$_[@indexes] = $exp->(@$_) for @data;
+    $self;
 }
+
+sub delete {
+    my ($self, $where) = @_; 
+    $self->{data} = $self->select( [ @{$self->{fields}} ], make_expr(['!', $where]), 1)->{data};
+    $self;
+}
+
+sub table_html { 
+    my ($self) = @_;
+    my $table_text = html->row_n('th', @{$self->{fields}});
+    $table_text .= html->row_n('td', @$_) for @{$self->{data}}; 
+    $table_text = html->table($table_text, { border => 1 });
+}
+
+sub random_val {
+   my ($self, @array) = @_;
+   rnd->pick(@{rnd->pick(@array)}) + rnd->pick(0, -50, 50); 
+} 
 
 1;
