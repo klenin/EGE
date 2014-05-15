@@ -44,12 +44,9 @@ sub database {
             last;
         }
     }
-    $table->update ([ 'Пол' ], sub { $_[0] ? 'м' : 'ж' });
-    my $table_text = html->row_n('th', @{$table->{fields}});
-    $table_text .= html->row_n('td', @$_) for @{$table->{data}};
-    $table_text = html->table($table_text, { border => 1 });
+    $table->update ([ 'Пол' ], sub { $$_[1] ? 'м' : 'ж' });
     $self->{text} =
-        "Результаты тестирования представлены в таблице\n$table_text\n" .
+        "Результаты тестирования представлены в таблице\n".$table->table_html()."\n" .
         "Сколько записей в ней удовлетворяют условию «$cond»?",
     $self->variants($count, rnd->pick_n(3, grep $_ != $count, 1 .. $table->count));
 }
