@@ -36,6 +36,21 @@ sub run_val {
 
 sub gather_vars {}
 
+package EGE::Prog::BlackBox;
+use base 'EGE::Prog::SynElement';
+
+sub to_lang_named {
+    my ($self, $lang_name) = @_;
+    $self->{lang}->{$lang_name} // die;
+}
+
+sub to_lang { $_[0]->to_lang_named($_[1]->name); }
+
+sub run {
+    my ($self, $env) = @_;
+    $self->{code}->($env);
+}
+
 package EGE::Prog::Assign;
 use base 'EGE::Prog::SynElement';
 
@@ -326,6 +341,9 @@ sub make_expr {
     }
     if (ref $src eq 'SCALAR') {
         return EGE::Prog::RefConst->new(ref => $src);
+    }
+    if (ref $src eq 'CODE') {
+        return EGE::Prog::BlackBox->new(code => $src);
     }
     if ($src =~ /^[[:alpha:]][[:alnum:]]*$/) {
         return EGE::Prog::Var->new(name => $src);

@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 61;
+use Test::More tests => 65;
 use Test::Exception;
 
 use lib '..';
@@ -21,11 +21,21 @@ use EGE::Prog qw(make_block make_expr);
         [ '-', 4 ],      -4,
         [ '!', 0 ],       1,
         55,              55,
+        sub { 77 },      77,
     );
     my $i = 0;
     is make_expr(shift @t)->run({}), shift @t, 'op ' . ++$i while @t;
     my $env = { a => '2', b => '3' };
     is make_expr([ '*', 'a', ['+', 'b', 7 ] ], 'basic env')->run($env), 20;
+}
+
+{
+    is make_expr(sub { $_[0]->{z} * 2 })->run({ z => 9 }), 18, 'black box';
+    my $bb = EGE::Prog::BlackBox->new(lang => { 'C' => 'test' });
+    is $bb->to_lang(EGE::Prog::Lang::lang('C')), 'test', 'black box text';
+    my $h = { y => 5 };
+    make_expr(sub { $_[0]->{y} = 6 })->run($h);
+    is $h->{y}, 6, 'black box assign';
 }
 
 {
