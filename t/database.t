@@ -2,10 +2,10 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 22;
+use Test::More tests => 24;
 
 use lib '..';
-use EGE::Prog qw(make_expr);
+use EGE::Prog qw(make_expr make_block);
 use EGE::SQL::Table;
 use EGE::SQL::Queries;
 
@@ -66,12 +66,21 @@ sub pack_table {
 }
 
 {
+    my $t = EGE::SQL::Table->new([ qw(a b) ]);
+    $t->insert_rows([ 1, 2 ], [ 3, 4 ],[ 5, 6 ]);
+    $t->update(make_block([ '=', 'a', 'b' ]));
+    is pack_table($t), 'a b|2 2|4 4|6 6', 'update var';
+    $t->update(make_block([ '=', 'a', ['+', 'a', '1'] ]));
+    is pack_table($t), 'a b|3 2|5 4|7 6', 'update expr';
+}
+
+{
     my $tab = EGE::SQL::Table->new([ qw(id name city) ]);
     $tab->insert_rows([ 1, 'aaa', 3 ], [ 2, 'bbb', 2 ],[ 3, 'aac', 1 ], [ 4, 'bbn', 2 ]);
-    $tab->update(['city'], sub { $$_[2] == 3 ? 'v' : 'k' });
-    is pack_table($tab), 'id name city|1 aaa v|2 bbb k|3 aac k|4 bbn k', 'update city';
-    $tab->update(['id'], sub { $$_[0] > 2 ? 2 : $$_[0] });
-    is pack_table($tab), 'id name city|1 aaa v|2 bbb k|2 aac k|2 bbn k', 'update id';
+    $tab->update(make_block([ '=', 'city', sub { $_[0]->{city} == 3 ? 'v' : 'k' } ]));
+    is pack_table($tab), 'id name city|1 aaa v|2 bbb k|3 aac k|4 bbn k', 'update sub city';
+    $tab->update(make_block([ '=', 'id', sub { $_[0]->{id} > 2 ? 2 : $_[0]->{id} } ]));
+    is pack_table($tab), 'id name city|1 aaa v|2 bbb k|2 aac k|2 bbn k', 'update sub id';
 }
 
 {

@@ -63,17 +63,21 @@ sub where {
     my $table = EGE::SQL::Table->new($self->{fields});
     for my $data (@{$self->{data}}) {
         my $hash = {};
-        $hash->{$_} = @$data[$self->{field_index}->{$_}] for @{$self->{fields}};
+        $hash->{$_} = $data->[$self->{field_index}->{$_}] for @{$self->{fields}};
         push @{$table->{data}}, $ref ? $data : [ @$data ] if $where->run($hash);
     }
     $table;
 }
 
 sub update {
-    my ($self, $fields, $exp, $where) = @_;
+    my ($self, $assigns, $where) = @_;
     my @data = $where ? @{$self->where($where, 1)->{data}} : @{$self->{data}};
-    my @indexes = map $self->{field_index}->{$_} // die("Unknown field $_"), @$fields;
-    @$_[@indexes] = $exp->(@$_) for @data;
+    for my $row (@data) {
+        my $hash = {};
+        $hash->{$_} = $row->[$self->{field_index}->{$_}] for @{$self->{fields}};
+        $assigns->run($hash);
+        $row->[$self->{field_index}->{$_}] = $hash->{$_} for @{$self->{fields}};
+    }
     $self;
 }
 
