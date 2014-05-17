@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 28;
+use Test::More tests => 38;
 
 use lib '..';
 use EGE::Prog qw(make_expr make_block);
@@ -16,6 +16,7 @@ sub pack_table {
 
 {
     my $tab = EGE::SQL::Table->new([ qw(id name) ]);
+    is_deeply $tab->_row_hash([ 2, 3 ]), { id => 2, name => 3 }, 'row hash';
     $tab->insert_rows([ 1, 'aaa' ], [ 2, 'bbb' ]);
     is pack_table($tab->select([ 'id', 'name' ])), 'id name|1 aaa|2 bbb', 'all fields';
     $tab->insert_row(3, 'ccc');
@@ -158,8 +159,9 @@ sub pack_table {
 
 {
     my $tab = EGE::SQL::Table->new([ qw(id name city) ]);
-    $tab->insert_rows([ 1, 'aaa', 3 ], [ 2, 'bbb', 2 ],[ 3, 'aac', 1 ], [ 4, 'bbn', 2 ]);
-    my $e = make_expr([ '==', 'id', 3 ]);
-    is pack_table($tab->select(['id' , $e])), 'id expression_0|1 0|2 0|3 1|4 0', 'select expression';
-    is pack_table($tab->select(['id' , $e], make_expr([ '<=', 'id', 3 ])) ), 'id expression_0|1 0|2 0|3 1', 'select expression where';
+    $tab->insert_rows([ 1, 'a', 3 ], [ 2, 'b', 2 ],[ 3, 'c', 1 ], [ 4, 'd', 2 ]);
+    my $f = [ 'id', make_expr([ '+', 'id', 3 ]) ];
+    is pack_table($tab->select($f)), 'id expr_1|1 4|2 5|3 6|4 7', 'select expression';
+    is pack_table($tab->select($f, make_expr([ '<=', 'id', 3 ]))), 'id expr_1|1 4|2 5|3 6', 'select expression where';
+    is pack_table($tab->select([ make_expr sub { $_[0]->{name} . 'x' } ])), 'expr_1|ax|bx|cx|dx', 'select sub';
 }

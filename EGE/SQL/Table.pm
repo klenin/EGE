@@ -43,56 +43,34 @@ sub print {
     my $self = shift;
     print_row $_ for $self->{fields}, @{$self->{data}};
 }
-sub count {
-    @{$_[0]->{data}};
-}
 
-sub _expr {
-    my ($self, $fields) = @_;
-    my (@result, @ans);
-    my $k = 0;
-    for my $i (@$fields){
-        if (!ref($i)) {
-            my $indexes = $self->{field_index}->{$i} // die("Unknown field $i");
-            push @result , sub {
-                my @value = @_;
-                $value[$indexes];
-            };
-            push @ans, $i;
-        } elsif (ref($i) eq "CODE") {
-            push @result, $i;
-            push @ans, "function_".$k++;
-        } elsif ($i->can('run')) {
-            push @result, sub {
-                    my @value = @_;
-                    my $hash = {};
-                    $hash->{$_} = $value[$self->{field_index}->{$_}] for @{$self->{fields}};
-                    $i->run($hash);
-                };
-            push @ans, "expression_".$k++;
-        }
-    }
-    ( sub { map $_->(@_), @result; }, [ @ans ]  );
+sub count { @{$_[0]->{data}}; }
+
+sub _row_hash {
+    my ($self, $row) = @_;
+    +{ map { +$_ => $row->[$self->{field_index}->{$_}] } @{$self->{fields}} };
 }
 
 sub select {
     my ($self, $fields, $where, $ref) = @_;
-    my ($value, $field)  = $self->_expr($fields);
-    my $result = EGE::SQL::Table->new([ @$field ]);
+
+    my $k = 0;
+    my $result = EGE::SQL::Table->new([ map ref $_ ? 'expr_' . ++$k : $_, @$fields ]);
+
+    my @values = map ref $_ ? $_ : make_expr($_), @$fields;
+    my $calc_row = sub { map $_->run($_[0]), @values };
+
     my $tab_where = $self->where($where, $ref);
-    $result->{data} = [ map [ $value->(@$_) ], @{$tab_where->{data}} ];
+    $result->{data} = [ map [ $calc_row->($self->_row_hash($_)) ], @{$tab_where->{data}} ];
     $result;
 }
-
 
 sub where {
     my ($self, $where, $ref) = @_;
     $where or return $self;
     my $table = EGE::SQL::Table->new($self->{fields});
     for my $data (@{$self->{data}}) {
-        my $hash = {};
-        $hash->{$_} = $data->[$self->{field_index}->{$_}] for @{$self->{fields}};
-        push @{$table->{data}}, $ref ? $data : [ @$data ] if $where->run($hash);
+        push @{$table->{data}}, $ref ? $data : [ @$data ] if $where->run($self->_row_hash($data));
     }
     $table;
 }
@@ -101,8 +79,7 @@ sub update {
     my ($self, $assigns, $where) = @_;
     my @data = $where ? @{$self->where($where, 1)->{data}} : @{$self->{data}};
     for my $row (@data) {
-        my $hash = {};
-        $hash->{$_} = $row->[$self->{field_index}->{$_}] for @{$self->{fields}};
+        my $hash = $self->_row_hash($row);
         $assigns->run($hash);
         $row->[$self->{field_index}->{$_}] = $hash->{$_} for @{$self->{fields}};
     }
