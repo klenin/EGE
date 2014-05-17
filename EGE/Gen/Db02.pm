@@ -20,14 +20,12 @@ use EGE::SQL::Queries;
 sub select_where {
     my ($self) = @_;
     my @fields = qw(Товар Количество Цена Затраты);
-    my $products = EGE::SQL::Table->new([ 'id', @fields ]);
     my @candy = rnd->pick_n(9, @EGE::Russian::Product::candy);
-    my @values = map [ map rnd->in_range(10, 80) * 100, @candy ], 0 .. @fields - 2;
-    $products->insert_rows(@{EGE::Utils::transpose([ 0..$#candy ], \@candy, @values)});
+    my ($products, $values) = EGE::SQL::Utils::create_table( \@fields, \@candy);
     my (%ans, $query);
     while (1) {
         my ($f1, $f2, $f3) = rnd->shuffle(@fields[1 .. $#fields]);
-        my ($l, $r) = map $products->random_val(@values), 1..2;
+        my ($l, $r) = map $products->random_val($values), 1..2;
         my $e = EGE::Prog::make_expr([
             rnd->pick('&&', '||'),
             [
