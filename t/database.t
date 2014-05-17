@@ -134,6 +134,29 @@ sub pack_table {
 }
 
 {
+    my $tab = EGE::SQL::Table->new([ qw(id name сity) ]); 
+    $tab->insert_rows([ 1, 'aaa', 3 ], [ 2, 'bbb', 2 ],[ 3, 'aac', 1 ], [ 4, 'bbn', 2 ]);
+    is pack_table($tab->select(['id'], make_expr($tab->between('id', 1, 3)))), 'id|1|2|3', 'between field 3';
+    is pack_table($tab->select(['id'], make_expr($tab->between('id', 5, 7)))), 'id', 'between empty';
+    is pack_table($tab->select(['id'], make_expr($tab->between('id', 1, 4)))), 'id|1|2|3|4', 'between all';
+}
+
+{
+    my $tab = EGE::SQL::Table->new([ qw(id name) ]); 
+    my $tab1 = EGE::SQL::Table->new([ qw(c_id city) ]); 
+    $tab->insert_rows([ 1, 'aaa' ], [ 2, 'bbb' ], [ 3, 'aac' ], [ 4, 'bbn' ]);
+    $tab1->insert_rows([2,'k'], [1, 'v'], [4, 'j'], [3, 'p']);
+    is pack_table($tab->inner_join($tab1,'id','c_id')), 'id name c_id city|1 aaa 1 v|2 bbb 2 k|3 aac 3 p|4 bbn 4 j', 'inner join';
+    my $tab2 = EGE::SQL::Table->new([ qw(id name) ]); 
+    $tab2->insert_rows([5,'k'], [6, 'v'], [7, 'j'], [8, 'p']);
+    is pack_table($tab2->inner_join($tab1,'id','c_id')),'id name c_id city', 'inner join empty';
+    my $tab3 = EGE::SQL::Table->new([ qw(cid city) ]); 
+    $tab3->insert_rows([1,'k'], [2, 'v'], [3, 'j'], [4, 'p']);
+    is pack_table($tab->inner_join($tab3,'id','cid')->where(make_expr([ '>', 'cid', 2 ]))),'id name cid city|3 aac 3 j|4 bbn 4 p', 'inner join where';
+    
+}
+
+{
     my $tab = EGE::SQL::Table->new([ qw(id name city) ]);
     $tab->insert_rows([ 1, 'aaa', 3 ], [ 2, 'bbb', 2 ],[ 3, 'aac', 1 ], [ 4, 'bbn', 2 ]);
     my $e = make_expr([ '==', 'id', 3 ]);

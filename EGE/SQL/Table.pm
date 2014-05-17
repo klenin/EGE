@@ -114,6 +114,23 @@ sub delete {
     $self->{data} = $self->select( [ @{$self->{fields}} ], make_expr(['!', $where]), 1)->{data};
     $self;
 }
+sub between {
+    my ($self, $exp, $l, $r) = @_;
+    return [ '&&', ['>=', $exp, $l] , ['<=', $exp, $r] ]
+}
+
+sub inner_join {
+    my ($self, $table2, $field1, $field2) = @_;
+    my $result =  EGE::SQL::Table->new([@{$self->{fields}}, @{$table2->{fields}}]);
+    my @indexe = $self->{field_index}->{$field1} // die("Unknown field $field1");
+    my @indexe2 = $table2->{field_index}->{$field2} // die("Unknown field $field2");
+    for my $data (@{$self->{data}}) {
+        for (@{$table2->{data}}) {
+            $result->insert_row(@$data, @$_) if (@$data[@indexe] == @$_[@indexe2]); 
+        }
+    }
+    $result;
+}
 
 sub table_html { 
     my ($self) = @_;
