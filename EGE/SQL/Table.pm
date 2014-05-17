@@ -47,12 +47,40 @@ sub count {
     @{$_[0]->{data}};
 }
 
+sub _expr {
+    my ($self, $fields) = @_;
+    my (@result, @ans);
+    my $k = 0;
+    for my $i (@$fields){
+        if (!ref($i)) {
+            my $indexes = $self->{field_index}->{$i} // die("Unknown field $i");
+            push @result , sub {
+                my @value = @_;
+                $value[$indexes];
+            };
+            push @ans, $i;
+        } elsif (ref($i) eq "CODE") {
+            push @result, $i;
+            push @ans, "function_".$k++;
+        } elsif ($i->can('run')) {
+            push @result, sub {
+                    my @value = @_;
+                    my $hash = {};
+                    $hash->{$_} = $value[$self->{field_index}->{$_}] for @{$self->{fields}};
+                    $i->run($hash);
+                };
+            push @ans, "expression_".$k++;
+        }
+    }
+    ( sub { map $_->(@_), @result; }, [ @ans ]  );
+}
+
 sub select {
     my ($self, $fields, $where, $ref) = @_;
+    my ($value, $field)  = $self->_expr($fields);
+    my $result = EGE::SQL::Table->new([ @$field ]);
     my $tab_where = $self->where($where, $ref);
-    my $result = EGE::SQL::Table->new($fields);
-    my @indexes = map $tab_where->{field_index}->{$_} // die("Unknown field $_"), @$fields;
-    $result->{data} = [ map [ @$_[@indexes] ], @{$tab_where->{data}} ];
+    $result->{data} = [ map [ $value->(@$_) ], @{$tab_where->{data}} ];
     $result;
 }
 

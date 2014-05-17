@@ -133,3 +133,10 @@ sub pack_table {
     is $q->text, 'DELETE FROM test WHERE f > 0', 'query text: delete';
 }
 
+{
+    my $tab = EGE::SQL::Table->new([ qw(id name city) ]);
+    $tab->insert_rows([ 1, 'aaa', 3 ], [ 2, 'bbb', 2 ],[ 3, 'aac', 1 ], [ 4, 'bbn', 2 ]);
+    my $e = make_expr([ '==', 'id', 3 ]);
+    is pack_table($tab->select(['id' , $e])), 'id expression_0|1 0|2 0|3 1|4 0', 'select expression';
+    is pack_table($tab->select(['id' , $e], make_expr([ '<=', 'id', 3 ])) ), 'id expression_0|1 0|2 0|3 1', 'select expression where';
+}
