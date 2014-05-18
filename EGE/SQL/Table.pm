@@ -97,14 +97,15 @@ sub between {
 }
 
 sub inner_join {
-    my ($self, $table2, $field1, $field2) = @_;
-    my $result =  EGE::SQL::Table->new([@{$self->{fields}}, @{$table2->{fields}}]);
-    my @indexe = $self->{field_index}->{$field1} // die("Unknown field $field1");
-    my @indexe2 = $table2->{field_index}->{$field2} // die("Unknown field $field2");
-    for my $data (@{$self->{data}}) {
-        for (@{$table2->{data}}) {
-            $result->insert_row(@$data, @$_) if (@$data[@indexe] == @$_[@indexe2]); 
-        }
+    my ($table1, $table2, $field1, $field2) = @_;
+    my $result = EGE::SQL::Table->new([ @{$table1->{fields}}, @{$table2->{fields}} ]);
+    my $index1 = $table1->{field_index}->{$field1} // die("Unknown field $field1");
+    my $index2 = $table2->{field_index}->{$field2} // die("Unknown field $field2");
+    my %h;
+    push @{$h{$_->[$index2]}}, $_ for @{$table2->{data}};
+    for my $row1 (@{$table1->{data}}) {
+        my $rows2 = $h{$row1->[$index1]} or next;
+        $result->insert_row(@$row1, @$_) for @$rows2;
     }
     $result;
 }
