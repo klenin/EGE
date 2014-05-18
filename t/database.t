@@ -143,18 +143,23 @@ sub pack_table {
 }
 
 {
-    my $tab = EGE::SQL::Table->new([ qw(id name) ]); 
-    my $tab1 = EGE::SQL::Table->new([ qw(c_id city) ]); 
-    $tab->insert_rows([ 1, 'aaa' ], [ 2, 'bbb' ], [ 3, 'aac' ], [ 4, 'bbn' ]);
-    $tab1->insert_rows([2,'k'], [1, 'v'], [4, 'j'], [3, 'p']);
-    is pack_table($tab->inner_join($tab1,'id','c_id')), 'id name c_id city|1 aaa 1 v|2 bbb 2 k|3 aac 3 p|4 bbn 4 j', 'inner join';
-    my $tab2 = EGE::SQL::Table->new([ qw(id name) ]); 
-    $tab2->insert_rows([5,'k'], [6, 'v'], [7, 'j'], [8, 'p']);
-    is pack_table($tab2->inner_join($tab1,'id','c_id')),'id name c_id city', 'inner join empty';
-    my $tab3 = EGE::SQL::Table->new([ qw(cid city) ]); 
-    $tab3->insert_rows([1,'k'], [2, 'v'], [3, 'j'], [4, 'p']);
-    is pack_table($tab->inner_join($tab3,'id','cid')->where(make_expr([ '>', 'cid', 2 ]))),'id name cid city|3 aac 3 j|4 bbn 4 p', 'inner join where';
-    
+    my $t1 = EGE::SQL::Table->new([ qw(id name) ]);
+    $t1->insert_rows([ 1, 'aaa' ], [ 2, 'bbb' ], [ 3, 'aac' ], [ 4, 'bbn' ]);
+    my $t2 = EGE::SQL::Table->new([ qw(cid city) ]);
+    $t2->insert_rows([ 2, 'k' ], [ 1, 'v' ], [ 4, 'j' ], [ 3, 'p' ]);
+    is pack_table($t1->inner_join($t2, 'id', 'cid')), 'id name cid city|1 aaa 1 v|2 bbb 2 k|3 aac 3 p|4 bbn 4 j', 'inner join';
+
+    my $t3 = EGE::SQL::Table->new([ qw(id name) ]);
+    $t3->insert_rows([ 5, 'k' ], [ 6, 'v' ], [ 7, 'j' ], [ 8, 'p' ]);
+    is pack_table($t3->inner_join($t2, 'id', 'cid')), 'id name cid city', 'inner join empty';
+}
+
+{
+    my $t1 = EGE::SQL::Table->new([ qw(x y) ]);
+    $t1->insert_rows([ 1, 2 ], [ 1, 3 ], [ 1, 4 ]);
+    my $t2 = EGE::SQL::Table->new([ qw(z) ]);
+    $t2->insert_rows([ 1 ], [ 2 ]);
+    is pack_table($t1->inner_join($t2, 'x', 'z')), 'x y z|1 2 1|1 3 1|1 4 1', 'inner join dups';
 }
 
 {
