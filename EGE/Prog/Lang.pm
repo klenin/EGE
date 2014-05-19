@@ -11,6 +11,8 @@ sub mult { '*', '/', '%', '//' }
 sub add { '+', '-' }
 sub comp { '>', '<', '==', '!=', '>=', '<=' }
 sub logic { '&&', '||', '^', '=>' }
+sub unary { '!', '+', '-' }
+sub prio_unary { map "`$_", unary }
 
 package EGE::Prog::Lang;
 
@@ -51,7 +53,10 @@ sub make_priorities {
     }
 }
 
-sub prio_list { [ ops::mult ], [ ops::add ], [ ops::comp ], [ ops::logic ] }
+sub prio_list {
+    [ ops::prio_unary ], [ ops::mult ], [ ops::add ],
+    [ ops::comp ], [ '^', '=>' ], [ '&&' ], [ '||' ],
+}
 
 sub translate_un_op { {} }
 
@@ -105,7 +110,7 @@ sub until_end_fmt { $_[1] ? "\n}" : '' }
 package EGE::Prog::Lang::Pascal;
 use base 'EGE::Prog::Lang';
 
-sub prio_list { [ ops::mult, '&&' ], [ ops::add, '||', '^' ], [ ops::comp ] }
+sub prio_list { [ ops::prio_unary ], [ ops::mult, '&&' ], [ ops::add, '||', '^' ], [ ops::comp ] }
 sub assign_fmt { '%s := %s;' }
 sub index_fmt { '%s[%s]' }
 sub translate_op {{
@@ -175,7 +180,8 @@ package EGE::Prog::Lang::Logic;
 use base 'EGE::Prog::Lang';
 
 sub prio_list {
-    [ ops::mult ], [ ops::add ], [ ops::comp ], ['&&'], ['||', '^'], ['=>']
+    [ ops::prio_unary ], [ ops::mult ], [ ops::add ],
+    [ ops::comp ], [ '&&' ], [ '||', '^' ], [ '=>' ]
 }
 
 sub translate_op {{
@@ -197,7 +203,6 @@ sub translate_un_op {{
     '!' => 'NOT'
 }}
 
-sub prio_list { [ ops::mult ], [ ops::add ], [ ops::comp ], ['&&'], ['||'] }
 sub assign_fmt { '%s = %s' }
 sub block_stmt_separator { ', ' }
 

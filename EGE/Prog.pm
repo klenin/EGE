@@ -50,6 +50,8 @@ sub count_if {
     $count;
 }
 
+sub needs_parens { 0 }
+
 package EGE::Prog::BlackBox;
 use base 'EGE::Prog::SynElement';
 
@@ -114,11 +116,34 @@ sub _children {}
 
 sub run {
     my ($self, $env) = @_;
-    my $r = eval $self->exec_str(map $self->{$_}->run($env), $self->_children);
+    my $r = eval sprintf $self->run_fmt(), map $self->{$_}->run($env), $self->_children;
     my $err = $@;
     $err and die $err;
     $r || 0;
 }
+
+sub prio { $_[1]->{prio}->{$_[0]->{op}} }
+
+sub operand {
+    my ($self, $lang, $operand) = @_;
+    my $t = $operand->to_lang($lang);
+    $operand->needs_parens($lang, $self->prio($lang)) ? "($t)" : $t;
+}
+
+sub to_lang {
+    my ($self, $lang) = @_;
+    sprintf
+        $self->to_lang_fmt($lang, $self->{op}),
+        map $self->operand($lang, $self->{$_}), $self->_children;
+}
+
+sub needs_parens {
+    my ($self, $lang, $parent_prio) = @_;
+    $parent_prio < $self->prio($lang);
+}
+
+sub run_fmt { $_[0]->to_lang_fmt(EGE::Prog::Lang::lang('Perl')) }
+sub to_lang_fmt {}
 
 sub gather_vars { $_[0]->{$_}->gather_vars($_[1]) for $_[0]->_children; }
 sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for $self->_children; }
@@ -126,24 +151,9 @@ sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for $self->_c
 package EGE::Prog::BinOp;
 use base 'EGE::Prog::Op';
 
-sub operand {
-    my ($self, $lang, $operand) = @_;
-    my $t = $operand->to_lang($lang);
-    $operand->isa('EGE::Prog::BinOp') &&
-    $lang->{prio}->{$operand->{op}} > $lang->{prio}->{$self->{op}} ?
-        "($t)" : $t;
-}
-
-sub to_lang {
+sub to_lang_fmt {
     my ($self, $lang) = @_;
-    sprintf
-        $lang->op_fmt($self->{op}),
-        map $self->operand($lang, $self->{$_}), qw(left right);
-}
-
-sub exec_str {
-    my $self = shift;
-    sprintf EGE::Prog::Lang::lang('Perl')->op_fmt($self->{op}), @_;
+    $lang->op_fmt($self->{op});
 }
 
 sub _children { qw(left right) }
@@ -151,19 +161,12 @@ sub _children { qw(left right) }
 package EGE::Prog::UnOp;
 use base 'EGE::Prog::Op';
 
-sub op_to_lang {
-    my ($self, $lang) = @_;
-    $lang->translate_un_op->{$self->{op}} || $self->{op};
-}
+sub prio { $_[1]->{prio}->{'`' . $_[0]->{op}} }
 
-sub to_lang {
+sub to_lang_fmt {
     my ($self, $lang) = @_;
-    my $arg = $self->{arg}->to_lang($lang);
-    $arg = "($arg)" if $self->{arg}->isa('EGE::Prog::BinOp');
-    $self->op_to_lang($lang) . " $arg";
+    ($lang->translate_un_op->{$self->{op}} || $self->{op}) . ' %s';
 }
-
-sub exec_str { $_[0]->op_to_lang(EGE::Prog::Lang::lang('Perl')) . " $_[1]" }
 
 sub _children { qw(arg) }
 

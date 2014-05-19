@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 68;
+use Test::More tests => 74;
 use Test::Exception;
 
 use lib '..';
@@ -72,14 +72,24 @@ use EGE::Prog qw(make_block make_expr);
     is $e->run(), 11, 'visit transform all';
 }
 
-{
-    my $e = make_expr([ '*', [ '+', 'a', 1 ], [ '-', 'b', 2 ] ]);
-    is $e->to_lang_named('C'), '(a + 1) * (b - 2)', 'priorities 1';
+sub check_lang {
+    my ($lang, $expr, $str, $name) = @_;
+    is make_expr($expr)->to_lang_named($lang), $str, $name;
 }
 
+sub check_prio_C { check_lang 'C', @_[0..1], "priorities $_[2]" }
+
 {
-    my $e = make_expr([ '+', [ '*', 'a', 1 ], [ '/', 'b', 2 ] ]);
-    is $e->to_lang_named('C'), 'a * 1 + b / 2', 'priorities 2';
+    check_prio_C [ '*', [ '+', 'a', 1 ], [ '-', 'b', 2 ] ], '(a + 1) * (b - 2)', '1';
+    check_prio_C [ '+', [ '*', 'a', 1 ], [ '/', 'b', 2 ] ], 'a * 1 + b / 2', '2';
+    check_prio_C [ '*', 5, [ '-', 'x' ] ], '5 * - x', 'unary 1';
+    check_prio_C [ '+', 5, [ '-', 'x' ] ], '5 + - x', 'unary 2';
+    check_prio_C [ '-', [ '+', 'x', 5 ] ], '- (x + 5)', 'unary 3';
+    check_prio_C [ '+', [ '-', 'x' ] ], '+ - x', 'unary 4';
+
+    my $e = [ '+', [ '&&', 'x', 'y' ] ];
+    check_lang 'Pascal', $e, '+ (x and y)', 'prio Pascal not';
+    check_prio_C $e, '+ (x && y)', 'C not';
 }
 
 {
