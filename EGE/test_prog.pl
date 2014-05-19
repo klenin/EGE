@@ -24,6 +24,13 @@ my $b = EGE::Prog::make_block([
     '=', 'c', ['+', ['-', 'b'], ['*', \$m, 'a']],
 ]);
 
+my $bb = EGE::Prog::make_expr [ '+', 'a', 'b' ];
+
+$bb->visit_dfs(sub { $_[0]->{op} = '-' if ($_[0]->{op} || '') eq '+' });
+print $bb->to_lang_named('Perl');
+#$b->visit_dfs(sub { print '  ' x $_[1], $_[0], "\n"; });
+exit;
+
 my $env = {};
 
 #print Dumper($b);
@@ -32,9 +39,8 @@ $b->run($env);
 
 print $b->to_lang('Pascal'), "\n";
 print %$env;
-print ' ops=', $b->count_ops, "\n";
 
-$env = { _skip => rnd->in_range(1, $b->count_ops) };
+$env = { _skip => rnd->in_range(1, 5) };
 $b->run($env);
 print %$env;
 =cut

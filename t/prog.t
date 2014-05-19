@@ -60,14 +60,12 @@ use EGE::Prog qw(make_block make_expr);
     is $e->run(), -2, 'visit_dfs before';
     $e->visit_dfs(sub { $_[0]->{op} = '+' if ($_[0]->{op} || '') eq '-' });
     is $e->run(), 6, 'visit_dfs after';
-    my $count = 0;
-    $e->visit_dfs(sub { ++$count; });
-    is $count, 6, 'visit_dfs count';
+    is $e->count_if(sub { 1 }), 6, 'visit_dfs count all';
+    is $e->count_if(sub { $_[0]->isa('EGE::Prog::Const') }), 3, 'count_if';
 }
 
 {
     my $b = make_expr([ '-', 3, 7 ]);
-    is $b->count_ops, 1;
     is $b->run({}), -4;
     is $b->run({ _skip => 1 }), 3;
     is $b->run({ _replace_op => { '-' => '*' } }), 21;

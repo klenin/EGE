@@ -13,6 +13,11 @@ use EGE::Prog;
 use EGE::LangTable;
 use EGE::Bits;
 
+sub count_arith {
+    my ($expr) = @_;
+    $expr->count_if(sub { !!grep $_[0]->isa("EGE::Prog::$_"), qw(UnOp BinOp) });
+}
+
 sub arith {
     my ($self) = @_;
     my $v1 = rnd->in_range(1, 9);
@@ -43,7 +48,7 @@ sub arith {
         push @errors, $get_c->();
         $$var += 1;
     }
-    push @errors, $get_c->(_skip => $_) for 1 .. $b->count_ops;
+    push @errors, $get_c->(_skip => $_) for 1 .. count_arith($b);
     my $correct = $get_c->();
     my %seen = ($correct => 1);
     @errors = grep !$seen{$_}++, @errors;
@@ -78,7 +83,7 @@ sub div_mod_common {
     my @errors;
     push @errors, $get_v->(_replace_op => $_),
         for { '%' => '//' }, { '//' => '%' }, { '%' => '//', '//' => '%' };
-    push @errors, $get_v->(_skip => $_) for 1 .. $b->count_ops;
+    push @errors, $get_v->(_skip => $_) for 1 .. count_arith($b);
 
     my %seen = ($correct => 1);
     @errors = grep !$seen{$_}++, @errors;

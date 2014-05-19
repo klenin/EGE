@@ -25,8 +25,6 @@ sub to_lang { die; }
 sub run { die; }
 sub get_ref { die; }
 
-sub count_ops { 0 }
-
 sub run_val {
     my ($self, $name, $env) = @_;
     $env ||= {};
@@ -43,6 +41,13 @@ sub visit_dfs {
     $_->visit_dfs($fn, $depth + 1) for $self->_get_children();
 }
 sub _get_children {}
+
+sub count_if {
+    my ($self, $cond) = @_;
+    my $count = 0;
+    $_[0]->visit_dfs( sub { ++$count if $cond->($_[0]) } );
+    $count;
+}
 
 package EGE::Prog::BlackBox;
 use base 'EGE::Prog::SynElement';
@@ -73,8 +78,6 @@ sub run {
     ${$self->{var}->get_ref($env)} = $self->{expr}->run($env);
 }
 
-sub count_ops { $_[0]->{expr}->count_ops; }
-
 sub _get_children { map $_[0]->{$_}, qw(var expr) }
 
 package EGE::Prog::Index;
@@ -99,12 +102,6 @@ sub get_ref {
     my $v = $self->{array}->get_ref($env);
     $v = \($$v->[$_->run($env)]) for @{$self->{indices}};
     $v;
-}
-
-sub count_ops {
-    my ($self) = @_;
-    my $count = 0;
-    $count += $_->count_ops for @{$self->{indices}};
 }
 
 sub _get_children { $_[0]->{array}, @{$_[0]->{indices}} }
@@ -140,8 +137,6 @@ sub run {
     $r || 0;
 }
 
-sub count_ops { $_[0]->{left}->count_ops + $_[0]->{right}->count_ops + 1; }
-
 sub gather_vars { $_[0]->{$_}->gather_vars($_[1]) for qw(left right) }
 
 sub _get_children { map $_[0]->{$_}, qw(left right) }
@@ -170,8 +165,6 @@ sub run {
     $err and die $err;
     $r || 0;
 }
-
-sub count_ops { $_[0]->{arg}->count_ops + 1; }
 
 sub gather_vars { $_[0]->{arg}->gather_vars($_[1]) }
 
@@ -237,12 +230,6 @@ sub to_lang {
 sub run {
     my ($self, $env) = @_;
     $_->run($env) for @{$self->{statements}};
-}
-
-sub count_ops {
-    my $count = 0;
-    $count += $_->count_ops for @{$_[0]->{statements}};
-    $count;
 }
 
 sub _get_children { @{$_[0]->{statements}} }
