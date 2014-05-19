@@ -92,7 +92,7 @@ sub pack_table {
 }
 
 {
-    my $tab1 = EGE::SQL::Table->new([ qw(id city name) ]); 
+    my $tab1 = EGE::SQL::Table->new([ qw(id city name) ]);
     $tab1->insert_rows ([ 2, 'v', 'aaa' ], [ 1, 'k', 'bbb' ], [ 8, 'l', 'ann' ], [ 9, 'k', 'bnn' ]);
     $tab1->delete(make_expr([ '==', 'id', 2 ]));
     is pack_table($tab1), 'id city name|1 k bbb|8 l ann|9 k bnn', 'delete 1';
@@ -135,11 +135,12 @@ sub pack_table {
 }
 
 {
-    my $tab = EGE::SQL::Table->new([ qw(id name сity) ]); 
-    $tab->insert_rows([ 1, 'aaa', 3 ], [ 2, 'bbb', 2 ],[ 3, 'aac', 1 ], [ 4, 'bbn', 2 ]);
-    is pack_table($tab->select(['id'], make_expr($tab->between('id', 1, 3)))), 'id|1|2|3', 'between field 3';
-    is pack_table($tab->select(['id'], make_expr($tab->between('id', 5, 7)))), 'id', 'between empty';
-    is pack_table($tab->select(['id'], make_expr($tab->between('id', 1, 4)))), 'id|1|2|3|4', 'between all';
+    my $t = EGE::SQL::Table->new([ 'id' ]);
+    $t->insert_rows([ 1 ], [ 2 ],[ 3 ], [ 4 ]);
+    is pack_table($t->select(['id'], make_expr([ 'between', 'id', 1, 3 ]))), 'id|1|2|3', 'between field 3';
+    is pack_table($t->select(['id'], make_expr([ 'between', 'id', 5, 7 ]))), 'id', 'between empty';
+    my $q = EGE::SQL::Select->new(undef, 'test', [ 'id' ], make_expr [ 'between', 'id', 5, 7 ]);
+    is $q->text, 'SELECT id FROM test WHERE id BETWEEN 5 AND 7', 'query text: select between';
 }
 
 {
@@ -147,7 +148,8 @@ sub pack_table {
     $t1->insert_rows([ 1, 'aaa' ], [ 2, 'bbb' ], [ 3, 'aac' ], [ 4, 'bbn' ]);
     my $t2 = EGE::SQL::Table->new([ qw(cid city) ]);
     $t2->insert_rows([ 2, 'k' ], [ 1, 'v' ], [ 4, 'j' ], [ 3, 'p' ]);
-    is pack_table($t1->inner_join($t2, 'id', 'cid')), 'id name cid city|1 aaa 1 v|2 bbb 2 k|3 aac 3 p|4 bbn 4 j', 'inner join';
+    is pack_table($t1->inner_join($t2, 'id', 'cid')),
+        'id name cid city|1 aaa 1 v|2 bbb 2 k|3 aac 3 p|4 bbn 4 j', 'inner join';
 
     my $t3 = EGE::SQL::Table->new([ qw(id name) ]);
     $t3->insert_rows([ 5, 'k' ], [ 6, 'v' ], [ 7, 'j' ], [ 8, 'p' ]);

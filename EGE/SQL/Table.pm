@@ -91,10 +91,6 @@ sub delete {
     $self->{data} = $self->select( [ @{$self->{fields}} ], make_expr(['!', $where]), 1)->{data};
     $self;
 }
-sub between {
-    my ($self, $exp, $l, $r) = @_;
-    return [ '&&', ['>=', $exp, $l] , ['<=', $exp, $r] ]
-}
 
 sub inner_join {
     my ($table1, $table2, $field1, $field2) = @_;

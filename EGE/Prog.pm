@@ -122,7 +122,7 @@ sub run {
     $r || 0;
 }
 
-sub prio { $_[1]->{prio}->{$_[0]->{op}} }
+sub prio { $_[1]->{prio}->{$_[0]->{op}} or die $_[0]->{op} }
 
 sub operand {
     my ($self, $lang, $operand) = @_;
@@ -161,7 +161,7 @@ sub _children { qw(left right) }
 package EGE::Prog::UnOp;
 use base 'EGE::Prog::Op';
 
-sub prio { $_[1]->{prio}->{'`' . $_[0]->{op}} }
+sub prio { $_[1]->{prio}->{'`' . $_[0]->{op}} or die $_[0]->{op} }
 
 sub to_lang_fmt {
     my ($self, $lang) = @_;
@@ -169,6 +169,20 @@ sub to_lang_fmt {
 }
 
 sub _children { qw(arg) }
+
+package EGE::Prog::TernaryOp;
+use base 'EGE::Prog::Op';
+
+sub to_lang_fmt {
+    my ($self, $lang) = @_;
+    my $r = $lang->op_fmt($self->{op});
+    return $r unless ref $r;
+    my $s = EGE::Prog::make_expr($r)->to_lang($lang);
+    $s =~ s/(\d+)/%$1\$s/g;
+    $s;
+}
+
+sub _children { qw(arg1 arg2 arg3) }
 
 package EGE::Prog::Var;
 use base 'EGE::Prog::SynElement';
@@ -344,6 +358,12 @@ sub make_expr {
                 op => $src->[0],
                 left => make_expr($src->[1]),
                 right => make_expr($src->[2])
+            );
+        }
+        if (@$src == 4) {
+            return EGE::Prog::TernaryOp->new(
+                op => $src->[0],
+                map { +"arg$_" => make_expr($src->[$_]) } 1..3
             );
         }
         die @$src;
