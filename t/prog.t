@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 66;
+use Test::More tests => 69;
 use Test::Exception;
 
 use lib '..';
@@ -53,6 +53,16 @@ use EGE::Prog qw(make_block make_expr);
 
 {
     throws_ok { make_expr(['xyz'])->run({}) } qr/xyz/, 'undefined variable';
+}
+
+{
+    my $e = make_expr([ '-', [ '-', 3, ['-', 2, 1 ] ] ]);
+    is $e->run(), -2, 'visit_dfs before';
+    $e->visit_dfs(sub { $_[0]->{op} = '+' if ($_[0]->{op} || '') eq '-' });
+    is $e->run(), 6, 'visit_dfs after';
+    my $count = 0;
+    $e->visit_dfs(sub { ++$count; });
+    is $count, 6, 'visit_dfs count';
 }
 
 {

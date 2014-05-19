@@ -36,6 +36,14 @@ sub run_val {
 
 sub gather_vars {}
 
+sub visit_dfs {
+    my ($self, $fn, $depth) = @_;
+    $depth //= 1;
+    $fn->($self, $depth);
+    $_->visit_dfs($fn, $depth + 1) for $self->_get_children();
+}
+sub _get_children {}
+
 package EGE::Prog::BlackBox;
 use base 'EGE::Prog::SynElement';
 
@@ -67,6 +75,8 @@ sub run {
 
 sub count_ops { $_[0]->{expr}->count_ops; }
 
+sub _get_children { map $_[0]->{$_}, qw(var expr) }
+
 package EGE::Prog::Index;
 use base 'EGE::Prog::SynElement';
 
@@ -96,6 +106,8 @@ sub count_ops {
     my $count = 0;
     $count += $_->count_ops for @{$self->{indices}};
 }
+
+sub _get_children { $_[0]->{array}, @{$_[0]->{indices}} }
 
 package EGE::Prog::BinOp;
 use base 'EGE::Prog::SynElement';
@@ -132,6 +144,8 @@ sub count_ops { $_[0]->{left}->count_ops + $_[0]->{right}->count_ops + 1; }
 
 sub gather_vars { $_[0]->{$_}->gather_vars($_[1]) for qw(left right) }
 
+sub _get_children { map $_[0]->{$_}, qw(left right) }
+
 package EGE::Prog::UnOp;
 use base 'EGE::Prog::SynElement';
 
@@ -160,6 +174,8 @@ sub run {
 sub count_ops { $_[0]->{arg}->count_ops + 1; }
 
 sub gather_vars { $_[0]->{arg}->gather_vars($_[1]) }
+
+sub _get_children { $_[0]->{arg} }
 
 package EGE::Prog::Var;
 use base 'EGE::Prog::SynElement';
@@ -229,8 +245,12 @@ sub count_ops {
     $count;
 }
 
+sub _get_children { @{$_[0]->{statements}} }
+
 package EGE::Prog::CompoundStatement;
 use base 'EGE::Prog::SynElement';
+
+sub to_lang_fields {}
 
 sub to_lang {
     my ($self, $lang) = @_;
@@ -244,6 +264,8 @@ sub to_lang {
         $fmt_start . $self->to_lang_fmt . $fmt_end,
         map($self->{$_}->to_lang($lang), $self->to_lang_fields), $body;
 }
+
+sub _get_children { map $_[0]->{$_}, $_->to_lang_fields, 'body' }
 
 package EGE::Prog::ForLoop;
 use base 'EGE::Prog::CompoundStatement';
