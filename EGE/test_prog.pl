@@ -39,8 +39,6 @@ $b->run($env);
 
 print $b->to_lang('Pascal'), "\n";
 print %$env;
-
-$env = { _skip => rnd->in_range(1, 5) };
 $b->run($env);
 print %$env;
 =cut

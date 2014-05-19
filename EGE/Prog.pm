@@ -35,13 +35,13 @@ sub run_val {
 sub gather_vars {}
 
 sub visit_dfs {
-    my ($self, $fn, $depth) = @_;
+    my (undef, $fn, $depth) = @_;
     $depth //= 1;
-    $fn->($self, $depth);
-    $_->visit_dfs($fn, $depth + 1) for $self->_get_children();
-    $self;
+    $fn->($_[0], $depth);
+    $_[0]->_visit_children($fn, $depth + 1);
+    $_[0];
 }
-sub _get_children {}
+sub _visit_children {}
 
 sub count_if {
     my ($self, $cond) = @_;
@@ -79,7 +79,7 @@ sub run {
     ${$self->{var}->get_ref($env)} = $self->{expr}->run($env);
 }
 
-sub _get_children { map $_[0]->{$_}, qw(var expr) }
+sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for qw(var expr) }
 
 package EGE::Prog::Index;
 use base 'EGE::Prog::SynElement';
@@ -105,7 +105,7 @@ sub get_ref {
     $v;
 }
 
-sub _get_children { $_[0]->{array}, @{$_[0]->{indices}} }
+sub _visit_children { my $self = shift; $_->visit_dfs(@_) for $self->{array}, @{$self->{indices}} }
 
 package EGE::Prog::BinOp;
 use base 'EGE::Prog::SynElement';
@@ -128,7 +128,6 @@ sub to_lang {
 sub run {
     my ($self, $env) = @_;
     my $vl = $self->{left}->run($env);
-    return $vl if ($env->{_skip} || 0) == ++$env->{_count};
     my $vr = $self->{right}->run($env);
     my $r = eval sprintf EGE::Prog::Lang::lang('Perl')->op_fmt($self->{op}), $vl, $vr;
     my $err = $@;
@@ -138,7 +137,7 @@ sub run {
 
 sub gather_vars { $_[0]->{$_}->gather_vars($_[1]) for qw(left right) }
 
-sub _get_children { map $_[0]->{$_}, qw(left right) }
+sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for qw(left right) }
 
 package EGE::Prog::UnOp;
 use base 'EGE::Prog::SynElement';
@@ -158,7 +157,6 @@ sub to_lang {
 sub run {
     my ($self, $env) = @_;
     my $v = $self->{arg}->run($env);
-    return $v if ($env->{_skip} || 0) == ++$env->{_count};
     my $r = eval $self->op_to_lang(EGE::Prog::Lang::lang('Perl')) . " $v";
     my $err = $@;
     $err and die $err;
@@ -167,7 +165,7 @@ sub run {
 
 sub gather_vars { $_[0]->{arg}->gather_vars($_[1]) }
 
-sub _get_children { $_[0]->{arg} }
+sub _visit_children { my $self = shift; $self->{arg}->visit_dfs(@_); }
 
 package EGE::Prog::Var;
 use base 'EGE::Prog::SynElement';
@@ -231,7 +229,7 @@ sub run {
     $_->run($env) for @{$self->{statements}};
 }
 
-sub _get_children { @{$_[0]->{statements}} }
+sub _visit_children { my $self = shift; $_->visit_dfs(@_) for @{$self->{statements}} }
 
 package EGE::Prog::CompoundStatement;
 use base 'EGE::Prog::SynElement';
@@ -251,7 +249,7 @@ sub to_lang {
         map($self->{$_}->to_lang($lang), $self->to_lang_fields), $body;
 }
 
-sub _get_children { map $_[0]->{$_}, $_->to_lang_fields, 'body' }
+sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for $_->to_lang_fields, 'body' }
 
 package EGE::Prog::ForLoop;
 use base 'EGE::Prog::CompoundStatement';

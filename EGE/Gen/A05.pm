@@ -15,9 +15,14 @@ use EGE::Prog;
 use EGE::LangTable;
 use EGE::Bits;
 
-sub count_arith {
-    my ($expr) = @_;
-    $expr->count_if(sub { $_[0]->isa('EGE::Prog::BinOp') });
+sub is_binop { $_[0]->isa('EGE::Prog::BinOp') }
+
+sub without_op {
+    my ($expr, $index) = @_;
+    my $count = 0;
+    dclone($expr)->visit_dfs(sub {
+        $_[0] = $_[0]->{left} || $_[0] if is_binop($_[0]) && ++$count == $index
+    });
 }
 
 sub arith {
@@ -40,18 +45,18 @@ sub arith {
         'Определите значение переменной <i>c</i> после выполнения ' .
         "следующего фрагмента программы: $lt";
 
-    my $get_c = sub { $b->run_val('c', { @_ }) };
+    my $get_c = sub { $_[0]->run_val('c', {}) };
 
     my @errors;
     for my $var (\$v1, \$v2, \$v3) {
         $$var += 1;
-        push @errors, $get_c->();
+        push @errors, $get_c->($b);
         $$var -= 2;
-        push @errors, $get_c->();
+        push @errors, $get_c->($b);
         $$var += 1;
     }
-    push @errors, $get_c->(_skip => $_) for 1 .. count_arith($b);
-    my $correct = $get_c->();
+    push @errors, $get_c->(without_op($b, $_)) for 1 .. $b->count_if(\&is_binop);
+    my $correct = $get_c->($b);
     my %seen = ($correct => 1);
     @errors = grep !$seen{$_}++, @errors;
 
@@ -81,9 +86,8 @@ sub div_mod_common {
     ]);
 
     my $get_v = sub {
-        my $expr = shift;
-        my $env = { @_ };
-        $expr->run($env);
+        my $env = {};
+        $_[0]->run($env);
         $get_fn->($env);
     };
     my $correct = $get_v->($b);
@@ -94,7 +98,7 @@ sub div_mod_common {
     my @errors;
     push @errors, $get_v->(replace_ops($b, $_)),
         for { '%' => '//' }, { '//' => '%' }, { '%' => '//', '//' => '%' };
-    push @errors, $get_v->($b, _skip => $_) for 1 .. count_arith($b);
+    push @errors, $get_v->(without_op($b, $_)) for 1 .. $b->count_if(\&is_binop);
 
     my %seen = ($correct => 1);
     @errors = grep !$seen{$_}++, @errors;

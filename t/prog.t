@@ -56,18 +56,20 @@ use EGE::Prog qw(make_block make_expr);
 }
 
 {
+    sub plus2minus { $_[0]->{op} = '+' if ($_[0]->{op} || '') eq '-' }
     my $e = make_expr([ '-', [ '-', 3, ['-', 2, 1 ] ] ]);
     is $e->run(), -2, 'visit_dfs before';
-    $e->visit_dfs(sub { $_[0]->{op} = '+' if ($_[0]->{op} || '') eq '-' });
-    is $e->run(), 6, 'visit_dfs after';
+    is $e->visit_dfs(\&plus2minus)->run(), 6, 'visit_dfs after';
     is $e->count_if(sub { 1 }), 6, 'visit_dfs count all';
     is $e->count_if(sub { $_[0]->isa('EGE::Prog::Const') }), 3, 'count_if';
 }
 
 {
-    my $b = make_expr([ '-', 3, 7 ]);
-    is $b->run({}), -4;
-    is $b->run({ _skip => 1 }), 3;
+    my $e = make_expr([ '[]', 'A', map [ '+', 'i', $_ ], 1 .. 5 ]);
+    $e->visit_dfs(sub { $_[0] = $_[0]->{right} if $_[0]->isa('EGE::Prog::BinOp') });
+    is $e->to_lang_named('Pascal'), 'A[1, 2, 3, 4, 5]', 'visit transform';
+    $e->visit_dfs(sub { $_[0] = make_expr 11 });
+    is $e->run(), 11, 'visit transform all';
 }
 
 {
