@@ -39,6 +39,7 @@ sub visit_dfs {
     $depth //= 1;
     $fn->($self, $depth);
     $_->visit_dfs($fn, $depth + 1) for $self->_get_children();
+    $self;
 }
 sub _get_children {}
 
@@ -129,9 +130,7 @@ sub run {
     my $vl = $self->{left}->run($env);
     return $vl if ($env->{_skip} || 0) == ++$env->{_count};
     my $vr = $self->{right}->run($env);
-    my $op = $self->{op};
-    $op = ($env->{_replace_op} || {})->{$op} || $op;
-    my $r = eval sprintf EGE::Prog::Lang::lang('Perl')->op_fmt($op), $vl, $vr;
+    my $r = eval sprintf EGE::Prog::Lang::lang('Perl')->op_fmt($self->{op}), $vl, $vr;
     my $err = $@;
     $err and die $err;
     $r || 0;

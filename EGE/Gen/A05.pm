@@ -8,6 +8,8 @@ use strict;
 use warnings;
 use utf8;
 
+use Storable qw(dclone);
+
 use EGE::Random;
 use EGE::Prog;
 use EGE::LangTable;
@@ -15,7 +17,7 @@ use EGE::Bits;
 
 sub count_arith {
     my ($expr) = @_;
-    $expr->count_if(sub { !!grep $_[0]->isa("EGE::Prog::$_"), qw(UnOp BinOp) });
+    $expr->count_if(sub { $_[0]->isa('EGE::Prog::BinOp') });
 }
 
 sub arith {
@@ -56,6 +58,14 @@ sub arith {
     $self->variants($correct, rnd->pick_n(3, @errors));
 }
 
+sub replace_ops {
+    my ($expr, $repls) = @_;
+    dclone($expr)->visit_dfs(sub {
+        my $newop = $repls->{$_[0]->{op} || ''} or return;
+        $_[0]->{op} = $newop;
+    });
+}
+
 sub div_mod_common {
     my ($self, $q, $src, $get_fn) = @_;
     my $cc =
@@ -71,19 +81,20 @@ sub div_mod_common {
     ]);
 
     my $get_v = sub {
+        my $expr = shift;
         my $env = { @_ };
-        $b->run($env);
+        $expr->run($env);
         $get_fn->($env);
     };
-    my $correct = $get_v->();
+    my $correct = $get_v->($b);
     my $lt = EGE::LangTable::table($b, [ [ 'Basic', 'Pascal', 'Alg' ] ]);
 
     $self->{text} = "$q после выполнения следующего фрагмента программы: $lt";
 
     my @errors;
-    push @errors, $get_v->(_replace_op => $_),
+    push @errors, $get_v->(replace_ops($b, $_)),
         for { '%' => '//' }, { '//' => '%' }, { '%' => '//', '//' => '%' };
-    push @errors, $get_v->(_skip => $_) for 1 .. count_arith($b);
+    push @errors, $get_v->($b, _skip => $_) for 1 .. count_arith($b);
 
     my %seen = ($correct => 1);
     @errors = grep !$seen{$_}++, @errors;

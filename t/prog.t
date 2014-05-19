@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 69;
+use Test::More tests => 68;
 use Test::Exception;
 
 use lib '..';
@@ -68,7 +68,6 @@ use EGE::Prog qw(make_block make_expr);
     my $b = make_expr([ '-', 3, 7 ]);
     is $b->run({}), -4;
     is $b->run({ _skip => 1 }), 3;
-    is $b->run({ _replace_op => { '-' => '*' } }), 21;
 }
 
 {
