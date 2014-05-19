@@ -107,8 +107,24 @@ sub get_ref {
 
 sub _visit_children { my $self = shift; $_->visit_dfs(@_) for $self->{array}, @{$self->{indices}} }
 
-package EGE::Prog::BinOp;
+package EGE::Prog::Op;
 use base 'EGE::Prog::SynElement';
+
+sub _children {}
+
+sub run {
+    my ($self, $env) = @_;
+    my $r = eval $self->exec_str(map $self->{$_}->run($env), $self->_children);
+    my $err = $@;
+    $err and die $err;
+    $r || 0;
+}
+
+sub gather_vars { $_[0]->{$_}->gather_vars($_[1]) for $_[0]->_children; }
+sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for $self->_children; }
+
+package EGE::Prog::BinOp;
+use base 'EGE::Prog::Op';
 
 sub operand {
     my ($self, $lang, $operand) = @_;
@@ -125,22 +141,15 @@ sub to_lang {
         map $self->operand($lang, $self->{$_}), qw(left right);
 }
 
-sub run {
-    my ($self, $env) = @_;
-    my $vl = $self->{left}->run($env);
-    my $vr = $self->{right}->run($env);
-    my $r = eval sprintf EGE::Prog::Lang::lang('Perl')->op_fmt($self->{op}), $vl, $vr;
-    my $err = $@;
-    $err and die $err;
-    $r || 0;
+sub exec_str {
+    my $self = shift;
+    sprintf EGE::Prog::Lang::lang('Perl')->op_fmt($self->{op}), @_;
 }
 
-sub gather_vars { $_[0]->{$_}->gather_vars($_[1]) for qw(left right) }
-
-sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for qw(left right) }
+sub _children { qw(left right) }
 
 package EGE::Prog::UnOp;
-use base 'EGE::Prog::SynElement';
+use base 'EGE::Prog::Op';
 
 sub op_to_lang {
     my ($self, $lang) = @_;
@@ -154,18 +163,9 @@ sub to_lang {
     $self->op_to_lang($lang) . " $arg";
 }
 
-sub run {
-    my ($self, $env) = @_;
-    my $v = $self->{arg}->run($env);
-    my $r = eval $self->op_to_lang(EGE::Prog::Lang::lang('Perl')) . " $v";
-    my $err = $@;
-    $err and die $err;
-    $r || 0;
-}
+sub exec_str { $_[0]->op_to_lang(EGE::Prog::Lang::lang('Perl')) . " $_[1]" }
 
-sub gather_vars { $_[0]->{arg}->gather_vars($_[1]) }
-
-sub _visit_children { my $self = shift; $self->{arg}->visit_dfs(@_); }
+sub _children { qw(arg) }
 
 package EGE::Prog::Var;
 use base 'EGE::Prog::SynElement';
