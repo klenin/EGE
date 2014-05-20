@@ -23,25 +23,10 @@ sub select_where {
     my @candy = rnd->pick_n(9, @EGE::Russian::Product::candy);
     my ($products, $values) = EGE::SQL::Utils::create_table( \@fields, \@candy);
     my (%ans, $query);
-    while (1) {
-        my ($f1, $f2, $f3) = rnd->shuffle(@fields[1 .. $#fields]);
-        my ($l, $r) = map $products->random_val($values), 1..2;
-        my $e = EGE::Prog::make_expr([
-            rnd->pick('&&', '||'),
-            [
-                rnd->pick('&&', '||'),
-                [ rnd->pick(ops::comp), $f1, $l ],
-                [ '>', $f2, $f1 ],
-            ], 
-            [ rnd->pick(ops::comp), $f3, $r ],
-        ]);
-        $query = EGE::SQL::Select->new($products, 'products', [ 'Товар' ], $e);
-        my ($selected) = $query->run();
-        if (1 < $selected->count() && $selected->count() < $products->count() - 2) {
-            $ans{$_->[0]} = 1 for @{$selected->{data}};
-            last;
-        }
-    }
+    my $cond = EGE::SQL::Utils::check_cond ($products, $values, \&EGE::SQL::Utils::expr_2 ,@fields);
+    $query = EGE::SQL::Select->new($products, 'products', [ 'Товар' ], $cond);
+    my ($selected) = $query->run();
+    $ans{$_->[0]} = 1 for @{$selected->{data}};
     $self->{text} =
         "В таблице <tt>products</tt> представлен список товаров: \n" .
         $products->select([@fields])->table_html() . "\n" .

@@ -15,27 +15,15 @@ use EGE::Prog::Lang;
 use EGE::Html;
 use EGE::Russian::Jobs;
 use EGE::SQL::Table;
-use EGE::SQL::Utils;
-
-sub check_cond {
-    my ($products, $values, @fields) = @_;
-    my ($ans, $cond);
-    my $count = $products->count();
-    do {
-        my $d =  $products->random_val($values);
-        my ($f1,$f2) = rnd->shuffle(@fields[1 .. $#fields]);
-        $cond = EGE::Prog::make_expr([ rnd->pick(ops::comp), $f1, $f2]);
-        $ans = $products->select([], $cond)->count();
-    } until (0 < $ans && $ans < $count);
-    $cond;
-}
+use EGE::SQL::Utils qw(create_table check_cond expr_1);
 
 sub trivial_select {
     my ($self) = @_;
     my @fields = qw(Товар Количество Цена Затраты);
     my @candy = rnd->pick_n(9, @EGE::Russian::Product::candy);
     my ($products, $values) = EGE::SQL::Utils::create_table( \@fields, \@candy);
-    my $selected = EGE::SQL::Select->new($products, 'products', [], check_cond ($products, $values, @fields));
+    my $selected = EGE::SQL::Select->new($products, 'products', [], 
+        EGE::SQL::Utils::check_cond ($products, $values, \&EGE::SQL::Utils::expr_1 ,@fields));
     my $count = $selected->run()->count;
     $self->{text} =
         "Заработная плата по профессиям представлена в таблице <tt>products</tt>: \n" .
@@ -51,7 +39,8 @@ sub trivial_delete {
     my ($products, $values) = EGE::SQL::Utils::create_table( \@fields, \@candy);
     my $text_table = $products->table_html();
     my $count = $products->count();
-    my $delete = EGE::SQL::Delete->new($products, "products", check_cond ($products, $values, @fields));
+    my $delete = EGE::SQL::Delete->new($products, "products",   
+        EGE::SQL::Utils::check_cond ($products, $values,\&EGE::SQL::Utils::expr_1, @fields));
     my $ans = $count - $delete->run()->count();
     $self->{text} =
         "В таблице <tt>products</tt> представлен список товаров:\n$text_table\n" .

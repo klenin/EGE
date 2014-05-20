@@ -31,22 +31,10 @@ sub insert_delete {
     $products->insert_row ($candy[$ind], @val); 
     push @query, " <tt>INSERT INTO $name_table (Товар, Количество, Цена, Затраты) 
         VALUES ( '$candy[$ind]', '$val[0]', '$val[1]', '$val[2]') </tt> \n";
-    while (1) {
-        my ($f1, $f2, $f3) = rnd->shuffle(@fields[1 .. $#fields]);
-        my ($l, $r) = map $products->random_val($values), 1..2;
-        my $cond = EGE::Prog::make_expr([
-            rnd->pick('&&', '||'),
-            [ rnd->pick(ops::comp), $f1, $l ], 
-            [ '>', $f2, $f1 ],
-        ]);
-        my $ans_pr = $products->select([], $cond)->count();
-        if (0 < $ans_pr && $ans_pr < $products->count()) { 
-            my $delete = EGE::SQL::Delete->new($products, $name_table, $cond);
-            $delete->run();
-            push @query, $delete->text_html(); 
-            last;
-        }
-    } 
+    my $cond = EGE::SQL::Utils::check_cond ($products, $values, \&EGE::SQL::Utils::expr_3 ,@fields);
+    my $delete = EGE::SQL::Delete->new($products, $name_table, $cond);
+    $delete->run();
+    push @query, $delete->text_html();     
     my $selected = $products->select([ 'Товар' ]);
     $ans{$_->[0]} = 1 for @{$selected->{data}};
     $self->{text} =
