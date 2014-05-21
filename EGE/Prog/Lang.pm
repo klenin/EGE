@@ -115,7 +115,7 @@ use base 'EGE::Prog::Lang';
 
 sub prio_list {
     [ ops::prio_unary ], [ ops::mult, '&&' ],
-    [ ops::add, '||', '^' ], [ ops::comp ], [ 'between' ]
+    [ ops::add, '||', '^' ], [ ops::comp, '=>' ], [ 'between' ]
 }
 
 sub assign_fmt { '%s := %s;' }
