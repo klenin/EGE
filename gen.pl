@@ -216,6 +216,7 @@ binmode STDOUT, ':utf8';
 #g2('Db03', 'trivial_update');
 #g2('Db04', 'choose_update');
 #g2('Db05', 'insert_delete');
+#g2('Db07', 'trivial_inner_join');
 
 #$questions = EGE::Generate::all;
 #$questions = EGE::AsmGenerate::all;
