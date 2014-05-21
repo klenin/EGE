@@ -374,7 +374,7 @@ sub make_expr {
     if (ref $src eq 'CODE') {
         return EGE::Prog::BlackBox->new(code => $src);
     }
-    if ($src =~ /^[[:alpha:]][[:alnum:]]*$/) {
+    if ($src =~ /^[[:alpha:]][[:alnum:]_]*$/) {
         return EGE::Prog::Var->new(name => $src);
     }
     return EGE::Prog::Const->new(value => $src);

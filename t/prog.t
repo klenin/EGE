@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 79;
+use Test::More tests => 81;
 use Test::Exception;
 
 use lib '..';
@@ -61,6 +61,9 @@ use EGE::Prog qw(make_block make_expr);
 }
 
 {
+    my $env = { a_1 => 2, a_b => 3 };
+    is make_expr('a_b')->run($env), 3, 'var underline';
+    is make_expr('a_1')->run($env), 2, 'var digit';
     throws_ok { make_expr(['xyz'])->run({}) } qr/xyz/, 'undefined variable';
 }
 
