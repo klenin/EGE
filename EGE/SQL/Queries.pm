@@ -91,4 +91,28 @@ sub text {
     "DELETE FROM $self->{table_name}" . $self->where_sql;
 }
 
+package EGE::SQL::Insert;
+use base 'EGE::SQL::Query';
+
+sub new { 
+    my ($class, $table, $name, $value) = @_;
+    my $self = {
+        table => $table,
+        table_name => $name,
+        value => $value,
+    };
+    bless $self, $class;
+    $self;
+}
+sub run {
+    my ($self) = @_;
+    $self->{table}->insert_row (@{$self->{value}});
+}
+
+sub text {
+    my ($self) = @_;
+    my $fields = join(', ', @{$self->{table}->{fields}});
+    my $val = join("', '", @{$self->{value}});
+    "INSERT INTO $self->{table_name} ( $fields ) VALUES ( '$val' )";
+}
 1

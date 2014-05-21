@@ -133,6 +133,12 @@ sub pack_table {
     my $q = EGE::SQL::Delete->new(undef, 'test', make_expr [ '>', 'f', '0' ]);
     is $q->text, 'DELETE FROM test WHERE f > 0', 'query text: delete';
 }
+    
+{
+    my $tab =  EGE::SQL::Table->new([ qw(id name) ]);
+    my $q = EGE::SQL::Insert->new($tab, 'test', [ 'a', 'b' ]);
+    is $q->text, "INSERT INTO test ( id, name ) VALUES ( 'a', 'b' )", 'query text: insert';
+}
 
 {
     my $t = EGE::SQL::Table->new([ 'id' ]);

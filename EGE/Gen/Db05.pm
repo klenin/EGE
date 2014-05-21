@@ -28,9 +28,9 @@ sub insert_delete {
     my (%ans, @query);
     my $ind = rnd->in_range(10, 13);
     my @val = map rnd->in_range(0, 50) * 100 , 1..@fields-1;
-    $products->insert_row ($candy[$ind], @val); 
-    push @query, " <tt>INSERT INTO $name_table (Товар, Количество, Цена, Затраты) 
-        VALUES ( '$candy[$ind]', '$val[0]', '$val[1]', '$val[2]') </tt> \n";
+    $products->insert_row ($candy[$ind], @val);
+    my $insert =  EGE::SQL::Insert->new ($products, $name_table, [ $candy[$ind], @val ]); 
+    push @query, $insert->text_html(); 
     my $cond = EGE::SQL::Utils::check_cond ($products, $values, \&EGE::SQL::Utils::expr_3 ,@fields);
     my $delete = EGE::SQL::Delete->new($products, $name_table, $cond);
     $delete->run();
@@ -38,7 +38,7 @@ sub insert_delete {
     my $selected = $products->select([ 'Товар' ]);
     $ans{$_->[0]} = 1 for @{$selected->{data}};
     $self->{text} =
-        "В таблице <tt>products</tt> представлен список товаров: \n".$text_table."\n".
+        "В таблице <tt>$name_table</tt> представлен список товаров: \n".$text_table."\n".
         "Какие товары в ней будут после выполнения приведенных ниже запросов? \n" ;
     $self->{text} .= html->row_n('td', $_) for @query;     
     $self->variants(@candy);
