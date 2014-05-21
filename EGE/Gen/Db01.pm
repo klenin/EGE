@@ -19,11 +19,13 @@ use EGE::SQL::Utils qw(create_table check_cond expr_1);
 
 sub trivial_select {
     my ($self) = @_;
-    my @fields = qw(Товар Количество Цена Затраты);
-    my @candy = rnd->pick_n(9, @EGE::Russian::Product::candy);
-    my ($products, $values) = EGE::SQL::Utils::create_table( \@fields, \@candy);
+    my @fields = qw(Товар Зарплата);
+    my @jobs = rnd->pick_n(9, @EGE::Russian::Jobs::list);
+    my ($products, $values) = EGE::SQL::Utils::create_table( \@fields, \@jobs);
+    my $d =  $products->random_val($values);
     my $selected = EGE::SQL::Select->new($products, 'products', [], 
-        EGE::SQL::Utils::check_cond ($products, $values, \&EGE::SQL::Utils::expr_1 ,@fields));
+        EGE::SQL::Utils::check_cond ($products, $values,
+            sub { EGE::Prog::make_expr([ rnd->pick(ops::comp), 'Зарплата', $d]);}, @fields));
     my $count = $selected->run()->count;
     $self->{text} =
         "Заработная плата по профессиям представлена в таблице <tt>products</tt>: \n" .

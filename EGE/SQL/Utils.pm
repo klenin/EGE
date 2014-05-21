@@ -34,7 +34,6 @@ sub check_cond {
 
 sub expr_1 {
     my ($tab, $values, @fields) = @_;
-    my $d =  $tab->random_val($values);
     my ($f1,$f2) = rnd->shuffle(@fields[1 .. $#fields]);
     EGE::Prog::make_expr([ rnd->pick(ops::comp), $f1, $f2]);
 }
