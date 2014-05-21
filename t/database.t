@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 38;
+use Test::More tests => 40;
 
 use lib '..';
 use EGE::Prog qw(make_expr make_block);
@@ -141,6 +141,15 @@ sub pack_table {
 }
 
 {
+    my $t1 = EGE::SQL::Table->new([ qw(x y) ]);
+    $t1->insert_rows([ 1, 2 ], [ 1, 3 ], [ 1, 4 ]);
+    my $t2 = EGE::SQL::Table->new([ qw(z) ]);
+    $t2->insert_rows([ 1 ], [ 2 ]);
+    my $q = EGE::SQL::Inner_join->new('t1', 't2', $t1, $t2, 'x', 'z' );
+    is $q->text, "t1 INNER JOIN t2 ON t1.x = t2.z", 'query text: inner_join';
+}
+
+{
     my $t = EGE::SQL::Table->new([ 'id' ]);
     $t->insert_rows([ 1 ], [ 2 ],[ 3 ], [ 4 ]);
     is pack_table($t->select(['id'], make_expr([ 'between', 'id', 1, 3 ]))), 'id|1|2|3', 'between field 3';
@@ -178,3 +187,4 @@ sub pack_table {
     is pack_table($tab->select($f, make_expr([ '<=', 'id', 3 ]))), 'id expr_1|1 4|2 5|3 6', 'select expression where';
     is pack_table($tab->select([ make_expr sub { $_[0]->{name} . 'x' } ])), 'expr_1|ax|bx|cx|dx', 'select sub';
 }
+
