@@ -2,7 +2,8 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 40;
+use Test::More tests => 42;
+use Test::Exception;
 
 use lib '..';
 use EGE::Prog qw(make_expr make_block);
@@ -93,10 +94,10 @@ sub pack_table {
 
 {
     my $tab1 = EGE::SQL::Table->new([ qw(id city name) ]);
-    $tab1->insert_rows ([ 2, 'v', 'aaa' ], [ 1, 'k', 'bbb' ], [ 8, 'l', 'ann' ], [ 9, 'k', 'bnn' ]);
+    $tab1->insert_rows([ 2, 'v', 'aaa' ], [ 1, 'k', 'bbb' ], [ 8, 'l', 'ann' ], [ 9, 'k', 'bnn' ]);
     $tab1->delete(make_expr([ '==', 'id', 2 ]));
     is pack_table($tab1), 'id city name|1 k bbb|8 l ann|9 k bnn', 'delete 1';
-    $tab1->insert_row (2, 'v', 'aaa');
+    $tab1->insert_row(2, 'v', 'aaa');
     $tab1->delete(make_expr([ '>', 'id', 6 ]));
     is pack_table($tab1), 'id city name|1 k bbb|2 v aaa', 'delete 2';
     $tab1->delete(make_expr([ '>=', 'id', 1 ]));
@@ -133,11 +134,14 @@ sub pack_table {
     my $q = EGE::SQL::Delete->new(undef, 'test', make_expr [ '>', 'f', '0' ]);
     is $q->text, 'DELETE FROM test WHERE f > 0', 'query text: delete';
 }
-    
+
 {
-    my $tab =  EGE::SQL::Table->new([ qw(id name) ]);
-    my $q = EGE::SQL::Insert->new($tab, 'test', [ 'a', 'b' ]);
-    is $q->text, "INSERT INTO test ( id, name ) VALUES ( 'a', 'b' )", 'query text: insert';
+    my $tab =  EGE::SQL::Table->new([ qw(id name n) ]);
+    my $q = EGE::SQL::Insert->new($tab, 'test', [ 'a', 'b', 123 ]);
+    is $q->text, q~INSERT INTO test (id, name, n) VALUES ('a', 'b', 123)~, 'query text: insert';
+    $q->run();
+    is pack_table($tab), 'id name n|a b 123', 'query run: insert';
+    throws_ok { EGE::SQL::Insert->new($tab, 't', []); } qr/count/, 'insert field count';
 }
 
 {

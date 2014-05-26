@@ -101,25 +101,28 @@ package EGE::SQL::Insert;
 use base 'EGE::SQL::Query';
 
 sub new { 
-    my ($class, $table, $name, $value) = @_;
+    my ($class, $table, $name, $values) = @_;
     my $self = {
         table => $table,
         table_name => $name,
-        value => $value,
+        values => $values,
     };
     bless $self, $class;
+    @{$self->{table}->{fields}} == @{$self->{values}}
+        or die 'Field count != value count';
     $self;
 }
+
 sub run {
     my ($self) = @_;
-    $self->{table}->insert_row (@{$self->{value}});
+    $self->{table}->insert_row(@{$self->{values}});
 }
 
 sub text {
     my ($self) = @_;
-    my $fields = join(', ', @{$self->{table}->{fields}});
-    my $val = join("', '", @{$self->{value}});
-    "INSERT INTO $self->{table_name} ( $fields ) VALUES ( '$val' )";
+    my $fields = join ', ', @{$self->{table}->{fields}};
+    my $values = join ', ', map /^\d+$/ ? $_ : "'$_'", @{$self->{values}};
+    "INSERT INTO $self->{table_name} ($fields) VALUES ($values)";
 }
 
 package EGE::SQL::Inner_join;
