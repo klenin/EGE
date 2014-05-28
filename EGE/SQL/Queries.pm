@@ -1,4 +1,4 @@
-# Copyright © 2014 Darya D. Gornak 
+# Copyright © 2014 Darya D. Gornak
 # Licensed under GPL version 2 or later.
 # http://github.com/dahin/EGE
 
@@ -153,4 +153,4 @@ sub text {
         "$self->{table_name1}.$self->{field1} = $self->{table_name2}.$self->{field2}";
 }
 
-1
+1;

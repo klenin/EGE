@@ -1,4 +1,4 @@
-# Copyright © 2014 Darya D. Gornak 
+# Copyright © 2014 Darya D. Gornak
 # Licensed under GPL version 2 or later.
 # http://github.com/dahin/EGE
 package EGE::SQL::Utils;
@@ -15,9 +15,9 @@ use EGE::SQL::Queries;
 
 sub create_table {
     my ($row, $col) = @_;
-    my $products = EGE::SQL::Table->new( $row);
+    my $products = EGE::SQL::Table->new($row);
     my @values = map [ map rnd->in_range(10, 80) * 100, @$col ], 0 .. @$row - 2;
-    $products->insert_rows(@{EGE::Utils::transpose( $col, @values)}); 
+    $products->insert_rows(@{EGE::Utils::transpose($col, @values)});
     $products, @values;
 }
 
@@ -35,7 +35,7 @@ sub check_cond {
 sub expr_1 {
     my ($tab, $values, @fields) = @_;
     my ($f1,$f2) = rnd->shuffle(@fields[1 .. $#fields]);
-    EGE::Prog::make_expr([ rnd->pick(ops::comp), $f1, $f2]);
+    EGE::Prog::make_expr([ rnd->pick(ops::comp), $f1, $f2 ]);
 }
 
 sub expr_2 {
@@ -48,7 +48,7 @@ sub expr_2 {
             rnd->pick('&&', '||'),
             [ rnd->pick(ops::comp), $f1, $l ],
             [ '>', $f2, $f1 ],
-        ], 
+        ],
         [ rnd->pick(ops::comp), $f3, $r ],
     ]);
 }

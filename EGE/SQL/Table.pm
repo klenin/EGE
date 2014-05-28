@@ -1,4 +1,4 @@
-# Copyright © 2014 Darya D. Gornak 
+# Copyright © 2014 Darya D. Gornak
 # Licensed under GPL version 2 or later.
 # http://github.com/dahin/EGE
 package EGE::SQL::Table;
@@ -90,7 +90,7 @@ sub update {
 }
 
 sub delete {
-    my ($self, $where) = @_; 
+    my ($self, $where) = @_;
     $self->{data} = $self->select( [ @{$self->{fields}} ], make_expr(['!', $where]), 1)->{data};
     $self;
 }
@@ -109,10 +109,10 @@ sub inner_join {
     $result;
 }
 
-sub table_html { 
+sub table_html {
     my ($self) = @_;
     my $table_text = html->row_n('th', @{$self->{fields}});
-    $table_text .= html->row_n('td', @$_) for @{$self->{data}}; 
+    $table_text .= html->row_n('td', @$_) for @{$self->{data}};
     $table_text = html->table($table_text, { border => 1 });
 }
 
