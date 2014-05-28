@@ -21,16 +21,16 @@ sub trivial_select {
     my ($self) = @_;
     my @fields = qw(Товар Зарплата);
     my @jobs = rnd->pick_n(9, @EGE::Russian::Jobs::list);
-    my ($products, $values) = EGE::SQL::Utils::create_table(\@fields, \@jobs);
+    my ($products, $values) = EGE::SQL::Utils::create_table(\@fields, \@jobs, 'products');
     my $d = $products->random_val($values);
-    my $selected = EGE::SQL::Select->new($products, 'products', [],
+    my $selected = EGE::SQL::Select->new($products, [],
         EGE::SQL::Utils::check_cond($products, $values,
             sub { EGE::Prog::make_expr([ rnd->pick(ops::comp), 'Зарплата', $d ]);}, @fields));
     my $count = $selected->run()->count;
-    $self->{text} =
-        "Заработная плата по профессиям представлена в таблице <tt>products</tt>: \n" .
-        $products->table_html() . "\n" .
-        'Сколько записей в ней удовлетворяют запросу ' . $selected->text_html() . ' ?',
+    $self->{text} = sprintf
+        "Заработная плата по профессиям представлена в таблице <tt>%s</tt>:\n%s\n" .
+        'Сколько записей в ней удовлетворяют запросу %s?',
+        $products->name, $products->table_html, $selected->text_html;
     $self->variants($count, rnd->pick_n(3, grep $_ != $count, 1 .. $products->count()));
 }
 
@@ -38,15 +38,15 @@ sub trivial_delete {
     my ($self) = @_;
     my @fields = qw(Товар Количество Цена Затраты);
     my @candy = rnd->pick_n(9, @EGE::Russian::Product::candy);
-    my ($products, $values) = EGE::SQL::Utils::create_table(\@fields, \@candy);
-    my $text_table = $products->table_html();
+    my ($products, $values) = EGE::SQL::Utils::create_table(\@fields, \@candy, 'products');
     my $count = $products->count();
-    my $delete = EGE::SQL::Delete->new($products, 'products',
+    my $delete = EGE::SQL::Delete->new($products,
         EGE::SQL::Utils::check_cond($products, $values, \&EGE::SQL::Utils::expr_1, @fields));
     my $ans = $count - $delete->run()->count();
-    $self->{text} =
-        "В таблице <tt>products</tt> представлен список товаров:\n$text_table\n" .
-        'Сколько записей из нее удалит запрос ' . $delete->text_html() . '?',
+    $self->{text} = sprintf
+        "В таблице <tt>%s</tt> представлен список товаров:\n%s\n" .
+        'Сколько записей из нее удалит запрос %s?',
+        $products->name, $products->table_html, $delete->text_html;
     $self->variants($ans, rnd->pick_n(3, grep $_ != $ans, 1 .. $count));
 }
 

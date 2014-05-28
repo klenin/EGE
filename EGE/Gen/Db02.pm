@@ -21,16 +21,16 @@ sub select_where {
     my ($self) = @_;
     my @fields = qw(Товар Количество Цена Затраты);
     my @candy = rnd->pick_n(9, @EGE::Russian::Product::candy);
-    my ($products, $values) = EGE::SQL::Utils::create_table(\@fields, \@candy);
-    my (%ans, $query);
+    my ($products, $values) = EGE::SQL::Utils::create_table(\@fields, \@candy, 'products');
     my $cond = EGE::SQL::Utils::check_cond($products, $values, \&EGE::SQL::Utils::expr_2, @fields);
-    $query = EGE::SQL::Select->new($products, 'products', [ 'Товар' ], $cond);
-    my ($selected) = $query->run();
+    my $query = EGE::SQL::Select->new($products, [ 'Товар' ], $cond);
+    my $selected = $query->run();
+    my %ans;
     $ans{$_->[0]} = 1 for @{$selected->{data}};
-    $self->{text} =
-        "В таблице <tt>products</tt> представлен список товаров: \n" .
-        $products->select([@fields])->table_html() . "\n" .
-        'Какие товары в этой таблицы удовлетворяют запросу ' . $query->text_html() . "?\n",
+    $self->{text} = sprintf
+        "В таблице <tt>%s</tt> представлен список товаров:\n%s\n" .
+        'Какие товары в этой таблицы удовлетворяют запросу %s?',
+        $products->name, $products->table_html, $query->text_html;
     $self->variants(@candy);
     $self->{correct} = [ map $ans{$_} ? 1 : 0, @candy ];
 }

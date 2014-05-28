@@ -9,17 +9,22 @@ use warnings;
 use EGE::Html;
 
 sub text_html { html->tag('tt', html->cdata($_[0]->text)); }
-sub where_sql { $_[0]->{where} ? ' WHERE '. $_[0]->{where}->to_lang_named('SQL') : '' };
+sub where_sql { $_[0]->{where} ? ' WHERE '. $_[0]->{where}->to_lang_named('SQL') : '' }
+
+sub init_table {
+    my ($self, $table) = @_;
+    $self->{table} = ref $table ? $table : undef;
+    $self->{table_name} = ref $table ? $table->name : $table;
+    $self;
+}
 
 package EGE::SQL::Select;
 use base 'EGE::SQL::Query';
 
-sub new { 
-    my ($class, $table, $name, $fields, $where, $inner) = @_;
+sub new {
+    my ($class, $table, $fields, $where, $inner) = @_;
     $fields or die;
     my $self = {
-        table => $table,
-        table_name => $name,
         inner_join => $inner,
         fields => $fields,
         where => $where,
@@ -29,7 +34,7 @@ sub new {
         $self->{where} = $inner;
     }
     bless $self, $class;
-    $self;
+    $self->init_table($table);
 }
 
 sub run {
@@ -50,16 +55,14 @@ package EGE::SQL::Update;
 use base 'EGE::SQL::Query';
 
 sub new { 
-    my ($class, $table, $name, $assigns, $where) = @_;
+    my ($class, $table, $assigns, $where) = @_;
     $assigns or die;
     my $self = {
-        table => $table,
-        table_name => $name,
         assigns => $assigns,
         where => $where,
     };
     bless $self, $class;
-    $self;
+    $self->init_table($table);
 }
 
 sub run {
@@ -77,14 +80,12 @@ package EGE::SQL::Delete;
 use base 'EGE::SQL::Query';
 
 sub new { 
-    my ($class, $table, $name, $where) = @_;
+    my ($class, $table, $where) = @_;
     my $self = {
-        table => $table,
-        table_name => $name,
         where => $where,
     };
     bless $self, $class;
-    $self;
+    $self->init_table($table);
 }
 
 sub run {
@@ -101,14 +102,13 @@ package EGE::SQL::Insert;
 use base 'EGE::SQL::Query';
 
 sub new { 
-    my ($class, $table, $name, $values) = @_;
+    my ($class, $table, $values) = @_;
     my $self = {
-        table => $table,
-        table_name => $name,
         values => $values,
     };
     bless $self, $class;
-    @{$self->{table}->{fields}} == @{$self->{values}}
+    $self->init_table($table);
+    !$self->{table} || @{$self->{table}->{fields}} == @{$self->{values}}
         or die 'Field count != value count';
     $self;
 }

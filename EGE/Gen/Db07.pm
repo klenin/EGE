@@ -21,8 +21,8 @@ sub create_table {
     my ($n, $m, $k) = @_;
     my @city = rnd->pick_n($n, @EGE::Russian::City::city);
     my @families = rnd->pick_n_sorted($m, @EGE::Russian::FamilyNames::list);
-    my $table_city = EGE::SQL::Table->new([ qw(id Город) ]);
-    my $table_person = EGE::SQL::Table->new([ qw(Фамилия), 'cid' ]);
+    my $table_city = EGE::SQL::Table->new([ qw(id Город) ], name => 'cities');
+    my $table_person = EGE::SQL::Table->new([ qw(Фамилия cid) ], name => 'persons');
     $table_city->insert_rows(@{EGE::Utils::transpose([ 1..@city ], \@city)});
     my @id_city = rnd->pick_n($m, 1 .. @city + $k);
     $table_person->insert_rows(@{EGE::Utils::transpose(\@families, \@id_city)});
@@ -33,12 +33,15 @@ sub trivial_inner_join{
     my ($self) = @_;
     my ($table_city, $table_person) = create_table(12, 7, 10);
     my $count = $table_person->inner_join($table_city, 'cid', 'id')->count();
-    my $inner = EGE::SQL::Inner_join->new('Person', 'City', $table_person, $table_city, 'cid', 'id');
-    my $query = EGE::SQL::Select->new($table_person, 'City', [], $inner);
-    $self->{text} =
-        "Есть две таблицы  <tt>City</tt> и <tt>Person</tt>\n" .
-        html->row_n('td', $table_city->table_html(), $table_person->table_html()) . "\n" .
-        'Сколько записей будет в таблице созданной данным запросом ' . $query->text_html() . ' ?',
+    my $inner = EGE::SQL::Inner_join->new(
+        'persons', 'cities', $table_person, $table_city, 'cid', 'id');
+    my $query = EGE::SQL::Select->new($table_person, [], $inner);
+    $self->{text} = sprintf
+        "Есть две таблицы <tt>%s</tt> и <tt>%s</tt>\n%s\n" .
+        'Сколько записей будет в таблице созданной данным запросом %s?',
+        $table_city->name, $table_person->name,
+        html->row_n('td', $table_city->table_html, $table_person->table_html),
+        $query->text_html;
     $self->variants($count, rnd->pick_n(3, grep $_ != $count, 1 .. $table_person->count()));
 }
 

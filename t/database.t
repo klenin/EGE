@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 43;
+use Test::More tests => 44;
 use Test::Exception;
 
 use lib '..';
@@ -110,43 +110,48 @@ sub pack_table {
 }
 
 {
-    my $q = EGE::SQL::Select->new(undef, 'test', [ qw(a b) ], make_expr [ '<', 'a', 7 ]);
+    my $q = EGE::SQL::Select->new('test', [ qw(a b) ], make_expr [ '<', 'a', 7 ]);
     is $q->text, 'SELECT a, b FROM test WHERE a < 7', 'query text: select where';
 }
 
 {
-    my $q = EGE::SQL::Select->new(undef, 'test', [ 'a', make_expr ['+', 'a', 'b'] ]);
+    my $q = EGE::SQL::Select->new('test', [ 'a', make_expr ['+', 'a', 'b'] ]);
     is $q->text, 'SELECT a, a + b FROM test', 'query text: select expr';
 }
 
 {
-    my $q = EGE::SQL::Select->new(undef, 'test', []);
+    my $q = EGE::SQL::Select->new('test', []);
     is $q->text, 'SELECT * FROM test', 'query text: select *';
 }
 
 {
-    my $q = EGE::SQL::Update->new(undef, 'test', make_block [ '=', 'a', 1, '=', 'x', 'a' ]);
+    my $q = EGE::SQL::Update->new('test', make_block [ '=', 'a', 1, '=', 'x', 'a' ]);
     is $q->text, 'UPDATE test SET a = 1, x = a', 'query text: update';
 }
 
 {
-    my $q = EGE::SQL::Update->new(undef, 'test',
+    my $q = EGE::SQL::Update->new(EGE::SQL::Table->new([ 'a' ], name => 'nnn'), make_block [ '=', 'a', 1 ]);
+    is $q->text, 'UPDATE nnn SET a = 1', 'query text: update named table';
+}
+
+{
+    my $q = EGE::SQL::Update->new('test',
         make_block([ '=', 'f', [ '-', 'f', 2 ] ]), make_expr [ '>', 'f', '0' ]);
     is $q->text, 'UPDATE test SET f = f - 2 WHERE f > 0', 'query text: update where';
 }
 
 {
-    my $q = EGE::SQL::Delete->new(undef, 'test', make_expr [ '>', 'f', '0' ]);
+    my $q = EGE::SQL::Delete->new('test', make_expr [ '>', 'f', '0' ]);
     is $q->text, 'DELETE FROM test WHERE f > 0', 'query text: delete';
 }
 
 {
-    my $tab =  EGE::SQL::Table->new([ qw(id name n) ]);
-    my $q = EGE::SQL::Insert->new($tab, 'test', [ 'a', 'b', 123 ]);
+    my $tab =  EGE::SQL::Table->new([ qw(id name n) ], name => 'test');
+    my $q = EGE::SQL::Insert->new($tab, [ 'a', 'b', 123 ]);
     is $q->text, q~INSERT INTO test (id, name, n) VALUES ('a', 'b', 123)~, 'query text: insert';
     $q->run();
     is pack_table($tab), 'id name n|a b 123', 'query run: insert';
-    throws_ok { EGE::SQL::Insert->new($tab, 't', []); } qr/count/, 'insert field count';
+    throws_ok { EGE::SQL::Insert->new($tab, []); } qr/count/, 'insert field count';
 }
 
 {
@@ -163,7 +168,7 @@ sub pack_table {
     $t->insert_rows([ 1 ], [ 2 ],[ 3 ], [ 4 ]);
     is pack_table($t->select(['id'], make_expr([ 'between', 'id', 1, 3 ]))), 'id|1|2|3', 'between field 3';
     is pack_table($t->select(['id'], make_expr([ 'between', 'id', 5, 7 ]))), 'id', 'between empty';
-    my $q = EGE::SQL::Select->new(undef, 'test', [ 'id' ], make_expr [ 'between', 'id', 5, 7 ]);
+    my $q = EGE::SQL::Select->new('test', [ 'id' ], make_expr [ 'between', 'id', 5, 7 ]);
     is $q->text, 'SELECT id FROM test WHERE id BETWEEN 5 AND 7', 'query text: select between';
 }
 

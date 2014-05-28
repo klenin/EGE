@@ -14,8 +14,8 @@ use EGE::SQL::Table;
 use EGE::SQL::Queries;
 
 sub create_table {
-    my ($row, $col) = @_;
-    my $products = EGE::SQL::Table->new($row);
+    my ($row, $col, $name) = @_;
+    my $products = EGE::SQL::Table->new($row, name => $name);
     my @values = map [ map rnd->in_range(10, 80) * 100, @$col ], 0 .. @$row - 2;
     $products->insert_rows(@{EGE::Utils::transpose($col, @values)});
     $products, @values;
@@ -64,4 +64,4 @@ sub expr_3 {
     ]);
 }
 
-1
+1;
