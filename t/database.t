@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 42;
+use Test::More tests => 43;
 use Test::Exception;
 
 use lib '..';
@@ -13,6 +13,11 @@ use EGE::SQL::Queries;
 sub pack_table {
     my $self = shift;
     join '|', map join(' ', @$_), $self->{fields}, @{$self->{data}};
+}
+
+{
+    my $t = EGE::SQL::Table->new([ qw(a b c) ], name => 'table');
+    is $t->name, 'table', 'table name';
 }
 
 {

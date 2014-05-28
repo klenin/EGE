@@ -10,9 +10,10 @@ use EGE::Prog qw(make_expr);
 use EGE::Random;
 
 sub new {
-    my ($class, $fields) = @_;
+    my ($class, $fields, %p) = @_;
     $fields or die;
     my $self = {
+        name => $p{name},
         fields => $fields,
         data => [],
         field_index => {},
@@ -22,6 +23,8 @@ sub new {
     bless $self, $class;
     $self;
 }
+
+sub name { $_[0]->{name} = $_[1] // $_[0]->{name} }
 
 sub insert_row {
     my $self = shift;
