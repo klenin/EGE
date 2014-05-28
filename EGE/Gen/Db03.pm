@@ -23,7 +23,7 @@ sub trivial_update {
     my @month = rnd->pick_n_sorted(5, @EGE::Russian::Time::month);
     my @electronic = rnd->pick_n(9, @EGE::Russian::Product::electronic);
     my ($products, $values) = EGE::SQL::Utils::create_table(
-        ['Товар', @month], \@electronic, 'products');
+        [ 'Товар', @month ], \@electronic, 'products');
     my ($cond, $update);
     my ($m1, $m2, $m3, $m4) = rnd->shuffle(@month[0 .. $#month]);
     my ($l, $r) = map $products->random_val($values), 1..2;
@@ -35,7 +35,7 @@ sub trivial_update {
     my $ans = $select->run->count();
     $self->{text} = sprintf
         "В таблице <tt>%s</tt> представлен список товаров: \n%s\n" .
-        'Сколько товаров в этой таблицы будут удовлетворяют запросу %s после выполнения запроса %s?',
+        'Сколько товаров в этой таблицы будут удовлетворять запросу %s после выполнения запроса %s?',
         $products->name, $products->table_html, $select->text_html, $update->text_html;
     $self->variants($ans, rnd->pick_n(3, grep $_ != $ans, 1 .. $products->count));
 }

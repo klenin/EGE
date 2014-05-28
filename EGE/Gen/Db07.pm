@@ -37,10 +37,12 @@ sub trivial_inner_join{
         'persons', 'cities', $table_person, $table_city, 'cid', 'id');
     my $query = EGE::SQL::Select->new($table_person, [], $inner);
     $self->{text} = sprintf
-        "Есть две таблицы <tt>%s</tt> и <tt>%s</tt>\n%s\n" .
-        'Сколько записей будет в таблице созданной данным запросом %s?',
-        $table_city->name, $table_person->name,
-        html->row_n('td', $table_city->table_html, $table_person->table_html),
+        "Даны две таблицы:<table>%s%s</table>\n" .
+        'Сколько записей будет содержать результат запроса %s?',
+        html->row_n('td', map html->tag('tt', $_->name), $table_city, $table_person),
+        html->tag('tr',
+            join ('', map(html->td($_->table_html), $table_city, $table_person)),
+            { html->style('vertical-align' => 'top') }),
         $query->text_html;
     $self->variants($count, rnd->pick_n(3, grep $_ != $count, 1 .. $table_person->count()));
 }

@@ -87,7 +87,7 @@ sub select_expression {
 
     $self->{text} = sprintf
         "В таблице <tt>%s</tt> представлен список товаров: \n%s\n" .
-        'Какой будет результат выполнения данного запроса %s?',
+        'Каким будет результат выполнения запроса %s?',
         $products->name, $products->table_html, $query->text_html;
     $self->variants($text_ans, @table_false);
 }

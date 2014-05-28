@@ -19,9 +19,9 @@ use EGE::SQL::Utils qw(create_table check_cond expr_1);
 
 sub trivial_select {
     my ($self) = @_;
-    my @fields = qw(Товар Зарплата);
+    my @fields = qw(Профессия Зарплата);
     my @jobs = rnd->pick_n(9, @EGE::Russian::Jobs::list);
-    my ($products, $values) = EGE::SQL::Utils::create_table(\@fields, \@jobs, 'products');
+    my ($products, $values) = EGE::SQL::Utils::create_table(\@fields, \@jobs, 'jobs');
     my $d = $products->random_val($values);
     my $selected = EGE::SQL::Select->new($products, [],
         EGE::SQL::Utils::check_cond($products, $values,
@@ -45,7 +45,7 @@ sub trivial_delete {
     my $ans = $count - $delete->run()->count();
     $self->{text} = sprintf
         "В таблице <tt>%s</tt> представлен список товаров:\n%s\n" .
-        'Сколько записей из нее удалит запрос %s?',
+        'Сколько записей удалит из нее запрос %s?',
         $products->name, $products->table_html, $delete->text_html;
     $self->variants($ans, rnd->pick_n(3, grep $_ != $ans, 1 .. $count));
 }

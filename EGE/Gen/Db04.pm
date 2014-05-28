@@ -67,10 +67,10 @@ sub choose_update {
         }
     }
     $self->{text} = sprintf
-        "В таблице <tt>%s</tt> представлен список товаров: \n%s\n" .
-        "В таблице <tt>%s</tt> представлен список товаров после выполнения запросов: \n%s\n" .
-        'Какой запрос надо выполнить чтобы из первой таблицы получить вторую?',
-        $products->name, $old_table_text, $products->name, $products->table_html;
+        "В таблице <tt>%s</tt> представлен список товаров<br/>до выполнения запроса: \n%s\n" .
+        "после выполнения запроса: \n%s\n" .
+        'Какой запрос надо выполнить, чтобы из первой таблицы получить вторую?',
+        $products->name, $old_table_text, $products->table_html;
     $self->variants($update->text_html, @requests);
 }
 

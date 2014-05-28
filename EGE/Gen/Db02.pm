@@ -29,7 +29,7 @@ sub select_where {
     $ans{$_->[0]} = 1 for @{$selected->{data}};
     $self->{text} = sprintf
         "В таблице <tt>%s</tt> представлен список товаров:\n%s\n" .
-        'Какие товары в этой таблицы удовлетворяют запросу %s?',
+        'Какие товары в этой таблице удовлетворяют запросу %s?',
         $products->name, $products->table_html, $query->text_html;
     $self->variants(@candy);
     $self->{correct} = [ map $ans{$_} ? 1 : 0, @candy ];
