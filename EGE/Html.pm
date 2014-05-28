@@ -31,7 +31,7 @@ sub tag {
 sub open_tag {
     my ($self, $tag, $attrs, $rest) = @_;
     $attrs ||= {};
-    "<$tag" . join('', map qq~ $_="$attrs->{$_}"~, keys %$attrs) . ($rest || '>');
+    "<$tag" . join('', map qq~ $_="$attrs->{$_}"~, sort keys %$attrs) . ($rest || '>');
 }
 
 sub close_tag {
@@ -55,7 +55,7 @@ sub cdata { "<![CDATA[$_[1]]]>" }
 
 sub style {
     my ($self, %p) = @_;
-    style => join '', map "$_: $p{$_};", keys %p;
+    style => join ' ', map "$_: $p{$_};", sort keys %p;
 }
 
 sub div_xy {
