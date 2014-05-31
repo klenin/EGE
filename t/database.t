@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 44;
+use Test::More tests => 46;
 use Test::Exception;
 
 use lib '..';
@@ -155,11 +155,11 @@ sub pack_table {
 }
 
 {
-    my $t1 = EGE::SQL::Table->new([ qw(x y) ]);
+    my $t1 = EGE::SQL::Table->new([ qw(x y) ], name => 't1');
     $t1->insert_rows([ 1, 2 ], [ 1, 3 ], [ 1, 4 ]);
-    my $t2 = EGE::SQL::Table->new([ qw(z) ]);
+    my $t2 = EGE::SQL::Table->new([ qw(z) ], name => 't2');
     $t2->insert_rows([ 1 ], [ 2 ]);
-    my $q = EGE::SQL::Inner_join->new('t1', 't2', $t1, $t2, 'x', 'z' );
+    my $q = EGE::SQL::Inner_join->new({ tab => $t1, field => 'x'}, { tab => $t2, field => 'z'} );
     is $q->text, "t1 INNER JOIN t2 ON t1.x = t2.z", 'query text: inner_join';
     my $s = EGE::SQL::Select->new($q, [ 'x' ]);
     is $s->text, "SELECT x FROM t1 INNER JOIN t2 ON t1.x = t2.z", 'query text: select c inner_join'
