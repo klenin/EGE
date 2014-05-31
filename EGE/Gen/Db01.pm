@@ -39,6 +39,7 @@ sub trivial_delete {
     my @fields = qw(Товар Количество Цена Затраты);
     my @candy = rnd->pick_n(9, @EGE::Russian::Product::candy);
     my ($products, $values) = EGE::SQL::Utils::create_table(\@fields, \@candy, 'products');
+    my $text =  $products->table_html;
     my $count = $products->count();
     my $delete = EGE::SQL::Delete->new($products,
         EGE::SQL::Utils::check_cond($products, $values, \&EGE::SQL::Utils::expr_1, @fields));
@@ -46,7 +47,7 @@ sub trivial_delete {
     $self->{text} = sprintf
         "В таблице <tt>%s</tt> представлен список товаров:\n%s\n" .
         'Сколько записей удалит из нее запрос %s?',
-        $products->name, $products->table_html, $delete->text_html;
+        $products->name, $text, $delete->text_html;
     $self->variants($ans, rnd->pick_n(3, grep $_ != $ans, 1 .. $count));
 }
 
