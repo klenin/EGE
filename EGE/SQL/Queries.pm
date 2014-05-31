@@ -22,24 +22,26 @@ package EGE::SQL::Select;
 use base 'EGE::SQL::Query';
 
 sub new {
-    my ($class, $table, $fields, $where, $inner) = @_;
+    my ($class, $table, $fields, $where, %h) = @_;
     $fields or die;
     my $self = {
-        inner_join => $inner,
         fields => $fields,
         where => $where,
+        as => $h{as},
     };
-    if (ref($where) eq "EGE::SQL::Inner_join") {
-        $self->{inner_join} = $where;
-        $self->{where} = $inner;
-    }
     bless $self, $class;
     $self->init_table($table);
 }
 
 sub run {
     my ($self) = @_;
-    $self->{table}->select($self->{fields}, $self->{where});
+    my $table = $self->{table}->can('run') ? $self->{table}->run : $self->{table};
+    $table->select($self->{fields}, $self->{where});
+}
+
+sub name {
+    my ($self) = @_;
+    $self->{as} ? $self->{as}: '';
 }
 
 sub _field_sql { ref $_ ? $_->to_lang_named('SQL') : $_ }
@@ -47,7 +49,9 @@ sub _field_sql { ref $_ ? $_->to_lang_named('SQL') : $_ }
 sub text {
     my ($self) = @_;
     my $fields = join(', ', map &_field_sql, @{$self->{fields}}) || '*';
-    my $table  =  $self->{inner_join} ? $self->{inner_join}->text : $self->{table_name};
+    my $table = $self->{table_name};
+    $table = $self->{table}->can('text') ? $self->{table}->text : $self->{table_name} if $self->{table};
+    $table = '(' . $table . ') AS ' . $self->{table_name} if ref $self->{table} eq qw(EGE::SQL::Select);
     "SELECT $fields FROM $table" . $self->where_sql;
 }
 

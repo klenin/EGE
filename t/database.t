@@ -161,8 +161,15 @@ sub pack_table {
     $t2->insert_rows([ 1 ], [ 2 ]);
     my $q = EGE::SQL::Inner_join->new('t1', 't2', $t1, $t2, 'x', 'z' );
     is $q->text, "t1 INNER JOIN t2 ON t1.x = t2.z", 'query text: inner_join';
+    my $s = EGE::SQL::Select->new($q, [ 'x' ]);
+    is $s->text, "SELECT x FROM t1 INNER JOIN t2 ON t1.x = t2.z", 'query text: select c inner_join'
 }
 
+{
+    my $q = EGE::SQL::Select->new('test', [ 'id', 'x' ], make_expr [ '<', 'x', 7 ], as => 't');
+    my $s = EGE::SQL::Select->new($q, [ 'id' ]);
+    is $s->text, "SELECT id FROM (SELECT id, x FROM test WHERE x < 7) AS ", 'query text: subquery select'
+}
 {
     my $t = EGE::SQL::Table->new([ 'id' ]);
     $t->insert_rows([ 1 ], [ 2 ],[ 3 ], [ 4 ]);
