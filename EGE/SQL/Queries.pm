@@ -22,24 +22,26 @@ package EGE::SQL::Select;
 use base 'EGE::SQL::Query';
 
 sub new {
-    my ($class, $table, $fields, $where, $inner) = @_;
+    my ($class, $table, $fields, $where, %h) = @_;
     $fields or die;
     my $self = {
-        inner_join => $inner,
         fields => $fields,
         where => $where,
+        as => $h{as},
     };
-    if (ref($where) eq "EGE::SQL::Inner_join") {
-        $self->{inner_join} = $where;
-        $self->{where} = $inner;
-    }
     bless $self, $class;
     $self->init_table($table);
 }
 
 sub run {
     my ($self) = @_;
-    $self->{table}->select($self->{fields}, $self->{where});
+    my $table = $self->{table}->can('run') ? $self->{table}->run : $self->{table};
+    $table->select($self->{fields}, $self->{where});
+}
+
+sub name {
+    my ($self) = @_;
+    $self->{as} ? $self->{as}: '';
 }
 
 sub _field_sql { ref $_ ? $_->to_lang_named('SQL') : $_ }
@@ -47,7 +49,9 @@ sub _field_sql { ref $_ ? $_->to_lang_named('SQL') : $_ }
 sub text {
     my ($self) = @_;
     my $fields = join(', ', map &_field_sql, @{$self->{fields}}) || '*';
-    my $table  =  $self->{inner_join} ? $self->{inner_join}->text : $self->{table_name};
+    my $table = $self->{table_name};
+    $table = $self->{table}->can('text') ? $self->{table}->text : $self->{table_name} if $self->{table};
+    $table = '(' . $table . ') AS ' . $self->{table_name} if ref $self->{table} eq qw(EGE::SQL::Select);
     "SELECT $fields FROM $table" . $self->where_sql;
 }
 
@@ -129,28 +133,46 @@ package EGE::SQL::Inner_join;
 use base 'EGE::SQL::Query';
 
 sub new { 
-    my ($class, $name1, $name2, $tab1, $tab2, $field1, $field2) = @_;
+    my ($class, $table1, $table2, %h) = @_;
     my $self = {
-        tab1 => $tab1,
-        tab2 => $tab2,
-        field1 => $field1,
-        field2 => $field2,
-        table_name1 => $name1,
-        table_name2 => $name2,
+        table1 => $table1,
+        table2 => $table2,
+        as => $h{as},
     };
     bless $self, $class;
     $self;
 }
 
+sub name {
+    my ($self, $table) = @_;
+    ref $table ? $table->name : $table;
+}
+
 sub run {
     my ($self) = @_;
-    $self->{tab1}->inner_join($self->{tab2}, $self->{field1}, $self->{field2});
+    my $tab1 = ${$self->{table1}}{tab}->can('run') ? ${$self->{table1}}{tab}->run : ${$self->{table1}}{tab};
+    my $tab2 = ${$self->{table2}}{tab}->can('run') ? ${$self->{table2}}{tab}->run : ${$self->{table2}}{tab};
+    $tab1->inner_join($tab2, ${$self->{table1}}{field}, ${$self->{table2}}{field});
+}
+sub _name_table {
+    my ($self, $table) = @_;
+    my $name = $self->name($$table{tab});
+    $name = $$table{as} if $$table{as};
+    $name = $$table{name} if $$table{name};
+    my $tab = $$table{tab}->can('text') ? $$table{tab}->text : $$table{tab}->name;
+    if (ref $$table{tab} eq 'EGE::SQL::Select') {
+        $tab = '(' . $tab . ') AS ' . $name;
+    }
+    $tab .= " $name" if $$table{as};
+    $name, $tab;
 }
 
 sub text {
     my ($self) = @_;
-    "$self->{table_name1} INNER JOIN $self->{table_name2} ON " .
-        "$self->{table_name1}.$self->{field1} = $self->{table_name2}.$self->{field2}";
+    my ($name1, $tab1) = $self->_name_table($self->{table1});
+    my ($name2, $tab2) = $self->_name_table($self->{table2});
+    "$tab1 INNER JOIN $tab2 ON " .
+        "$name1.${$self->{table1}}{field} = $name2.${$self->{table2}}{field}";
 }
 
 1;

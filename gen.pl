@@ -219,6 +219,10 @@ binmode STDOUT, ':utf8';
 #g2('Db06', 'select_between');
 #g2('Db06', 'select_expression');
 #g2('Db07', 'trivial_inner_join');
+#g2('Db08', 'parents');
+#g2('Db08', 'grandchildren');
+#g2('Db08', 'nuncle');
+#g2('Db09', 'inner_join');
 
 #$questions = EGE::Generate::all;
 #$questions = EGE::AsmGenerate::all;
