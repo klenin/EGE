@@ -64,4 +64,13 @@ sub expr_3 {
     ]);
 }
 
+sub multi_table_html {
+    html->table(
+        html->row_n('td', map html->tag('tt', $_->name), @_) .
+        html->tag('tr',
+            join ('', map(html->td($_->table_html), @_)),
+            { html->style('vertical-align' => 'top') })
+    )
+}
+
 1;

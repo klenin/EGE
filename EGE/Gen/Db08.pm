@@ -15,6 +15,7 @@ use EGE::Prog::Lang;
 use EGE::Html;
 use EGE::SQL::Table;
 use EGE::SQL::Queries;
+use EGE::SQL::Utils;
 
 my $parents;
 
@@ -108,13 +109,9 @@ sub parents {
     }
     $table_person->update(EGE::Prog::make_block [ '=', 'Пол', sub { $_[0]->{'Пол'} ? 'м' : 'ж' } ]);
     $self->{text} = sprintf
-        "В фрагменте базы данных представлены сведения о родственных отношениях:<table>%s%s</table>\n" .
+        "В фрагменте базы данных представлены сведения о родственных отношениях:\n%s\n" .
         'Результатом какого запроса будут %s %s?',
-        html->row_n('td', map html->tag('tt', $_->name),  $table_person, $table_kinship),
-        html->tag('tr',
-            join ('', map(html->td($_->table_html), $table_person, $table_kinship)),
-            { html->style('vertical-align' => 'top') }),
-            $gen, $name;
+        EGE::SQL::Utils::multi_table_html($table_person, $table_kinship), $gen, $name;
     $self->variants($query->text_html, @requests);
 }
 
@@ -149,13 +146,9 @@ sub grandchildren{
         EGE::Prog::make_expr([ '==', 'id_parent', $parents ]))->text_html;
     $table_person->update(EGE::Prog::make_block [ '=', 'Пол', sub { $_[0]->{'Пол'} ? 'м' : 'ж' } ]);
     $self->{text} = sprintf
-        "В фрагменте базы данных представлены сведения о родственных отношениях:<table>%s%s</table>\n" .
-        'Результатом какого запроса будут внуки %s ?',
-        html->row_n('td', map html->tag('tt', $_->name),  $table_person, $table_kinship),
-        html->tag('tr',
-            join ('', map(html->td($_->table_html), $table_person, $table_kinship)),
-            { html->style('vertical-align' => 'top') }),
-            $name;
+        "В фрагменте базы данных представлены сведения о родственных отношениях:\n%s\n" .
+        'Результатом какого запроса будут внуки %s?',
+        EGE::SQL::Utils::multi_table_html($table_person, $table_kinship), $name;
     $self->variants($query->text_html, @requests);
 }
 
@@ -195,13 +188,9 @@ sub nuncle {
         EGE::Prog::make_expr([ '==', 'id_parent', $parents ]))->text_html;
     $table_person->update(EGE::Prog::make_block [ '=', 'Пол', sub { $_[0]->{'Пол'} ? 'м' : 'ж' } ]);
     $self->{text} = sprintf
-        "В фрагменте базы данных представлены сведения о родственных отношениях:<table>%s%s</table>\n" .
+        "В фрагменте базы данных представлены сведения о родственных отношениях:\n%s\n" .
         'Результатом какого запроса будут родители %s, их сестеры и братья?',
-        html->row_n('td', map html->tag('tt', $_->name),  $table_person, $table_kinship),
-        html->tag('tr',
-            join ('', map(html->td($_->table_html), $table_person, $table_kinship)),
-            { html->style('vertical-align' => 'top') }),
-            $name;
+        EGE::SQL::Utils::multi_table_html($table_person, $table_kinship), $name;
     $self->variants($query2->text_html, @requests);
 }
 

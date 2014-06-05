@@ -15,6 +15,7 @@ use EGE::Prog::Lang;
 use EGE::Html;
 use EGE::SQL::Table;
 use EGE::SQL::Queries;
+use EGE::SQL::Utils;
 
 sub create_table {
     my $table_PC = EGE::SQL::Table->new([ qw(id name_PC) ], name => 'PC');
@@ -59,13 +60,9 @@ sub inner_join {
     push @requests, EGE::SQL::Select->new($inner3, ['name_PC', 'name_Printer', 'name_Laptop'],
         EGE::Prog::make_expr([ '!=', 'id_buyer', $f1 ]))->text_html;
     $self->{text} = sprintf
-        "В фрагменте базы данных интернет-магазина представлены сведенья о покупках:<table>%s%s</table>\n" .
+        "В фрагменте базы данных интернет-магазина представлены сведения о покупках:\n%s\n" .
         'Какой из приведенных ниже запросов покажет названия продуктов приобретенных покупателем с id = %s?',
-        html->row_n('td', map html->tag('tt', $_->name), $table_PC, $table_Printer, $table_Laptop, $table_relations),
-        html->tag('tr',
-            join ('', map(html->td($_->table_html), $table_PC, $table_Printer, $table_Laptop, $table_relations)),
-            { html->style('vertical-align' => 'top') }),
-            $f1;
+        EGE::SQL::Utils::multi_table_html($table_PC, $table_Printer, $table_Laptop, $table_relations), $f1;
     $self->variants($query->text_html, @requests);
 }
 

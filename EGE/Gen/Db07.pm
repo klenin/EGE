@@ -13,9 +13,10 @@ use EGE::Random;
 use EGE::Prog;
 use EGE::Prog::Lang;
 use EGE::Html;
-use EGE::SQL::Table;
 use EGE::Russian::City;
+use EGE::SQL::Table;
 use EGE::SQL::Queries;
+use EGE::SQL::Utils;
 
 sub create_table {
     my ($n, $m, $k) = @_;
@@ -38,12 +39,9 @@ sub trivial_inner_join{
         { tab => $table_city, field => 'id' });
     my $query = EGE::SQL::Select->new($inner, []);
     $self->{text} = sprintf
-        "Даны две таблицы:<table>%s%s</table>\n" .
+        "Даны две таблицы:\n%s\n" .
         'Сколько записей будет содержать результат запроса %s?',
-        html->row_n('td', map html->tag('tt', $_->name), $table_city, $table_person),
-        html->tag('tr',
-            join ('', map(html->td($_->table_html), $table_city, $table_person)),
-            { html->style('vertical-align' => 'top') }),
+        EGE::SQL::Utils::multi_table_html($table_city, $table_person),
         $query->text_html;
     $self->variants($count, rnd->pick_n(3, grep $_ != $count, 1 .. $table_person->count()));
 }
