@@ -30,7 +30,7 @@ sub create_table {
     $table_PC->insert_rows(@{EGE::Utils::transpose(\@id_Pc, \@PC)});
     $table_Printer->insert_rows(@{EGE::Utils::transpose(\@id_printer, \@Printer)});
     $table_Laptop->insert_rows(@{EGE::Utils::transpose(\@id_Laptop, \@Laptop)});
-    my @id_buyer = rnd->pick_n(8, 1 .. 12); 
+    my @id_buyer = rnd->pick_n(8, 1 .. 12);
     for (@id_buyer) {
         $table_relations->insert_row($_, rnd->pick(@id_Pc), rnd->pick(@id_printer), rnd->pick(@id_Laptop));
     }
@@ -44,11 +44,14 @@ sub inner_join {
     my @id = @$id_b;
     my ($f1) = rnd->shuffle(@id[1 .. $#id]);
     my $inner1 = EGE::SQL::Inner_join->new(
-            {tab => $table_relations, field => 'id_pc'}, {tab => $table_PC, field => 'id'});
+        { tab => $table_relations, field => 'id_pc' },
+        { tab => $table_PC, field => 'id' });
     my $inner2 = EGE::SQL::Inner_join->new(
-            {tab => $inner1, field => 'id_printer', name => 'relations'}, {tab => $table_Printer, field => 'id'});
+        { tab => $inner1, field => 'id_printer', name => 'relations' },
+        { tab => $table_Printer, field => 'id' });
     my $inner3 = EGE::SQL::Inner_join->new(
-            {tab => $inner2, field => 'id_laptop', name => 'relations'}, {tab => $table_Laptop, field => 'id'});        
+        { tab => $inner2, field => 'id_laptop', name => 'relations' },
+        { tab => $table_Laptop, field => 'id' });
     my $where = EGE::Prog::make_expr([ '==', 'id_buyer', $f1 ]);
     $query = EGE::SQL::Select->new($inner3, ['name_PC', 'name_Printer', 'name_Laptop'], $where);
     push @requests, EGE::SQL::Select->new($inner2, ['name_PC', 'name_Printer', 'name_Laptop'], $where)->text_html;
@@ -63,7 +66,7 @@ sub inner_join {
             join ('', map(html->td($_->table_html), $table_PC, $table_Printer, $table_Laptop, $table_relations)),
             { html->style('vertical-align' => 'top') }),
             $f1;
-    $self->variants($query->text_html, @requests); 
+    $self->variants($query->text_html, @requests);
 }
 
 1;

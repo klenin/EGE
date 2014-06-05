@@ -34,7 +34,8 @@ sub trivial_inner_join{
     my ($table_city, $table_person) = create_table(12, 7, 10);
     my $count = $table_person->inner_join($table_city, 'cid', 'id')->count();
     my $inner = EGE::SQL::Inner_join->new(
-        {tab => $table_person, field => 'cid'}, {tab => $table_city, field => 'id'});
+        { tab => $table_person, field => 'cid' },
+        { tab => $table_city, field => 'id' });
     my $query = EGE::SQL::Select->new($inner, []);
     $self->{text} = sprintf
         "Даны две таблицы:<table>%s%s</table>\n" .
