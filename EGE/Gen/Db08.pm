@@ -78,8 +78,8 @@ sub parents {
             { tab => $table_kinship, field => 'id_parent' },
             { tab => $table_person, field => 'id' });
         my $inner2 = EGE::SQL::Inner_join->new(
-            { tab => $inner1, field => 'id_child', name => 'kinship' },
-            { tab => $table_person, field => 'id', as => 'per' });
+            { tab => $inner1, field => 'id_child' },
+            { tab => EGE::SQL::SubqueryAlias->new($table_person, 'per'), field => 'id' });
         my $where = EGE::Prog::make_expr([ '&&',[ '==', 'id_parent', $f1 ],[ '==', 'Пол', \$sex ] ]);
         $query = EGE::SQL::Select->new($inner2, ['Фамилия', 'Имя'], $where);
         my $count = $inner2->run->select(['Фамилия'], $where)->count();
@@ -126,8 +126,8 @@ sub grandchildren{
         { tab => $table_kinship, field => 'id_parent' },
         { tab => $table_person, field => 'id' });
     my $inner2 = EGE::SQL::Inner_join->new(
-        { tab => $inner1, field => 'id_child', name => 'kinship' },
-        { tab => $table_person, field => 'id', as => 'per' });
+        { tab => $inner1, field => 'id_child' },
+        { tab => EGE::SQL::SubqueryAlias->new($table_person, 'per'), field => 'id' });
     my $where = EGE::Prog::make_expr([ '!=', 'id_parent', $parents ]);
     $query = EGE::SQL::Select->new($inner2, ['Фамилия'], $where);
     my $par = ${$table_person->select(['Фамилия', 'Имя', 'Пол'],
@@ -166,16 +166,17 @@ sub nuncle {
     my @grand = @$grandchildren;
     my ($f1) = rnd->shuffle(@grand[1 .. $#grand]);
     my $where = EGE::Prog::make_expr([ '==', 'id_child', $f1 ]);
-    $query = EGE::SQL::Select->new($table_kinship, ['id_parent'], $where, as => 'person1');
+    $query = EGE::SQL::SubqueryAlias->new(
+        EGE::SQL::Select->new($table_kinship, ['id_parent'], $where), 'person1');
     my $tab = $query->run;
     my $inner2 = EGE::SQL::Inner_join->new(
         { tab => $query, field => 'id_parent' },
-        { tab => $table_kinship, field => 'id_child', as => 'k1' });
+        { tab => EGE::SQL::SubqueryAlias->new($table_kinship, 'k1'), field => 'id_child' });
     my $inner4 = EGE::SQL::Inner_join->new(
-        { tab => $inner2, field => 'id_parent', name => 'k1' },
-        { tab => $table_kinship, field => 'id_parent', as => 'k2' });
+        { tab => $inner2, field => 'k1.id_parent' },
+        { tab => EGE::SQL::SubqueryAlias->new($table_kinship, 'k2'), field => 'id_child' });
     my $inner5 = EGE::SQL::Inner_join->new(
-        { tab => $inner4, field => 'id_parent', name => 'k2' },
+        { tab => $inner4, field => 'k2.id_parent' },
         { tab => $table_person, field => 'id' });
     my $query2 = EGE::SQL::Select->new($inner5, [ 'Фамилия', 'Имя' ]);
     my $par = ${$table_person->select(['Фамилия', 'Имя', 'Пол'],

@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 46;
+use Test::More tests => 55;
 use Test::Exception;
 
 use lib '..';
@@ -156,20 +156,66 @@ sub pack_table {
 
 {
     my $t1 = EGE::SQL::Table->new([ qw(x y) ], name => 't1');
-    $t1->insert_rows([ 1, 2 ], [ 1, 3 ], [ 1, 4 ]);
     my $t2 = EGE::SQL::Table->new([ qw(z) ], name => 't2');
-    $t2->insert_rows([ 1 ], [ 2 ]);
     my $q = EGE::SQL::Inner_join->new({ tab => $t1, field => 'x'}, { tab => $t2, field => 'z'} );
-    is $q->text, "t1 INNER JOIN t2 ON t1.x = t2.z", 'query text: inner_join';
+    is $q->text, 't1 INNER JOIN t2 ON t1.x = t2.z', 'query text: inner_join';
     my $s = EGE::SQL::Select->new($q, [ 'x' ]);
-    is $s->text, "SELECT x FROM t1 INNER JOIN t2 ON t1.x = t2.z", 'query text: select c inner_join'
+    is $s->text, 'SELECT x FROM t1 INNER JOIN t2 ON t1.x = t2.z', 'query text: select with inner join';
+    is pack_table($s->run), 'x', 'query run: inner_join';
 }
 
 {
-    my $q = EGE::SQL::Select->new('test', [ 'id', 'x' ], make_expr [ '<', 'x', 7 ], as => 't');
-    my $s = EGE::SQL::Select->new($q, [ 'id' ]);
-    is $s->text, "SELECT id FROM (SELECT id, x FROM test WHERE x < 7) AS ", 'query text: subquery select'
+    my $q = EGE::SQL::Inner_join->new(
+        { tab => 't1', field => 'x'},
+        { tab => EGE::SQL::SubqueryAlias->new('t2', 't3'), field => 'z'}
+    );
+    is $q->text, 't1 INNER JOIN t2 t3 ON t1.x = t3.z', 'query text: inner_join text alias';
 }
+
+{
+    my $q = EGE::SQL::Inner_join->new(
+        { tab => 't1', field => 'p1.x'},
+        { tab => 't2', field => 'p1x'},
+    );
+    is $q->text, 't1 INNER JOIN t2 ON p1.x = t2.p1x', 'query text: inner_join forced field';
+}
+
+{
+    my $q1 = EGE::SQL::Inner_join->new(
+        { tab => 't1', field => 'id'},
+        { tab => 't2', field => 'id'},
+    );
+    my $q2 = EGE::SQL::Inner_join->new(
+        { tab => $q1, field => 'id'},
+        { tab => 't3', field => 'id'},
+    );
+    is $q2->text, 't1 INNER JOIN t2 ON t1.id = t2.id INNER JOIN t3 ON t1.id = t3.id',
+        'query text: nested inner_join';
+}
+
+{
+    my $q = EGE::SQL::SubqueryAlias->new(EGE::SQL::Select->new('test', []), 't');
+    is $q->text, "(SELECT * FROM test) AS t", 'query text: subquery as'
+}
+
+{
+    my $q = EGE::SQL::SubqueryAlias->new(EGE::SQL::Table->new([ 'id' ], name => 'test'), 't');
+    is $q->text, 'test t', 'query text: table alias';
+    is $q->name, 't', 'query text: table alias';
+}
+
+{
+    my $q = EGE::SQL::SubqueryAlias->new('test', 't');
+    is $q->text, 'test t', 'query text: table name alias';
+    is $q->name, 't', 'query text: table name alias';
+}
+
+{
+    my $q = EGE::SQL::Select->new('test', [ 'id', 'x' ], make_expr [ '<', 'x', 7 ]);
+    my $s = EGE::SQL::Select->new(EGE::SQL::SubqueryAlias->new($q, 't'), [ 'id' ]);
+    is $s->text, "SELECT id FROM (SELECT id, x FROM test WHERE x < 7) AS t", 'query text: subquery select'
+}
+
 {
     my $t = EGE::SQL::Table->new([ 'id' ]);
     $t->insert_rows([ 1 ], [ 2 ],[ 3 ], [ 4 ]);

@@ -10,6 +10,7 @@ use EGE::Html;
 
 sub text_html { html->tag('tt', html->cdata($_[0]->text)); }
 sub where_sql { $_[0]->{where} ? ' WHERE '. $_[0]->{where}->to_lang_named('SQL') : '' }
+sub _maybe_run { $_[1]->can('run') ? $_[1]->run : $_[1]; }
 
 sub init_table {
     my ($self, $table) = @_;
@@ -22,12 +23,11 @@ package EGE::SQL::Select;
 use base 'EGE::SQL::Query';
 
 sub new {
-    my ($class, $table, $fields, $where, %h) = @_;
+    my ($class, $table, $fields, $where, %p) = @_;
     $fields or die;
     my $self = {
         fields => $fields,
         where => $where,
-        as => $h{as},
     };
     bless $self, $class;
     $self->init_table($table);
@@ -39,10 +39,7 @@ sub run {
     $table->select($self->{fields}, $self->{where});
 }
 
-sub name {
-    my ($self) = @_;
-    $self->{as} ? $self->{as}: '';
-}
+sub name { $_[0]->{table_name} }
 
 sub _field_sql { ref $_ ? $_->to_lang_named('SQL') : $_ }
 
@@ -51,14 +48,40 @@ sub text {
     my $fields = join(', ', map &_field_sql, @{$self->{fields}}) || '*';
     my $table = $self->{table_name};
     $table = $self->{table}->can('text') ? $self->{table}->text : $self->{table_name} if $self->{table};
-    $table = '(' . $table . ') AS ' . $self->{table_name} if ref $self->{table} eq qw(EGE::SQL::Select);
     "SELECT $fields FROM $table" . $self->where_sql;
+}
+
+package EGE::SQL::SubqueryAlias;
+use base 'EGE::SQL::Query';
+
+sub name { $_[0]->{alias} }
+
+sub new {
+    my ($class, $table, $alias) = @_;
+    $table && $alias or die;
+    my $self = {
+        alias => $alias,
+    };
+    bless $self, $class;
+    $self->init_table($table);
+}
+
+sub run {
+    my ($self) = @_;
+    $self->_maybe_run($self->{table});
+}
+
+sub text {
+    my ($self) = @_;
+    my $q = $self->{table} && $self->{table}->can('text') ?
+        '(' . $self->{table}->text . ") AS" : $self->{table_name};
+    "$q $self->{alias}";
 }
 
 package EGE::SQL::Update;
 use base 'EGE::SQL::Query';
 
-sub new { 
+sub new {
     my ($class, $table, $assigns, $where) = @_;
     $assigns or die;
     my $self = {
@@ -83,7 +106,7 @@ sub text {
 package EGE::SQL::Delete;
 use base 'EGE::SQL::Query';
 
-sub new { 
+sub new {
     my ($class, $table, $where) = @_;
     my $self = {
         where => $where,
@@ -105,7 +128,7 @@ sub text {
 package EGE::SQL::Insert;
 use base 'EGE::SQL::Query';
 
-sub new { 
+sub new {
     my ($class, $table, $values) = @_;
     my $self = {
         values => $values,
@@ -132,47 +155,38 @@ sub text {
 package EGE::SQL::Inner_join;
 use base 'EGE::SQL::Query';
 
-sub new { 
-    my ($class, $table1, $table2, %h) = @_;
+sub new {
+    my ($class, @tables) = @_;
+    @tables == 2 or die;
     my $self = {
-        table1 => $table1,
-        table2 => $table2,
-        as => $h{as},
+        tables => \@tables,
     };
     bless $self, $class;
     $self;
 }
 
-sub name {
-    my ($self, $table) = @_;
-    ref $table ? $table->name : $table;
-}
+sub name { return ref $_ ? $_->name : $_ for $_[0]->{tables}->[0]->{tab} }
+
+sub tables { @{$_[0]->{tables}} }
 
 sub run {
     my ($self) = @_;
-    my $tab1 = ${$self->{table1}}{tab}->can('run') ? ${$self->{table1}}{tab}->run : ${$self->{table1}}{tab};
-    my $tab2 = ${$self->{table2}}{tab}->can('run') ? ${$self->{table2}}{tab}->run : ${$self->{table2}}{tab};
-    $tab1->inner_join($tab2, ${$self->{table1}}{field}, ${$self->{table2}}{field});
-}
-sub _name_table {
-    my ($self, $table) = @_;
-    my $name = $self->name($$table{tab});
-    $name = $$table{as} if $$table{as};
-    $name = $$table{name} if $$table{name};
-    my $tab = $$table{tab}->can('text') ? $$table{tab}->text : $$table{tab}->name;
-    if (ref $$table{tab} eq 'EGE::SQL::Select') {
-        $tab = '(' . $tab . ') AS ' . $name;
-    }
-    $tab .= " $name" if $$table{as};
-    $name, $tab;
+    my ($t1, $t2) = map $self->_maybe_run($_->{tab}), $self->tables;
+    $t1->inner_join($t2, map $_->{field}, $self->tables);
 }
 
 sub text {
     my ($self) = @_;
-    my ($name1, $tab1) = $self->_name_table($self->{table1});
-    my ($name2, $tab2) = $self->_name_table($self->{table2});
-    "$tab1 INNER JOIN $tab2 ON " .
-        "$name1.${$self->{table1}}{field} = $name2.${$self->{table2}}{field}";
+    my ($t1, $t2) = map
+        !ref $_->{tab} ? $_->{tab} :
+        $_->{tab}->can('text') ? $_->{tab}->text :
+        $_->{tab}->{name},
+        $self->tables;
+    my ($f1, $f2) = map {
+        $_->{field} =~ /\./ ? $_->{field} :
+        (ref $_->{tab} ? $_->{tab}->name : $_->{tab}) . ".$_->{field}"
+    } $self->tables;
+    "$t1 INNER JOIN $t2 ON $f1 = $f2";
 }
 
 1;

@@ -47,10 +47,10 @@ sub inner_join {
         { tab => $table_relations, field => 'id_pc' },
         { tab => $table_PC, field => 'id' });
     my $inner2 = EGE::SQL::Inner_join->new(
-        { tab => $inner1, field => 'id_printer', name => 'relations' },
+        { tab => $inner1, field => 'id_printer' },
         { tab => $table_Printer, field => 'id' });
     my $inner3 = EGE::SQL::Inner_join->new(
-        { tab => $inner2, field => 'id_laptop', name => 'relations' },
+        { tab => $inner2, field => 'id_laptop' },
         { tab => $table_Laptop, field => 'id' });
     my $where = EGE::Prog::make_expr([ '==', 'id_buyer', $f1 ]);
     $query = EGE::SQL::Select->new($inner3, ['name_PC', 'name_Printer', 'name_Laptop'], $where);
