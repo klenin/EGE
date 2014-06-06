@@ -175,12 +175,9 @@ sub all {[
     gg('Db03', qw(trivial_update)),
     gg('Db04', qw(choose_update)),
     gg('Db05', qw(insert_delete)),
-    gg('Db06', qw(select_between)),
-    gg('Db06', qw(select_expression)),
+    gg('Db06', qw(select_between select_expression)),
     gg('Db07', qw(trivial_inner_join)),
-    gg('Db08', qw(parents)),
-    gg('Db08', qw(grandchildren)),
-    gg('Db08', qw(nuncle)),
+    gg('Db08', qw(parents grandchildren nuncle)),
     gg('Db09', qw(inner_join)),
      
 ]}
