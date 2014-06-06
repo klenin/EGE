@@ -22,11 +22,12 @@ sub trivial_select {
     my @fields = qw(Профессия Зарплата);
     my @jobs = rnd->pick_n(9, @EGE::Russian::Jobs::list);
     my ($products, $values) = EGE::SQL::Utils::create_table(\@fields, \@jobs, 'jobs');
-    my $d = $products->random_val($values);
+    my $gen_expr = sub {
+        EGE::Prog::make_expr([ rnd->pick(ops::comp), 'Зарплата', $products->random_val($values) ])
+    };
     my $selected = EGE::SQL::Select->new($products, [],
-        EGE::SQL::Utils::check_cond($products, $values,
-            sub { EGE::Prog::make_expr([ rnd->pick(ops::comp), 'Зарплата', $d ]);}, @fields));
-    my $count = $selected->run()->count;
+        EGE::SQL::Utils::check_cond($products, $values, $gen_expr, @fields));
+    my $count = $selected->run->count;
     $self->{text} = sprintf
         "Заработная плата по профессиям представлена в таблице <tt>%s</tt>:\n%s\n" .
         'Сколько записей в ней удовлетворяют запросу %s?',
