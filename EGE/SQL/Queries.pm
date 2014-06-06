@@ -94,7 +94,7 @@ sub new {
 
 sub run {
     my ($self) = @_;
-    $self->{table}->update($self->{fields}, $self->{assigns}, $self->{where});
+    $self->{table}->update($self->{assigns}, $self->{where});
 }
 
 sub text {

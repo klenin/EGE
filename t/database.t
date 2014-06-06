@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 55;
+use Test::More tests => 56;
 use Test::Exception;
 
 use lib '..';
@@ -77,8 +77,10 @@ sub pack_table {
     $t->insert_rows([ 1, 2 ], [ 3, 4 ],[ 5, 6 ]);
     $t->update(make_block([ '=', 'a', 'b' ]));
     is pack_table($t), 'a b|2 2|4 4|6 6', 'update var';
-    $t->update(make_block([ '=', 'a', ['+', 'a', '1'] ]));
+    $t->update(make_block([ '=', 'a', [ '+', 'a', '1' ] ]));
     is pack_table($t), 'a b|3 2|5 4|7 6', 'update expr';
+    EGE::SQL::Update->new($t, make_block([ '=', 'b', 'a' ]))->run;
+    is pack_table($t), 'a b|3 3|5 5|7 7', 'update expr query';
 }
 
 {
