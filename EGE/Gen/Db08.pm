@@ -167,9 +167,9 @@ sub nuncle {
         { tab => EGE::SQL::SubqueryAlias->new($table_kinship, 'k1'), field => 'id_child' });
     my $inner4 = EGE::SQL::Inner_join->new(
         { tab => $inner2, field => 'k1.id_parent' },
-        { tab => EGE::SQL::SubqueryAlias->new($table_kinship, 'k2'), field => 'id_child' });
+        { tab => EGE::SQL::SubqueryAlias->new($table_kinship, 'k2'), field => 'id_parent' });
     my $inner5 = EGE::SQL::Inner_join->new(
-        { tab => $inner4, field => 'k2.id_parent' },
+        { tab => $inner4, field => 'k2.id_child' },
         { tab => $table_person, field => 'id' });
     my $query2 = EGE::SQL::Select->new($inner5, [ 'Фамилия', 'Имя' ]);
     my $par = ${$table_person->select(['Фамилия', 'Имя', 'Пол'],
@@ -189,7 +189,7 @@ sub nuncle {
     $table_person->update(EGE::Prog::make_block [ '=', 'Пол', sub { $_[0]->{'Пол'} ? 'м' : 'ж' } ]);
     $self->{text} = sprintf
         "В фрагменте базы данных представлены сведения о родственных отношениях:\n%s\n" .
-        'Результатом какого запроса будут родители %s, их сестеры и братья?',
+        'Результатом какого запроса будут родители %s, их сестры и братья?',
         EGE::SQL::Utils::multi_table_html($table_person, $table_kinship), $name;
     $self->variants($query2->text_html, @requests);
 }
