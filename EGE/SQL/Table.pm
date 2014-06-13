@@ -26,6 +26,8 @@ sub new {
 
 sub name { $_[0]->{name} = $_[1] // $_[0]->{name} }
 
+sub fields { $_[0]->{fields} }
+
 sub insert_row {
     my $self = shift;
     @_ == @{$self->{fields}}
@@ -120,5 +122,7 @@ sub random_val {
    my ($self, @array) = @_;
    rnd->pick(@{rnd->pick(@array)}) + rnd->pick(0, -50, 50);
 }
+
+sub random_row { rnd->pick(@{$_[0]->{data}}) }
 
 1;

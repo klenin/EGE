@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 56;
+use Test::More tests => 57;
 use Test::Exception;
 
 use lib '..';
@@ -31,6 +31,8 @@ sub pack_table {
     is pack_table($tab->select([ 'id', 'id' ])), 'id id|1 1|2 2|3 3', 'dup field';
     eval { $tab->select([ 'zzz' ]) };
     like $@, qr/zzz/, 'bad field';
+    my $r = $tab->random_row->[0];
+    ok $r == 1 || $r == 2 || $r == 3, 'random_row';
 }
 
 {
