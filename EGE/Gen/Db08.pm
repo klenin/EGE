@@ -17,15 +17,15 @@ use EGE::SQL::Table;
 use EGE::SQL::Queries;
 use EGE::SQL::Utils;
 
-my $parents;
+my ($parents, @males, @females);
 
 sub names {
     my ($s) = @_;
     my $name;
     if ($s) {
-        $name = rnd->pick(@EGE::Russian::Names::male);
+        $name = shift @males;
     } else {
-        $name = rnd->pick(@EGE::Russian::Names::female);
+        $name = shift @females;
     }
     $name;
 }
@@ -49,6 +49,8 @@ sub create_table {
     my $table_person = EGE::SQL::Table->new([ qw(id Фамилия Имя Пол) ], name => 'persons');
     my $table_kinship = EGE::SQL::Table->new([ qw(id_parent id_child) ], name => 'kinship');
     my $families = rnd->pick(@EGE::Russian::FamilyNames::list);
+    @males = EGE::Russian::Names::different_males(10);
+    @females = EGE::Russian::Names::different_females(10);
     my $sex = rnd->coin;
     my (@grandchildren, @child);
     my $id = rnd->in_range(500, 3000);
