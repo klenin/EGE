@@ -14,6 +14,7 @@ sub _maybe_run { $_[1]->can('run') ? $_[1]->run : $_[1]; }
 
 sub init_table {
     my ($self, $table) = @_;
+    $table || die 'No table';
     $self->{table} = ref $table ? $table : undef;
     $self->{table_name} = ref $table ? $table->name : $table;
     $self;
