@@ -86,40 +86,39 @@ our @electronic = (
     'Мыши',
 );
 
-our @PC = (
-    'Компьютер DNS Home XL', 
-    'Компьютер HP',	
-    'Компьютер Lenovo M4350', 
-    'Компьютер DNS Home XL', 
-    'Компьютер DNS Extreme', 	
-    'Компьютер DNS Home', 
-    'Компьютер DNS Office XL', 
-    'Компьютер Lenovo H535', 
-    'Компьютер DNS Office', 
+our @pcs = (
+'Компьютер DNS Extreme',
+'Компьютер DNS Home',
+'Компьютер DNS Home XL',
+'Компьютер DNS Office',
+'Компьютер DNS Office XL',
+'Компьютер HP',
+'Компьютер Lenovo M4350',
+'Компьютер Lenovo H535',
 );
 
-our @Printer = (
-    'Принтер цветной HP LaserJet Pro', 		
-    'Принтер цветной Samsung CLP-415N',
-    'Принтер HP LaserJet Pro 400 M401a',
-    'Принтер Brother HL-5440D Laser Printer',
-    'Принтер цветной HP LaserJet Pro Color CP1025nw',
-    'Принтер Brother HL-2250DNR',
-    'Принтер цветной Samsung CLP-365W',
-    'Принтер HP LaserJet Pro P1606dn',
-    'Принтер HP LaserJet P2035',
-    'Принтер Samsung ML-3310D',
+our @printers = (
+'Принтер Brother HL-2250DNR',
+'Принтер Brother HL-5440D Laser Printer',
+'Принтер HP LaserJet P2035',
+'Принтер HP LaserJet Pro 400 M401a',
+'Принтер HP LaserJet Pro P1606dn',
+'Принтер Samsung ML-3310D',
+'Принтер цветной HP LaserJet Pro',
+'Принтер цветной Samsung CLP-365W',
+'Принтер цветной Samsung CLP-415N',
 );
 
-our @Laptop = (
-    'Ноутбук Apple MacBook Pro Retina ME294RU',
-    'Ноутбук Sony VAIO (SVD1321M9RB)',
-    'Ноутбук Apple MacBook Pro (ME866RU, A)',
-    'Ноутбук Sony VAIO (SVP1322V9RB)',
-    'Ноутбук Alienware A14-7956 (FHD)',
-    'Ноутбук Sony VAIO (SVD1321M2RW)',
-    'Ноутбук Asus (UX301LA)',
-    'Ноутбук Sony VAIO (SVT1122X9RW)',
-    'Ноутбук Apple MacBook Pro (ME865RU, A)',
-    'Ноутбук Apple MacBook Pro (ME864RU, A)',
+our @laptops = (
+'Ноутбук Alienware',
+'Ноутбук Apple MacBook Pro',
+'Ноутбук Apple MacBook Air',
+'Ноутбук Asus',
+'Ноутбук DELL Inspiron',
+'Ноутбук DNS',
+'Ноутбук HP Pavilion',
+'Ноутбук Lenovo',
+'Ноутбук Samsung ATIV',
+'Ноутбук Sony VAIO',
+'Ноутбук Toshiba Satellite',
 );

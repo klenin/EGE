@@ -19,7 +19,7 @@ use EGE::SQL::Utils;
 sub _make_table {
     my ($name, $fields, $data_source, $start) = @_;
     my $table = EGE::SQL::Table->new($fields, name => $name);
-    my @data = rnd->pick_n_sorted(6, @$data_source);
+    my @data = rnd->pick_n(6, @$data_source);
     $table->insert_rows(@{EGE::Utils::transpose(
         [ rnd->shuffle($$start .. $$start + $#data) ], \@data)});
     $$start += @data;
@@ -30,9 +30,9 @@ sub inner_join {
     my ($self) = @_;
     my $start = 1;
     my @tables = map _make_table(@$_, \$start), (
-        [ 'pcs', [ qw(id name_pc) ], \@EGE::Russian::Product::PC ],
-        [ 'printers', [ qw(id name_printer) ], \@EGE::Russian::Product::Printer ],
-        [ 'laptops', [ qw(id name_laptop) ], \@EGE::Russian::Product::Laptop ],
+        [ 'pcs', [ qw(id name_pc) ], \@EGE::Russian::Product::pcs ],
+        [ 'printers', [ qw(id name_printer) ], \@EGE::Russian::Product::printers ],
+        [ 'laptops', [ qw(id name_laptop) ], \@EGE::Russian::Product::laptops ],
     );
     my $buyers = EGE::SQL::Table->new([ qw(id_buyer id_pc id_printer id_laptop) ], name => 'buyers');
     for my $id (rnd->pick_n(8, 1 .. 12)) {
