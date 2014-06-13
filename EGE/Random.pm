@@ -28,6 +28,12 @@ sub in_range {
     int rand($hi - $lo + 1) + $lo;
 }
 
+sub in_range_except {
+    my ($self, $lo, $hi, $except) = @_;
+    my $r = int rand($hi - $lo) + $lo;
+    $r == $except ? $r + 1 : $r;
+}
+
 sub pick {
     my ($self, @array) = @_;
     @array or die 'pick from empty array';

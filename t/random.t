@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 11;
+use Test::More tests => 12;
 use List::Util qw(sum);
 
 use lib '..';
@@ -12,8 +12,8 @@ my $v;
 $v = rnd->in_range(1, 10);
 ok 1 <= $v && $v <= 10, 'in_range';
 
-$v = rnd->in_range(1, 0);
-is $v, 1, 'in_range empty';
+is rnd->in_range(1, 0), 1, 'in_range empty';
+is rnd->in_range_except(1, 2, 1), 2, 'in_range_except';
 
 $v = rnd->coin;
 ok $v == 0 || $v == 1, 'coin';
