@@ -287,16 +287,8 @@ our @list = (@male, @female);
 
 my ($h, $hm, $hf);
 
-sub different_males {
-    my ($count) = @_;
-    unless ($hm) {
-        $hm = { map { $_, [] } 'А' .. 'Я' };
-        for (@male) {
-            push @{$hm->{substr($_, 0, 1)}}, $_;
-        }
-    }
-    map { rnd->pick(@{$hm->{$_}}) } rnd->pick_n($count, keys %{$hm});
-}
+sub different_males { EGE::Russian::different(\$hm, \@male, $_[0]) }
+sub different_females { EGE::Russian::different(\$hf, \@female, $_[0]) }
 
 sub different_names {
     my ($count) = @_;
