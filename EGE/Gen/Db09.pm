@@ -17,8 +17,9 @@ use EGE::SQL::Queries;
 use EGE::SQL::Utils;
 
 sub _make_table {
-    my ($name, $fields, $data_source, $start) = @_;
-    my $table = EGE::SQL::Table->new($fields, name => $name);
+    my ($name, $data_source, $start) = @_;
+    my $table = EGE::SQL::Table->new([ 'id', "name_$name" ], name => $name . 's');
+    $table->{ref_field} = "id_$name";
     my @data = rnd->pick_n(6, @$data_source);
     $table->insert_rows(@{EGE::Utils::transpose(
         [ rnd->shuffle($$start .. $$start + $#data) ], \@data)});
@@ -30,11 +31,11 @@ sub inner_join {
     my ($self) = @_;
     my $start = 1;
     my @tables = map _make_table(@$_, \$start), (
-        [ 'pcs', [ qw(id name_pc) ], \@EGE::Russian::Product::pcs ],
-        [ 'printers', [ qw(id name_printer) ], \@EGE::Russian::Product::printers ],
-        [ 'laptops', [ qw(id name_laptop) ], \@EGE::Russian::Product::laptops ],
+        [ 'pc', \@EGE::Russian::Product::pcs ],
+        [ 'printer', \@EGE::Russian::Product::printers ],
+        [ 'laptop', \@EGE::Russian::Product::laptops ],
     );
-    my $buyers = EGE::SQL::Table->new([ qw(id_buyer id_pc id_printer id_laptop) ], name => 'buyers');
+    my $buyers = EGE::SQL::Table->new([ 'id_buyer', map $_->{ref_field}, @tables ], name => 'buyers');
     for my $id (rnd->pick_n(8, 1 .. 12)) {
         $buyers->insert_row($id, map $_->random_row->[0], @tables);
     }
@@ -43,17 +44,15 @@ sub inner_join {
         my $prev = $buyers;
         my @t = rnd->shuffle(@tables);
         $prev = EGE::SQL::Inner_join->new(
-            { tab => $prev, field =>
-                $buyers->fields->[
-                    $wrong == $_ ? rnd->in_range_except(0, scalar @tables, $_) : $_] },
-            { tab => $t[$_ - 1], field => 'id' }
-        ) for 1 .. @tables;
+            { tab => $prev, field => $t[$wrong == $_ ? rnd->in_range_except(0, $#t, $_) : $_]->{ref_field} },
+            { tab => $t[$_], field => 'id' }
+        ) for 0 .. $#t;
         $prev;
     };
     my $id = $buyers->random_row->[0];
     my $where = make_expr([ '==', 'id_buyer', $id ]);
     $self->variants(map EGE::SQL::Select->new(
-        $make_joins->($_), [ qw(name_pc name_printer name_laptop) ], $where)->text_html, 0..@tables);
+        $make_joins->($_), [ qw(name_pc name_printer name_laptop) ], $where)->text_html, -1..$#tables);
     $self->{text} = sprintf
         "В фрагменте базы данных интернет-магазина представлены сведения о покупках:\n%s\n" .
         'Какой из приведенных ниже запросов покажет названия предметов, приобретенных покупателем с id = %s?',
