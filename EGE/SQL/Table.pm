@@ -125,4 +125,10 @@ sub random_val {
 
 sub random_row { rnd->pick(@{$_[0]->{data}}) }
 
+sub column_array {
+    my ($self, $field) = @_;
+    my $column = $self->{field_index}->{$field} // die $field;
+    [ map $_->[$column], @{$self->{data}} ];
+}
+
 1;
