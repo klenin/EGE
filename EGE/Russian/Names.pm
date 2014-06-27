@@ -5,6 +5,7 @@ use warnings;
 use utf8;
 
 use EGE::Random;
+use EGE::Russian;
 
 our @male = qw(
 Августин
