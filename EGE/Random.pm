@@ -30,8 +30,13 @@ sub in_range {
 
 sub in_range_except {
     my ($self, $lo, $hi, $except) = @_;
-    my $r = int rand($hi - $lo) + $lo;
-    $r == $except ? $r + 1 : $r;
+    my @ex = ref $except ? sort { $a <=> $b } @$except : ($except);
+    my $r = $self->in_range($lo, $hi - @ex);
+    for (@ex) {
+        last if $_ > $r;
+        $r++;
+    }
+    $r;
 }
 
 sub pick {

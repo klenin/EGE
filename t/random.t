@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 12;
+use Test::More tests => 15;
 use List::Util qw(sum);
 
 use lib '..';
@@ -14,6 +14,13 @@ ok 1 <= $v && $v <= 10, 'in_range';
 
 is rnd->in_range(1, 0), 1, 'in_range empty';
 is rnd->in_range_except(1, 2, 1), 2, 'in_range_except';
+is rnd->in_range_except(1, 4, [1, 2, 3]), 4, 'in_range_except many';
+{
+    my @cnt;
+    @cnt[rnd->in_range_except(1, 7, [1, 3, 4, 6])]++ for 1 .. 3000;
+    is_deeply [ grep $cnt[$_], 0 .. $#cnt ], [2, 5, 7], 'in_range_except historgam 1';
+    is scalar(grep $_ && abs($_ - 1000) > 99, @cnt), 0, 'in_range_except historgam 2';
+}
 
 $v = rnd->coin;
 ok $v == 0 || $v == 1, 'coin';
