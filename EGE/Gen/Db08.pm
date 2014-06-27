@@ -19,54 +19,44 @@ use EGE::SQL::Utils;
 
 my ($parents, @males, @females);
 
-sub names {
-    my ($s) = @_;
-    my $name;
-    if ($s) {
-        $name = shift @males;
-    } else {
-        $name = shift @females;
+sub make_person {
+    my ($family_name, $table_persons, $new_family_name) = @_;
+    my $is_male = rnd->coin;
+    my $person_id = rnd->in_range_except(1000, 4000, $table_persons->column_array('id'));
+    if ($new_family_name) {
+        $family_name = $$new_family_name =
+            $is_male ? $family_name : rnd->pick(@EGE::Russian::FamilyNames::list);
     }
-    $name;
+    $table_persons->insert_row(
+        $person_id, $family_name . ($is_male ? '' : 'а'), $is_male ? shift @males : shift @females, $is_male);
+    $person_id;
 }
 
 sub children {
-    my ($famile, $id, $sex, $table_persone, $table_kinship) = @_;
-    my @ans;
-    for my $i (0..rnd->pick(1,2)) {
-        my $s = rnd->coin;
-        my $id_c = rnd->in_range(500, 3000);
-        my $name = $famile;
-        $name = rnd->pick(@EGE::Russian::FamilyNames::list) if (!$s);
-        $table_kinship->insert_row($id, $id_c);
-        $table_persone->insert_row($id_c, $name . ($s ? '' : 'а'), names($s), $s);
-        push @ans, $id_c;
-    }
-    @ans;
+    my ($family_name, $parent_id, $table_persons, $table_kinship) = @_;
+    map {
+        my $child_id = make_person($family_name, $table_persons, \my $nf);
+        $table_kinship->insert_row($parent_id, $child_id);
+        $child_id;
+    } 0 .. rnd->in_range(1, 2);
 }
 
 sub create_table {
-    my $table_person = EGE::SQL::Table->new([ qw(id Фамилия Имя Пол) ], name => 'persons');
+    my $table_persons = EGE::SQL::Table->new([ qw(id Фамилия Имя Пол) ], name => 'persons');
     my $table_kinship = EGE::SQL::Table->new([ qw(id_parent id_child) ], name => 'kinship');
-    my $families = rnd->pick(@EGE::Russian::FamilyNames::list);
     @males = EGE::Russian::Names::different_males(10);
     @females = EGE::Russian::Names::different_females(10);
-    my $sex = rnd->coin;
-    my (@grandchildren, @child);
-    my $id = rnd->in_range(500, 3000);
-    for my $i (0..2) {
-        my $s = rnd->coin;
-        my $id_c = rnd->in_range(500, 3000);
-        my $fam = $families;
-        $fam = rnd->pick(@EGE::Russian::FamilyNames::list) if (!$s) ;
-        $table_kinship->insert_row($id, $id_c);
-        $table_person->insert_row($id_c,  $fam . ($s ? '' : 'а'), names($s), $s);
-        push @grandchildren, children($fam, $id_c, $s, $table_person, $table_kinship);
-        push @child, $id_c;
+    my (@grandchildren, @children);
+    my $family_name = rnd->pick(@EGE::Russian::FamilyNames::list);
+    my $id = make_person($family_name, $table_persons);
+    for (0 .. 2) {
+        my ($child_id) = make_person($family_name, $table_persons, \my $new_family_name);
+        $table_kinship->insert_row($id, $child_id);
+        push @grandchildren, children($new_family_name, $child_id, $table_persons, $table_kinship);
+        push @children, $child_id;
     }
-    $table_person->insert_row($id, $families . ($sex ? '' : 'а'), names($sex), $sex);
     $parents = $id;
-    $table_kinship, $table_person, \@grandchildren, \@child;
+    $table_kinship, $table_persons, \@grandchildren, \@children;
 }
 
 sub parents {
