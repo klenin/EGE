@@ -5,6 +5,7 @@ use warnings;
 use utf8;
 
 use EGE::Random;
+use EGE::Russian;
 
 our @list =
 qw(
@@ -146,16 +147,6 @@ qw(
 );
 
 my $h;
-
-sub different_jobs {
-    my ($count) = @_;
-    unless ($h) {
-        $h = { map { $_, [] } 'А' .. 'Я' };
-        for (@list) {
-            push @{$h->{substr($_, 0, 1)}}, $_;
-        }
-    }
-    map { rnd->pick(@{$h->{$_}}) } rnd->pick_n($count, keys %{$h});
-}
+sub different_jobs { EGE::Russian::different(\$h, \@list, $_[0]) }
 
 1;
