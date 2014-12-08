@@ -237,6 +237,93 @@ end;~;
     is_deeply $v, { x => 1, y => 1 }, 'gather_vars';
 }
 
+sub check_sub {
+    my ($lang, $block, $code, $name) = @_;
+    is $block->to_lang_named($lang), join("\n", @$code), $name;
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'func', 'my_func', [qw(x y z)], [
+            '=', 'my_func', ['-', 'x', 'y']
+        ],
+        'func', 'g', [qw(a b)], [
+            '=', 'g', ['-', 'a', 'b']
+        ],        
+    ]);
+    my $c = {
+        Basic => [
+            'FUNCTION my_func(x, y, z)',
+            '  my_func = x - y',
+            'END FUNCTION',
+            '',
+            'FUNCTION g(a, b)',
+            '  g = a - b',
+            'END FUNCTION',
+            '',
+        ],
+        Alg => [
+            'алг цел my_func(цел x, y, z)',
+            'нач',
+            '  my_func := x - y',
+            'кон',
+            '',
+            'алг цел g(цел a, b)',
+            'нач',
+            '  g := a - b',
+            'кон',
+            '',
+        ],
+        Pascal => [
+            'Function my_func(x, y, z: integer):integer;',
+            'begin',
+            '  my_func := x - y;',
+            'end;',
+            '',
+            'Function g(a, b: integer):integer;',
+            'begin',
+            '  g := a - b;',
+            'end;',
+            '',
+        ],
+        C => [
+            'int my_func(int x, int y, int z) {',
+            '  my_func = x - y;',
+            '}',
+            '',
+            'int g(int a, int b) {',
+            '  g = a - b;',
+            '}',
+            '',
+        ],
+        Perl => [
+            'sub my_func {',
+            '  my ($x, $y, $z) = @_;',
+            '  $my_func = $x - $y;',
+            '}',
+            '',
+            'sub g {',
+            '  my ($a, $b) = @_;',
+            '  $g = $a - $b;',
+            '}',
+            '',
+        ],        
+    };
+    check_sub($_, $b, $c->{$_}, "function definition in $_") for keys $c;
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'func', 'f', [qw(x y z)], [
+            '=', 'my_func', ['-', 'x', 'y']
+        ],
+        'func', 'f', [qw(a b)], [
+            '=', 'f', ['-', 'a', 'b']
+        ],      
+    ]);
+    throws_ok sub { $b->run({}) }, qr/f/, 'function redefinition'
+}
+
 {
     sub check_sql { is make_expr($_[0])->to_lang_named('SQL'), $_[1], "SQL $_[2]" }
     check_sql(
