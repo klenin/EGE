@@ -244,12 +244,13 @@ sub check_sub {
 
 {
     my $b = EGE::Prog::make_block([
-        'func', 'my_func', [qw(x y z)], [
-            '=', 'my_func', ['-', 'x', 'y']
+        'func', 'my_func', [ qw(x y z) ], [
+            '=', 'my_func', [ '-', 'x', 'y' ]
         ],
-        'func', 'g', [qw(a b)], [
-            '=', 'g', ['-', 'a', 'b']
-        ],        
+        'func', 'g', [ qw(a b) ], [
+            '=', 'g', [ '-', 'a', 'b' ]
+        ],
+        '=', 'a', ['()', 'g', 3, 2]
     ]);
     my $c = {
         Basic => [
@@ -261,6 +262,7 @@ sub check_sub {
             '  g = a - b',
             'END FUNCTION',
             '',
+            'a = g(3, 2)',
         ],
         Alg => [
             'алг цел my_func(цел x, y, z)',
@@ -273,6 +275,7 @@ sub check_sub {
             '  g := a - b',
             'кон',
             '',
+            'a := g(3, 2)',
         ],
         Pascal => [
             'Function my_func(x, y, z: integer):integer;',
@@ -285,6 +288,7 @@ sub check_sub {
             '  g := a - b;',
             'end;',
             '',
+            'a := g(3, 2);',
         ],
         C => [
             'int my_func(int x, int y, int z) {',
@@ -295,6 +299,7 @@ sub check_sub {
             '  g = a - b;',
             '}',
             '',
+            'a = g(3, 2);',
         ],
         Perl => [
             'sub my_func {',
@@ -307,22 +312,54 @@ sub check_sub {
             '  $g = $a - $b;',
             '}',
             '',
+            '$a = g(3, 2);',
         ],        
     };
-    check_sub($_, $b, $c->{$_}, "function definition in $_") for keys $c;
+    check_sub($_, $b, $c->{$_}, "function calling, definition in $_") for keys $c;
 }
 
 {
     my $b = EGE::Prog::make_block([
-        'func', 'f', [qw(x y z)], [
-            '=', 'my_func', ['-', 'x', 'y']
+        'func', 'f', [ qw(x y z) ], [
+            '=', 'my_func', [ '-', 'x', 'y' ]
         ],
-        'func', 'f', [qw(a b)], [
-            '=', 'f', ['-', 'a', 'b']
+        'func', 'f', [ qw(a b) ], [
+            '=', 'f', [ '-', 'a', 'b' ]
         ],      
     ]);
     throws_ok sub { $b->run({}) }, qr/f/, 'function redefinition'
 }
+
+{
+    my $b = EGE::Prog::make_block([
+        'func', 'f', [ qw(x y z) ], [
+            '=', 'f', [ '-', 'x', 'y' ]
+        ],
+        '=', 'a', [ '()', 'f', 1, 2, 3 ],
+    ]);
+    is $b->run_val('a'), -1, 'run call function';
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'func', 'f', [ qw(x y z) ], [
+            '=', 'f', [ '-', 'x', 'y' ]
+        ],
+        '=', 'a', [ '()', 'g', 1, 2, 3 ],
+    ]);
+    throws_ok sub { $b->run({}) }, qr/g/, 'call undefined function';
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'func', 'f', [ qw(x y z) ], [
+            '=', 'f', [ '-', 'x', 'y' ]
+        ],
+        '=', 'a', [ '()', 'f', 1, 2 ],
+    ]);
+    throws_ok sub { $b->run({}) }, qr/f/, 'not enoght arguments';
+}
+
 
 {
     sub check_sql { is make_expr($_[0])->to_lang_named('SQL'), $_[1], "SQL $_[2]" }

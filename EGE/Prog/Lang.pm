@@ -66,6 +66,7 @@ sub translate_un_op { {} }
 sub block_stmt_separator { "\n" }
 sub args_separator { ', '}
 sub args_fmt { '%s' }
+sub call_func_fmt { '%s(%s)' }
 
 package EGE::Prog::Lang::Basic;
 use base 'EGE::Prog::Lang';

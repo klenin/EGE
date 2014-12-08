@@ -109,6 +109,23 @@ sub get_ref {
 
 sub _visit_children { my $self = shift; $_->visit_dfs(@_) for $self->{array}, @{$self->{indices}} }
 
+package EGE::Prog::CallFunc;
+use base 'EGE::Prog::SynElement';
+
+sub to_lang {
+    my ($self, $lang) = @_; 
+    sprintf $lang->call_func_fmt,
+        $self->{func},
+        join $lang->args_separator, map $_->to_lang($lang), @{$self->{args}};
+}
+
+sub run {
+    my ($self, $env) = @_;
+    my $func = $env->{'&'}->{$self->{func}} or die "Undefined function $self->{func}";
+    my $args = [ map $_->run($env), @{$self->{args}} ];
+    $func->call($args, $env);
+}
+
 package EGE::Prog::Op;
 use base 'EGE::Prog::SynElement';
 
@@ -345,6 +362,17 @@ sub run {
     $env->{'&'}->{$self->{var}->{name}} = $self;
 }
 
+sub call {
+    my ($self, $args, $env) = @_;
+    my $act_len = @$args;
+    my $form_len = @{$self->{params}->{names}};
+    $act_len > $form_len and die "Too many arguments to function $self->{var}->{name}";    
+    $act_len < $form_len and die "Too few arguments to function $self->{var}->{name}";   
+    
+    my $new_env = { '&' => $env->{'&'}, map(($_ => shift $args), @{$self->{params}->{names}}) };
+    $self->{body}->run_val($self->{var}->{name}, $new_env);
+}
+
 package EGE::Prog::FuncParams;
 use base 'EGE::Prog::SynElement';
 
@@ -373,7 +401,14 @@ sub make_expr {
             $_ = make_expr($_) for @p;
             my $array = shift @p;
             return EGE::Prog::Index->new(array => $array, indices => \@p);
-        }  
+        }
+        if (@$src >= 2 && $src->[0] eq '()') {
+            my @p = @$src;
+            shift @p;
+            my $func = shift @p;
+            $_ = make_expr($_) for @p;
+            return EGE::Prog::CallFunc->new(func => $func, args => \@p);
+        }
         if (@$src == 2) {
             return EGE::Prog::UnOp->new(
                 op => $src->[0], arg => make_expr($src->[1]));
