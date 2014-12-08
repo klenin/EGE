@@ -109,6 +109,24 @@ sub get_ref {
 
 sub _visit_children { my $self = shift; $_->visit_dfs(@_) for $self->{array}, @{$self->{indices}} }
 
+package EGE::Prog::CallFunc;
+use base 'EGE::Prog::SynElement';
+
+sub to_lang {
+    my ($self, $lang) = @_; 
+    sprintf $lang->call_func_fmt,
+        $self->{func},
+        join $lang->args_separator, map $_->to_lang($lang), @{$self->{args}};
+}
+
+sub run {
+    my ($self, $env) = @_;
+    my $args = [map $_->run($env), @{$self->{args}}];
+    my $func = $env->{functions}->{$self->{func}};
+    defined $func or die "Undefined function $self->{func}";    
+    $func->call($args, $env);
+}
+
 package EGE::Prog::Op;
 use base 'EGE::Prog::SynElement';
 
@@ -342,16 +360,29 @@ sub to_lang {
     my ($fmt_start, $fmt_end) = ($lang->func_start_fmt(), $lang->func_end_fmt());
     my $body = $self->{body}->to_lang($lang);
     $body =~ s/^/  /mg if $fmt_start =~ /\n$/; # отступы
-    my @args = $self->{args}->to_lang($lang);
     sprintf
         $fmt_start . $body . $fmt_end,
-        $self->{name}, @args;
+        $self->{name}, $self->{args}->to_lang($lang);
 }
 
 sub run {
     my ($self, $env) = @_;
     $env->{"functions"} ||= {};
     $env->{"functions"}->{$self->{name}} = $self;
+}
+
+sub call {
+    my ($self, $args, $env) = @_;
+    my $new_env = {functions => $env->{functions}};
+    my $act_len = @$args;
+    my $form_len = @{$self->{args}->{names}};
+    $act_len > $form_len and die "too many arguments to function $self->{name}";    
+    $act_len < $form_len and die "too few arguments to function $self->{name}";   
+    for (0 .. @$args - 1){
+        my $name = $self->{args}->{names}->[$_];
+        $new_env->{ $name } = $args->[$_];    
+    }
+    $self->{body}->run_val($self->{name}, $new_env);
 }
 
 package EGE::Prog::FuncArgs;
@@ -387,8 +418,9 @@ sub make_expr {
             my @p = @$src;
             shift @p; 
             my $func = shift @p;
-            $_ = make_expr($_) for @p;
-            return EGE::Prog::CallFunc->new(func => $func, args => \@p);
+            my $args = $p[0];
+            $args = [map make_expr($_), @$args];
+            return EGE::Prog::CallFunc->new(func => $func, args => $args);
         }        
         if (@$src == 2) {
             return EGE::Prog::UnOp->new(

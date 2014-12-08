@@ -65,7 +65,7 @@ sub translate_un_op { {} }
 sub block_stmt_separator { "\n" }
 sub args_separator { ", "}
 sub args_fmt { "%s" }
-sub call_fnc_fmt { "%s(%s)" }
+sub call_func_fmt { "%s(%s)" }
 
 package EGE::Prog::Lang::Basic;
 use base 'EGE::Prog::Lang';
@@ -116,8 +116,8 @@ sub while_end_fmt { $_[1] ? "\n}" : '' }
 sub until_start_fmt { 'while (!(%s))' . ($_[1] ? " {\n" : "\n") }
 sub until_end_fmt { $_[1] ? "\n}" : '' }
 
-sub func_start_fmt { "int %s(%s) {\n" }
-sub func_end_fmt { "\n}" }
+sub func_start_fmt { "int %s(%s) {\n  int %1\$s;\n" }
+sub func_end_fmt { "\n  return %1\$s;\n}" }
 
 sub args_fmt {"int %s"}
 package EGE::Prog::Lang::Pascal;
@@ -150,7 +150,7 @@ sub while_end_fmt { $_[1] ? "\nend;" : '' }
 sub until_start_fmt { 'while not (%s) do' . ($_[1] ? " begin\n" : "\n") }
 sub until_end_fmt { $_[1] ? "\nend;" : '' }
 
-sub func_start_fmt { "Function %s(%s: integer):integer;\nbegin" }
+sub func_start_fmt { "Function %s(%s: integer):integer; begin\n" }
 sub func_end_fmt { "\nend;" }
 
 
@@ -179,7 +179,7 @@ sub while_end_fmt { "\nкц" }
 sub until_start_fmt { "пока не (%s) нц\n" }
 sub until_end_fmt { "\nкц" }
 
-sub func_start_fmt { "алг цел %s(цел %s)\nнач" }
+sub func_start_fmt { "алг цел %s(цел %s) нач\n" }
 sub func_end_fmt { "\nкон;" }
 
 package EGE::Prog::Lang::Perl;
@@ -203,7 +203,7 @@ sub until_start_fmt { "until (%s) {\n" }
 sub until_end_fmt { "\n}" }
 
 sub func_start_fmt { "sub %s {\n (%s) = \@_;\n" }
-sub func_end_fmt { "\n}" }
+sub func_end_fmt { "\n  \$%1\$s;\n}" }
 
 sub args_fmt { "\$%s" }
 package EGE::Prog::Lang::Logic;
