@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 81;
+use Test::More tests => 87;
 use Test::Exception;
 
 use lib '..';
@@ -230,6 +230,56 @@ end;~;
     my $v = {};
     $e->gather_vars($v);
     is_deeply $v, { x => 1, y => 1 }, 'gather_vars';
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'func', 'my_func', [qw(x y z)], [
+            '=', 'my_func', ['-', 'x', 'y']
+        ],
+        '=', 'a', ['()', 'my_func', [1, 2, 3]]
+    ]);
+
+    is $b->to_lang_named('Basic'),
+        "FUNCTION my_func(x, y, z)\n".
+        "  my_func = x - y\n".
+        "END FUNCTION\n".
+        "a = my_func(1, 2, 3)", 
+        'function defenition in Basic';
+
+    is $b->to_lang_named('C'), 
+        "int my_func(int x, int y, int z) {\n".
+        "  int my_func;\n".
+        "  my_func = x - y;\n".
+        "  return my_func;\n".
+        "}\n".
+        "a = my_func(1, 2, 3);",
+        'function defenition in C';  
+
+    is $b->to_lang_named('Pascal'),
+        "Function my_func(x, y, z: integer):integer; begin\n".
+        "  my_func := x - y;\n".
+        "end;\n".
+        "a := my_func(1, 2, 3);",
+        'function defenition in Pascal';
+
+    is $b->to_lang_named('Alg'), 
+        "алг цел my_func(цел x, y, z) нач\n".
+        "  my_func := x - y\n".
+        "кон;\n".
+        "a := my_func(1, 2, 3)",
+        'function defenition in Alg';
+
+    is $b->to_lang_named('Perl'), 
+        "sub my_func {\n".
+        "  (\$x, \$y, \$z) = \@_;\n".
+        "  \$my_func = \$x - \$y;\n".
+        "  \$my_func;\n".
+        "}\n".
+        "\$a = my_func(1, 2, 3);",
+        'function defenition in Perl';
+
+    is $b->run_val('a'), -1, 'run call function';    
 }
 
 {

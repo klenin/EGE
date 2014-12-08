@@ -102,7 +102,7 @@ sub all {[
     gg('B11', qw(ip_mask)),
     gg('B12', qw(search_query)),
     gg('B13', qw(plus_minus)),
-    gg('B14', qw(call_func)),    
+    gg('B14', qw(find_func_min)),    
     gg('B15', qw(logic_var_set)),
 ]}
 

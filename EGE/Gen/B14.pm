@@ -21,22 +21,22 @@ sub find_func_min {
     my ($i, $inner_var) = ('i', rnd->index_var);
     my $b = EGE::Prog::make_block([
         'func', 'F', [$inner_var], [
-        	'=', 'F', 
-            	['*', 
-            		['+', $inner_var, -$x1], 
-            		['-', $inner_var, $x2]
+            '=', 'F', 
+                ['*', 
+                    ['+', $inner_var, -$x1], 
+                    ['-', $inner_var, $x2]
                 ]
-		],
-		
+        ],
+        
         '=', 'A', $beg,
         '=', 'B', $end,        
-		'=', 'M', 'A',
-		'=', 'R', ['()', 'F', ['A']],
-		
+        '=', 'M', 'A',
+        '=', 'R', ['()', 'F', ['A']],
+        
         'for', $i, 'A', 'B', [
             'if',  ['<', ['()', 'F', [$i]], 'R'], [
-            	'=', 'M', $i,
-            	'=', 'R', ['()', 'F', [$i]] 
+                '=', 'M', $i,
+                '=', 'R', ['()', 'F', [$i]] 
             ]
         ]
     ]);
@@ -44,7 +44,7 @@ sub find_func_min {
     my $lt = EGE::LangTable::table($b, [ [ 'Basic', 'Alg' ], [ 'Pascal', 'C', 'Perl' ] ]);
     $self->{text} = "Определите значение переменной M выполнения следующего алгоритма: $lt";
     $self->{correct} = $b->run_val('M');
-    $self->accept_number;
+    #$self->accept_number;
 }
 
 1;

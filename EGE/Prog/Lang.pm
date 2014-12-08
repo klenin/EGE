@@ -93,7 +93,7 @@ sub until_start_fmt { "DO UNTIL %s\n" }
 sub until_end_fmt { "\nEND DO" }
 
 sub func_start_fmt { "FUNCTION %s(%s)\n" }
-sub func_end_fmt { "\nEND FUNCTION\n" }
+sub func_end_fmt { "\nEND FUNCTION" }
 
 package EGE::Prog::Lang::C;
 use base 'EGE::Prog::Lang';
@@ -202,7 +202,7 @@ sub while_end_fmt { "\n}" }
 sub until_start_fmt { "until (%s) {\n" }
 sub until_end_fmt { "\n}" }
 
-sub func_start_fmt { "sub %s {\n (%s) = \@_;\n" }
+sub func_start_fmt { "sub %s {\n  (%s) = \@_;\n" }
 sub func_end_fmt { "\n  \$%1\$s;\n}" }
 
 sub args_fmt { "\$%s" }
