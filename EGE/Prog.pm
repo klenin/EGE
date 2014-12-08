@@ -332,6 +332,40 @@ sub to_lang {
 
 sub run {}
 
+
+package EGE::Prog::FuncDef;
+use base 'EGE::Prog::SynElement';
+
+
+sub to_lang {
+    my ($self, $lang) = @_;
+    my ($fmt_start, $fmt_end) = ($lang->func_start_fmt(), $lang->func_end_fmt());
+    my $body = $self->{body}->to_lang($lang);
+    $body =~ s/^/  /mg if $fmt_start =~ /\n$/; # отступы
+    my @args = $self->{args}->to_lang($lang);
+    sprintf
+        $fmt_start . $body . $fmt_end,
+        $self->{name}, @args;
+}
+
+sub run {
+    my ($self, $env) = @_;
+    $env->{"functions"} ||= {};
+    $env->{"functions"}->{$self->{name}} = $self;
+}
+
+package EGE::Prog::FuncArgs;
+use base 'EGE::Prog::SynElement';
+
+sub to_lang {
+    my ($self, $lang) = @_;
+    join $lang->args_separator, map sprintf($lang->args_fmt, $_), @{$self->{names}};    
+}
+
+sub run {
+}
+
+
 package EGE::Prog;
 use base 'Exporter';
 
@@ -349,6 +383,13 @@ sub make_expr {
             my $array = shift @p;
             return EGE::Prog::Index->new(array => $array, indices => \@p);
         }
+        if (@$src >= 2 && $src->[0] eq '()') {
+            my @p = @$src;
+            shift @p; 
+            my $func = shift @p;
+            $_ = make_expr($_) for @p;
+            return EGE::Prog::CallFunc->new(func => $func, args => \@p);
+        }        
         if (@$src == 2) {
             return EGE::Prog::UnOp->new(
                 op => $src->[0], arg => make_expr($src->[1]));
@@ -387,13 +428,22 @@ sub statements_descr {{
     'if' => { type => 'IfThen', args => [qw(E_cond B_body)] },
     'while' => { type => 'While', args => [qw(E_cond B_body)] },
     'until' => { type => 'Until', args => [qw(E_cond B_body)] },
+    'func' => { type => 'FuncDef', args => [qw(C_name A_args B_body)]},
 }}
 
 sub arg_processors {{
     C => sub { $_[0] },
     E => \&make_expr,
     B => \&make_block,
+    A => \&make_func_args,
 }}
+
+sub make_func_args
+{
+    my ($src) = @_;
+    ref $src eq 'ARRAY' or die;
+    EGE::Prog::FuncArgs->new(names => $src);
+}
 
 sub make_statement {
     my ($next) = @_;
