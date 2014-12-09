@@ -374,11 +374,11 @@ sub run {
 sub call {
     my ($self, $args, $env) = @_;
     my $new_env = {functions => $env->{functions}};
-    my $act_len = @$args;
-    my $form_len = @{$self->{args}->{names}};
-    $act_len > $form_len and die "too many arguments to function $self->{name}";    
-    $act_len < $form_len and die "too few arguments to function $self->{name}";   
-    for (0 .. @$args - 1){
+    my @act_args = @$args;
+    my @form_args = @{$self->{args}->{names}};
+    @act_args > @form_args and die "too many arguments to function $self->{name}";    
+    @act_args < @form_args and die "too few arguments to function $self->{name}";   
+    for (0 .. @act_args-1){
         my $name = $self->{args}->{names}->[$_];
         $new_env->{ $name } = $args->[$_];    
     }
