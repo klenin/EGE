@@ -122,7 +122,7 @@ sub to_lang {
 sub run {
     my ($self, $env) = @_;
     my $args = [map $_->run($env), @{$self->{args}}];
-    my $func = $env->{functions}->{$self->{func}};
+    my $func = $env->{'&'}->{$self->{func}};
     defined $func or die "Undefined function $self->{func}";    
     $func->call($args, $env);
 }
@@ -367,13 +367,13 @@ sub to_lang {
 
 sub run {
     my ($self, $env) = @_;
-    $env->{"functions"} ||= {};
-    $env->{"functions"}->{$self->{name}} = $self;
+    $env->{"&"} ||= {};
+    $env->{"&"}->{$self->{name}} = $self;
 }
 
 sub call {
     my ($self, $args, $env) = @_;
-    my $new_env = {functions => $env->{functions}};
+    my $new_env = {'&' => $env->{'&'}};
     my @act_args = @$args;
     my @form_args = @{$self->{args}->{names}};
     @act_args > @form_args and die "too many arguments to function $self->{name}";    
