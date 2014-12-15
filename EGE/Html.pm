@@ -51,7 +51,7 @@ sub row {
 
 sub row_n { row(@_) . "\n" }
 
-sub cdata { $_[1] }
+sub cdata { "<![CDATA[$_[1]]]>" }
 
 sub style {
     my ($self, %p) = @_;
