@@ -28,7 +28,7 @@ sub loop_number {
     );
     my $code_txt = cgen->get_code_txt('%s');
     $self->{text} =
-        "При выполнении кода $code_txt в команда " .
+        "При выполнении кода $code_txt команда " .
         "<code>add $reg, 1</code> будет выполнена раз:";
     my $inf = 'бесконечное число (программа зациклится)';
     if ($jmp eq 'jp' || $jmp eq 'jnp') {
