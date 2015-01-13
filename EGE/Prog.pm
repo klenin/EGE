@@ -126,6 +126,20 @@ sub run {
     $func->call($args, $env);
 }
 
+package EGE::Prog::Print;
+use base 'EGE::Prog::SynElement';
+
+sub to_lang {
+    my ($self, $lang) = @_; 
+    sprintf $lang->print_fmt,
+        join $lang->args_separator, map $_->to_lang($lang), @{$self->{args}};
+}
+
+sub run {
+    my ($self, $env) = @_;
+    $env->{'<out>'} .= ($env->{'<out>'} ? "\n" : '') . join(' ', map $_->run($env), @{$self->{args}});
+}
+
 package EGE::Prog::Op;
 use base 'EGE::Prog::SynElement';
 
@@ -349,6 +363,20 @@ sub to_lang {
 
 sub run {}
 
+package EGE::Prog::ExprStmt;
+use base 'EGE::Prog::SynElement';
+
+sub to_lang {
+    my ($self, $lang) = @_;
+    sprintf $lang->expr_fmt, $self->{expr}->to_lang($lang);
+}
+
+sub run {
+    my ($self, $env) = @_;
+    $self->{expr}->run($env);
+};
+
+
 package EGE::Prog::FuncDef;
 use base 'EGE::Prog::CompoundStatement';
 
@@ -409,6 +437,12 @@ sub make_expr {
             $_ = make_expr($_) for @p;
             return EGE::Prog::CallFunc->new(func => $func, args => \@p);
         }
+        if (@$src >= 1 && $src->[0] eq 'print') {
+           	my @p = @$src;
+            shift @p;
+            $_ = make_expr($_) for @p;
+            return EGE::Prog::Print->new(args => \@p);
+        }
         if (@$src == 2) {
             return EGE::Prog::UnOp->new(
                 op => $src->[0], arg => make_expr($src->[1]));
@@ -448,6 +482,7 @@ sub statements_descr {{
     'while' => { type => 'While', args => [qw(E_cond B_body)] },
     'until' => { type => 'Until', args => [qw(E_cond B_body)] },
     'func' => { type => 'FuncDef', args => [qw(E_var P_params B_body)] },
+    'expr' => { type => 'ExprStmt', args => [qw(E_expr)] },
 }}
 
 sub arg_processors {{
