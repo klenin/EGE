@@ -9,6 +9,7 @@ use EGE::Prog::Lang;
 
 package EGE::Prog::SynElement;
 
+
 sub new {
     my ($class, %init) = @_;
     my $self = { %init };
@@ -125,6 +126,20 @@ sub run {
     my $func = $env->{'&'}->{$self->{func}};
     defined $func or die "Undefined function $self->{func}";    
     $func->call($args, $env);
+}
+
+package EGE::Prog::Print;
+use base 'EGE::Prog::SynElement';
+
+sub to_lang {
+    my ($self, $lang) = @_; 
+    sprintf $lang->print_fmt,
+        join $lang->args_separator, map $_->to_lang($lang), @{$self->{args}};
+}
+
+sub run {
+    my ($self, $env) = @_;
+    push($env->{"<out>"}, join(' ', map $_->run($env), @{$self->{args}}));
 }
 
 package EGE::Prog::Op;
@@ -286,6 +301,8 @@ sub to_lang {
 
 sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for $_->to_lang_fields, 'body' }
 
+sub complexity { 0 }
+
 package EGE::Prog::ForLoop;
 use base 'EGE::Prog::CompoundStatement';
 
@@ -367,13 +384,17 @@ sub to_lang {
 
 sub run {
     my ($self, $env) = @_;
-    $env->{"&"} ||= {};
-    $env->{"&"}->{$self->{name}} = $self;
+    $env->{'&'} ||= {};
+    $env->{'&'}->{$self->{name}} = $self;
 }
 
 sub call {
     my ($self, $args, $env) = @_;
-    my $new_env = {'&' => $env->{'&'}};
+    $env->{'<out>'} ||= [];
+    my $new_env = {
+        '&' => $env->{'&'},
+        '<out>' => $env->{'<out>'},
+    };
     my @act_args = @$args;
     my @form_args = @{$self->{args}->{names}};
     @act_args > @form_args and die "too many arguments to function $self->{name}";    
@@ -405,7 +426,10 @@ our @EXPORT_OK = qw(make_expr make_block lang_names);
 sub make_expr {
     my ($src) = @_;
     ref($src) =~ /^EGE::Prog::/ and return $src;
-
+	if (!defined($src)){
+		1;
+	}
+		
     if (ref $src eq 'ARRAY') {
         if (@$src >= 2 && $src->[0] eq '[]') {
             my @p = @$src;
@@ -414,14 +438,21 @@ sub make_expr {
             my $array = shift @p;
             return EGE::Prog::Index->new(array => $array, indices => \@p);
         }
-        if (@$src >= 2 && $src->[0] eq '()') {
+        if (@$src == 3 && $src->[0] eq '()') {
             my @p = @$src;
             shift @p; 
             my $func = shift @p;
             my $args = $p[0];
             $args = [map make_expr($_), @$args];
             return EGE::Prog::CallFunc->new(func => $func, args => $args);
-        }        
+        }   
+        if (@$src == 2 && $src->[0] eq 'print') {
+            my @p = @$src;
+            shift @p;
+            my $args = $p[0];
+            $args = [map make_expr($_), @$args];
+            return EGE::Prog::Print->new(args => $args);
+        }                    
         if (@$src == 2) {
             return EGE::Prog::UnOp->new(
                 op => $src->[0], arg => make_expr($src->[1]));
@@ -480,14 +511,19 @@ sub make_func_args
 sub make_statement {
     my ($next) = @_;
     my $name = $next->();
-    my $d = statements_descr->{$name};
-    $d or die "Unknown statement $name";
-    my %args;
-    for (@{$d->{args}}) {
-        my ($p, $n) = /(\w)_(\w+)/;
-        $args{$n} = arg_processors->{$p}->($next->());
+    if (ref $name eq 'ARRAY') {
+        make_expr($name);
     }
-    "EGE::Prog::$d->{type}"->new(%args);
+    else {
+        my $d = statements_descr->{$name};
+        $d or die "Unknown statement $name";
+        my %args;
+        for (@{$d->{args}}) {
+            my ($p, $n) = /(\w)_(\w+)/;
+            $args{$n} = arg_processors->{$p}->($next->());
+        }
+        "EGE::Prog::$d->{type}"->new(%args);
+    }
 }
 
 sub make_block {
@@ -506,6 +542,7 @@ sub lang_names() {{
   'C' => 'Си',
   'Alg' => 'Алгоритмический',
   'SQL' => 'Структурированный язык запросов',
+  'Perl' => 'Перл',
 }}
 
 1;
