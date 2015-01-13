@@ -360,6 +360,41 @@ sub check_sub {
     throws_ok sub { $b->run({}) }, qr/f/, 'not enoght arguments';
 }
 
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, 9, [
+        	'expr', ['print', 'i', 0]
+        ]
+    ]);
+    my $c = {
+        Basic => [
+            'FOR i = 0 TO 9',
+            '  PRINT i, 0',
+            'NEXT i',
+        ],
+        Alg => [
+            'нц для i от 0 до 9',
+            '  вывод i, 0',
+            'кц',
+        ],
+        Pascal => [
+            'for i := 0 to 9 do',
+            '  write(i, 0);',
+        ],
+        C => [
+            'for (i = 0; i <= 9; ++i)',
+            '  print(i, 0);',
+        ],
+        Perl => [
+            'for ($i = 0; $i <= 9; ++$i) {',
+            '  print($i, 0);',
+            '}',
+        ],
+    };
+    check_sub($_, $b, $c->{$_}, "print in $_") for keys $c;
+    is $b->run_val('<out>'), join("\n", map $_ . ' ' . 0, 0 .. 9), 'run print';    
+}
+
 
 {
     sub check_sql { is make_expr($_[0])->to_lang_named('SQL'), $_[1], "SQL $_[2]" }

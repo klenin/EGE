@@ -64,9 +64,12 @@ sub prio_list {
 sub translate_un_op { {} }
 
 sub block_stmt_separator { "\n" }
+
 sub args_separator { ', '}
 sub args_fmt { '%s' }
 sub call_func_fmt { '%s(%s)' }
+
+sub expr_fmt { '%s' }
 
 package EGE::Prog::Lang::Basic;
 use base 'EGE::Prog::Lang';
@@ -97,6 +100,10 @@ sub until_end_fmt { "\nEND DO" }
 sub func_start_fmt { "FUNCTION %s(%s)\n" }
 sub func_end_fmt { "\nEND FUNCTION\n" }
 
+sub print_fmt { 'PRINT %s' }
+
+
+
 package EGE::Prog::Lang::C;
 use base 'EGE::Prog::Lang';
 
@@ -122,6 +129,10 @@ sub until_end_fmt { $_[1] ? "\n}" : '' }
 
 sub func_start_fmt { "int %s(%s) {\n" }
 sub func_end_fmt { "\n}\n" }
+
+sub print_fmt { 'print(%s)' }
+
+sub expr_fmt { '%s;' }
 
 sub args_fmt {"int %s"}
 package EGE::Prog::Lang::Pascal;
@@ -157,6 +168,9 @@ sub until_end_fmt { $_[1] ? "\nend;" : '' }
 sub func_start_fmt { "Function %s(%s: integer):integer;\nbegin\n" }
 sub func_end_fmt { "\nend;\n" }
 
+sub print_fmt { 'write(%s)' }
+
+sub expr_fmt { '%s;' }
 
 package EGE::Prog::Lang::Alg;
 use base 'EGE::Prog::Lang';
@@ -186,6 +200,8 @@ sub until_end_fmt { "\nкц" }
 sub func_start_fmt { "алг цел %s(цел %s)\nнач\n" }
 sub func_end_fmt { "\nкон\n" }
 
+sub print_fmt { 'вывод %s' }
+
 package EGE::Prog::Lang::Perl;
 use base 'EGE::Prog::Lang';
 
@@ -208,6 +224,10 @@ sub until_end_fmt { "\n}" }
 # TODO убрать '$' из имени функции
 sub func_start_fmt { "sub %s {\n  my (%s) = \@_;\n" } 
 sub func_end_fmt { "\n}\n" }
+
+sub print_fmt { 'print(%s)' }
+
+sub expr_fmt { '%s;' }
 
 sub args_fmt { "\$%s" }
 package EGE::Prog::Lang::Logic;
