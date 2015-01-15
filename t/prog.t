@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 92;
+use Test::More tests => 105;
 use Test::Exception;
 
 use lib '..';
@@ -395,6 +395,55 @@ sub check_sub {
     is $b->run_val('<out>'), join("\n", map $_ . ' ' . 0, 0 .. 9), 'run print';    
 }
 
+{
+    my $e = make_expr([ '+', ['*', 'x', 'x'], ['+', 'x', 2] ]);
+    is $e->polinom_degree('x'), 2, 'polinom degree' 
+}
+
+{
+    my $e = make_expr([ '+', 'x', 'xyz' ]);
+    throws_ok sub { $e->polinom_degree('x') }, qr/Undefined variable xyz/, 'undefined var when calculating polinom degree' 
+}
+
+{
+    my $e = make_expr([ '%', 'x', 'x' ]);
+    throws_ok sub { $e->polinom_degree('x') }, qr/Polinom degree is unavaible for Expr with operator: '%'/, 
+    	'calculating polinom degree of expr with \'%\'' 
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, ['*', 'n', ['-', 4, 'n']], [
+         	'=', ['[]', 'M', 'i'], 'i'
+            ]
+    ]);
+    is $b->complexity('n'), 2, 'single forLoop complexity'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, ['*', 2, ['*', 'n', 'n']], [
+            'for', 'j', 0, ['+', 2, 'n'], [
+                '=', ['[]', 'M', 'i', 'j'], ['*', 'i', 'j']
+            ]
+        ]
+    ]);
+    is $b->complexity('n'), 3, 'multi forLoop complexity'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, ['*', 2, ['*', 'n', 'n']], [
+            'for', 'j', 0, ['+', 3, 'n'], [
+                '=', ['[]', 'M', 'i', 'j'], ['*', 'i', 'j']
+            ],
+            'for', 'j', 0, ['*', 'n', ['-', 'n', 1]], [
+                '=', ['[]', 'M', 'i', 'j'], ['*', 'i', 'j']
+            ],            
+        ]
+    ]);
+    is $b->complexity('n'), 4, 'block complexity'
+}
 
 {
     sub check_sql { is make_expr($_[0])->to_lang_named('SQL'), $_[1], "SQL $_[2]" }
