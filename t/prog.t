@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 87;
+use Test::More tests => 90;
 use Test::Exception;
 
 use lib '..';
@@ -280,6 +280,45 @@ end;~;
         'function defenition in Perl';
 
     is $b->run_val('a'), -1, 'run call function';    
+}
+
+{
+    my $e = make_expr([ '+', ['*', 'x', 'x'], ['+', 'x', 'y'] ]);
+    is $e->polinom_degree('x'), 2, 'polinom degree' 
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, ['*', 'n', ['-', 4, 'n']], [
+         	'=', ['[]', 'M', 'i'], 'i'
+            ]
+    ]);
+    is $b->complexity('n'), 2, 'single forLoop complexity'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, ['*', 2, ['*', 'n', 'n']], [
+            'for', 'j', 0, ['+', 'm', 'n'], [
+                '=', ['[]', 'M', 'i', 'j'], ['*', 'i', 'j']
+            ]
+        ]
+    ]);
+    is $b->complexity('n'), 3, 'multi forLoop complexity'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, ['*', 2, ['*', 'n', 'n']], [
+            'for', 'j', 0, ['+', 'm', 'n'], [
+                '=', ['[]', 'M', 'i', 'j'], ['*', 'i', 'j']
+            ],
+            'for', 'j', 0, ['/', 'n', ['-', 'n', 1]], [
+                '=', ['[]', 'M', 'i', 'j'], ['*', 'i', 'j']
+            ],            
+        ]
+    ]);
+    is $b->complexity('n'), 4, 'block complexity'
 }
 
 {
