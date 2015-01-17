@@ -200,7 +200,7 @@ sub gg {
 }
 
 sub all {[
-    gg('Complexity', qw(o_poly)),
+    gg('Complexity', qw(o_poly o_poly_cmp)),
 ]}
 
 1;
