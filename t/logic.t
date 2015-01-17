@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 13;
+use Test::More tests => 14;
 
 use lib '..';
 use EGE::Prog qw(make_expr);
@@ -23,9 +23,10 @@ sub tts { EGE::Logic::truth_table_string($_[0]) }
 }
 
 is make_expr([ 'eq', [ '=>', 'a', 'b' ], [ '||', [ '!', 'a' ], 'b' ]])->to_lang_named('Logic'),
-    'a → b ≡ ¬ a ∨ b', 'logic text';
+    '<i>a</i> → <i>b</i> ≡ ¬ <i>a</i> ∨ <i>b</i>', 'logic text';
 
-is make_expr([ '**', 'a', 'b' ])->to_lang_named('Logic'), 'a<sup>b</sup>', 'logic power';
+is make_expr([ '**', 'a', 'b' ])->to_lang_named('Logic'), '<i>a</i><sup><i>b</i></sup>', 'logic power';
+is make_expr([ '[]', 'a', [ '+', 'i', 1 ] ])->to_lang_named('Logic'), '<i>a</i><sub><i>i</i> + 1</sub>', 'logic index';
 
 {
     my @t = (

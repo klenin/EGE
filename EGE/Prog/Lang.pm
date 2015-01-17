@@ -197,6 +197,9 @@ sub prio_list {
     [ ops::comp ], [ '&&' ], [ '||', '^' ], [ '=>', 'eq' ]
 }
 
+sub var_fmt { '<i>%s</i>' }
+sub index_fmt { '%s<sub>%s</sub>' }
+
 sub translate_op {{
     '**' => '%s<sup>%s</sup>',
     '-' => '−', '*' => '⋅',
