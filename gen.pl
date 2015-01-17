@@ -14,7 +14,7 @@ use Encode;
 use lib '.';
 
 use EGE::Generate;
-use EGE::Math::Summer;
+use EGE::Gen::Math::Summer;
 
 my $questions;
 
@@ -229,8 +229,9 @@ binmode STDOUT, ':utf8';
 
 #$questions = EGE::Generate::all;
 #$questions = EGE::AsmGenerate::all;
+#$questions = EGE::DatabaseGenerate::all;
 
-#push @$questions, EGE::Math::Summer::g($_) for qw(p1 p2 p3 p4 p5 p6 p7);
+#push @$questions, EGE::Gen::Math::Summer::g($_) for qw(p1 p2 p3 p4 p5 p6 p7);
 
 print_html;
 #print_json;

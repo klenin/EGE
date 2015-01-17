@@ -25,41 +25,41 @@ package EGE::Generate;
 use EGE::Random;
 
 use EGE::GenBase;
-use EGE::Gen::A01;
-use EGE::Gen::A02;
-use EGE::Gen::A03;
-use EGE::Gen::A04;
-use EGE::Gen::A05;
-use EGE::Gen::A06;
-use EGE::Gen::A07;
-use EGE::Gen::A08;
-use EGE::Gen::A09;
-use EGE::Gen::A10;
-use EGE::Gen::A11;
-use EGE::Gen::A12;
-use EGE::Gen::A13;
-use EGE::Gen::A14;
-use EGE::Gen::A15;
-use EGE::Gen::A16;
-use EGE::Gen::A17;
-use EGE::Gen::A18;
-use EGE::Gen::B01;
-use EGE::Gen::B02;
-use EGE::Gen::B03;
-use EGE::Gen::B04;
-use EGE::Gen::B05;
-use EGE::Gen::B06;
-use EGE::Gen::B07;
-use EGE::Gen::B08;
-use EGE::Gen::B11;
-use EGE::Gen::B12;
-use EGE::Gen::B13;
-use EGE::Gen::B15;
+use EGE::Gen::EGE::A01;
+use EGE::Gen::EGE::A02;
+use EGE::Gen::EGE::A03;
+use EGE::Gen::EGE::A04;
+use EGE::Gen::EGE::A05;
+use EGE::Gen::EGE::A06;
+use EGE::Gen::EGE::A07;
+use EGE::Gen::EGE::A08;
+use EGE::Gen::EGE::A09;
+use EGE::Gen::EGE::A10;
+use EGE::Gen::EGE::A11;
+use EGE::Gen::EGE::A12;
+use EGE::Gen::EGE::A13;
+use EGE::Gen::EGE::A14;
+use EGE::Gen::EGE::A15;
+use EGE::Gen::EGE::A16;
+use EGE::Gen::EGE::A17;
+use EGE::Gen::EGE::A18;
+use EGE::Gen::EGE::B01;
+use EGE::Gen::EGE::B02;
+use EGE::Gen::EGE::B03;
+use EGE::Gen::EGE::B04;
+use EGE::Gen::EGE::B05;
+use EGE::Gen::EGE::B06;
+use EGE::Gen::EGE::B07;
+use EGE::Gen::EGE::B08;
+use EGE::Gen::EGE::B11;
+use EGE::Gen::EGE::B12;
+use EGE::Gen::EGE::B13;
+use EGE::Gen::EGE::B15;
 
 sub g {
     my $unit = shift;
     my ($p, $n) = ($unit =~ /^([A-Za-z]+)(\d+)$/);
-    my $q = EGE::GenerateBase::one( sprintf('%s%02d', $p, $n), rnd->pick(@_) );
+    my $q = EGE::GenerateBase::one( sprintf('EGE::%s%02d', $p, $n), rnd->pick(@_) );
     $q->{text} = "<h3>$unit</h3>\n$q->{text}";
     $q;
 }
@@ -107,21 +107,21 @@ package EGE::AsmGenerate;
 use EGE::Random;
 
 use EGE::GenBase;
-use EGE::Gen::Arch01;
-use EGE::Gen::Arch02;
-use EGE::Gen::Arch03;
-use EGE::Gen::Arch04;
-use EGE::Gen::Arch05;
-use EGE::Gen::Arch06;
-use EGE::Gen::Arch07;
-use EGE::Gen::Arch08;
-use EGE::Gen::Arch09;
-use EGE::Gen::Arch10;
-use EGE::Gen::Arch12;
+use EGE::Gen::Arch::Arch01;
+use EGE::Gen::Arch::Arch02;
+use EGE::Gen::Arch::Arch03;
+use EGE::Gen::Arch::Arch04;
+use EGE::Gen::Arch::Arch05;
+use EGE::Gen::Arch::Arch06;
+use EGE::Gen::Arch::Arch07;
+use EGE::Gen::Arch::Arch08;
+use EGE::Gen::Arch::Arch09;
+use EGE::Gen::Arch::Arch10;
+use EGE::Gen::Arch::Arch12;
 
 sub g {
     my $unit = shift;
-    my $q = EGE::GenerateBase::one($unit, rnd->pick(@_));
+    my $q = EGE::GenerateBase::one("Arch::$unit", rnd->pick(@_));
     $q;
 }
 
@@ -149,19 +149,20 @@ package EGE::DatabaseGenerate;
 use EGE::Random;
 
 use EGE::GenBase;
-use EGE::Gen::Db01;
-use EGE::Gen::Db02;
-use EGE::Gen::Db03;
-use EGE::Gen::Db04;
-use EGE::Gen::Db05;
-use EGE::Gen::Db06;
-use EGE::Gen::Db07;
-use EGE::Gen::Db08;
-use EGE::Gen::Db09;
+use EGE::Gen::Db::Db01;
+use EGE::Gen::Db::Db02;
+use EGE::Gen::Db::Db03;
+use EGE::Gen::Db::Db04;
+use EGE::Gen::Db::Db05;
+use EGE::Gen::Db::Db06;
+use EGE::Gen::Db::Db07;
+use EGE::Gen::Db::Db08;
+use EGE::Gen::Db::Db09;
 
 
 sub g {
-   EGE::Generate::g(@_);
+    my ($p, $m) = @_;
+    EGE::GenerateBase::one("Db::$p", $m);
 }
 
 sub gg {
@@ -183,3 +184,4 @@ sub all {[
 ]}
 
 1;
+
