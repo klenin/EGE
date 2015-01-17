@@ -24,9 +24,9 @@ sub logic_var_set {
     my $n_2 = rnd->in_range(4, 8);
     $self->{correct} = 2**($n_2 + 1);
     $self->accept_number();
-    my @x = map "<i>x</i><sub>$_</sub>", 1 .. 2*$n_2;
+    my @x = map [ '[]', 'x', $_ ], 1 .. 2*$n_2;
     my $conds = join '<br/>', map { _connect(@x[2 * $_ .. 2 * $_ + 3]) } 0 .. $n_2 - 2;
-    my $vars = join ', ', @x;
+    my $vars = join ', ', map EGE::Prog::make_expr($_)->to_lang_named('Logic'), @x;
     $self->{text} = <<EOL
 Сколько существует различных наборов значений логических переменных $vars которые
 удовлетворяют всем перечисленным ниже условиям? <p>$conds</p> В ответе
