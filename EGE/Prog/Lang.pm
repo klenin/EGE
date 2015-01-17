@@ -10,7 +10,7 @@ package ops;
 sub mult { '*', '/', '%', '//' }
 sub add { '+', '-' }
 sub comp { '>', '<', '==', '!=', '>=', '<=' }
-sub logic { '&&', '||', '^', '=>' }
+sub logic { '&&', '||', '^', '=>', 'eq' }
 sub unary { '!', '+', '-' }
 sub prio_unary { map "`$_", unary }
 
@@ -72,7 +72,7 @@ sub index_fmt { '%s(%s)' }
 sub translate_op {{
     '%' => 'MOD', '//' => '\\',
     '==' => '=', '!=' => '<>',
-    '&&' => 'AND', '||' => 'OR', '^' => 'XOR', '=>' => 'IMP',
+    '&&' => 'AND', '||' => 'OR', '^' => 'XOR', '=>' => 'IMP', 'eq' => 'EQV',
     ops::between,
 }}
 sub translate_un_op { { '!' => 'NOT' } }
@@ -94,7 +94,7 @@ use base 'EGE::Prog::Lang';
 
 sub assign_fmt { '%s = %s;' }
 sub index_fmt { '%s[%s]' }
-sub translate_op { { '//' => 'int(%s / %s)', '=>' => '<=', ops::between } }
+sub translate_op { { '//' => 'int(%s / %s)', '=>' => '<=', 'eq' => '==', ops::between } }
 
 sub for_start_fmt {
     'for (%s = %2$s; %1$s <= %3$s; ++%1$s)' . ($_[1] ? '{' : '') . "\n"
@@ -115,7 +115,7 @@ use base 'EGE::Prog::Lang';
 
 sub prio_list {
     [ ops::prio_unary ], [ ops::mult, '&&' ],
-    [ ops::add, '||', '^' ], [ ops::comp, '=>' ], [ 'between' ]
+    [ ops::add, '||', '^' ], [ ops::comp, '=>', 'eq' ], [ 'between' ]
 }
 
 sub assign_fmt { '%s := %s;' }
@@ -123,7 +123,7 @@ sub index_fmt { '%s[%s]' }
 sub translate_op {{
     '%' => 'mod', '//' => 'div',
     '==' => '=', '!=' => '<>',
-    '&&' => 'and', '||' => 'or', '^' => 'xor', '=>' => '<=',
+    '&&' => 'and', '||' => 'or', '^' => 'xor', '=>' => '<=', 'eq' => '=',
     between => 'InRange(%s, %s, %s)',
 }}
 sub translate_un_op { { '!' => 'not' } }
@@ -148,7 +148,7 @@ sub index_fmt { '%s[%s]' }
 sub translate_op {{
     '==' => '=', '!=' => '≠',
     '%' => 'mod(%s, %s)', '//' => 'div(%s, %s)',
-    '&&' => 'и', '||' => 'или', '=>' => '→',
+    '&&' => 'и', '||' => 'или', '=>' => '→', 'eq' => '≡',
     ops::between,
 }}
 sub translate_un_op { { '!' => 'не' } }
@@ -171,7 +171,7 @@ use base 'EGE::Prog::Lang';
 sub var_fmt { '$%s' }
 sub assign_fmt { '%s = %s;' }
 sub index_fmt { '$%s[%s]' }
-sub translate_op { { '//' => 'int(%s / %s)', '=>' => '<=', ops::between } }
+sub translate_op { { '//' => 'int(%s / %s)', '=>' => '<=', 'eq' => '==', ops::between } }
 
 sub for_start_fmt { 'for (%s = %2$s; %1$s <= %3$s; ++%1$s) {' . "\n" }
 sub for_end_fmt { "\n}" }
@@ -190,13 +190,13 @@ use base 'EGE::Prog::Lang';
 
 sub prio_list {
     [ ops::prio_unary ], [ ops::mult ], [ ops::add ],
-    [ ops::comp ], [ '&&' ], [ '||', '^' ], [ '=>' ]
+    [ ops::comp ], [ '&&' ], [ '||', '^' ], [ '=>', 'eq' ]
 }
 
 sub translate_op {{
     '-' => '−', '*' => '⋅',
-    '!=' => '≠', '>=' => '≥', '<=' => '≤',
-    '&&' => '∧', '||' => '∨', '^' => '⊕', '=>' => '→'
+    '==' => '=', '!=' => '≠', '>=' => '≥', '<=' => '≤',
+    '&&' => '∧', '||' => '∨', '^' => '⊕', '=>' => '→', 'eq' => '≡',
 }}
 
 sub translate_un_op { { '!' => '¬' } }
