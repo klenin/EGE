@@ -183,5 +183,25 @@ sub all {[
      
 ]}
 
+package EGE::AlgGenerate;
+
+use EGE::GenBase;
+use EGE::Gen::Alg::Complexity;
+
+
+sub g {
+    my ($p, $m) = @_;
+    EGE::GenerateBase::one("Alg::$p", $m);
+}
+
+sub gg {
+    my $unit = shift;
+    map g($unit, $_), @_;
+}
+
+sub all {[
+    gg('Complexity', qw(o_poly)),
+]}
+
 1;
 

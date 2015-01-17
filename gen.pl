@@ -21,6 +21,7 @@ my $questions;
 sub g { push @$questions, EGE::Generate::g(@_); }
 sub g1 { push @$questions, EGE::AsmGenerate::g(@_); }
 sub g2 { push @$questions, EGE::DatabaseGenerate::g(@_); }
+sub g3 { push @$questions, EGE::AlgGenerate::g(@_); }
 
 sub print_dump {
     for (@$questions) {
@@ -226,6 +227,7 @@ binmode STDOUT, ':utf8';
 #g2('Db08', 'grandchildren') for 1..3;
 #g2('Db08', 'nuncle') for 1..3;
 #g2('Db09', 'inner_join');
+#g3('Complexity', 'o_poly');
 
 #$questions = EGE::Generate::all;
 #$questions = EGE::AsmGenerate::all;
