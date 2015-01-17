@@ -161,6 +161,8 @@ binmode STDOUT, ':utf8';
 #g('A7', 'names');
 #g('A7', 'animals');
 #g('A7', 'random_sequences');
+#g('A7', 'restore_password');
+#g('A7', 'spreadsheet_shift');
 #g('A8', 'equiv_3');
 #g('A8', 'equiv_4');
 #g('A9', 'truth_table_fragment');
