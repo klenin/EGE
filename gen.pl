@@ -188,6 +188,9 @@ binmode STDOUT, ':utf8';
 #g('B07', 'who_is_right');
 #g('B08', 'identify_letter');
 #g('B11', 'ip_mask');
+#g('B12', 'search_query'),
+#g('B13', 'plus_minus'),
+#g('B15', 'logic_var_set');
 #g1('Arch01', 'reg_value_add');
 #g1('Arch01', 'reg_value_logic');
 #g1('Arch01', 'reg_value_shift');
@@ -219,9 +222,9 @@ binmode STDOUT, ':utf8';
 #g2('Db06', 'select_between');
 #g2('Db06', 'select_expression');
 #g2('Db07', 'trivial_inner_join');
-#g2('Db08', 'parents');
-#g2('Db08', 'grandchildren');
-#g2('Db08', 'nuncle');
+#g2('Db08', 'parents') for 1..3;
+#g2('Db08', 'grandchildren') for 1..3;
+#g2('Db08', 'nuncle') for 1..3;
 #g2('Db09', 'inner_join');
 
 #$questions = EGE::Generate::all;
