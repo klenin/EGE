@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 81;
+use Test::More tests => 83;
 use Test::Exception;
 
 use lib '..';
@@ -20,6 +20,7 @@ use EGE::Prog qw(make_block make_expr);
         [ '||', 1, 0 ],   1,
         [ '-', 4 ],      -4,
         [ '!', 0 ],       1,
+        [ '**', 2, 8 ], 256,
         55,              55,
         sub { 77 },      77,
     );
@@ -102,6 +103,10 @@ sub check_prio_C { check_lang 'C', @_[0..1], "priorities $_[2]" }
     my $e = [ '+', [ '&&', 'x', 'y' ] ];
     check_lang 'Pascal', $e, '+ (x and y)', 'prio Pascal not';
     check_prio_C $e, '+ (x && y)', 'C not';
+}
+
+{
+    check_lang 'Pascal', [ '+', 'x', [ '**', 'x', 2 ] ], 'x + x ** 2', 'Pascal power' 
 }
 
 {

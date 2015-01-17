@@ -7,6 +7,7 @@ use utf8;
 
 package ops;
 
+sub power { '**' }
 sub mult { '*', '/', '%', '//' }
 sub add { '+', '-' }
 sub comp { '>', '<', '==', '!=', '>=', '<=' }
@@ -56,7 +57,7 @@ sub make_priorities {
 }
 
 sub prio_list {
-    [ ops::prio_unary ], [ ops::mult ], [ ops::add ],
+    [ ops::prio_unary ], [ ops::power ], [ ops::mult ], [ ops::add ],
     [ ops::comp ], [ '^', '=>' ], [ '&&' ], [ '||' ], [ 'between' ],
 }
 
@@ -70,6 +71,7 @@ use base 'EGE::Prog::Lang';
 sub assign_fmt { '%s = %s' }
 sub index_fmt { '%s(%s)' }
 sub translate_op {{
+    '**' => '^',
     '%' => 'MOD', '//' => '\\',
     '==' => '=', '!=' => '<>',
     '&&' => 'AND', '||' => 'OR', '^' => 'XOR', '=>' => 'IMP', 'eq' => 'EQV',
@@ -94,7 +96,9 @@ use base 'EGE::Prog::Lang';
 
 sub assign_fmt { '%s = %s;' }
 sub index_fmt { '%s[%s]' }
-sub translate_op { { '//' => 'int(%s / %s)', '=>' => '<=', 'eq' => '==', ops::between } }
+sub translate_op {{
+    '**' => 'pow(%s, %s)', '//' => 'int(%s / %s)', '=>' => '<=', 'eq' => '==', ops::between
+}}
 
 sub for_start_fmt {
     'for (%s = %2$s; %1$s <= %3$s; ++%1$s)' . ($_[1] ? '{' : '') . "\n"
@@ -114,7 +118,7 @@ package EGE::Prog::Lang::Pascal;
 use base 'EGE::Prog::Lang';
 
 sub prio_list {
-    [ ops::prio_unary ], [ ops::mult, '&&' ],
+    [ ops::prio_unary ], [ ops::power ], [ ops::mult, '&&' ],
     [ ops::add, '||', '^' ], [ ops::comp, '=>', 'eq' ], [ 'between' ]
 }
 
@@ -189,11 +193,12 @@ package EGE::Prog::Lang::Logic;
 use base 'EGE::Prog::Lang';
 
 sub prio_list {
-    [ ops::prio_unary ], [ ops::mult ], [ ops::add ],
+    [ ops::prio_unary ], [ ops::power ], [ ops::mult ], [ ops::add ],
     [ ops::comp ], [ '&&' ], [ '||', '^' ], [ '=>', 'eq' ]
 }
 
 sub translate_op {{
+    '**' => '%s<sup>%s</sup>',
     '-' => '−', '*' => '⋅',
     '==' => '=', '!=' => '≠', '>=' => '≥', '<=' => '≤',
     '&&' => '∧', '||' => '∨', '^' => '⊕', '=>' => '→', 'eq' => '≡',
@@ -205,8 +210,9 @@ package EGE::Prog::Lang::SQL;
 use base 'EGE::Prog::Lang';
 
 sub translate_op {{
-     '==' => '=', '!=' => '<>','&&' => 'AND', '||' => 'OR',
-     between => '%s BETWEEN %s AND %s',
+    '**' => 'POWER(%s, %s)',
+    '==' => '=', '!=' => '<>','&&' => 'AND', '||' => 'OR',
+    between => '%s BETWEEN %s AND %s',
 }}
 
 sub translate_un_op {{ '!' => 'NOT' }}
