@@ -230,6 +230,7 @@ binmode STDOUT, ':utf8';
 #g2('Db08', 'nuncle') for 1..3;
 #g2('Db09', 'inner_join');
 #g3('Complexity', 'o_poly');
+#g3('Complexity', 'o_poly_cmp');
 
 #$questions = EGE::Generate::all;
 #$questions = EGE::AsmGenerate::all;
