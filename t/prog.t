@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 90;
+use Test::More tests => 103;
 use Test::Exception;
 
 use lib '..';
@@ -284,7 +284,7 @@ end;~;
 
 {
     my $e = make_expr([ '+', ['*', 'x', 'x'], ['+', 'x', 'y'] ]);
-    is $e->polinom_degree('x'), 2, 'polinom degree' 
+    is $e->polinom_degree({'x' => 1}), 2, 'polinom degree' 
 }
 
 {
@@ -293,7 +293,7 @@ end;~;
          	'=', ['[]', 'M', 'i'], 'i'
             ]
     ]);
-    is $b->complexity('n'), 2, 'single forLoop complexity'
+    is $b->complexity({n => 1}), 2, 'single forLoop complexity'
 }
 
 {
@@ -304,7 +304,7 @@ end;~;
             ]
         ]
     ]);
-    is $b->complexity('n'), 3, 'multi forLoop complexity'
+    is $b->complexity({n => 1}), 3, 'multi forLoop complexity'
 }
 
 {
@@ -313,12 +313,86 @@ end;~;
             'for', 'j', 0, ['+', 'm', 'n'], [
                 '=', ['[]', 'M', 'i', 'j'], ['*', 'i', 'j']
             ],
-            'for', 'j', 0, ['/', 'n', ['-', 'n', 1]], [
+            'for', 'j', 0, ['*', 'n', ['-', 'n', 1]], [
                 '=', ['[]', 'M', 'i', 'j'], ['*', 'i', 'j']
             ],            
         ]
     ]);
-    is $b->complexity('n'), 4, 'block complexity'
+    is $b->complexity({n => 1}), 4, 'block complexity'
+}
+
+
+{
+    my $b = EGE::Prog::make_block([
+		'for', 'i', 0, 'n', [
+			'for', 'j', 0, 'i', [
+				['print', ['*', 'j', 'i']]
+			]
+		]    
+	]);
+    is $b->complexity({n => 1}), 2, 'complexity with using var as border'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, ['*', 2, ['*', 'n', 'n']], [
+            'for', 'j', 0, ['+', 'm', 'n'], [
+                'if', ['==', 'i', 'j'], [
+                    'for', 'l', 0, 'n', [
+                        '=', ['[]', 'M', 'i', 'j'], ['*', 'i', 'j']
+                    ],
+                ],
+            ],
+            'for', 'k', 0, 'n', [
+                '=', ['[]', 'M', 'i', 'j'], ['*', 'i', 'j']
+            ],            
+        ]
+    ]);
+    is $b->complexity({n => 1}), 3, 'ifThen complexity1'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, ['*', 2, ['*', 'n', 'n']], [
+            'for', 'j', 0, ['+', 'm', 'n'], [
+                'if', ['==', 'i', 'j'], [
+                    'for', 'l', 0, 'n', [
+                        '=', ['[]', 'M', 'i', 'j'], ['*', 'i', 'j']
+                    ],
+                ],
+            ],
+            'for', 'k', 0, ['*', 'i', 'j'], [
+                '=', ['[]', 'M', 'i', 'j'], ['*', 'i', 'j']
+            ],            
+        ]
+    ]);
+    is $b->complexity({n => 1}), 5, 'ifThen complexity2'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, ['*', 2, ['*', 'n', 'n']], [
+            'for', 'j', 0, ['+', 'm', 'n'], [
+                'if', ['==', 'i', 'j'], [
+                    'for', 'l', 0, ['*', 'n', 'j'], [
+                        '=', ['[]', 'M', 'i', 'j'], ['*', 'i', 'j']
+                    ],
+                ],
+            ],
+            'for', 'k', 0, ['*', 'i', 2], [
+                '=', ['[]', 'M', 'i', 'j'], ['*', 'i', 'j']
+            ],            
+        ]
+    ]);
+	my @mistakes_names = qw(var_as_const ignore_if change_min);
+	my @ans = (4, 3, 5, 4, 3, 2, 4, 2);
+		
+	for (my $i = 0; $i < 2**@mistakes_names; $i++) {
+		my %mistakes = map(($mistakes_names[$_] => $i/2**$_ % 2), (0..@mistakes_names-1));
+		$mistakes{var_as_const} and $mistakes{var_as_const} = 'n';
+		is $b->complexity({n => 1}, \%mistakes), $ans[$i], "complexity with mistakes:" . 
+            join ', ', map($mistakes{$_}? $_: (), @mistakes_names);
+	}
 }
 
 {
