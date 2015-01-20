@@ -8,8 +8,6 @@ use utf8;
 use EGE::Prog::Lang;
 package EGE::Prog::SynElement;
 
-use List::Util qw(max min sum);
-
 sub new {
     my ($class, %init) = @_;
     my $self = { %init };
@@ -196,8 +194,6 @@ sub polinom_degree { 0 }
 package EGE::Prog::BinOp;
 use base 'EGE::Prog::Op';
 
-use List::Util qw(max min sum);
-
 sub to_lang_fmt {
     my ($self, $lang) = @_;
     $lang->op_fmt($self->{op});
@@ -209,7 +205,7 @@ sub polinom_degree {
     my ($self, $env, $mistakes, $iter) = @_;
 
     if ($self->{op} eq '*') { $self->{left}->polinom_degree($env, $mistakes, $iter) + $self->{right}->polinom_degree($env, $mistakes, $iter) } 
-    elsif ($self->{op} eq '+' || $self->{op} eq '-') { max(map($self->{$_}->polinom_degree($env, $mistakes, $iter), $self->_children)) } 
+    elsif ($self->{op} eq '+' || $self->{op} eq '-') { List::Util::max(map($self->{$_}->polinom_degree($env, $mistakes, $iter), $self->_children)) } 
     else { die "polinom degree is unavaible for Expr with operator: '$self->{op}'" }
 }
 
@@ -304,8 +300,6 @@ sub run {
 package EGE::Prog::Block;
 use base 'EGE::Prog::SynElement';
 
-use List::Util qw(max min sum);
-
 sub to_lang {
     my ($self, $lang) = @_;
     join $lang->block_stmt_separator, map $_->to_lang($lang), @{$self->{statements}};
@@ -324,11 +318,10 @@ sub complexity {
     $iter ||= {};
     $repeat ||= 0;
     if ($mistakes->{change_min}) { 
-        return min(map($_->complexity($env, $mistakes, $iter, $repeat), @{$self->{statements}})); 
+        return List::Util::min(map($_->complexity($env, $mistakes, $iter, $repeat), @{$self->{statements}})); 
     }    
-    max(map($_->complexity($env, $mistakes, $iter, $repeat), @{$self->{statements}})); 
+    List::Util::max(map($_->complexity($env, $mistakes, $iter, $repeat), @{$self->{statements}})); 
 }
-
 
 package EGE::Prog::CompoundStatement;
 use base 'EGE::Prog::SynElement';
@@ -451,10 +444,8 @@ sub to_lang {
 
 sub run {}
 
-
 package EGE::Prog::FuncDef;
 use base 'EGE::Prog::SynElement';
-
 
 sub to_lang {
     my ($self, $lang) = @_;
@@ -500,7 +491,6 @@ sub to_lang {
 
 sub run {
 }
-
 
 package EGE::Prog;
 use base 'Exporter';
