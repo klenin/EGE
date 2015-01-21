@@ -73,7 +73,7 @@ sub cycles_complexity
 
     my $block = EGE::Prog::make_block($body);
     my $lt = EGE::LangTable::table($block, [ [ 'C', 'Basic' ], ['Pascal', 'Alg', 'Perl' ] ]);   
-    $self->{text} = "Асимптотическая сложность функции <em> my_function </em> равна: $lt";
+    $self->{text} = "Асимптотическая сложность следующего алгоритма равна: $lt";
     $self->{correct} = $block->complexity({$main_var => 1});
 }
 1;
