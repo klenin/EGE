@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 103;
+use Test::More tests => 102;
 use Test::Exception;
 
 use lib '..';
@@ -327,7 +327,7 @@ end;~;
     	'=', 'r', 'n',
 		'for', 'i', 0, 'r', [
 			'for', 'j', 0, 'i', [
-				['print', ['*', 'j', 'i']]
+				'expr', ['print', ['*', 'j', 'i']]
 			]
 		]    
 	]);

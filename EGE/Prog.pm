@@ -395,12 +395,11 @@ sub complexity {
         defined $iter->{$cond->{right}->{name}} and
         defined $iter->{$cond->{left}->{name}}) {
         my $side = $iter->{$cond->{right}->{name}} > $iter->{$cond->{left}->{name}};
-        my $dif = $iter->{$cond->{$operands[$side]}->{name}} - $iter->{$cond->{$operands[!$side]}->{name}}; 
 
         $repeat -= $iter->{$cond->{$operands[$side]}->{name}};
-        $iter->{$cond->{$operands[$side]}->{name}} -= $dif;
+        my $old_val = delete $iter->{$cond->{$operands[$side]}->{name}};
         my $ret = $body->complexity($env, $mistakes, $iter, $repeat);
-        $iter->{$cond->{$operands[$side]}->{name}} += $dif;
+        $iter->{$cond->{$operands[$side]}->{name}} = $old_val;
         $repeat += $iter->{$cond->{$operands[$side]}->{name}};
         return $ret;
     }
@@ -443,6 +442,20 @@ sub to_lang {
 };
 
 sub run {}
+
+package EGE::Prog::ExprStmt;
+use base 'EGE::Prog::SynElement';
+
+sub to_lang {
+    my ($self, $lang) = @_;
+    sprintf $lang->expr_fmt, $self->{expr}->to_lang($lang);
+}
+
+sub run {
+    my ($self, $env) = @_;
+    $self->{expr}->run($env);
+};
+
 
 package EGE::Prog::FuncDef;
 use base 'EGE::Prog::SynElement';
@@ -566,6 +579,7 @@ sub statements_descr {{
     'while' => { type => 'While', args => [qw(E_cond B_body)] },
     'until' => { type => 'Until', args => [qw(E_cond B_body)] },
     'func' => { type => 'FuncDef', args => [qw(C_name A_args B_body)]},
+    'expr' => { type => 'ExprStmt', args => [qw(E_expr)]},
 }}
 
 sub arg_processors {{
@@ -585,19 +599,15 @@ sub make_func_args
 sub make_statement {
     my ($next) = @_;
     my $name = $next->();
-    if (ref $name eq 'ARRAY') {
-        make_expr($name);
+
+    my $d = statements_descr->{$name};
+    $d or die "Unknown statement $name";
+    my %args;
+    for (@{$d->{args}}) {
+        my ($p, $n) = /(\w)_(\w+)/;
+        $args{$n} = arg_processors->{$p}->($next->());
     }
-    else {
-        my $d = statements_descr->{$name};
-        $d or die "Unknown statement $name";
-        my %args;
-        for (@{$d->{args}}) {
-            my ($p, $n) = /(\w)_(\w+)/;
-            $args{$n} = arg_processors->{$p}->($next->());
-        }
-        "EGE::Prog::$d->{type}"->new(%args);
-    }
+    "EGE::Prog::$d->{type}"->new(%args);
 }
 
 sub make_block {
