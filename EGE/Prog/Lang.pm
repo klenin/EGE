@@ -95,6 +95,8 @@ sub until_end_fmt { "\nEND DO" }
 sub func_start_fmt { "FUNCTION %s(%s)\n" }
 sub func_end_fmt { "\nEND FUNCTION" }
 
+sub print_fmt { "PRINT %s" }
+
 package EGE::Prog::Lang::C;
 use base 'EGE::Prog::Lang';
 
@@ -118,6 +120,10 @@ sub until_end_fmt { $_[1] ? "\n}" : '' }
 
 sub func_start_fmt { "int %s(%s) {\n  int %1\$s;\n" }
 sub func_end_fmt { "\n  return %1\$s;\n}" }
+
+sub print_fmt { 
+    "print(%s)"
+}
 
 sub args_fmt {"int %s"}
 package EGE::Prog::Lang::Pascal;
@@ -153,6 +159,7 @@ sub until_end_fmt { $_[1] ? "\nend;" : '' }
 sub func_start_fmt { "Function %s(%s: integer):integer; begin\n" }
 sub func_end_fmt { "\nend;" }
 
+sub print_fmt { "write(%s)" }
 
 package EGE::Prog::Lang::Alg;
 use base 'EGE::Prog::Lang';
@@ -182,6 +189,8 @@ sub until_end_fmt { "\nкц" }
 sub func_start_fmt { "алг цел %s(цел %s) нач\n" }
 sub func_end_fmt { "\nкон;" }
 
+sub print_fmt { "вывод %s" }
+
 package EGE::Prog::Lang::Perl;
 use base 'EGE::Prog::Lang';
 
@@ -204,6 +213,8 @@ sub until_end_fmt { "\n}" }
 
 sub func_start_fmt { "sub %s {\n  (%s) = \@_;\n" }
 sub func_end_fmt { "\n  \$%1\$s;\n}" }
+
+sub print_fmt { 'print(%s, "\n")' }
 
 sub args_fmt { "\$%s" }
 package EGE::Prog::Lang::Logic;

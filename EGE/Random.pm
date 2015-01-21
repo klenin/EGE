@@ -71,7 +71,7 @@ sub shuffle {
 
 sub index_var {
     my ($self, $n) = @_;
-    $self->pick_n($n || 1, 'i', 'j', 'k', 'm', 'n')
+    $self->pick_n($n || 1, 'i', 'j', 'k', 'm', 'n', 'a', 'b', 'c', 'iter', 'it', 'index', 'ind')
 }
 
 sub english_letter { $_[0]->pick('a' .. 'z') }
@@ -92,6 +92,10 @@ sub split_number {
     die if $parts > $number;
     my @p = sort { $a <=> $b } $self->pick_n($parts - 1, 1 .. $number - 1);
     $p[0], map($p[$_] - $p[$_ - 1], 1 .. $#p), $number - $p[-1];
+}
+
+sub const_value {
+    $_[0]->pick(10, 100, 1000, 10000, 42, 15);
 }
 
 1;
