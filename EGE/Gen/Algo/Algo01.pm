@@ -32,7 +32,7 @@ sub pow {
 
 sub final_expr {
     my $iter = $_[0];
-    ['print', [keys $iter]];
+    ('expr', ['print', [map $iter->{$_} ? $_ : (), keys $iter]]);
 }
 
 sub get_var {
@@ -44,6 +44,13 @@ sub get_var {
 sub cycle {
     my ($count, $is_it_iterator) = @_;
     $_[0]-- or return final_expr($is_it_iterator);
+
+    if (List::Util::sum(values $is_it_iterator) > 1 and rnd->coin) {
+        my @if_vars = rnd->pick_n(2, map $is_it_iterator->{$_} ? $_ : (), keys $is_it_iterator);
+        delete $is_it_iterator->{$_} for @if_vars;
+        return ('if', ['==', @if_vars], [cycle($_[0], $is_it_iterator)]);   
+    }
+    
     my @ret = ();
     my $var = get_var $is_it_iterator;  
     while (rnd->coin) {
@@ -51,16 +58,13 @@ sub cycle {
         $is_it_iterator->{$var} = 0;
         $var = get_var $is_it_iterator;
     }
-    $is_it_iterator->{$var} = 1;
     push @ret, 'for', $var, 0, pow(rnd->pick(keys $is_it_iterator), rnd->in_range(0, MAX_DEGREE));
+    $is_it_iterator->{$var} = 1;
     my $c = rnd->coin;
     push @ret, $c? [cycle($_[0], $is_it_iterator)] : [ final_expr($is_it_iterator) ];
     $is_it_iterator->{$var} = 0;
     
     !$c and $_[0] and @ret = (@ret, cycle($_[0], $is_it_iterator));
-    List::Util::sum(values $is_it_iterator) > 1 and 
-        rnd->coin and 
-        @ret = ('if', ['==', rnd->pick_n(2, map $is_it_iterator->{$_} ? $_ : (), keys $is_it_iterator )], [@ret]);
     return @ret;
 }
 
@@ -72,8 +76,8 @@ sub cycles_complexity
     my $body = [cycle($count, {$main_var => 0})];
 
     my $block = EGE::Prog::make_block($body);
-    my $lt = EGE::LangTable::table($block, [ [ 'C', 'Basic' ], ['Pascal', 'Alg', 'Perl' ] ]);   
+    my $lt = EGE::LangTable::table($block, [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);   
     $self->{text} = "Асимптотическая сложность следующего алгоритма равна: $lt";
-    $self->{correct} = $block->complexity({$main_var => 1});
+    $self->{correct} = "O($main_var <sup>" . $block->complexity({$main_var => 1}) . "</sup>)";
 }
 1;
