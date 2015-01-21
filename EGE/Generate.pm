@@ -188,4 +188,25 @@ sub all {[
      
 ]}
 
+package EGE::AlgoGenerate;
+
+use EGE::Random;
+
+use EGE::GenBase;
+use EGE::Gen::Algo::Algo01;
+
+sub g {
+    my $unit = shift;
+    my $q = EGE::GenerateBase::one('Algo::' . $unit, rnd->pick(@_));
+    $q;
+}
+
+sub gg {
+    my $unit = shift;
+    map g($unit, $_), @_;
+}
+
+sub all {[
+    gg('Algo01', qw(cycles_complexity)),
+]}
 1;

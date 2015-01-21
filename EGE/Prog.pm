@@ -87,7 +87,7 @@ sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for qw(var ex
 sub complexity {
     my ($self, $env, $mistakes, $iter) = @_;
     if (defined $self->{var}->{name}) {
-    	${$self->{var}->{name}} = $self->{expr}->polinom_degree($env, $mistakes, $iter);
+        $env->{$self->{var}->{name}} = $self->{expr}->polinom_degree($env, $mistakes, $iter);
     }
     0;
 }

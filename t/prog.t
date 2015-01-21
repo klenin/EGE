@@ -324,7 +324,8 @@ end;~;
 
 {
     my $b = EGE::Prog::make_block([
-		'for', 'i', 0, 'n', [
+    	'=', 'r', 'n',
+		'for', 'i', 0, 'r', [
 			'for', 'j', 0, 'i', [
 				['print', ['*', 'j', 'i']]
 			]
@@ -387,7 +388,7 @@ end;~;
 	my @mistakes_names = qw(var_as_const ignore_if change_min);
 	my @ans = (4, 3, 5, 4, 3, 2, 4, 2);
 		
-	for (my $i = 0; $i < 2**@mistakes_names; $i++) {
+	for (my $i = 1; $i < 2**@mistakes_names; $i++) {
 		my %mistakes = map(($mistakes_names[$_] => $i/2**$_ % 2), (0..@mistakes_names-1));
 		$mistakes{var_as_const} and $mistakes{var_as_const} = 'n';
 		is $b->complexity({n => 1}, \%mistakes), $ans[$i], "complexity with mistakes:" . 
