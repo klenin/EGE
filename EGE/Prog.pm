@@ -267,6 +267,7 @@ sub polinom_degree {
     }    
     defined $env->{$name} and   return $env->{$name};
     defined $iter->{$name} and  return $iter->{$name};
+    die "Undefined variable $self->{name}";
 }
 
 package EGE::Prog::Const;
