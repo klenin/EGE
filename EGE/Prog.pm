@@ -68,7 +68,30 @@ sub run {
     $self->{code}->($env);
 }
 
- 
+package EGE::Prog::Assign;
+use base 'EGE::Prog::SynElement';
+
+sub to_lang {
+    my ($self, $lang) = @_;
+    sprintf $lang->assign_fmt,
+        map $self->{$_}->to_lang($lang), qw(var expr);
+}
+
+sub run {
+    my ($self, $env) = @_;
+    ${$self->{var}->get_ref($env)} = $self->{expr}->run($env);
+}
+
+sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for qw(var expr) }
+
+sub complexity {
+    my ($self, $env, $mistakes, $iter) = @_;
+    if (defined $self->{var}->{name}) {
+        $env->{$self->{var}->{name}} = $self->{expr}->polinom_degree($env, $mistakes, $iter);
+    }
+    0;
+}
+
 package EGE::Prog::Index;
 use base 'EGE::Prog::SynElement';
 
