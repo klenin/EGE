@@ -2,7 +2,7 @@
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
 package EGE::Gen::Algo::Algo01;
-use base 'EGE::GenBase::DirectInput';
+use base 'EGE::GenBase::SingleChoice';
 
 use strict;
 use warnings;
@@ -37,7 +37,7 @@ sub final_expr {
 
 sub get_var {
     my $var = rnd->index_var;
-    $var .= rnd->index_var while ($_[0]->{$var});
+    $var .= rnd->index_var while (defined $_[0]->{$var});
     $var;
 }
 
@@ -47,7 +47,6 @@ sub cycle {
 
     if (List::Util::sum(values $is_it_iterator) > 1 and rnd->coin) {
         my @if_vars = rnd->pick_n(2, map $is_it_iterator->{$_} ? $_ : (), keys $is_it_iterator);
-        delete $is_it_iterator->{$_} for @if_vars;
         return ('if', ['==', @if_vars], [cycle($_[0], $is_it_iterator)]);   
     }
     
@@ -72,12 +71,34 @@ sub cycles_complexity
 {
     my ($self) = @_;    
     my $main_var = rnd->pick(qw(N M K));
-    my $count = rnd->in_range(MIN_COUNT, MAX_COUNT);
-    my $body = [cycle($count, {$main_var => 0})];
+    my ($count, $block);
+    my @mistakes_names = qw(var_as_const ignore_if change_min); 
+    $self->{correct} = 0;
+    
+    
+    while(1) {
+        $count = rnd->in_range(MIN_COUNT, MAX_COUNT);
+        $block = EGE::Prog::make_block([cycle($count, {$main_var => 0})]);
 
-    my $block = EGE::Prog::make_block($body);
-    my $lt = EGE::LangTable::table($block, [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);   
-    $self->{text} = "Асимптотическая сложность следующего алгоритма равна: $lt";
-    $self->{correct} = "O($main_var <sup>" . $block->complexity({$main_var => 1}) . "</sup>)";
+        my @indexes = rnd->shuffle(1..7);
+        my @variants = $block->complexity({$main_var => 1});
+        MISTAKE:
+        while (@indexes) {
+            my $i = shift @indexes;
+            my %mistakes = map(($mistakes_names[$_] => $i/2**$_ % 2), (0..@mistakes_names-1));
+            $mistakes{var_as_const} and $mistakes{var_as_const} = $main_var;
+
+            my $cur_variant = $block->complexity({$main_var => 1}, \%mistakes);
+            $cur_variant == $_ and next MISTAKE for (@variants);
+            push @variants, $cur_variant . join('', %mistakes);
+            if (@variants == 4) {
+                my $lt = EGE::LangTable::table($block, [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);   
+                $self->{text} = "Асимптотическая сложность следующего алгоритма равна: $lt";
+                $self->variants(map "O($main_var <sup>" . $_ . "</sup>)", @variants) and return;
+            }
+            
+        } 
+
+    }
 }
 1;
