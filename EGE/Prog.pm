@@ -68,30 +68,7 @@ sub run {
     $self->{code}->($env);
 }
 
-package EGE::Prog::Assign;
-use base 'EGE::Prog::SynElement';
-
-sub to_lang {
-    my ($self, $lang) = @_;
-    sprintf $lang->assign_fmt,
-        map $self->{$_}->to_lang($lang), qw(var expr);
-}
-
-sub run {
-    my ($self, $env) = @_;
-    ${$self->{var}->get_ref($env)} = $self->{expr}->run($env);
-}
-
-sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for qw(var expr) }
-
-sub complexity {
-    my ($self, $env, $mistakes, $iter) = @_;
-    if (defined $self->{var}->{name}) {
-        $env->{$self->{var}->{name}} = $self->{expr}->polinom_degree($env, $mistakes, $iter);
-    }
-    0;
-}
-
+ 
 package EGE::Prog::Index;
 use base 'EGE::Prog::SynElement';
 
@@ -261,12 +238,8 @@ sub gather_vars { $_[1]->{$_[0]->{name}} = 1 }
 sub polinom_degree { 
     my ($self, $env, $mistakes, $iter) = @_;
     my $name = $_[0]->{name};
-    if ($mistakes->{var_as_const}) {
-        $env = {$mistakes->{var_as_const} => 1};
-        $iter = {};
-    }    
-    defined $env->{$name} and   return $env->{$name};
-    defined $iter->{$name} and  return $iter->{$name};
+    defined $env->{$name} and   return $mistakes->{var_as_const}? $name eq $mistakes->{var_as_const} : $env->{$name};
+    defined $iter->{$name} and  return $mistakes->{var_as_const}? 0 : $iter->{$name};
     die "Undefined variable $self->{name}";
 }
 
@@ -362,7 +335,6 @@ sub run {
 sub complexity { 
     my ($self, $env, $mistakes, $iter, $repeat) = @_;
     my $name = $self->{var}->{name};
-    
     my $degree = $self->{ub}->polinom_degree($env, $mistakes, $iter);
     $iter->{$name} = $degree;
     $repeat += $degree;
@@ -397,8 +369,9 @@ sub complexity {
         defined $iter->{$cond->{left}->{name}}) {
         my $side = $iter->{$cond->{right}->{name}} > $iter->{$cond->{left}->{name}};
 
-        $repeat -= $iter->{$cond->{$operands[$side]}->{name}};
-        my $old_val = delete $iter->{$cond->{$operands[$side]}->{name}};
+        my $old_val;
+        $repeat -= $old_val = $iter->{$cond->{$operands[$side]}->{name}};
+        $iter->{$cond->{$operands[$side]}->{name}} = $iter->{$cond->{$operands[!$side]}->{name}};
         my $ret = $body->complexity($env, $mistakes, $iter, $repeat);
         $iter->{$cond->{$operands[$side]}->{name}} = $old_val;
         $repeat += $iter->{$cond->{$operands[$side]}->{name}};
