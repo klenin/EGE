@@ -1,7 +1,7 @@
 # Copyright © 2010-2011 Alexander S. Klenin
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
-package EGE::Gen::Algo::Algo01;
+package EGE::Gen::Alg::Complexity;
 use base 'EGE::GenBase::SingleChoice';
 
 use strict;
@@ -90,7 +90,7 @@ sub cycles_complexity
 
             my $cur_variant = $block->complexity({$main_var => 1}, \%mistakes);
             $cur_variant == $_ and next MISTAKE for (@variants);
-            push @variants, $cur_variant . join('', %mistakes);
+            push @variants, $cur_variant;
             if (@variants == 4) {
                 my $lt = EGE::LangTable::table($block, [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);   
                 $self->{text} = "Асимптотическая сложность следующего алгоритма равна: $lt";

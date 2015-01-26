@@ -89,7 +89,7 @@ sub complexity {
     if (defined $self->{var}->{name}) {
         $env->{$self->{var}->{name}} = $self->{expr}->polinom_degree($env, $mistakes, $iter);
     }
-    0;
+    ();
 }
 
 package EGE::Prog::Index;
@@ -315,9 +315,9 @@ sub complexity {
     $iter ||= {};
     $repeat ||= 0;
     if ($mistakes->{change_min}) { 
-        return List::Util::min(map($_->complexity($env, $mistakes, $iter, $repeat), @{$self->{statements}})); 
+        return List::Util::min(map($_->complexity($env, $mistakes, $iter, $repeat), @{$self->{statements}})) || 0; 
     }    
-    List::Util::max(map($_->complexity($env, $mistakes, $iter, $repeat), @{$self->{statements}})); 
+    List::Util::max(map($_->complexity($env, $mistakes, $iter, $repeat), @{$self->{statements}})) or 0; 
 }
 
 package EGE::Prog::CompoundStatement;

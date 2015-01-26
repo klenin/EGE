@@ -188,16 +188,16 @@ sub all {[
      
 ]}
 
-package EGE::AlgoGenerate;
+package EGE::AlgGenerate;
 
 use EGE::Random;
 
 use EGE::GenBase;
-use EGE::Gen::Algo::Algo01;
+use EGE::Gen::Alg::Complexity;
 
 sub g {
     my $unit = shift;
-    my $q = EGE::GenerateBase::one('Algo::' . $unit, rnd->pick(@_));
+    my $q = EGE::GenerateBase::one('Alg::' . $unit, rnd->pick(@_));
     $q;
 }
 
@@ -207,6 +207,6 @@ sub gg {
 }
 
 sub all {[
-    gg('Algo01', qw(cycles_complexity)),
+    gg('Complexity', qw(cycles_complexity)),
 ]}
 1;
