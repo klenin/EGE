@@ -67,6 +67,7 @@ sub block_stmt_separator { "\n" }
 
 sub args_separator { ', '}
 sub args_fmt { '%s' }
+
 sub call_func_fmt { '%s(%s)' }
 
 sub expr_fmt { '%s' }
@@ -102,8 +103,6 @@ sub func_end_fmt { "\nEND FUNCTION\n" }
 
 sub print_fmt { 'PRINT %s' }
 
-
-
 package EGE::Prog::Lang::C;
 use base 'EGE::Prog::Lang';
 
@@ -135,6 +134,7 @@ sub print_fmt { 'print(%s)' }
 sub expr_fmt { '%s;' }
 
 sub args_fmt {"int %s"}
+
 package EGE::Prog::Lang::Pascal;
 use base 'EGE::Prog::Lang';
 
@@ -230,6 +230,7 @@ sub print_fmt { 'print(%s)' }
 sub expr_fmt { '%s;' }
 
 sub args_fmt { "\$%s" }
+
 package EGE::Prog::Lang::Logic;
 use base 'EGE::Prog::Lang';
 
