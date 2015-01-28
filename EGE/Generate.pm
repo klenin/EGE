@@ -96,9 +96,11 @@ sub all {[
     gg('B06', qw(solve)),
     gg('B07', qw(who_is_right)),
     gg('B08', qw(identify_letter find_calc_system)),
+    gg('B10', qw(trans_arch)),
     gg('B11', qw(ip_mask)),
     gg('B12', qw(search_query)),
     gg('B13', qw(plus_minus)),
+    gg('B14', qw(find_func_min)),    
     gg('B15', qw(logic_var_set)),
 ]}
 
@@ -165,6 +167,7 @@ sub g {
     EGE::GenerateBase::one("Db::$p", $m);
 }
 
+
 sub gg {
     my $unit = shift;
     map g($unit, $_), @_;
@@ -200,8 +203,7 @@ sub gg {
 }
 
 sub all {[
-    gg('Complexity', qw(o_poly o_poly_cmp)),
+    gg('Complexity', qw(cycles_complexity)),
 ]}
-
 1;
 

@@ -62,6 +62,7 @@ sub accept_number {
     $_[0]->{accept} = qr/^\d+$/;
 }
 
+# accept_number allow just positive number. Is it true? 
 sub post_process {
     $_[0]->{correct} =~ $_[0]->{accept} or
         die 'Correct answer is not acceptable in ', ref $_[0], ': ', $_[0]->{correct};
