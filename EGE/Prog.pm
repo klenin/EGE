@@ -157,7 +157,7 @@ sub to_lang_fmt {}
 sub gather_vars { $_[0]->{$_}->gather_vars($_[1]) for $_[0]->_children; }
 sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for $self->_children; }
 
-sub polinom_degree { 0 }
+sub polinom_degree { die "polinom degree is unavaible for Expr with operator: '$@_[0]->{op}'"; }
 
 package EGE::Prog::BinOp;
 use base 'EGE::Prog::Op';

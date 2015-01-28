@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 83;
+use Test::More tests => 90;
 use Test::Exception;
 
 use lib '..';
@@ -240,6 +240,17 @@ end;~;
 {
     my $e = make_expr([ '+', ['*', 'x', 'x'], ['+', 'x', 2] ]);
     is $e->polinom_degree({'x' => 1}), 2, 'polinom degree' 
+}
+
+{
+    my $e = make_expr([ '+', 'x', 'xyz' ]);
+    throws_ok sub { $e->polinom_degree({'x' => 1}) }, qr/Undefined variable xyz/, 'undefined var when calculating polinom degree' 
+}
+
+{
+    my $e = make_expr([ '%', 'x', 'x' ]);
+    throws_ok sub { $e->polinom_degree({'x' => 1}) }, qr/polinom degree is unavaible for Expr with operator: '%'/, 
+    	'calculating polinom degree of expr with \'%\'' 
 }
 
 {
