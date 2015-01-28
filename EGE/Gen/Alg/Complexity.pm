@@ -1,4 +1,5 @@
 # Copyright © 2015 Alexander S. Klenin
+# Copyright © 2015 Anton Kim
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
 package EGE::Gen::Alg::Complexity;
@@ -44,6 +45,44 @@ sub o_poly_cmp {
         $power, $power + 1, $power - 1, [ '/', 1, $power ], 0, -$power;
     $self->{text} ="Всякая функция, являющаяся $func, является также и";
     $self->variants(@variants);
+}
+
+use constant MAX_DEGREE => 5;
+
+sub pow {
+    my ($var, $degree) = @_;
+    $degree == 0 and return rnd->const_value;
+    $degree == 1 and return $var;
+    [ '*', $var, pow($var, --$degree) ];
+}
+
+sub cycle_complexity
+{
+    my ($self) = @_;
+    $self->{correct} = 0;
+
+    my $main_var = rnd->pick(qw(N M K));
+    my @vars = rnd->index_var(3);
+    my @degrees = rnd->shuffle(1 .. MAX_DEGREE);
+    @degrees = @degrees[ 1 .. 3 ];
+    my $cycles = [
+        'for', $vars[0], 0, pow($main_var, $degrees[0]), [
+            'for', $vars[1], 0, pow($main_var, $degrees[1]), [
+                '=', [ '[]', 'buf', $vars[1] ], $vars[1]
+            ],
+            'for', $vars[2], 0, pow($main_var, $degrees[2]), [
+                '=', [ '[]', 'buf', $vars[2] ], $vars[2]
+            ]
+        ]
+    ];
+    my $block = EGE::Prog::make_block($cycles);
+    my $lt = EGE::LangTable::table($block, [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);
+    $self->{text} = "Определите асимптотическую сложность следующего алгоритма: $lt";
+    my @variants = ( $block->complexity($main_var),
+        $degrees[0] + List::Util::min(@degrees[ 1 .. 2 ]),
+        List::Util::sum(@degrees),
+        $degrees[0] );
+    $self->variants(map big_o(to_logic([ '**', $main_var, $_ ])), @variants);
 }
 
 1;
