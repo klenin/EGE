@@ -11,7 +11,6 @@ $SIG{__DIE__} = $SIG{INT} = \&Carp::confess;
 use Data::Dumper;
 use Encode;
 
-use lib '.';
 
 use EGE::Generate;
 use EGE::Gen::Math::Summer;
@@ -230,7 +229,7 @@ binmode STDOUT, ':utf8';
 #g2('Db08', 'nuncle') for 1..3;
 #g2('Db09', 'inner_join');
 #g3('Complexity', 'o_poly');
-#g3('Complexity', 'o_poly_cmp');
+g3('Complexity', 'cycle_complexity');
 
 #$questions = EGE::Generate::all;
 #$questions = EGE::AsmGenerate::all;
@@ -240,5 +239,5 @@ binmode STDOUT, ':utf8';
 #push @$questions, EGE::Gen::Math::Summer::g($_) for qw(p1 p2 p3 p4 p5 p6 p7);
 
 print_html;
-#print_json;
+# print_json;
 #print_elt;

@@ -6,7 +6,6 @@ use warnings;
 use utf8;
 
 use EGE::Prog::Lang;
-
 package EGE::Prog::SynElement;
 
 sub new {
@@ -50,6 +49,8 @@ sub count_if {
     $count;
 }
 
+sub complexity { 0 }
+
 sub needs_parens { 0 }
 
 package EGE::Prog::BlackBox;
@@ -82,6 +83,14 @@ sub run {
 }
 
 sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for qw(var expr) }
+
+sub complexity {
+    my ($self, $env, $mistakes, $iter) = @_;
+    if (defined $self->{var}->{name}) {
+        $env->{$self->{var}->{name}} = $self->{expr}->polinom_degree($env, $mistakes, $iter);
+    }
+    ();
+}
 
 package EGE::Prog::Index;
 use base 'EGE::Prog::SynElement';
@@ -148,6 +157,8 @@ sub to_lang_fmt {}
 sub gather_vars { $_[0]->{$_}->gather_vars($_[1]) for $_[0]->_children; }
 sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for $self->_children; }
 
+sub polinom_degree { die "polinom degree is unavaible for Expr with operator: '$@_[0]->{op}'"; }
+
 package EGE::Prog::BinOp;
 use base 'EGE::Prog::Op';
 
@@ -157,6 +168,14 @@ sub to_lang_fmt {
 }
 
 sub _children { qw(left right) }
+
+sub polinom_degree {
+    my ($self, $env, $mistakes, $iter) = @_;
+
+    if ($self->{op} eq '*') { $self->{left}->polinom_degree($env, $mistakes, $iter) + $self->{right}->polinom_degree($env, $mistakes, $iter) } 
+    elsif ($self->{op} eq '+' || $self->{op} eq '-') { List::Util::max(map($self->{$_}->polinom_degree($env, $mistakes, $iter), $self->_children)) } 
+    else { die "polinom degree is unavaible for Expr with operator: '$self->{op}'" }
+}
 
 package EGE::Prog::UnOp;
 use base 'EGE::Prog::Op';
@@ -194,7 +213,7 @@ sub to_lang {
 
 sub run {
     my ($self, $env) = @_;
-    for ($env->{$self->{name}}) {
+    for ($env->{$self->{name}}) {                   # Зачем здесь цикл?!
         defined $_ or die "Undefined variable $self->{name}";
         return $_;
     }
@@ -206,6 +225,14 @@ sub get_ref {
 }
 
 sub gather_vars { $_[1]->{$_[0]->{name}} = 1 }
+
+sub polinom_degree { 
+    my ($self, $env, $mistakes, $iter) = @_;
+    my $name = $_[0]->{name};
+    defined $env->{$name} and   return $mistakes->{var_as_const}? $name eq $mistakes->{var_as_const} : $env->{$name};
+    defined $iter->{$name} and  return $mistakes->{var_as_const}? 0 : $iter->{$name};
+    die "Undefined variable $self->{name}";
+}
 
 package EGE::Prog::Const;
 use base 'EGE::Prog::SynElement';
@@ -219,6 +246,8 @@ sub run {
     my ($self, $env) = @_;
     $self->{value} + 0;
 }
+
+sub polinom_degree { 0 }
 
 package EGE::Prog::RefConst;
 use base 'EGE::Prog::SynElement';
@@ -247,6 +276,17 @@ sub run {
 }
 
 sub _visit_children { my $self = shift; $_->visit_dfs(@_) for @{$self->{statements}} }
+
+sub complexity { 
+    my ($self, $env, $mistakes, $iter, $repeat) = @_;
+    $env ||= {};
+    $iter ||= {};
+    $repeat ||= 0;
+    if ($mistakes->{change_min}) { 
+        return List::Util::min(map($_->complexity($env, $mistakes, $iter, $repeat), @{$self->{statements}})) || 0; 
+    }    
+    List::Util::max(map($_->complexity($env, $mistakes, $iter, $repeat), @{$self->{statements}})) or 0; 
+}
 
 package EGE::Prog::CompoundStatement;
 use base 'EGE::Prog::SynElement';
@@ -281,6 +321,20 @@ sub run {
     for ($$i = $self->{lb}->run($env); $$i <= $self->{ub}->run($env); ++$$i) {
         $self->{body}->run($env);
     }
+}
+
+sub complexity { 
+    my ($self, $env, $mistakes, $iter, $repeat) = @_;
+    my $name = $self->{var}->{name};
+    my $degree = $self->{ub}->polinom_degree($env, $mistakes, $iter);
+    $iter->{$name} = $degree;
+    $repeat += $degree;
+
+    my $body_complexity = $self->{body}->complexity($env, $mistakes, $iter, $repeat);
+    
+    $env->{$name} = $degree;
+    delete $iter->{$name};
+    $repeat > $body_complexity? $repeat: $body_complexity;
 }
 
 package EGE::Prog::IfThen;
@@ -398,6 +452,7 @@ sub arg_processors {{
 sub make_statement {
     my ($next) = @_;
     my $name = $next->();
+
     my $d = statements_descr->{$name};
     $d or die "Unknown statement $name";
     my %args;
@@ -424,6 +479,7 @@ sub lang_names() {{
   'C' => 'Си',
   'Alg' => 'Алгоритмический',
   'SQL' => 'Структурированный язык запросов',
+  'Perl' => 'Перл',
 }}
 
 1;

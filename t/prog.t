@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 83;
+use Test::More tests => 90;
 use Test::Exception;
 
 use lib '..';
@@ -235,6 +235,56 @@ end;~;
     my $v = {};
     $e->gather_vars($v);
     is_deeply $v, { x => 1, y => 1 }, 'gather_vars';
+}
+
+{
+    my $e = make_expr([ '+', ['*', 'x', 'x'], ['+', 'x', 2] ]);
+    is $e->polinom_degree({'x' => 1}), 2, 'polinom degree' 
+}
+
+{
+    my $e = make_expr([ '+', 'x', 'xyz' ]);
+    throws_ok sub { $e->polinom_degree({'x' => 1}) }, qr/Undefined variable xyz/, 'undefined var when calculating polinom degree' 
+}
+
+{
+    my $e = make_expr([ '%', 'x', 'x' ]);
+    throws_ok sub { $e->polinom_degree({'x' => 1}) }, qr/polinom degree is unavaible for Expr with operator: '%'/, 
+    	'calculating polinom degree of expr with \'%\'' 
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, ['*', 'n', ['-', 4, 'n']], [
+         	'=', ['[]', 'M', 'i'], 'i'
+            ]
+    ]);
+    is $b->complexity({n => 1}), 2, 'single forLoop complexity'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, ['*', 2, ['*', 'n', 'n']], [
+            'for', 'j', 0, ['+', 1, 'n'], [
+                '=', ['[]', 'M', 'i', 'j'], ['*', 'i', 'j']
+            ]
+        ]
+    ]);
+    is $b->complexity({n => 1}), 3, 'multi forLoop complexity'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, ['*', 2, ['*', 'n', 'n']], [
+            'for', 'j', 0, ['+', 1, 'n'], [
+                '=', ['[]', 'M', 'i', 'j'], ['*', 'i', 'j']
+            ],
+            'for', 'j', 0, ['*', 'n', ['-', 'n', 1]], [
+                '=', ['[]', 'M', 'i', 'j'], ['*', 'i', 'j']
+            ],            
+        ]
+    ]);
+    is $b->complexity({n => 1}), 4, 'block complexity'
 }
 
 {
