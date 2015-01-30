@@ -250,7 +250,7 @@ sub check_sub {
         'func', 'g', [ qw(a b) ], [
             '=', 'g', [ '-', 'a', 'b' ]
         ],
-        '=', 'a', ['()', 'g', 3, 2]
+        '=', 'a', [ '()', 'g', 3, 2 ]
     ]);
     my $c = {
         Basic => [
@@ -278,12 +278,12 @@ sub check_sub {
             'a := g(3, 2)',
         ],
         Pascal => [
-            'Function my_func(x, y, z: integer):integer;',
+            'function my_func(x, y, z: integer): integer;',
             'begin',
             '  my_func := x - y;',
             'end;',
             '',
-            'Function g(a, b: integer):integer;',
+            'function g(a, b: integer): integer;',
             'begin',
             '  g := a - b;',
             'end;',
@@ -320,12 +320,8 @@ sub check_sub {
 
 {
     my $b = EGE::Prog::make_block([
-        'func', 'f', [ qw(x y z) ], [
-            '=', 'my_func', [ '-', 'x', 'y' ]
-        ],
-        'func', 'f', [ qw(a b) ], [
-            '=', 'f', [ '-', 'a', 'b' ]
-        ],      
+        'func', 'f', [ qw(x y z) ], [],
+        'func', 'f', [ qw(a b) ], [],
     ]);
     throws_ok sub { $b->run({}) }, qr/f/, 'function redefinition'
 }
@@ -342,9 +338,6 @@ sub check_sub {
 
 {
     my $b = EGE::Prog::make_block([
-        'func', 'f', [ qw(x y z) ], [
-            '=', 'f', [ '-', 'x', 'y' ]
-        ],
         '=', 'a', [ '()', 'g', 1, 2, 3 ],
     ]);
     throws_ok sub { $b->run({}) }, qr/g/, 'call undefined function';
@@ -352,12 +345,10 @@ sub check_sub {
 
 {
     my $b = EGE::Prog::make_block([
-        'func', 'f', [ qw(x y z) ], [
-            '=', 'f', [ '-', 'x', 'y' ]
-        ],
+        'func', 'f', [ qw(x y z) ], [],
         '=', 'a', [ '()', 'f', 1, 2 ],
     ]);
-    throws_ok sub { $b->run({}) }, qr/f/, 'not enoght arguments';
+    throws_ok sub { $b->run({}) }, qr/f/, 'not enough arguments';
 }
 
 

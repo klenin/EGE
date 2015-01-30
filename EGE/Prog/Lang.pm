@@ -64,7 +64,7 @@ sub prio_list {
 sub translate_un_op { {} }
 
 sub block_stmt_separator { "\n" }
-sub args_separator { ', '}
+sub args_separator { ', ' }
 sub args_fmt { '%s' }
 sub call_func_fmt { '%s(%s)' }
 
@@ -154,7 +154,7 @@ sub while_end_fmt { $_[1] ? "\nend;" : '' }
 sub until_start_fmt { 'while not (%s) do' . ($_[1] ? " begin\n" : "\n") }
 sub until_end_fmt { $_[1] ? "\nend;" : '' }
 
-sub func_start_fmt { "Function %s(%s: integer):integer;\nbegin\n" }
+sub func_start_fmt { "function %s(%s: integer): integer;\nbegin\n" }
 sub func_end_fmt { "\nend;\n" }
 
 
