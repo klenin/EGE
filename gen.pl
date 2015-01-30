@@ -190,9 +190,11 @@ binmode STDOUT, ':utf8';
 #g('B06', 'solve');
 #g('B07', 'who_is_right');
 #g('B08', 'identify_letter');
+#g('B10', 'trans_rate');
 #g('B11', 'ip_mask');
 #g('B12', 'search_query'),
 #g('B13', 'plus_minus'),
+#g('B14', 'find_func_min'),
 #g('B15', 'logic_var_set');
 #g1('Arch01', 'reg_value_add');
 #g1('Arch01', 'reg_value_logic');

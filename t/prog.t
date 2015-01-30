@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 83;
+use Test::More tests => 92;
 use Test::Exception;
 
 use lib '..';
@@ -236,6 +236,130 @@ end;~;
     $e->gather_vars($v);
     is_deeply $v, { x => 1, y => 1 }, 'gather_vars';
 }
+
+sub check_sub {
+    my ($lang, $block, $code, $name) = @_;
+    is $block->to_lang_named($lang), join("\n", @$code), $name;
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'func', 'my_func', [ qw(x y z) ], [
+            '=', 'my_func', [ '-', 'x', 'y' ]
+        ],
+        'func', 'g', [ qw(a b) ], [
+            '=', 'g', [ '-', 'a', 'b' ]
+        ],
+        '=', 'a', ['()', 'g', 3, 2]
+    ]);
+    my $c = {
+        Basic => [
+            'FUNCTION my_func(x, y, z)',
+            '  my_func = x - y',
+            'END FUNCTION',
+            '',
+            'FUNCTION g(a, b)',
+            '  g = a - b',
+            'END FUNCTION',
+            '',
+            'a = g(3, 2)',
+        ],
+        Alg => [
+            'алг цел my_func(цел x, y, z)',
+            'нач',
+            '  my_func := x - y',
+            'кон',
+            '',
+            'алг цел g(цел a, b)',
+            'нач',
+            '  g := a - b',
+            'кон',
+            '',
+            'a := g(3, 2)',
+        ],
+        Pascal => [
+            'Function my_func(x, y, z: integer):integer;',
+            'begin',
+            '  my_func := x - y;',
+            'end;',
+            '',
+            'Function g(a, b: integer):integer;',
+            'begin',
+            '  g := a - b;',
+            'end;',
+            '',
+            'a := g(3, 2);',
+        ],
+        C => [
+            'int my_func(int x, int y, int z) {',
+            '  my_func = x - y;',
+            '}',
+            '',
+            'int g(int a, int b) {',
+            '  g = a - b;',
+            '}',
+            '',
+            'a = g(3, 2);',
+        ],
+        Perl => [
+            'sub my_func {',
+            '  my ($x, $y, $z) = @_;',
+            '  $my_func = $x - $y;',
+            '}',
+            '',
+            'sub g {',
+            '  my ($a, $b) = @_;',
+            '  $g = $a - $b;',
+            '}',
+            '',
+            '$a = g(3, 2);',
+        ],        
+    };
+    check_sub($_, $b, $c->{$_}, "function calling, definition in $_") for keys $c;
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'func', 'f', [ qw(x y z) ], [
+            '=', 'my_func', [ '-', 'x', 'y' ]
+        ],
+        'func', 'f', [ qw(a b) ], [
+            '=', 'f', [ '-', 'a', 'b' ]
+        ],      
+    ]);
+    throws_ok sub { $b->run({}) }, qr/f/, 'function redefinition'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'func', 'f', [ qw(x y z) ], [
+            '=', 'f', [ '-', 'x', 'y' ]
+        ],
+        '=', 'a', [ '()', 'f', 1, 2, 3 ],
+    ]);
+    is $b->run_val('a'), -1, 'run call function';
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'func', 'f', [ qw(x y z) ], [
+            '=', 'f', [ '-', 'x', 'y' ]
+        ],
+        '=', 'a', [ '()', 'g', 1, 2, 3 ],
+    ]);
+    throws_ok sub { $b->run({}) }, qr/g/, 'call undefined function';
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'func', 'f', [ qw(x y z) ], [
+            '=', 'f', [ '-', 'x', 'y' ]
+        ],
+        '=', 'a', [ '()', 'f', 1, 2 ],
+    ]);
+    throws_ok sub { $b->run({}) }, qr/f/, 'not enoght arguments';
+}
+
 
 {
     sub check_sql { is make_expr($_[0])->to_lang_named('SQL'), $_[1], "SQL $_[2]" }

@@ -51,9 +51,11 @@ use EGE::Gen::EGE::B05;
 use EGE::Gen::EGE::B06;
 use EGE::Gen::EGE::B07;
 use EGE::Gen::EGE::B08;
+use EGE::Gen::EGE::B10;
 use EGE::Gen::EGE::B11;
 use EGE::Gen::EGE::B12;
 use EGE::Gen::EGE::B13;
+use EGE::Gen::EGE::B14;
 use EGE::Gen::EGE::B15;
 
 sub g {
@@ -96,9 +98,11 @@ sub all {[
     gg('B06', qw(solve)),
     gg('B07', qw(who_is_right)),
     gg('B08', qw(identify_letter find_calc_system)),
+    gg('B10', qw(trans_rate)),
     gg('B11', qw(ip_mask)),
     gg('B12', qw(search_query)),
     gg('B13', qw(plus_minus)),
+    gg('B14', qw(find_func_min)),    
     gg('B15', qw(logic_var_set)),
 ]}
 

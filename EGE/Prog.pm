@@ -109,6 +109,23 @@ sub get_ref {
 
 sub _visit_children { my $self = shift; $_->visit_dfs(@_) for $self->{array}, @{$self->{indices}} }
 
+package EGE::Prog::CallFunc;
+use base 'EGE::Prog::SynElement';
+
+sub to_lang {
+    my ($self, $lang) = @_; 
+    sprintf $lang->call_func_fmt,
+        $self->{func},
+        join $lang->args_separator, map $_->to_lang($lang), @{$self->{args}};
+}
+
+sub run {
+    my ($self, $env) = @_;
+    my $func = $env->{'&'}->{$self->{func}} or die "Undefined function $self->{func}";
+    my $args = [ map $_->run($env), @{$self->{args}} ];
+    $func->call($args, $env);
+}
+
 package EGE::Prog::Op;
 use base 'EGE::Prog::SynElement';
 
@@ -332,6 +349,42 @@ sub to_lang {
 
 sub run {}
 
+package EGE::Prog::FuncDef;
+use base 'EGE::Prog::CompoundStatement';
+
+sub get_formats { qw(func_start_fmt func_end_fmt) }
+sub to_lang_fmt { '%3$s' }
+sub to_lang_fields { qw(var params) }
+
+sub run {
+    my ($self, $env) = @_;
+    $env->{'&'}->{$self->{var}->{name}} and die "Redefinition of function $self->{var}->{name}";
+    $env->{'&'}->{$self->{var}->{name}} = $self;
+}
+
+sub call {
+    my ($self, $args, $env) = @_;
+    my $act_len = @$args;
+    my $form_len = @{$self->{params}->{names}};
+    $act_len > $form_len and die "Too many arguments to function $self->{var}->{name}";    
+    $act_len < $form_len and die "Too few arguments to function $self->{var}->{name}";   
+    
+    my $new_env = { '&' => $env->{'&'}, map(($_ => shift $args), @{$self->{params}->{names}}) };
+    $self->{body}->run_val($self->{var}->{name}, $new_env);
+}
+
+package EGE::Prog::FuncParams;
+use base 'EGE::Prog::SynElement';
+
+sub to_lang {
+    my ($self, $lang) = @_;
+    join $lang->args_separator, map sprintf($lang->args_fmt, $_), @{$self->{names}};    
+}
+
+sub run {
+}
+
+
 package EGE::Prog;
 use base 'Exporter';
 
@@ -348,6 +401,13 @@ sub make_expr {
             $_ = make_expr($_) for @p;
             my $array = shift @p;
             return EGE::Prog::Index->new(array => $array, indices => \@p);
+        }
+        if (@$src >= 2 && $src->[0] eq '()') {
+            my @p = @$src;
+            shift @p;
+            my $func = shift @p;
+            $_ = make_expr($_) for @p;
+            return EGE::Prog::CallFunc->new(func => $func, args => \@p);
         }
         if (@$src == 2) {
             return EGE::Prog::UnOp->new(
@@ -387,13 +447,21 @@ sub statements_descr {{
     'if' => { type => 'IfThen', args => [qw(E_cond B_body)] },
     'while' => { type => 'While', args => [qw(E_cond B_body)] },
     'until' => { type => 'Until', args => [qw(E_cond B_body)] },
+    'func' => { type => 'FuncDef', args => [qw(E_var P_params B_body)] },
 }}
 
 sub arg_processors {{
     C => sub { $_[0] },
     E => \&make_expr,
     B => \&make_block,
+    P => \&make_func_params,
 }}
+
+sub make_func_params {
+    my ($src) = @_;
+    ref $src eq 'ARRAY' or die;
+    EGE::Prog::FuncParams->new(names => $src);
+}
 
 sub make_statement {
     my ($next) = @_;
