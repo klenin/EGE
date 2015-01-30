@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 83;
+use Test::More tests => 92;
 use Test::Exception;
 
 use lib '..';
