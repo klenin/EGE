@@ -95,4 +95,8 @@ sub split_number {
     $p[0], map($p[$_] - $p[$_ - 1], 1 .. $#p), $number - $p[-1];
 }
 
+sub const_value {
+    $_[0]->pick(10, 100, 1000, 10000, 42);
+}
+
 1;
