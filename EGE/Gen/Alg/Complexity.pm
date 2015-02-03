@@ -47,7 +47,7 @@ sub o_poly_cmp {
     $self->variants(@variants);
 }
 
-use constant MAX_DEGREE => 5;
+use constant MAX_DEGREE => 3;
 
 sub pow {
     my ($var, $degree) = @_;
@@ -83,6 +83,80 @@ sub cycle_complexity
         List::Util::sum(@degrees),
         $degrees[0] );
     $self->variants(map big_o(to_logic([ '**', $main_var, $_ ])), @variants);
+}
+sub final_expr {
+    my $iter = $_[0];
+    ('expr', [ 'print', map $iter->{$_} ? $_ : (), keys $iter ]);
+}
+
+sub new_var {
+    my $var = rnd->index_var;
+    $var .= rnd->index_var while (defined $_[0]->{$var});
+    $_[0]->{$var} = $_[1];
+    $var;
+}
+
+sub rnd_expr { pow(rnd->pick(keys $_[0]), rnd->in_range(0, MAX_DEGREE)) }
+
+sub cycle {
+    my ($count, $is_it_iterator) = @_;
+    $_[0]-- or return final_expr($is_it_iterator);
+
+    if (List::Util::sum(values $is_it_iterator) > 1 and rnd->coin) {
+        my @if_vars = rnd->pick_n(2, map $is_it_iterator->{$_} ? $_ : (), keys $is_it_iterator);
+        return ('if', [ '==', @if_vars ], [ cycle($_[0], $is_it_iterator) ]);   
+    }
+    
+    my @ret = ();
+    my $e = rnd_expr($is_it_iterator);
+    push @ret, ('=', new_var($is_it_iterator, 0), $e) while (rnd->coin); 
+
+    $e = rnd_expr($is_it_iterator);    
+    my $iter = new_var($is_it_iterator, 1);
+    push @ret, 'for', ($iter, 0, $e);
+    my $c = rnd->coin;
+    push @ret, $c? [cycle($_[0], $is_it_iterator)] : [ final_expr($is_it_iterator) ];
+    $is_it_iterator->{$iter} = 0;
+    
+    !$c and $_[0] and @ret = (@ret, cycle($_[0], $is_it_iterator));
+    @ret;
+}
+
+use constant MIN_COUNT => 4;
+use constant MAX_COUNT => 6;
+
+sub complexity
+{
+    my ($self) = @_;    
+    my $main_var = rnd->pick(qw(N M K));
+    my ($count, $block);
+    my @mistakes_names = qw(var_as_const ignore_if change_min); 
+    $self->{correct} = 0;
+
+    while(1) {
+        $count = rnd->in_range(MIN_COUNT, MAX_COUNT);
+        $block = EGE::Prog::make_block([ cycle($count, { $main_var => 0 }) ]);
+        my @indexes = rnd->shuffle(1 .. 7);
+        my @variants = $block->complexity({ $main_var => 1 });
+        MISTAKE:
+        while (@indexes) {
+            my $i = shift @indexes;
+            my %mistakes = map(($mistakes_names[$_] => $i/2**$_ % 2), (0 .. @mistakes_names - 1));
+            $mistakes{var_as_const} and $mistakes{var_as_const} = $main_var;
+
+            my $cur_variant = $block->complexity({ $main_var => 1 }, \%mistakes);
+            $cur_variant == $_ and next MISTAKE for @variants;
+            push @variants, $cur_variant;
+            if (@variants == 4) {
+                my $lt = EGE::LangTable::table($block, [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);   
+                $self->{text} = "Определите асимптотическую сложность следующего алгоритма: $lt";
+                $self->variants(map big_o(to_logic([ '**', $main_var, $_ ])), @variants);
+                return;
+            }
+            
+        } 
+
+    }
 }
 
 1;

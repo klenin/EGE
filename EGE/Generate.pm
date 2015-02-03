@@ -204,7 +204,7 @@ sub gg {
 }
 
 sub all {[
-    gg('Complexity', qw(o_poly o_poly_cmp cycle_complexity)),
+    gg('Complexity', qw(o_poly o_poly_cmp cycle_complexity complexity)),
 ]}
 
 1;
