@@ -5,6 +5,7 @@ use strict;
 use warnings;
 use utf8;
 
+use EGE::Utils;
 use EGE::Prog::Lang;
 package EGE::Prog::SynElement;
 
@@ -83,6 +84,13 @@ sub run {
 }
 
 sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for qw(var expr) }
+
+sub complexity {
+    my ($self, $env, $mistakes, $iter) = @_;
+    defined $self->{var}->{name} or return ();
+    $env->{$self->{var}->{name}} = $self->{expr}->polinom_degree($env, $mistakes, $iter);
+}
+
 
 package EGE::Prog::Index;
 use base 'EGE::Prog::SynElement';
@@ -193,10 +201,10 @@ sub to_lang_fmt {
 sub _children { qw(left right) }
 
 sub polinom_degree {
-    my ($self, $var) = @_;
-    if ($self->{op} eq '*') { $self->{left}->polinom_degree($var) + $self->{right}->polinom_degree($var) } 
-    elsif ($self->{op} eq '+' || $self->{op} eq '-') { List::Util::max(map $self->{$_}->polinom_degree($var), $self->_children) } 
-    else { die "Polinom degree is unavaible for Expr with operator: '$self->{op}'" }
+    my $self = shift;
+    if ($self->{op} eq '*') { $self->{left}->polinom_degree(@_) + $self->{right}->polinom_degree(@_) } 
+    elsif ($self->{op} eq '+' || $self->{op} eq '-') { List::Util::max(map $self->{$_}->polinom_degree(@_), $self->_children) } 
+    else { die "Polinom degree is unavaible for expr with operator: '$self->{op}'" }
 }
 
 package EGE::Prog::UnOp;
@@ -248,7 +256,14 @@ sub get_ref {
 
 sub gather_vars { $_[1]->{$_[0]->{name}} = 1 }
 
-sub polinom_degree { $_[1] eq $_[0]->{name} or die "Undefined variable $_[0]->{name}" }
+
+sub polinom_degree {
+    my ($self, $env, $mistakes, $iter) = @_;
+    my $name = $self->{name};
+    defined $env->{$name} and return $mistakes->{var_as_const} ? $name eq $mistakes->{var_as_const} : $env->{$name};
+    defined $iter->{$name} and return $mistakes->{var_as_const} ? 0 : $iter->{EGE::Utils::last_key($iter, $name)};
+    die "Undefined variable $self->{name}";
+}
 
 package EGE::Prog::Const;
 use base 'EGE::Prog::SynElement';
@@ -293,7 +308,12 @@ sub run {
 
 sub _visit_children { my $self = shift; $_->visit_dfs(@_) for @{$self->{statements}} }
 
-sub complexity { my $self = shift; List::Util::max(map($_->complexity(@_), @{$self->{statements}})) }
+sub complexity {
+    my $self = shift;
+    $_[1]->{change_min} and return List::Util::min(map($_->complexity(@_), @{$self->{statements}})) || 0;
+    List::Util::max(map($_->complexity(@_), @{$self->{statements}})) || 0;
+}
+
 
 
 package EGE::Prog::CompoundStatement;
@@ -331,11 +351,17 @@ sub run {
     }
 }
 
-sub complexity { 
-    my ($self, $var, $repeat) = @_;
-    $repeat += $self->{ub}->polinom_degree($var);
-    my $body_complexity = $self->{body}->complexity($var, $repeat);
-    $repeat > $body_complexity ? $repeat : $body_complexity;
+sub complexity {
+    my ($self, $env, $mistakes, $iter, ) = @_;
+    my $name = $self->{var}->{name};
+    my $degree = $self->{ub}->polinom_degree($env, $mistakes, $iter);
+    $iter->{$name} = $degree;
+
+    my $body_complexity = $self->{body}->complexity($env, $mistakes, $iter);
+    $env->{$name} = $degree;
+    my $cur_complexity = List::Util::sum(grep { $_ =~ m/^\d+$/ } values $iter) || 0;
+    delete $iter->{$name};
+    $cur_complexity > $body_complexity ? $cur_complexity : $body_complexity;
 }
 
 package EGE::Prog::IfThen;
@@ -348,6 +374,25 @@ sub to_lang_fields { qw(cond) }
 sub run {
     my ($self, $env) = @_;
     $self->{body}->run($env) if $self->{cond}->run($env);
+}
+
+sub complexity { 
+    my ($self, $env, $mistakes, $iter) = @_;
+    my ($cond, $body) = ($self->{cond}, $self->{body});
+    $cond->{op} eq '==' or die "IfThen complexity for condition with operator: '$cond->{op}' is unavaible";
+
+    my @operands = qw(left right);
+    my @names = map $cond->{$_}->{name}, @operands;
+    defined $_ or die "IfThen complexity for condition with such arguments is unavaible" for @names;
+    @names = map EGE::Utils::last_key($iter, $_), @names;
+    ($mistakes->{ignore_if} || $names[0] eq $names[1]) and return $body->complexity($env, $mistakes, $iter);
+    
+    my $side = $iter->{$names[1]} > $iter->{$names[0]};
+    my $old_val;
+    ($old_val, $iter->{$names[$side]}) = ($iter->{$names[$side]}, $names[!$side]);
+    my $ret = $body->complexity($env, $mistakes, $iter);
+    $iter->{$names[$side]} = $old_val;
+    return $ret;
 }
 
 package EGE::Prog::CondLoop;
