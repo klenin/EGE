@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 120;
+use Test::More tests => 121;
 use Test::Exception;
 
 use lib '..';
@@ -551,6 +551,15 @@ sub check_sub {
         ]
     ]);
     is $b->complexity({ n => 1} ), 4, 'multi IfThen complexity'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, 'n', [
+            '=', 'i', 0     
+        ]
+    ]);
+    throws_ok sub { $b->complexity({ 'n' => 1 }) }, qr/i/, 'assign to iterator'
 }
 
 {
