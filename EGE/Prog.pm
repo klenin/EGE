@@ -87,7 +87,9 @@ sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for qw(var ex
 
 sub complexity {
     my ($self, $env, $mistakes, $iter) = @_;
-    defined $self->{var}->{name} or return ();
+    my $name;
+    defined($name = $self->{var}->{name}) or return ();
+    defined $iter->{$name} and die "Assign to iterator: '$name'"; 
     $env->{$self->{var}->{name}} = $self->{expr}->polinom_degree($env, $mistakes, $iter);
 }
 
