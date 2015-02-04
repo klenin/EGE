@@ -50,7 +50,7 @@ sub count_if {
     $count;
 }
 
-sub complexity { 0 }
+sub complexity { die; }
 
 sub needs_parens { 0 }
 
@@ -92,7 +92,6 @@ sub complexity {
     defined $iter->{$name} and die "Assign to iterator: '$name'"; 
     $env->{$self->{var}->{name}} = $self->{expr}->polinom_degree($env, $mistakes, $iter);
 }
-
 
 package EGE::Prog::Index;
 use base 'EGE::Prog::SynElement';
@@ -316,8 +315,6 @@ sub complexity {
     List::Util::max(map($_->complexity(@_), @{$self->{statements}})) || 0;
 }
 
-
-
 package EGE::Prog::CompoundStatement;
 use base 'EGE::Prog::SynElement';
 
@@ -447,6 +444,7 @@ sub run {
     $self->{expr}->run($env);
 };
 
+sub complexity { 0 }
 
 package EGE::Prog::FuncDef;
 use base 'EGE::Prog::CompoundStatement';
