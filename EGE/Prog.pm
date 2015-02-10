@@ -451,23 +451,23 @@ use base 'EGE::Prog::CompoundStatement';
 
 sub get_formats { qw(func_start_fmt func_end_fmt) }
 sub to_lang_fmt { '%3$s' }
-sub to_lang_fields { qw(var params) }
+sub to_lang_fields { qw(name params) }
 
 sub run {
     my ($self, $env) = @_;
-    $env->{'&'}->{$self->{var}->{name}} and die "Redefinition of function $self->{var}->{name}";
-    $env->{'&'}->{$self->{var}->{name}} = $self;
+    $env->{'&'}->{$self->{name}->{name}} and die "Redefinition of function $self->{name}->{name}";
+    $env->{'&'}->{$self->{name}->{name}} = $self;
 }
 
 sub call {
     my ($self, $args, $env) = @_;
     my $act_len = @$args;
     my $form_len = @{$self->{params}->{names}};
-    $act_len > $form_len and die "Too many arguments to function $self->{var}->{name}";    
-    $act_len < $form_len and die "Too few arguments to function $self->{var}->{name}";   
+    $act_len > $form_len and die "Too many arguments to function $self->{name}->{name}";    
+    $act_len < $form_len and die "Too few arguments to function $self->{name}->{name}";   
     
     my $new_env = { '&' => $env->{'&'}, map(($_ => shift $args), @{$self->{params}->{names}}) };
-    $self->{body}->run_val($self->{var}->{name}, $new_env);
+    $self->{body}->run_val($self->{name}->{name}, $new_env);
 }
 
 package EGE::Prog::FuncParams;
@@ -475,12 +475,22 @@ use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang) = @_;
-    join $lang->args_separator, map sprintf($lang->args_fmt, $_), @{$self->{names}};    
+    join $lang->args_separator, map sprintf($lang->args_fmt, $_), @{$self->{names}};
 }
 
 sub run {
 }
 
+package EGE::Prog::FuncName;
+use base 'EGE::Prog::SynElement';
+
+sub to_lang {
+    my ($self, $lang) = @_;
+    $self->{name};
+}
+
+sub run {
+}
 
 package EGE::Prog;
 use base 'Exporter';
@@ -550,7 +560,7 @@ sub statements_descr {{
     'if' => { type => 'IfThen', args => [qw(E_cond B_body)] },
     'while' => { type => 'While', args => [qw(E_cond B_body)] },
     'until' => { type => 'Until', args => [qw(E_cond B_body)] },
-    'func' => { type => 'FuncDef', args => [qw(E_var P_params B_body)] },
+    'func' => { type => 'FuncDef', args => [qw(N_name P_params B_body)] },
     'expr' => { type => 'ExprStmt', args => [qw(E_expr)] },
 }}
 
@@ -559,7 +569,13 @@ sub arg_processors {{
     E => \&make_expr,
     B => \&make_block,
     P => \&make_func_params,
+    N => \&make_func_name,
 }}
+
+sub make_func_name {
+    my ($src) = @_;
+    EGE::Prog::FuncName->new(name => $src);
+}
 
 sub make_func_params {
     my ($src) = @_;

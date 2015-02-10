@@ -221,9 +221,9 @@ sub while_end_fmt { "\n}" }
 
 sub until_start_fmt { "until (%s) {\n" }
 sub until_end_fmt { "\n}" }
-# TODO убрать '$' из имени функции
-sub func_start_fmt { "sub %s {\n  my (%s) = \@_;\n" } 
-sub func_end_fmt { "\n  return %1\$s;\n}\n" }
+
+sub func_start_fmt { "sub %s {\n  my \$%1\$s;\n  my (%s) = \@_;\n" } 
+sub func_end_fmt { "\n  return \$%1\$s;\n}\n" }
 
 sub print_fmt { 'print(%s)' }
 

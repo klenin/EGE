@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 121;
+use Test::More tests => 122;
 use Test::Exception;
 
 use lib '..';
@@ -284,8 +284,10 @@ sub check_sub {
         ],
         Perl => [
             'sub g {',
+            '  my $g;',
             '  my ($a, $b) = @_;',
             '  $g = $a - $b;',
+            '  return $g;',
             '}',
             '',
             '$a = g(3, 2);',
@@ -293,6 +295,7 @@ sub check_sub {
     };
     check_sub($_, $b, $c->{$_}, "function calling, definition in $_") for keys $c;
     is $b->run_val('a'), 1, 'run call function';
+    is eval($b->to_lang_named('Perl')), 3 - 2, 'eval perl funtion';
 }
 
 {
