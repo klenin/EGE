@@ -126,8 +126,8 @@ sub while_end_fmt { $_[1] ? "\n}" : '' }
 sub until_start_fmt { 'while (!(%s))' . ($_[1] ? " {\n" : "\n") }
 sub until_end_fmt { $_[1] ? "\n}" : '' }
 
-sub func_start_fmt { "int %s(%s) {\n" }
-sub func_end_fmt { "\n}\n" }
+sub func_start_fmt { "int %s(%s) {\n  int %1\$s;\n" }
+sub func_end_fmt { "\n  return %1\$s;\n}\n" }
 
 sub print_fmt { 'print(%s)' }
 
@@ -223,7 +223,7 @@ sub until_start_fmt { "until (%s) {\n" }
 sub until_end_fmt { "\n}" }
 # TODO убрать '$' из имени функции
 sub func_start_fmt { "sub %s {\n  my (%s) = \@_;\n" } 
-sub func_end_fmt { "\n}\n" }
+sub func_end_fmt { "\n  return %1\$s;\n}\n" }
 
 sub print_fmt { 'print(%s)' }
 

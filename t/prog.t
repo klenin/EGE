@@ -275,7 +275,9 @@ sub check_sub {
         ],
         C => [
             'int g(int a, int b) {',
+            '  int g;',
             '  g = a - b;',
+            '  return g;',
             '}',
             '',
             'a = g(3, 2);',
@@ -319,7 +321,7 @@ sub check_sub {
 {
     my $b = EGE::Prog::make_block([
         'for', 'i', 0, 9, [
-        	'expr', [ 'print', 'i', 0 ]
+            'expr', [ 'print', 'i', 0 ]
         ]
     ]);
     my $c = {
@@ -364,7 +366,7 @@ sub check_sub {
 {
     my $e = make_expr([ '%', 'x', 'x' ]);
     throws_ok sub { $e->polinom_degree({ 'x' => 1 }) }, qr/Polinom degree is unavaible for expr with operator: '%'/, 
-    	'calculating polinom degree of expr with \'%\'' 
+        'calculating polinom degree of expr with \'%\'' 
 }
 
 {
