@@ -133,7 +133,7 @@ sub print_fmt { 'print(%s)' }
 
 sub expr_fmt { '%s;' }
 
-sub args_fmt {"int %s"}
+sub args_fmt {'int %s'}
 
 package EGE::Prog::Lang::Pascal;
 use base 'EGE::Prog::Lang';
@@ -229,7 +229,7 @@ sub print_fmt { 'print(%s)' }
 
 sub expr_fmt { '%s;' }
 
-sub args_fmt { "\$%s" }
+sub args_fmt { '$%s' }
 
 package EGE::Prog::Lang::Logic;
 use base 'EGE::Prog::Lang';
