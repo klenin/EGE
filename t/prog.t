@@ -244,9 +244,6 @@ sub check_sub {
 
 {
     my $b = EGE::Prog::make_block([
-        'func', 'my_func', [ qw(x y z) ], [
-            '=', 'my_func', [ '-', 'x', 'y' ]
-        ],
         'func', 'g', [ qw(a b) ], [
             '=', 'g', [ '-', 'a', 'b' ]
         ],
@@ -254,10 +251,6 @@ sub check_sub {
     ]);
     my $c = {
         Basic => [
-            'FUNCTION my_func(x, y, z)',
-            '  my_func = x - y',
-            'END FUNCTION',
-            '',
             'FUNCTION g(a, b)',
             '  g = a - b',
             'END FUNCTION',
@@ -265,11 +258,6 @@ sub check_sub {
             'a = g(3, 2)',
         ],
         Alg => [
-            'алг цел my_func(цел x, y, z)',
-            'нач',
-            '  my_func := x - y',
-            'кон',
-            '',
             'алг цел g(цел a, b)',
             'нач',
             '  g := a - b',
@@ -278,11 +266,6 @@ sub check_sub {
             'a := g(3, 2)',
         ],
         Pascal => [
-            'function my_func(x, y, z: integer): integer;',
-            'begin',
-            '  my_func := x - y;',
-            'end;',
-            '',
             'function g(a, b: integer): integer;',
             'begin',
             '  g := a - b;',
@@ -291,10 +274,6 @@ sub check_sub {
             'a := g(3, 2);',
         ],
         C => [
-            'int my_func(int x, int y, int z) {',
-            '  my_func = x - y;',
-            '}',
-            '',
             'int g(int a, int b) {',
             '  g = a - b;',
             '}',
@@ -302,11 +281,6 @@ sub check_sub {
             'a = g(3, 2);',
         ],
         Perl => [
-            'sub my_func {',
-            '  my ($x, $y, $z) = @_;',
-            '  $my_func = $x - $y;',
-            '}',
-            '',
             'sub g {',
             '  my ($a, $b) = @_;',
             '  $g = $a - $b;',
@@ -316,6 +290,7 @@ sub check_sub {
         ],        
     };
     check_sub($_, $b, $c->{$_}, "function calling, definition in $_") for keys $c;
+    is $b->run_val('a'), 1, 'run call function';
 }
 
 {
@@ -324,16 +299,6 @@ sub check_sub {
         'func', 'f', [ qw(a b) ], [],
     ]);
     throws_ok sub { $b->run({}) }, qr/f/, 'function redefinition'
-}
-
-{
-    my $b = EGE::Prog::make_block([
-        'func', 'f', [ qw(x y z) ], [
-            '=', 'f', [ '-', 'x', 'y' ]
-        ],
-        '=', 'a', [ '()', 'f', 1, 2, 3 ],
-    ]);
-    is $b->run_val('a'), -1, 'run call function';
 }
 
 {
@@ -404,19 +369,15 @@ sub check_sub {
 
 {
     my $b = EGE::Prog::make_block([
-        'for', 'i', 0, [ '*', 'n', [ '-', 4, 'n' ] ], [
-            '=', [ '[]', 'M', 'i' ], 'i'
-        ]
+        'for', 'i', 0, [ '*', 'n', 'n' ], []
     ]);
     is $b->complexity({ n => 1 }), 2, 'single forLoop complexity'
 }
 
 {
     my $b = EGE::Prog::make_block([
-        'for', 'i', 0, [ '*', 2, [ '*', 'n', 'n' ] ], [
-            'for', 'j', 0, [ '+', 2, 'n' ], [
-                '=', [ '[]', 'M', 'i', 'j' ], [ '*', 'i', 'j' ]
-            ]
+        'for', 'i', 0, [ '*', 'n', 'n' ], [
+            'for', 'j', 0, 'n', []
         ]
     ]);
     is $b->complexity({ n => 1 }), 3, 'multi forLoop complexity'
@@ -424,13 +385,9 @@ sub check_sub {
 
 {
     my $b = EGE::Prog::make_block([
-        'for', 'i', 0, [ '*', 2, [ '*', 'n', 'n' ] ], [
-            'for', 'j', 0, [ '+', 3, 'n' ], [
-                '=', [ '[]', 'M', 'i', 'j' ], [ '*', 'i', 'j' ]
-            ],
-            'for', 'j', 0, [ '*', 'n', [ '-', 'n', 1 ] ], [
-                '=', [ '[]', 'M', 'i', 'j' ], [ '*', 'i', 'j' ]
-            ]
+        'for', 'i', 0, [ '*', 'n', 'n' ], [
+            'for', 'j', 0, 'n' , [],
+            'for', 'j', 0, [ '*', 'n', 'n' ], []
         ]
     ]);
     is $b->complexity({ n => 1 }), 4, 'block complexity'
@@ -440,9 +397,7 @@ sub check_sub {
 {
     my $b = EGE::Prog::make_block([
         'for', 'i', 0, 'n', [
-           'for', 'j', 0, 'i', [
-                'expr', [ 'print', [ '*', 'j', 'i' ] ]
-            ]
+           'for', 'j', 0, 'i', []
         ]
     ]);
     is $b->complexity({ n => 1 }), 2, 'complexity with using var as border'
@@ -452,9 +407,7 @@ sub check_sub {
     my $b = EGE::Prog::make_block([
         'for', 'i', 0, 'n', [
             'for', 'j', 0, 'n', [
-                'if', [ '!=', 'i', 'j' ], [
-                   'expr', [ 'print', [ '*', 'j', 'i' ] ]
-                ]
+                'if', [ '!=', 'i', 'j' ], []
             ]
         ]
     ]);
@@ -465,9 +418,7 @@ sub check_sub {
     my $b = EGE::Prog::make_block([
         'for', 'i', 0, 'n', [
             'if', [ '==', 'i', 'i' ], [
-                'for', 'j', 0, 'n', [
-                    'expr', [ 'print', [ '*', 'j', 'i' ] ]
-                ]
+                'for', 'j', 0, 'n', []
             ]
         ]
     ]);
@@ -478,9 +429,7 @@ sub check_sub {
     my $b = EGE::Prog::make_block([
         'for', 'i', 0, 'n', [
             'for', 'j', 0, 'n', [
-                'if', [ '==', 'i', 'j1' ], [
-                    'expr', [ 'print', [ '*', 'j', 'i' ] ]
-                ]
+                'if', [ '==', 'i', 'j1' ], []
             ]
         ]
     ]);
@@ -490,11 +439,7 @@ sub check_sub {
 {
     my $b = EGE::Prog::make_block([
         'for', 'i', 0, 'n', [
-            'for', 'j', 0, 'n', [
-                'if', [ '==', 'i', 2 ], [
-                    'expr', [ 'print', [ '*', 'j', 'i' ] ]
-                ]
-            ]
+            'if', [ '==', 'i', 2 ], []
         ]
     ]);
     throws_ok sub { $b->complexity({ 'n' => 1 }) }, qr/such arguments/, 'IfThen complexity for condition with const'
@@ -502,30 +447,24 @@ sub check_sub {
 
 {
     my $b = EGE::Prog::make_block([
-        'for', 'i', 0, [ '*', 2, [ '*', 'n', 'n' ] ], [
-            'for', 'j', 0, [ '+', 2, 'n' ], [
+        'for', 'i', 0, [ '*', 'n', 'n' ], [
+            'for', 'j', 0, 'n', [
                 'if', [ '==', 'i', 'j' ], [
-                    'for', 'l', 0, 'n', [
-                        '=', [ '[]', 'M', 'i', 'j' ], [ '*', 'i', 'j' ]
-                    ]
+                    'for', 'l', 0, 'n', []
                 ]
             ],
-            'for', 'k', 0, 'n', [
-                '=', [ '[]', 'M', 'i', 'j' ], [ '*', 'i', 'j' ]
-            ]
+            'for', 'k', 0, 'n', []
         ]
     ]);
-    is $b->complexity({ n => 1 }), 3, 'IfThen complexity1'
+    is $b->complexity({ n => 1 }), 3, 'IfThen complexity 1'
 }
 
 {
     my $b = EGE::Prog::make_block([
-        'for', 'i', 0, [ '*', 2, [ '*', 'n', 'n' ] ], [
-            'for', 'j', 0, [ '+', 11, 'n' ], [
+        'for', 'i', 0, [ '*', 'n', 'n' ] , [
+            'for', 'j', 0, 'n', [
                 'if', [ '==', 'i', 'j' ], [
-                    'for', 'l', 0, 'n', [
-                        '=', [ '[]', 'M', 'i', 'j' ], [ '*', 'i', 'j' ]
-                    ]
+                    'for', 'l', 0, 'n', []
                 ]
             ],
             'for', 'k', 0, [ '*', 'i', 'j' ], [
@@ -533,7 +472,7 @@ sub check_sub {
             ]
         ]
     ]);
-    is $b->complexity({ n => 1 }), 5, 'IfThen complexity2'
+    is $b->complexity({ n => 1 }), 5, 'IfThen complexity 2'
 }
 
 {
@@ -542,9 +481,7 @@ sub check_sub {
             'for', 'j', 0, 'n', [
                 'if', [ '==', 'i', 'j' ], [
                     'for', 'l', 0, [ '*', 'n', [ '*', 'i', 'j' ] ], [
-                        'if', [ '==', 'i', 'l' ], [
-                            'expr', [ 'print', 'i', 'j', 'l' ]
-                        ]
+                        'if', [ '==', 'i', 'l' ], []
                     ]
                 ]
             ]
@@ -567,14 +504,10 @@ sub check_sub {
         'for', 'i', 0, [ '*', 'n', 'n' ], [
             'for', 'j', 0, 'n', [
                 'if', [ '==', 'i', 'j' ], [
-                    'for', 'l', 0, [ '*', 'n', 'j' ], [
-                        '=', [ '[]', 'M', 'i', 'j' ], [ '*', 'i', 'j' ]
-                    ]
+                    'for', 'l', 0, [ '*', 'n', 'j' ], []
                 ]
             ],
-            'for', 'k', 0, [ '*', 'i', 2 ], [
-                '=', [ '[]', 'M', 'i', 'j' ], [ '*', 'i', 'j' ]
-            ]
+            'for', 'k', 0, 'i', []
         ]
     ]);
     my @mistakes_names = qw(var_as_const ignore_if change_min);
