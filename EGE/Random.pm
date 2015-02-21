@@ -63,7 +63,7 @@ sub pick_n_sorted {
     sort $self->pick_n(@_);
 }
 
-sub coin { rand(2) > 1 ? 1 : 0 }
+sub coin { (($_[1] || 0.5) > rand) ? 1 : 0 }
 
 sub shuffle {
     my $self = shift;
