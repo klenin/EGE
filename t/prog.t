@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 122;
+use Test::More tests => 133;
 use Test::Exception;
 
 use lib '..';
@@ -358,17 +358,17 @@ sub check_sub {
 
 {
     my $e = make_expr([ '+', [ '*', 'x', 'x' ], [ '+', 'x', 2 ] ]);
-    is $e->polinom_degree({ 'x' => 1 }), 2, 'polinom degree'
+    is $e->polinom_degree({ x => 1 }), 2, 'polinom degree'
 }
 
 {
     my $e = make_expr([ '+', 'x', 'xyz' ]);
-    throws_ok sub { $e->polinom_degree({ 'x' => 1 }) }, qr/Undefined variable xyz/, 'undefined var when calculating polinom degree' 
+    throws_ok sub { $e->polinom_degree({ x => 1 }) }, qr/Undefined variable xyz/, 'undefined var when calculating polinom degree' 
 }
 
 {
     my $e = make_expr([ '%', 'x', 'x' ]);
-    throws_ok sub { $e->polinom_degree({ 'x' => 1 }) }, qr/Polinom degree is unavaible for expr with operator: '%'/, 
+    throws_ok sub { $e->polinom_degree({ x => 1 }) }, qr/Polinom degree is unavaible for expr with operator: '%'/, 
         'calculating polinom degree of expr with \'%\'' 
 }
 
@@ -416,7 +416,7 @@ sub check_sub {
             ]
         ]
     ]);
-    throws_ok sub { $b->complexity({ 'n' => 1 }) }, qr/!=/, 'IfThen complexity for condition with \'!=\''
+    throws_ok sub { $b->complexity({ n => 1 }) }, qr/!=/, 'IfThen complexity for condition with \'!=\''
 }
 
 {
@@ -427,7 +427,7 @@ sub check_sub {
             ]
         ]
     ]);
-    is $b->complexity({ 'n' => 1 }), 2, 'IfThen complexity for condition with same var'
+    is $b->complexity({ n => 1 }), 2, 'IfThen complexity for condition with same var'
 }
 
 {
@@ -438,7 +438,7 @@ sub check_sub {
             ]
         ]
     ]);
-    throws_ok sub { $b->complexity({ 'n' => 1 }) }, qr/j1/, 'IfThen complexity for condition with not iterated var'
+    throws_ok sub { $b->complexity({ n => 1 }) }, qr/j1/, 'IfThen complexity for condition with not iterated var'
 }
 
 {
@@ -447,7 +447,7 @@ sub check_sub {
             'if', [ '==', 'i', 2 ], []
         ]
     ]);
-    throws_ok sub { $b->complexity({ 'n' => 1 }) }, qr/such arguments/, 'IfThen complexity for condition with const'
+    throws_ok sub { $b->complexity({ n => 1 }) }, qr/such arguments/, 'IfThen complexity for condition with const'
 }
 
 {
@@ -501,7 +501,7 @@ sub check_sub {
             '=', 'i', 0     
         ]
     ]);
-    throws_ok sub { $b->complexity({ 'n' => 1 }) }, qr/i/, 'assign to iterator'
+    throws_ok sub { $b->complexity({ n => 1 }) }, qr/i/, 'assign to iterator'
 }
 
 {
