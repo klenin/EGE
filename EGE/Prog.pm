@@ -378,20 +378,37 @@ sub run {
 sub complexity { 
     my ($self, $env, $mistakes, $iter) = @_;
     my ($cond, $body) = ($self->{cond}, $self->{body});
-    $cond->{op} eq '==' or die "IfThen complexity for condition with operator: '$cond->{op}' is unavaible";
+    if ($cond->{op} eq '==') {
+        my @names = map $cond->{$_}->{name}, qw(left right);
+        defined $_ or die "IfThen complexity for condition with such arguments is unavaible" for @names;
+        @names = map EGE::Utils::last_key($iter, $_), @names;
+        ($mistakes->{ignore_if_eq} || $names[0] eq $names[1]) and return $body->complexity($env, $mistakes, $iter);
+        
+        my $side = $iter->{$names[1]} > $iter->{$names[0]};
+        my $old_val;
+        ($old_val, $iter->{$names[$side]}) = ($iter->{$names[$side]}, $names[!$side]);
+        my $ret = $body->complexity($env, $mistakes, $iter);
+        $iter->{$names[$side]} = $old_val;
+        return $ret;
+    }
+    elsif (my $side = $cond->{op} eq '>=' or $cond->{op} eq '<=') {
+        my @operands = qw(left right);
+        my $name = $cond->{$operands[$side]}->{name} or die "IfThen complexity with condition a >= b, expected b as var, got $cond->{$operands[$side]}";
+        $name = EGE::Utils::last_key($iter, $name);
+        my $old_val = $iter->{$name};
+        my $new_val = $cond->{$operands[!$side]}->polinom_degree($env, $mistakes, $iter);
+        ($mistakes->{ignore_if_less} || $new_val >= $old_val) and return $body->complexity($env, $mistakes, $iter);
 
-    my @operands = qw(left right);
-    my @names = map $cond->{$_}->{name}, @operands;
-    defined $_ or die "IfThen complexity for condition with such arguments is unavaible" for @names;
-    @names = map EGE::Utils::last_key($iter, $_), @names;
-    ($mistakes->{ignore_if} || $names[0] eq $names[1]) and return $body->complexity($env, $mistakes, $iter);
-    
-    my $side = $iter->{$names[1]} > $iter->{$names[0]};
-    my $old_val;
-    ($old_val, $iter->{$names[$side]}) = ($iter->{$names[$side]}, $names[!$side]);
-    my $ret = $body->complexity($env, $mistakes, $iter);
-    $iter->{$names[$side]} = $old_val;
-    return $ret;
+        $iter->{$name} = $new_val;
+        my $ret = $body->complexity($env, $mistakes, $iter);
+        $iter->{$name} = $old_val;
+        return $ret;
+    }
+        
+    else {
+        die "IfThen complexity for condition with operator: '$cond->{op}' is unavaible";
+    }
+
 }
 
 package EGE::Prog::CondLoop;

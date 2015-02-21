@@ -497,6 +497,41 @@ sub check_sub {
 
 {
     my $b = EGE::Prog::make_block([
+        'for', 'i', 0, ['*', [ '*', 'n', 'n' ], 'n'], [
+            'if', [ '<=', 'i', 'n' ], [
+                'for', 'j', 0, 'i', []
+            ]
+        ]
+    ]);
+    is $b->complexity({ n => 1} ), 3, 'IfThen complexity less condition'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, [ '*', 'n', 'n' ], [
+            'for', 'j', 0, 'n', [
+                'if', [ '==', 'i', 'j' ], [
+                    'if', [ '<=', 'i', 10 ], [
+                        'for', 'k', 0, ['*', ['*', 'i', 'n'], 'n'], []
+                    ]
+                ]
+            ]
+        ]
+    ]);
+    is $b->complexity({ n => 1} ), 3, 'IfThen complexity less and eq condition'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, 'n', [
+            'if', [ '<=', 1, 'i' ], []
+        ]
+    ]);
+    throws_ok sub { $b->complexity({ n => 1 }) }, qr/EGE::Prog::Const/, 'IfThen complexity without var in less condition'
+}
+
+{
+    my $b = EGE::Prog::make_block([
         'for', 'i', 0, 'n', [
             '=', 'i', 0     
         ]
@@ -509,14 +544,16 @@ sub check_sub {
         'for', 'i', 0, [ '*', 'n', 'n' ], [
             'for', 'j', 0, 'n', [
                 'if', [ '==', 'i', 'j' ], [
-                    'for', 'l', 0, [ '*', 'n', 'j' ], []
+                    'if', [ '<=', 'j', 10 ], [
+                        'for', 'k', 0, ['*', ['*', 'i', 'i'], 'n'], []
+                    ]
                 ]
             ],
-            'for', 'k', 0, 'i', []
+            'for', 'l', 0, 'i', []
         ]
     ]);
-    my @mistakes_names = qw(var_as_const ignore_if change_min);
-    my @ans = (4, 3, 5, 4, 3, 2, 4, 2);
+    my @mistakes_names = qw(var_as_const ignore_if_eq change_min ignore_if_less);
+    my @ans = (4, 3, 7, 3, 3, 2, 4, 2, 4, 3, 8, 4, 4, 2, 4, 2);
 
     for (my $i = 1; $i < 2**@mistakes_names; $i++) {
         my %mistakes = map(($mistakes_names[$_] => $i/2**$_ % 2), (0..@mistakes_names-1));
