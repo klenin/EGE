@@ -97,11 +97,13 @@ sub new_var {
 }
 
 sub rnd_pow {
-    my ($other_counts, $is_it_iterator, $assign, $create_new_var) = @_;
-    my $var = rnd->pick(keys $is_it_iterator);
+    my ($other_counts, $is_it_iterator, $assign, $create_new_var, $use_iter) = @_;
+    my @vars = keys $is_it_iterator;
+    !$use_iter and @vars = grep { !$is_it_iterator->{$_} } @vars;
+    my $var = rnd->pick(@vars);
     if ($create_new_var && $other_counts->{assign} && rnd->coin) {
         $other_counts->{assign}--;
-        my $right = rnd_pow($other_counts, $is_it_iterator, $assign, 0);
+        my $right = rnd_pow($other_counts, $is_it_iterator, $assign, 0, $use_iter);
         $var = new_var($is_it_iterator, 0);
         push $assign, '=', $var, $right;
     }
@@ -115,6 +117,9 @@ sub rnd_poly {
     $poly;
 }
 
+use constant P_IF_EQ => 0.3;
+use constant P_IF_LESS => 0.3;
+
 sub make_cycle {
     my ($for_count, $other_counts, $is_it_iterator) = @_;
     if ($for_count) {
@@ -123,15 +128,23 @@ sub make_cycle {
         my $children = [];
         my @head;
         my $iter;
-
-        if (rnd->coin && List::Util::sum(values $is_it_iterator) > 1 && $other_counts->{if}--) {
+        if (rnd->coin(P_IF_EQ) && List::Util::sum(values $is_it_iterator) > 1 && $other_counts->{if}) {
+        	$other_counts->{if}--;
             my @if_vars = rnd->pick_n(2, map $is_it_iterator->{$_} ? $_ : (), keys $is_it_iterator); 
             $is_it_iterator->{$iter = $if_vars[0]} = 0;
             @head = ('if', [ '==', @if_vars ]);
         }
+        elsif (rnd->coin(P_IF_LESS) && List::Util::sum(values $is_it_iterator) > 0 && $other_counts->{if}) {
+            $other_counts->{if}--;
+            my $var = rnd->pick(grep { $is_it_iterator->{$_} } keys $is_it_iterator);
+            my $old_val = delete $is_it_iterator->{$var};
+            my $expr = rnd_pow($other_counts, $is_it_iterator, $assign, 0, 0);
+            $is_it_iterator->{$var} = $old_val;
+            @head = ('if', rnd->coin ? [ '<=', $var, $expr] : [ '>=', $expr, $var]);
+        }
         else {
         	$for_count--;
-            my $e = rnd_pow($other_counts, $is_it_iterator, $assign, 1);
+            my $e = rnd_pow($other_counts, $is_it_iterator, $assign, 1, 1);
             $iter = new_var($is_it_iterator, 1);
             @head = ('for', $iter, 0, $e);
         }
@@ -142,7 +155,7 @@ sub make_cycle {
             push $children, make_cycle($next_for_count, $other_counts, $is_it_iterator);
         } while ($for_count);     
         
-        $is_it_iterator->{$iter} ^= 1; 
+        $iter and $is_it_iterator->{$iter} ^= 1; 
         return @$assign, @head, $children;
 
     }
@@ -163,7 +176,7 @@ sub complexity
 {
     my ($self) = @_;    
     my $main_var = rnd->pick(qw(x y z));
-    my @mistakes_names = qw(var_as_const ignore_if change_min); 
+    my @mistakes_names = qw(var_as_const ignore_if_eq change_min ignore_if_less); 
     $self->{correct} = 0;
 
     while(1) {
