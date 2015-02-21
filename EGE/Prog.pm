@@ -204,7 +204,7 @@ sub _children { qw(left right) }
 sub polinom_degree {
     my $self = shift;
     if ($self->{op} eq '*') { $self->{left}->polinom_degree(@_) + $self->{right}->polinom_degree(@_) } 
-    elsif ($self->{op} eq '+' || $self->{op} eq '-') { List::Util::max(map $self->{$_}->polinom_degree(@_), $self->_children) } 
+    elsif ($self->{op} eq '+') { List::Util::max(map $self->{$_}->polinom_degree(@_), $self->_children) } 
     else { die "Polinom degree is unavaible for expr with operator: '$self->{op}'" }
 }
 
