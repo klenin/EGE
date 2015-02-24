@@ -47,7 +47,7 @@ sub o_poly_cmp {
     $self->variants(@variants);
 }
 
-use constant MAX_DEGREE => 3;
+use constant MAX_DEGREE => 2;
 
 sub pow {
     my ($var, $degree) = @_;
@@ -84,6 +84,9 @@ sub cycle_complexity
         $degrees[0] );
     $self->variants(map big_o(to_logic([ '**', $main_var, $_ ])), @variants);
 }
+
+use constant COUNTER => 0;
+
 sub final_expr {
     my $iter = $_[0];
     ('expr', [ 'print', map $iter->{$_} ? $_ : (), keys $iter ]);
@@ -129,7 +132,7 @@ sub make_cycle {
         my @head;
         my $iter;
         if (rnd->coin(P_IF_EQ) && List::Util::sum(values $is_it_iterator) > 1 && $other_counts->{if}) {
-        	$other_counts->{if}--;
+            $other_counts->{if}--;
             my @if_vars = rnd->pick_n(2, map $is_it_iterator->{$_} ? $_ : (), keys $is_it_iterator); 
             $is_it_iterator->{$iter = $if_vars[0]} = 0;
             @head = ('if', [ '==', @if_vars ]);
@@ -143,10 +146,11 @@ sub make_cycle {
             @head = ('if', rnd->coin ? [ '<=', $var, $expr] : [ '>=', $expr, $var]);
         }
         else {
-        	$for_count--;
+            $for_count--;
             my $e = rnd_pow($other_counts, $is_it_iterator, $assign, 1, 1);
             $iter = new_var($is_it_iterator, 1);
             @head = ('for', $iter, 0, $e);
+            push $children, '=', 'counter', [ '+', 'counter', 1 ];
         }
 
         my $next_for_count;
@@ -165,12 +169,10 @@ sub make_cycle {
 
 }
 
-use constant MIN_FOR => 4;
-use constant MAX_FOR => 6;
-use constant MAX_IF => 3;
-use constant MAX_ASSIGN => 5;
-
-
+use constant MIN_FOR => 2;
+use constant MAX_FOR => 3;
+use constant MAX_IF => 2;
+use constant MAX_ASSIGN => 2;
 
 sub complexity
 {
@@ -180,11 +182,11 @@ sub complexity
     $self->{correct} = 0;
 
     while(1) {
-        my $cycle = [ make_cycle(
+        my $cycle = [ '=', 'counter', 0, make_cycle(
             rnd->in_range(MIN_FOR, MAX_FOR), 
             { if => MAX_IF, assign => MAX_ASSIGN }, 
             { $main_var => 0 }) ];
-		
+        
         my $block = EGE::Prog::make_block($cycle);
         my @indexes = rnd->shuffle(1 .. 7);
         my @variants = $block->complexity({ $main_var => 1 });
@@ -204,6 +206,10 @@ sub complexity
                 }
                 my $lt = EGE::LangTable::table($block, [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);   
                 $self->{text} = "Определите асимптотическую сложность следующего алгоритма: $lt";
+                if (COUNTER) {
+                    unshift($cycle, '=', $main_var, 10);
+                    $self->{text} .= EGE::Prog::make_block($cycle)->run_val('counter');
+                }
                 $self->variants(map big_o(to_logic([ '**', $main_var, $_ ])), @variants);
                 return;
             }
@@ -212,5 +218,8 @@ sub complexity
 
     }
 }
+
+
+
 
 1;
