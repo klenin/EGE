@@ -90,7 +90,7 @@ sub complexity {
     my $name;
     defined($name = $self->{var}->{name}) or return ();
     defined $iter->{$name} and die "Assign to iterator: '$name'"; 
-    $env->{$self->{var}->{name}} = $self->{expr}->polinom_degree($env, $mistakes, $iter);
+    $env->{$self->{var}->{name}} = $self->{expr}->polinom_degree($env, $mistakes, {});
 }
 
 package EGE::Prog::Index;
@@ -375,25 +375,33 @@ sub run {
     $self->{body}->run($env) if $self->{cond}->run($env);
 }
 
-sub complexity { 
+sub complexity {
     my ($self, $env, $mistakes, $iter) = @_;
     my ($cond, $body) = ($self->{cond}, $self->{body});
     if ($cond->{op} eq '==') {
         my @names = map $cond->{$_}->{name}, qw(left right);
+        # проверка что обе переменные определены
+        $cond->{$_}->polinom_degree($env, $mistakes, $iter) for qw(left right);
+
         defined $_ or die "IfThen complexity for condition with such arguments is unavaible" for @names;
-        @names = map EGE::Utils::last_key($iter, $_), @names;
         ($mistakes->{ignore_if_eq} || $names[0] eq $names[1]) and return $body->complexity($env, $mistakes, $iter);
-        
-        my $side = $iter->{$names[1]} > $iter->{$names[0]};
-        my $old_val;
-        ($old_val, $iter->{$names[$side]}) = ($iter->{$names[$side]}, $names[!$side]);
+        defined $iter->{$names[0]} and defined $iter->{$names[1]} or 
+            die "IfThen complexity with condition a == b, expected both var as iterator";
+
+        my ($old_val, $new_val, $side);
+        $_ = EGE::Utils::last_key($iter, $_) for @names;
+        $side = $iter->{$names[1]} > $iter->{$names[0]};
+        $new_val = $names[!$side];
+      
+        ($old_val, $iter->{$names[$side]}) = ($iter->{$names[$side]}, $new_val);
         my $ret = $body->complexity($env, $mistakes, $iter);
         $iter->{$names[$side]} = $old_val;
         return $ret;
     }
     elsif (my $side = $cond->{op} eq '>=' or $cond->{op} eq '<=') {
         my @operands = qw(left right);
-        my $name = $cond->{$operands[$side]}->{name} or die "IfThen complexity with condition a >= b, expected b as var, got $cond->{$operands[$side]}";
+        my $name = $cond->{$operands[$side]}->{name} or 
+            die "IfThen complexity with condition a >= b, expected b as var, got $cond->{$operands[$side]}";
         $name = EGE::Utils::last_key($iter, $name);
         my $old_val = $iter->{$name};
         my $new_val = $cond->{$operands[!$side]}->polinom_degree($env, $mistakes, $iter);
@@ -404,7 +412,6 @@ sub complexity {
         $iter->{$name} = $old_val;
         return $ret;
     }
-        
     else {
         die "IfThen complexity for condition with operator: '$cond->{op}' is unavaible";
     }

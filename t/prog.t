@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 133;
+use Test::More tests => 135;
 use Test::Exception;
 
 use lib '..';
@@ -438,7 +438,7 @@ sub check_sub {
             ]
         ]
     ]);
-    throws_ok sub { $b->complexity({ n => 1 }) }, qr/j1/, 'IfThen complexity for condition with not iterated var'
+    throws_ok sub { $b->complexity({ n => 1 }) }, qr/j1/, 'IfThen complexity for condition with undef var'
 }
 
 {
@@ -533,10 +533,30 @@ sub check_sub {
 {
     my $b = EGE::Prog::make_block([
         'for', 'i', 0, 'n', [
-            '=', 'i', 0     
+            '=', 'i', 0
         ]
     ]);
     throws_ok sub { $b->complexity({ n => 1 }) }, qr/i/, 'assign to iterator'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, 'n', [
+            '=', 'j', [ '*', 'i', 'i' ]
+        ]
+    ]);
+    throws_ok sub { $b->complexity({ n => 1 }) }, qr/i/, 'assign iterator to other var'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, 'n', [
+            'if', [ '==', 'i', 'n' ], [
+            	'for', 'j', 0, 'n', []
+           	]
+        ]
+    ]);
+    throws_ok sub { $b->complexity({ n => 1 }) } , qr/a == b/, 'if_eq compare iterator with non-iterator'
 }
 
 {
