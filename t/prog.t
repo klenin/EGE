@@ -357,8 +357,8 @@ sub check_sub {
 }
 
 {
-    my $e = make_expr([ '+', [ '*', 'x', 'x' ], [ '+', 'x', 2 ] ]);
-    is $e->polinom_degree({ x => 1 }), 2, 'polinom degree'
+    my $e = make_expr([ '+', [ '*', 'x', ['**', 'x', 2] ], [ '+', 'x', 2 ] ]);
+    is $e->polinom_degree({ x => 1 }), 3, 'polinom degree'
 }
 
 {
