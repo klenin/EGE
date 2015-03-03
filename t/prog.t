@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 135;
+use Test::More tests => 138;
 use Test::Exception;
 
 use lib '..';
@@ -398,7 +398,6 @@ sub check_sub {
     is $b->complexity({ n => 1 }), 4, 'block complexity'
 }
 
-
 {
     my $b = EGE::Prog::make_block([
         'for', 'i', 0, 'n', [
@@ -545,18 +544,26 @@ sub check_sub {
             '=', 'j', [ '*', 'i', 'i' ]
         ]
     ]);
-    throws_ok sub { $b->complexity({ n => 1 }) }, qr/i/, 'assign iterator to other var'
+    throws_ok sub { $b->complexity({ n => 1 }) }, qr/j/, 'assign iterator to another var'
 }
 
 {
     my $b = EGE::Prog::make_block([
         'for', 'i', 0, 'n', [
             'if', [ '==', 'i', 'n' ], [
-            	'for', 'j', 0, 'n', []
-           	]
+                'for', 'j', 0, 'n', []
+            ]
         ]
     ]);
     throws_ok sub { $b->complexity({ n => 1 }) } , qr/a == b/, 'if_eq compare iterator with non-iterator'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, ['**', 'n', ['()', 'rand', 0, 4]], []
+    ]);
+    my $ans = { worth => 4, best => 0, average => 2 }; 
+    is $b->complexity({ n => 1 }, {}, {}, $_) , $ans->{$_}, "complexity $_ case" for keys $ans
 }
 
 {
@@ -595,4 +602,3 @@ sub check_sub {
         [ '&&', [ '||', 'x', 'y' ], [ '==', 'a', 1 ] ],
         '(x OR y) AND a = 1', 'priorities');
 }
-

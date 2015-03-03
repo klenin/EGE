@@ -86,11 +86,16 @@ sub run {
 sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for qw(var expr) }
 
 sub complexity {
-    my ($self, $env, $mistakes, $iter) = @_;
+    my ($self, $env, $mistakes, $iter, $rnd_case) = @_;
     my $name;
     defined($name = $self->{var}->{name}) or return ();
-    defined $iter->{$name} and die "Assign to iterator: '$name'"; 
-    $env->{$self->{var}->{name}} = $self->{expr}->polinom_degree($env, $mistakes, {});
+    defined $iter->{$name} and die "Assign to iterator: '$name'";
+
+    # проверить, что все переменные expr определены
+    $self->{expr}->polinom_degree($env, $mistakes, $iter, $rnd_case);
+    $env->{$self->{var}->{name}} = eval { $self->{expr}->polinom_degree($env, $mistakes, {}, $rnd_case) };
+    $@ and die "Assign iterator to: '$name'";
+    ()
 }
 
 package EGE::Prog::Index;
@@ -130,8 +135,14 @@ sub to_lang {
 }
 
 sub run {
-    my ($self, $env) = @_;
+    my ($self, $env, $rand_case) = @_;
     my $func = $env->{'&'}->{$self->{func}} or die "Undefined function $self->{func}";
+    if ($self->{func} eq 'rand') {
+        $rand_case or return $self->{args}[0]->run($env, $rand_case) + int rand $self->{args}[1]->run($env, $rand_case);
+        $rand_case eq 'worth' and return $self->{args}[1]->run($env, $rand_case);
+        $rand_case eq 'best' and return $self->{args}[0]->run($env, $rand_case);
+        $rand_case eq 'average' and return ($self->{args}[0]->run($env, $rand_case) + $self->{args}[1]->run($env, $rand_case)) / 2;
+    }
     my $args = [ map $_->run($env), @{$self->{args}} ];
     $func->call($args, $env);
 }
@@ -203,9 +214,10 @@ sub _children { qw(left right) }
 
 sub polinom_degree {
     my $self = shift;
+    my ($env, $mistakes, $iter, $rand_case) = @_;
     if ($self->{op} eq '*') { $self->{left}->polinom_degree(@_) + $self->{right}->polinom_degree(@_) }
     elsif ($self->{op} eq '+') { List::Util::max(map $self->{$_}->polinom_degree(@_), $self->_children) }
-    elsif ($self->{op} eq '**') { $self->{left}->polinom_degree(@_) * $self->{right}->run() }
+    elsif ($self->{op} eq '**') { $self->{left}->polinom_degree(@_) * $self->{right}->run({ '&' => { rand => 1 } }, $rand_case) }
     else { die "Polinom degree is unavaible for expr with operator: '$self->{op}'" }
 }
 
@@ -352,12 +364,12 @@ sub run {
 }
 
 sub complexity {
-    my ($self, $env, $mistakes, $iter, ) = @_;
+    my ($self, $env, $mistakes, $iter, $rnd_case) = @_;
     my $name = $self->{var}->{name};
-    my $degree = $self->{ub}->polinom_degree($env, $mistakes, $iter);
+    my $degree = $self->{ub}->polinom_degree($env, $mistakes, $iter, $rnd_case);
     $iter->{$name} = $degree;
 
-    my $body_complexity = $self->{body}->complexity($env, $mistakes, $iter);
+    my $body_complexity = $self->{body}->complexity($env, $mistakes, $iter, $rnd_case);
     $env->{$name} = $degree;
     my $cur_complexity = List::Util::sum(grep { $_ =~ m/^\d+$/ } values $iter) || 0;
     delete $iter->{$name};
@@ -377,15 +389,15 @@ sub run {
 }
 
 sub complexity {
-    my ($self, $env, $mistakes, $iter) = @_;
+    my ($self, $env, $mistakes, $iter, $rnd_case) = @_;
     my ($cond, $body) = ($self->{cond}, $self->{body});
     if ($cond->{op} eq '==') {
         my @names = map $cond->{$_}->{name}, qw(left right);
         # проверка что обе переменные определены
-        $cond->{$_}->polinom_degree($env, $mistakes, $iter) for qw(left right);
+        $cond->{$_}->polinom_degree($env, $mistakes, $iter, $rnd_case) for qw(left right);
 
         defined $_ or die "IfThen complexity for condition with such arguments is unavaible" for @names;
-        ($mistakes->{ignore_if_eq} || $names[0] eq $names[1]) and return $body->complexity($env, $mistakes, $iter);
+        ($mistakes->{ignore_if_eq} || $names[0] eq $names[1]) and return $body->complexity($env, $mistakes, $iter, $rnd_case);
         defined $iter->{$names[0]} and defined $iter->{$names[1]} or 
             die "IfThen complexity with condition a == b, expected both var as iterator";
 
@@ -395,7 +407,7 @@ sub complexity {
         $new_val = $names[!$side];
       
         ($old_val, $iter->{$names[$side]}) = ($iter->{$names[$side]}, $new_val);
-        my $ret = $body->complexity($env, $mistakes, $iter);
+        my $ret = $body->complexity($env, $mistakes, $iter, $rnd_case);
         $iter->{$names[$side]} = $old_val;
         return $ret;
     }
@@ -405,11 +417,11 @@ sub complexity {
             die "IfThen complexity with condition a >= b, expected b as var, got $cond->{$operands[$side]}";
         $name = EGE::Utils::last_key($iter, $name);
         my $old_val = $iter->{$name};
-        my $new_val = $cond->{$operands[!$side]}->polinom_degree($env, $mistakes, $iter);
-        ($mistakes->{ignore_if_less} || $new_val >= $old_val) and return $body->complexity($env, $mistakes, $iter);
+        my $new_val = $cond->{$operands[!$side]}->polinom_degree($env, $mistakes, $iter, $rnd_case);
+        ($mistakes->{ignore_if_less} || $new_val >= $old_val) and return $body->complexity($env, $mistakes, $iter, $rnd_case);
 
         $iter->{$name} = $new_val;
-        my $ret = $body->complexity($env, $mistakes, $iter);
+        my $ret = $body->complexity($env, $mistakes, $iter, $rnd_case);
         $iter->{$name} = $old_val;
         return $ret;
     }
@@ -542,7 +554,7 @@ sub make_expr {
             return EGE::Prog::CallFunc->new(func => $func, args => \@p);
         }
         if (@$src >= 1 && $src->[0] eq 'print') {
-           	my @p = @$src;
+            my @p = @$src;
             shift @p;
             $_ = make_expr($_) for @p;
             return EGE::Prog::Print->new(args => \@p);
