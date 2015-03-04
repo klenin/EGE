@@ -136,15 +136,15 @@ sub to_lang {
 
 sub run {
     my ($self, $env, $rand_case) = @_;
-    my $func = $env->{'&'}->{$self->{func}} or die "Undefined function $self->{func}";
+    my @arg_val = map $_->run($env, $rand_case), @{$self->{args}};
     if ($self->{func} eq 'rand') {
-        $rand_case or return $self->{args}[0]->run($env, $rand_case) + int rand $self->{args}[1]->run($env, $rand_case);
-        $rand_case eq 'worth' and return $self->{args}[1]->run($env, $rand_case);
-        $rand_case eq 'best' and return $self->{args}[0]->run($env, $rand_case);
-        $rand_case eq 'average' and return ($self->{args}[0]->run($env, $rand_case) + $self->{args}[1]->run($env, $rand_case)) / 2;
+        $rand_case or return $arg_val[0] + int rand $arg_val[1];
+        $rand_case eq 'worth' and return $arg_val[1];
+        $rand_case eq 'best' and return $arg_val[0];
+        $rand_case eq 'average' and return 0.5 * ($arg_val[0] + $arg_val[1]);
     }
-    my $args = [ map $_->run($env), @{$self->{args}} ];
-    $func->call($args, $env);
+    my $func = $env->{'&'}->{$self->{func}} or die "Undefined function $self->{func}";
+    $func->call( [ @arg_val ], $env);
 }
 
 package EGE::Prog::Print;
@@ -371,7 +371,7 @@ sub complexity {
 
     my $body_complexity = $self->{body}->complexity($env, $mistakes, $iter, $rnd_case);
     $env->{$name} = $degree;
-    my $cur_complexity = List::Util::sum(grep { $_ =~ m/^\d+$/ } values $iter) || 0;
+    my $cur_complexity = List::Util::sum(grep { $_ =~ m/^[\d|.]+$/ } values $iter) || 0;
     delete $iter->{$name};
     $cur_complexity > $body_complexity ? $cur_complexity : $body_complexity;
 }

@@ -191,7 +191,7 @@ package EGE::AlgGenerate;
 
 use EGE::GenBase;
 use EGE::Gen::Alg::Complexity;
-
+use EGE::Gen::Alg::RandComplexity;
 
 sub g {
     my ($p, $m) = @_;
@@ -205,7 +205,8 @@ sub gg {
 
 sub all {[
     gg('Complexity', qw(o_poly o_poly_cmp cycle_complexity complexity)),
+    gg('RandComplexity', qw(rand_complexity)),
+
 ]}
 
 1;
-
