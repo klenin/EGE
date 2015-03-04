@@ -72,7 +72,7 @@ sub shuffle {
 
 sub index_var {
     my ($self, $n) = @_;
-    $self->pick_n($n || 1, 'i', 'j', 'k', 'm', 'n')
+    $self->pick_n($n || 1, 'i', 'j', 'k', 'a', 'b', 'c')
 }
 
 sub english_letter { $_[0]->pick('a' .. 'z') }
