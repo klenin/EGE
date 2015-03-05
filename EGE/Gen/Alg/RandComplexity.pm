@@ -15,21 +15,18 @@ use EGE::Prog;
 use EGE::Random;
 use EGE::Alg;
 
-use constant MIN_FOR => 4;
-use constant MAX_FOR => 6;
-use constant MAX_IF => 4;
-use constant MAX_ASSIGN => 4;
-
 sub rand_complexity
 {
     my ($self) = @_;
     my $main_var = rnd->pick(qw(n m));
+    my $max_counts = {
+        if => 4,
+        assign => 4,
+        rand => 3
+    };
+    my $for_count = rnd->in_range(4, 6);
     my $vars = { all => { $main_var => 1 }, iterator => {}, if => {} };
-    my $cycle = [ EGE::Alg::make_rnd_block(
-        rnd->in_range(MIN_FOR, MAX_FOR), 
-        { if => MAX_IF, assign => MAX_ASSIGN, rand => 1 },
-        $vars,
-        0) ];
+    my $cycle = [ EGE::Alg::make_rnd_block( $for_count, $max_counts, $vars) ];
     my $block = EGE::Prog::make_block($cycle);
     my $rand_case = rnd->pick(qw(average worth best));
     $self->{correct} = $block->complexity({ $main_var => 1 }, {}, {}, $rand_case);

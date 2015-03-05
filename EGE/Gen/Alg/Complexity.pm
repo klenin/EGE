@@ -52,7 +52,7 @@ sub cycle_complexity
 
     my $main_var = rnd->pick(qw(n m));
     my @vars = rnd->index_var(3);
-    my @degrees = rnd->shuffle(1 .. 3);
+    my @degrees = rnd->shuffle(1 .. 5);
     my $cycles = [
         'for', $vars[0], 0, EGE::Alg::pow($main_var, $degrees[0]), [
             'for', $vars[1], 0, EGE::Alg::pow($main_var, $degrees[1]), [
@@ -74,25 +74,22 @@ sub cycle_complexity
 }
 
 use constant MAKE_COUNTER => 0;
-use constant MIN_FOR => 4;
-use constant MAX_FOR => 6;
-use constant MAX_IF => 4;
-use constant MAX_ASSIGN => 4;
 
 sub complexity
 {
     my ($self) = @_;    
-    my $main_var = rnd->pick(qw(x y z));
-    my @mistakes_names = qw(var_as_const ignore_if_eq change_min ignore_if_less); 
+    my $main_var = rnd->pick(qw(m n));
+    my @mistakes_names = qw(var_as_const ignore_if_eq change_min ignore_if_less);
+    my $max_counts = {
+        if => 4,
+        assign => 4,
+    };
+    my $for_count = rnd->in_range(4, 6);    
     $self->{correct} = 0;
 
     while(1) {
         my $vars = { all => { $main_var => 1 }, iterator => {}, if => {} };
-        my $cycle = [ EGE::Alg::make_rnd_block(
-            rnd->in_range(MIN_FOR, MAX_FOR), 
-            { if => MAX_IF, assign => MAX_ASSIGN, counter => MAKE_COUNTER },
-            $vars,
-            0) ];
+        my $cycle = [ EGE::Alg::make_rnd_block( $for_count, $max_counts, $vars) ];
         MAKE_COUNTER and unshift $cycle, '=', 'counter', 0; 
         
         my $block = EGE::Prog::make_block($cycle);
