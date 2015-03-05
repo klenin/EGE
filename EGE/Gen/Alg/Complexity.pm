@@ -89,10 +89,10 @@ sub complexity
 
     while(1) {
         my $vars = { all => { $main_var => 1 }, iterator => {}, if => {} };
-        my $cycle = [ EGE::Alg::make_rnd_block( $for_count, $max_counts, $vars) ];
+        my $cycle = [ EGE::Alg::make_rnd_block($for_count, $max_counts, $vars) ];
         MAKE_COUNTER and unshift $cycle, '=', 'counter', 0; 
         
-        my $block = EGE::Prog::make_block($cycle);
+        my $block = EGE::Prog::make_block($cycle);        
         my @indexes = rnd->shuffle(1 .. 7);
         my @variants = $block->complexity({ $main_var => 1 });
         MISTAKE:

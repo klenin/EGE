@@ -1,4 +1,3 @@
-# Copyright © 2015 Alexander S. Klenin
 # Copyright © 2015 Anton Kim
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE

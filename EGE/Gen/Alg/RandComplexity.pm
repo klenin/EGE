@@ -1,4 +1,3 @@
-# Copyright © 2015 Alexander S. Klenin
 # Copyright © 2015 Anton Kim
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
@@ -26,7 +25,7 @@ sub rand_complexity
     };
     my $for_count = rnd->in_range(4, 6);
     my $vars = { all => { $main_var => 1 }, iterator => {}, if => {} };
-    my $cycle = [ EGE::Alg::make_rnd_block( $for_count, $max_counts, $vars) ];
+    my $cycle = [ EGE::Alg::make_rnd_block($for_count, $max_counts, $vars) ];
     my $block = EGE::Prog::make_block($cycle);
     my $rand_case = rnd->pick(qw(average worth best));
     $self->{correct} = $block->complexity({ $main_var => 1 }, {}, {}, $rand_case);

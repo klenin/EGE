@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 138;
+use Test::More tests => 137;
 use Test::Exception;
 
 use lib '..';
@@ -427,17 +427,6 @@ sub check_sub {
         ]
     ]);
     is $b->complexity({ n => 1 }), 2, 'IfThen complexity for condition with same var'
-}
-
-{
-    my $b = EGE::Prog::make_block([
-        'for', 'i', 0, 'n', [
-            'for', 'j', 0, 'n', [
-                'if', [ '==', 'i', 'j1' ], []
-            ]
-        ]
-    ]);
-    throws_ok sub { $b->complexity({ n => 1 }) }, qr/j1/, 'IfThen complexity for condition with undef var'
 }
 
 {

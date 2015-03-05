@@ -91,8 +91,9 @@ sub complexity {
     defined($name = $self->{var}->{name}) or return ();
     defined $iter->{$name} and die "Assign to iterator: '$name'";
 
-    # проверить, что все переменные expr определены
+    # провека, что все переменные expr определены
     $self->{expr}->polinom_degree($env, $mistakes, $iter, $rnd_case);
+    # вычисляем степень выражения без итераторов, если ошибка, значит в выражении присутсвует итератор
     $env->{$self->{var}->{name}} = eval { $self->{expr}->polinom_degree($env, $mistakes, {}, $rnd_case) };
     $@ and die "Assign iterator to: '$name'";
     ()
@@ -217,7 +218,7 @@ sub polinom_degree {
     my ($env, $mistakes, $iter, $rand_case) = @_;
     if ($self->{op} eq '*') { $self->{left}->polinom_degree(@_) + $self->{right}->polinom_degree(@_) }
     elsif ($self->{op} eq '+') { List::Util::max(map $self->{$_}->polinom_degree(@_), $self->_children) }
-    elsif ($self->{op} eq '**') { $self->{left}->polinom_degree(@_) * $self->{right}->run({ '&' => { rand => 1 } }, $rand_case) }
+    elsif ($self->{op} eq '**') { $self->{left}->polinom_degree(@_) * $self->{right}->run({}, $rand_case) }
     else { die "Polinom degree is unavaible for expr with operator: '$self->{op}'" }
 }
 
@@ -371,7 +372,7 @@ sub complexity {
 
     my $body_complexity = $self->{body}->complexity($env, $mistakes, $iter, $rnd_case);
     $env->{$name} = $degree;
-    my $cur_complexity = List::Util::sum(grep { $_ =~ m/^[\d|.]+$/ } values $iter) || 0;
+    my $cur_complexity = List::Util::sum(grep $_ =~ m/^[\d|.]+$/, values $iter) || 0;
     delete $iter->{$name};
     $cur_complexity > $body_complexity ? $cur_complexity : $body_complexity;
 }
@@ -393,9 +394,6 @@ sub complexity {
     my ($cond, $body) = ($self->{cond}, $self->{body});
     if ($cond->{op} eq '==') {
         my @names = map $cond->{$_}->{name}, qw(left right);
-        # проверка что обе переменные определены
-        $cond->{$_}->polinom_degree($env, $mistakes, $iter, $rnd_case) for qw(left right);
-
         defined $_ or die "IfThen complexity for condition with such arguments is unavaible" for @names;
         ($mistakes->{ignore_if_eq} || $names[0] eq $names[1]) and return $body->complexity($env, $mistakes, $iter, $rnd_case);
         defined $iter->{$names[0]} and defined $iter->{$names[1]} or 
@@ -415,6 +413,7 @@ sub complexity {
         my @operands = qw(left right);
         my $name = $cond->{$operands[$side]}->{name} or 
             die "IfThen complexity with condition a >= b, expected b as var, got $cond->{$operands[$side]}";
+        defined $iter->{$name} or die "IfThen complexity with condition a >= b, expected b as iterator, $name is not iterator";
         $name = EGE::Utils::last_key($iter, $name);
         my $old_val = $iter->{$name};
         my $new_val = $cond->{$operands[!$side]}->polinom_degree($env, $mistakes, $iter, $rnd_case);
