@@ -184,7 +184,6 @@ sub all {[
     gg('Db07', qw(trivial_inner_join)),
     gg('Db08', qw(parents grandchildren nuncle)),
     gg('Db09', qw(inner_join)),
-     
 ]}
 
 package EGE::AlgGenerate;
@@ -204,9 +203,8 @@ sub gg {
 }
 
 sub all {[
-    gg('Complexity', qw(o_poly o_poly_cmp cycle_complexity complexity)),
+    gg('Complexity', qw(o_poly o_poly_cmp cycle_complexity complexity substitution)),
     gg('RandComplexity', qw(rand_complexity)),
-
 ]}
 
 1;

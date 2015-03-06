@@ -236,6 +236,7 @@ binmode STDOUT, ':utf8';
 #g3('Complexity', 'cycle_complexity');
 #g3('Complexity', 'complexity');
 #g3('RandComplexity', 'rand_complexity');
+#g3('Complexity', 'substitution');
 
 #$questions = EGE::Generate::all;
 #$questions = EGE::AsmGenerate::all;

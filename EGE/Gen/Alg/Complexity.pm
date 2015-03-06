@@ -84,8 +84,7 @@ sub complexity
         if => 4,
         assign => 4,
     };
-    my $for_count = rnd->in_range(4, 6);    
-    $self->{correct} = 0;
+    my $for_count = rnd->in_range(4, 6);
 
     while(1) {
         my $vars = { all => { $main_var => 1 }, iterator => {}, if => {} };
@@ -110,6 +109,7 @@ sub complexity
                     next MISTAKE;
                 }
                 my $lt = EGE::LangTable::table($block, [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);   
+                $self->{correct} = 0;
                 $self->{text} = "Определите асимптотическую сложность следующего алгоритма: $lt";
                 if (MAKE_COUNTER) {
                     unshift($cycle, '=', $main_var, 10);
@@ -119,6 +119,43 @@ sub complexity
                 return;
             }
         } 
+    }
+}
+
+sub substitution
+{
+    my ($self) = @_;
+    my $main_var = rnd->pick(qw(n m));
+    my $mask = 'XXXXX';
+    while (1) {
+	    my $max_counts = {
+	        if => 2,
+	        assign => 2,
+	        subs => $mask,
+	    };
+	    my $for_count = rnd->in_range(4, 6);
+	    my $vars = { all => { $main_var => 1 }, iterator => {}, if => {} };
+	    my $code = [ EGE::Alg::make_rnd_block($for_count, $max_counts, $vars) ];
+	    my $subs = $max_counts->{subs};
+	    if (ref $subs eq 'ARRAY') {
+	    	my $lt = EGE::LangTable::table(EGE::Prog::make_block($code), 
+	    		[ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);
+	    	my %variants;
+	    	my $slot = [];
+	    	EGE::Alg::swap($code, $mask, $slot);
+	    	for (@$subs) {
+	    		for my $i (0 .. 2) { $slot->[$i] = $_->[$i]; }
+	    		my $cur = EGE::Prog::make_block($code)->complexity({ $main_var => 1 });
+	    		$variants{$cur} = $_ if !$variants{$cur};
+	    		if (keys %variants >= 4) {
+	    			$self->{correct} = 0;
+	    			$self->variants(map EGE::Alg::to_logic($_), values %variants);
+	    			$self->{text} = "На какое выражение следует заменить $mask, чтобы сложность алгоритма составила " .
+                    EGE::Alg::big_o(EGE::Alg::to_logic([ '**', $main_var, (keys %variants)[0]])) . $lt;
+					return;
+	    		}
+	    	}
+	    }
     }
 }
 
