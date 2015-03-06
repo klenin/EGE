@@ -77,7 +77,7 @@ sub make_rnd_block {
             $type = $vars->{if};
             my @not_used = grep(!$vars->{if}->{$_}, keys $vars->{iterator});
             my @cond;
-            my $make_subs = ($other_counts->{subs} =~ /^[[:alpha:]][[:alnum:]_]*$/) && rnd->coin(1 / $for_count) ? 1 : 0;
+            my $make_subs = (defined $other_counts->{subs} and $other_counts->{subs} =~ /^[[:alpha:]][[:alnum:]_]*$/) && rnd->coin(1 / $for_count) ? 1 : 0;
             for (0 .. 1 + $make_subs * SUBS_COUNT)
             {
                 if (rnd->coin) {
