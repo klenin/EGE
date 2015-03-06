@@ -8,7 +8,7 @@ use warnings;
 
 use EGE::Random;
 use base 'Exporter';
-our @EXPORT_OK = qw(to_logic big_o make_rnd_block);
+our @EXPORT_OK = qw(to_logic big_o make_rnd_block swap);
 
 
 sub to_logic { EGE::Prog::make_expr($_[0])->to_lang_named('Logic') }
@@ -56,6 +56,15 @@ sub rnd_poly {
     $poly = [ '+', $poly, rnd_pow(@_) ] while (rnd->coin);
     $poly = [ '+', $poly, rnd->const_value ] if rnd->coin;
     $poly;
+}
+
+sub swap {
+    if (ref $_[0] eq 'ARRAY') {
+        swap($_, @_[1, 2]) for @{$_[0]};
+    }
+    else {
+        ($_[1] eq $_[0]) and $_[0] = $_[2];
+    }
 }
 
 sub make_rnd_block {
