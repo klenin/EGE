@@ -27,10 +27,11 @@ sub new_var {
     $var;
 }
 
-use constant MAX_DEGREE => 4;
+use constant MAX_DEGREE => 3;
 use constant P_RAND => 0.5;
 use constant P_IF => 0.5;
 use constant P_ASSIGN => 0.5;
+use constant SUBS_COUNT => 8;
 
 sub rnd_pow {
     my ($vars, $use_iters, $other_counts, $assign) = @_;
@@ -65,18 +66,24 @@ sub make_rnd_block {
         my (@head, @cur_vars, $type);
         if ($other_counts->{if} && rnd->coin(P_IF) && keys($vars->{iterator}) - keys($vars->{if}) >= 2) {
             $type = $vars->{if};
-            my $cond;
             my @not_used = grep(!$vars->{if}->{$_}, keys $vars->{iterator});
-            if (rnd->coin) {
-                @cur_vars = (rnd->shuffle(@not_used))[0 .. 1];
-                $cond = [ '==', @cur_vars ];
+            my @cond;
+            my $make_subs = ($other_counts->{subs} =~ /^[[:alpha:]][[:alnum:]_]*$/) && rnd->coin(1 / $for_count) ? 1 : 0;
+            for (0 .. 1 + $make_subs * SUBS_COUNT)
+            {
+                if (rnd->coin) {
+                    push @cur_vars, (rnd->shuffle(@not_used))[0 .. 1];
+                    push @cond, [ '==', @cur_vars[-2, -1] ];
+                }
+                else {
+                    push @cur_vars, rnd->pick(@not_used);
+                    my $expr = rnd_pow($vars, 0, $other_counts, $assign);
+                    push @cond, rnd->coin ? [ '<=', $cur_vars[$_], $expr ] : [ '>=', $expr, $cur_vars[$_] ];
+                }   
+                
             }
-            else {
-                push @cur_vars, rnd->pick(@not_used);
-                my $expr = rnd_pow($vars, 0, $other_counts, $assign);
-                $cond = rnd->coin ? [ '<=', @cur_vars, $expr ] : [ '>=', $expr, @cur_vars ];
-            }
-            @head = ('if', $cond);
+            @head = ('if', $cond[0]);
+            $make_subs and ($other_counts->{subs}, $head[1]) = ([ @cond ], $other_counts->{subs});
             $other_counts->{if}--;
         }
         else {
@@ -100,7 +107,6 @@ sub make_rnd_block {
     else {
         return final_expr(keys $vars->{iterator});
     }
-
 }
 
 1;
