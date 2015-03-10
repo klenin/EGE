@@ -190,7 +190,6 @@ package EGE::AlgGenerate;
 
 use EGE::GenBase;
 use EGE::Gen::Alg::Complexity;
-use EGE::Gen::Alg::RandComplexity;
 use EGE::Gen::Alg::CallCount;
 
 sub g {
@@ -205,7 +204,6 @@ sub gg {
 
 sub all {[
     gg('Complexity', qw(o_poly o_poly_cmp cycle_complexity complexity substitution)),
-    gg('RandComplexity', qw(rand_complexity)),
     gg('CallCount', qw(super_recursion)),
 ]}
 

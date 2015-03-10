@@ -136,14 +136,8 @@ sub to_lang {
 }
 
 sub run {
-    my ($self, $env, $rand_case) = @_;
-    my @arg_val = map $_->run($env, $rand_case), @{$self->{args}};
-    if ($self->{func} eq 'rand') {
-        $rand_case or return $arg_val[0] + int rand $arg_val[1];
-        $rand_case eq 'worth' and return $arg_val[1];
-        $rand_case eq 'best' and return $arg_val[0];
-        $rand_case eq 'average' and return 0.5 * ($arg_val[0] + $arg_val[1]);
-    }
+    my ($self, $env) = @_;
+    my @arg_val = map $_->run($env), @{$self->{args}};
     my $func = $env->{'&'}->{$self->{func}} or die "Undefined function $self->{func}";
     $func->call( [ @arg_val ], $env);
 }
@@ -215,10 +209,10 @@ sub _children { qw(left right) }
 
 sub polinom_degree {
     my $self = shift;
-    my ($env, $mistakes, $iter, $rand_case) = @_;
+    my ($env, $mistakes, $iter) = @_;
     if ($self->{op} eq '*') { $self->{left}->polinom_degree(@_) + $self->{right}->polinom_degree(@_) }
     elsif ($self->{op} eq '+') { List::Util::max(map $self->{$_}->polinom_degree(@_), $self->_children) }
-    elsif ($self->{op} eq '**') { $self->{left}->polinom_degree(@_) * $self->{right}->run({}, $rand_case) }
+    elsif ($self->{op} eq '**') { $self->{left}->polinom_degree(@_) * $self->{right}->run({}) }
     else { die "Polinom degree is unavaible for expr with operator: '$self->{op}'" }
 }
 

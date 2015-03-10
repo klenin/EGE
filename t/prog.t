@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 137;
+use Test::More tests => 134;
 use Test::Exception;
 
 use lib '..';
@@ -545,14 +545,6 @@ sub check_sub {
         ]
     ]);
     throws_ok sub { $b->complexity({ n => 1 }) } , qr/a == b/, 'if_eq compare iterator with non-iterator'
-}
-
-{
-    my $b = EGE::Prog::make_block([
-        'for', 'i', 0, ['**', 'n', ['()', 'rand', 0, 4]], []
-    ]);
-    my $ans = { worth => 4, best => 0, average => 2 }; 
-    is $b->complexity({ n => 1 }, {}, {}, $_) , $ans->{$_}, "complexity $_ case" for keys $ans
 }
 
 {
