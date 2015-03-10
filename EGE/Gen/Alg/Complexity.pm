@@ -128,21 +128,21 @@ sub substitution
     my $main_var = rnd->pick(qw(n m));
     my $mask = 'XXXXX';
     while (1) {
-	    my $max_counts = {
+	    my $other_counts = {
 	        if => 2,
 	        assign => 2,
 	        subs => $mask,
 	    };
 	    my $for_count = rnd->in_range(4, 6);
 	    my $vars = { all => { $main_var => 1 }, iterator => {}, if => {} };
-	    my $code = [ EGE::Alg::make_rnd_block($for_count, $max_counts, $vars) ];
-	    my $subs = $max_counts->{subs};
+	    my $code = [ EGE::Alg::make_rnd_block($for_count, $other_counts, $vars) ];
+	    my $subs = $other_counts->{subs};
 	    if (ref $subs eq 'ARRAY') {
+            my $slot = shift $subs;
 	    	my $lt = EGE::LangTable::table(EGE::Prog::make_block($code), 
 	    		[ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);
 	    	my %variants;
-	    	my $slot = [];
-	    	EGE::Alg::swap($code, $mask, $slot);
+
 	    	for (@$subs) {
 	    		for my $i (0 .. 2) { $slot->[$i] = $_->[$i]; }
 	    		my $cur = EGE::Prog::make_block($code)->complexity({ $main_var => 1 });

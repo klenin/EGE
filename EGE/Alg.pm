@@ -8,7 +8,7 @@ use warnings;
 
 use EGE::Random;
 use base 'Exporter';
-our @EXPORT_OK = qw(to_logic big_o make_rnd_block swap);
+our @EXPORT_OK = qw(to_logic big_o make_rnd_block);
 
 
 sub to_logic { EGE::Prog::make_expr($_[0])->to_lang_named('Logic') }
@@ -58,15 +58,6 @@ sub rnd_poly {
     $poly;
 }
 
-sub swap {
-    if (ref $_[0] eq 'ARRAY') {
-        swap($_, @_[1, 2]) for @{$_[0]};
-    }
-    else {
-        ($_[1] eq $_[0]) and $_[0] = $_[2];
-    }
-}
-
 sub make_rnd_block {
     my ($for_count, $other_counts, $vars) = @_;
     if ($for_count) {
@@ -77,7 +68,7 @@ sub make_rnd_block {
             $type = $vars->{if};
             my @not_used = grep(!$vars->{if}->{$_}, keys $vars->{iterator});
             my @cond;
-            my $make_subs = (defined $other_counts->{subs} and $other_counts->{subs} =~ /^[[:alpha:]][[:alnum:]_]*$/) && rnd->coin(1 / $for_count) ? 1 : 0;
+            my $make_subs = defined $other_counts->{subs} && ref $other_counts->{subs} ne 'ARRAY' && rnd->coin(1 / $for_count) ? 1 : 0;
             for (0 .. 1 + $make_subs * SUBS_COUNT)
             {
                 if (rnd->coin) {
@@ -92,8 +83,10 @@ sub make_rnd_block {
                 
             }
             @head = ('if', $cond[0]);
-            $make_subs and ($other_counts->{subs}, $head[1]) = ([ @cond ], $other_counts->{subs});
-            $other_counts->{if}--;
+            if ($make_subs) {
+                $head[1] = [ '#', "$other_counts->{subs}" ];
+                $other_counts->{subs} = [ $head[1], @cond ]
+            }
         }
         else {
             $type = $vars->{iterator};
