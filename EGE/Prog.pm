@@ -451,15 +451,18 @@ sub run {
     $self->{body}->run($env) until $self->{cond}->run($env);
 }
 
-package EGE::Prog::LangSpecificText;
+package EGE::Prog::PlainText;
 use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang) = @_;
-    $self->{text}->{$lang->name} || '';
+    my $t = $self->{text};
+    ref $t eq 'HASH' ? $t->{$lang->name} || '' : $t;
 };
 
-sub run {}
+sub run {
+    defined wantarray and die "required value of plain text: '$_[0]->{text}'";
+}
 
 package EGE::Prog::ExprStmt;
 use base 'EGE::Prog::SynElement';
@@ -530,8 +533,10 @@ our @EXPORT_OK = qw(make_expr make_block lang_names);
 sub make_expr {
     my ($src) = @_;
     ref($src) =~ /^EGE::Prog::/ and return $src;
-
     if (ref $src eq 'ARRAY') {
+        if (@$src == 2 && $src->[0] eq '#') {
+            return EGE::Prog::PlainText->new(text => $src->[1]);
+        }
         if (@$src >= 2 && $src->[0] eq '[]') {
             my @p = @$src;
             shift @p;
@@ -584,7 +589,7 @@ sub make_expr {
 }
 
 sub statements_descr {{
-    '#' => { type => 'LangSpecificText', args => ['C_text'] },
+    '#' => { type => 'PlainText', args => ['C_text'] },
     '=' => { type => 'Assign', args => [qw(E_var E_expr)] },
     'for' => { type => 'ForLoop', args => [qw(E_var E_lb E_ub B_body)] },
     'if' => { type => 'IfThen', args => [qw(E_cond B_body)] },

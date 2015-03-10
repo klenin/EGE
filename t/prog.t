@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 134;
+use Test::More tests => 136;
 use Test::Exception;
 
 use lib '..';
@@ -569,6 +569,12 @@ sub check_sub {
         is $b->complexity({ n => 1 }, \%mistakes), $ans[$i], "complexity with mistakes:" .
             join ', ', map($mistakes{$_} ? $_ : (), @mistakes_names);
     }
+}
+
+{
+    my $b = EGE::Prog::make_expr([ '#', 'BUMP' ]);
+    is $b->to_lang_named('C'), 'BUMP', 'to lang expr with plain text';
+    throws_ok sub { $b = $b->run() } , qr/BUMP/, 'run expr with plain text'
 }
 
 {
