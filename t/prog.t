@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 136;
+use Test::More tests => 137;
 use Test::Exception;
 
 use lib '..';
@@ -549,7 +549,8 @@ sub check_sub {
             ]
     	]
     ]);
-    is $b->complexity({ n => 1 }), 5, 'amortized analysis with if_eq';
+    is $b->complexity({ n => 1 }), 5, 'amortized analysis with if_mod';
+    is $b->complexity({ n => 1 }, { ignore_if_mod => 1 }), 6, 'complexity with mistake ignore_if_mod';
 }
 
 {

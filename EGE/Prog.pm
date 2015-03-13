@@ -416,6 +416,7 @@ sub complexity {
         my $isno_const;
         ($cond->{$sides[$_]}->get_type eq 'Const') and ($isno_const = $cond->{$sides[!$_]})  for 0 .. 1;
         if (defined $isno_const && defined $isno_const->{op} && $isno_const->{op} eq '%') {
+            $mistakes->{ignore_if_mod} and return $body->complexity(@_);
             my $name = $isno_const->{left}->{name};
             defined $iter->{$name} or die "IfThen complexity with condition a % b == 0, expected a as iterator, given: '$isno_const->{left}'";
             $name = EGE::Utils::last_key($iter, $name);
@@ -427,6 +428,7 @@ sub complexity {
             return $ret;
         }
         if (defined $isno_const && $isno_const->get_type eq 'Var') {
+            $mistakes->{ignore_if_mod} and return $body->complexity(@_);
             my $name = EGE::Utils::last_key($iter, $isno_const->{name});
             my $old_val = $iter->{$name};
             $iter->{$name} = 0;
