@@ -59,14 +59,14 @@ sub rnd_poly {
 }
 
 sub make_rnd_if {
-    my ($main_var, $iters) = @_;
+    my ($n, $iters) = @_;
     my @vars = rnd->shuffle(keys $iters);
     my $case = rnd->in_range(0, 3);
 
     $case == 0 and return 'if', [ '==', @vars ];
-    $case == 1 and return 'if', [ '==', [ '%', $vars[0], pow($main_var, rnd->in_range(1, $iters->{$vars[0]})) ], 0 ];
+    $case == 1 and return 'if', [ '==', [ '%', $vars[0], pow($n, rnd->in_range(1, $iters->{$vars[0]})) ], 0 ];
     $case == 2 and return 'if', [ '==', $vars[0], 0 ];
-    $case == 3 and return 'if', [ '<=', $vars[0], pow($main_var, rnd->in_range(1, $iters->{$vars[0]} - 1)) ];
+    $case == 3 and return 'if', [ '<=', $vars[0], pow($n, rnd->in_range(1, $iters->{$vars[0]} - 1)) ];
 }
 
 # TODO: Добавить генерацию if_mod!

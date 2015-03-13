@@ -15,8 +15,7 @@ use EGE::Prog;
 use EGE::Random;
 use EGE::Utils;
 
-sub node_count
-{
+sub node_count {
     my ($self) = @_;
     my ($k, $inner) = (rnd->in_range(2, 9), rnd->in_range(50, 300));
     my %data = ( внутренних => $inner, листовых => 1 + ($k - 1) * $inner, '' => 1 + $k * $inner );

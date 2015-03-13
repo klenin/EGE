@@ -45,20 +45,19 @@ sub o_poly_cmp {
     $self->variants(@variants);
 }
 
-sub cycle_complexity
-{
+sub cycle_complexity {
     my ($self) = @_;
     $self->{correct} = 0;
 
-    my $main_var = rnd->pick(qw(n m));
+    my $n = rnd->pick(qw(n m));
     my @vars = rnd->index_var(3);
     my @degrees = rnd->shuffle(1 .. 5);
     my $cycles = [
-        'for', $vars[0], 0, EGE::Alg::pow($main_var, $degrees[0]), [
-            'for', $vars[1], 0, EGE::Alg::pow($main_var, $degrees[1]), [
+        'for', $vars[0], 0, EGE::Alg::pow($n, $degrees[0]), [
+            'for', $vars[1], 0, EGE::Alg::pow($n, $degrees[1]), [
                 '=', [ '[]', 'buf', $vars[1] ], $vars[1]
             ],
-            'for', $vars[2], 0, EGE::Alg::pow($main_var, $degrees[2]), [
+            'for', $vars[2], 0, EGE::Alg::pow($n, $degrees[2]), [
                 '=', [ '[]', 'buf', $vars[2] ], $vars[2]
             ]
         ]
@@ -66,19 +65,18 @@ sub cycle_complexity
     my $block = EGE::Prog::make_block($cycles);
     my $lt = EGE::LangTable::table($block, [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);
     $self->{text} = "Определите асимптотическую сложность следующего алгоритма: $lt";
-    my @variants = ( $block->complexity({ $main_var => 1 }),
+    my @variants = ( $block->complexity({ $n => 1 }),
         $degrees[0] + List::Util::min(@degrees[ 1 .. 2 ]),
         List::Util::sum(@degrees),
         $degrees[0] );
-    $self->variants(map EGE::Alg::big_o(EGE::Alg::to_logic([ '**', $main_var, $_ ])), @variants);
+    $self->variants(map EGE::Alg::big_o(EGE::Alg::to_logic([ '**', $n, $_ ])), @variants);
 }
 
 use constant MAKE_COUNTER => 0;
 
-sub complexity
-{
+sub complexity {
     my ($self) = @_;    
-    my $main_var = rnd->pick(qw(m n));
+    my $n = rnd->pick(qw(m n));
     my @mistakes_names = qw(var_as_const ignore_if_eq change_min ignore_if_less ignore_if_mod);
     my $max_counts = {
         if => 4,
@@ -87,20 +85,20 @@ sub complexity
     my $for_count = rnd->in_range(4, 6);
 
     while(1) {
-        my $vars = { all => { $main_var => 1 }, iterator => {}, if => {} };
+        my $vars = { all => { $n => 1 }, iterator => {}, if => {} };
         my $cycle = [ EGE::Alg::make_rnd_block($for_count, $max_counts, $vars) ];
         MAKE_COUNTER and unshift $cycle, '=', 'counter', 0; 
         
         my $block = EGE::Prog::make_block($cycle);        
         my @indexes = rnd->shuffle(1 .. 7);
-        my @variants = $block->complexity({ $main_var => 1 });
+        my @variants = $block->complexity({ $n => 1 });
         MISTAKE:
         while (@indexes) {
             my $i = shift @indexes;
             my %mistakes = map(($mistakes_names[$_] => $i/2**$_ % 2), (0 .. @mistakes_names - 1));
-            $mistakes{var_as_const} and $mistakes{var_as_const} = $main_var;
+            $mistakes{var_as_const} and $mistakes{var_as_const} = $n;
 
-            my $cur_variant = $block->complexity({ $main_var => 1 }, \%mistakes);
+            my $cur_variant = $block->complexity({ $n => 1 }, \%mistakes);
             $cur_variant == $_ and next MISTAKE for @variants;
             push @variants, $cur_variant;
             if (@variants == 4) {
@@ -112,20 +110,19 @@ sub complexity
                 $self->{correct} = 0;
                 $self->{text} = "Определите асимптотическую сложность следующего алгоритма: $lt";
                 if (MAKE_COUNTER) {
-                    unshift($cycle, '=', $main_var, 10);
+                    unshift($cycle, '=', $n, 10);
                     $self->{text} .= EGE::Prog::make_block($cycle)->run_val('counter');
                 }
-                $self->variants(map EGE::Alg::big_o(EGE::Alg::to_logic([ '**', $main_var, $_ ])), @variants);
+                $self->variants(map EGE::Alg::big_o(EGE::Alg::to_logic([ '**', $n, $_ ])), @variants);
                 return;
             }
         } 
     }
 }
 
-sub substitution
-{
+sub substitution {
     my ($self) = @_;
-    my $main_var = rnd->pick(qw(n m));
+    my $n = rnd->pick(qw(n m));
     my $mask = 'XXXXX';
     while (1) {
 	    my $other_counts = {
@@ -134,7 +131,7 @@ sub substitution
 	        subs => $mask,
 	    };
 	    my $for_count = rnd->in_range(4, 6);
-	    my $vars = { all => { $main_var => 1 }, iterator => {}, if => {} };
+	    my $vars = { all => { $n => 1 }, iterator => {}, if => {} };
 	    my $code = [ EGE::Alg::make_rnd_block($for_count, $other_counts, $vars) ];
 	    my $subs = $other_counts->{subs};
 	    if (ref $subs eq 'ARRAY') {
@@ -145,13 +142,13 @@ sub substitution
 
 	    	for (@$subs) {
 	    		for my $i (0 .. 2) { $slot->[$i] = $_->[$i]; }
-	    		my $cur = EGE::Prog::make_block($code)->complexity({ $main_var => 1 });
+	    		my $cur = EGE::Prog::make_block($code)->complexity({ $n => 1 });
 	    		$variants{$cur} = $_ if !$variants{$cur};
 	    		if (keys %variants >= 4) {
 	    			$self->{correct} = 0;
 	    			$self->variants(map EGE::Alg::to_logic($_), values %variants);
 	    			$self->{text} = "На какое выражение следует заменить $mask, чтобы сложность алгоритма составила " .
-                    EGE::Alg::big_o(EGE::Alg::to_logic([ '**', $main_var, (keys %variants)[0]])) . $lt;
+                    EGE::Alg::big_o(EGE::Alg::to_logic([ '**', $n, (keys %variants)[0]])) . $lt;
 					return;
 	    		}
 	    	}
@@ -159,46 +156,44 @@ sub substitution
     }
 }
 
-sub amortized
-{
+sub amortized {
     my ($self) = @_;
-    my $main_var = rnd->pick(qw(n m));
-    my @vars = qw(i j);
+    my $n = rnd->pick(qw(n m));
+    my @ij = qw(i j);
     while (1) {
         my $other_counts = {
             if => 0,
             assign => 3,
         };
 
-        my $iters = { map(($_, rnd->in_range(1, 3)), @vars) };
+        my $iters = { map(($_, rnd->in_range(1, 3)), @ij) };
         my $vars = { 
-            all => { $main_var => 1, %$iters }, 
+            all => { $n => 1, %$iters }, 
             iterator => $iters,
-            if => { map(($_, 1), @vars) } 
+            if => { map(($_, 1), @ij) } 
         };
         my $fst = [
             EGE::Alg::make_rnd_block(rnd->in_range(1, 2), $other_counts, $vars) 
         ];
         my $sec = [ 
-            EGE::Alg::make_rnd_if($main_var, $iters),
+            EGE::Alg::make_rnd_if($n, $iters),
             [ EGE::Alg::make_rnd_block(rnd->in_range(1, 2), $other_counts, $vars) ] 
         ];
-        my $env = { $main_var => 1 };
+        my $env = { $n => 1 };
         my @comp = map EGE::Prog::make_block($_)->complexity($env, {}, $iters), ($fst, $sec);
 
         if ($comp[0] == $comp[1]) {
             my $b = EGE::Prog::make_block([
-                'for', 'i', 0, EGE::Alg::pow($main_var, $iters->{i}), [
-                    'for', 'j', 0, EGE::Alg::pow($main_var, $iters->{j}), [
+                'for', 'i', 0, EGE::Alg::pow($n, $iters->{i}), [
+                    'for', 'j', 0, EGE::Alg::pow($n, $iters->{j}), [
                         @$fst, @$sec
                     ]
                 ]
             ]);
-            my $lt = EGE::LangTable::table($b, [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);
-            my $ans = $b->complexity({ $main_var => 1 });
+            my $ans = $b->complexity({ $n => 1 });
             my @variants = keys {
                 $ans => 1,
-                $b->complexity({ $main_var => 1 }, { map(($_, 1), qw(ignore_if_eq ignore_if_less ignore_if_mod)) } ) => 1,
+                $b->complexity({ $n => 1 }, { map(($_, 1), qw(ignore_if_eq ignore_if_less ignore_if_mod)) } ) => 1,
                 $comp[0] => 1,
                 $iters->{i} + $iters->{j} => 1,
                 $iters->{i} => 1,
@@ -207,9 +202,10 @@ sub amortized
 
             if (@variants >= 4) {
                 $self->{correct} = 0;
+                my $lt = EGE::LangTable::table($b, [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);
                 $variants[$_] == $ans and ($variants[$_], $variants[0]) = ($variants[0], $variants[$_]) for 0 .. @variants - 1;    
                 $self->{text} = "Определите асимптотическую сложность следующего алгоритма: $lt";
-                $self->variants(map EGE::Alg::big_o(EGE::Alg::to_logic([ '**', $main_var, $_ ])), @variants[0 .. 3]);
+                $self->variants(map EGE::Alg::big_o(EGE::Alg::to_logic([ '**', $n, $_ ])), @variants[0 .. 3]);
                 return;
             }
         }
