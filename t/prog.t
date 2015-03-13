@@ -431,15 +431,6 @@ sub check_sub {
 
 {
     my $b = EGE::Prog::make_block([
-        'for', 'i', 0, 'n', [
-            'if', [ '==', 'i', 2 ], []
-        ]
-    ]);
-    throws_ok sub { $b->complexity({ n => 1 }) }, qr/such arguments/, 'IfThen complexity for condition with const'
-}
-
-{
-    my $b = EGE::Prog::make_block([
         'for', 'i', 0, [ '*', 'n', 'n' ], [
             'for', 'j', 0, 'n', [
                 'if', [ '==', 'i', 'j' ], [
@@ -549,11 +540,25 @@ sub check_sub {
 
 {
     my $b = EGE::Prog::make_block([
+        'for', 'i', 0, [ '**', 'n', 2 ], [
+            'for', 'j', 0, 'n', [
+            	'if', [ '==', [ '%', 'i', 'n' ], 0 ], [
+            		'for', 'k', 0, [ '**', 'n', 3 ], []
+            	],
+                'for', 'l', 0, 1, []
+            ]
+    	]
+    ]);
+    is $b->complexity({ n => 1 }), 5, 'amortized analysis with if_eq';
+}
+
+{
+    my $b = EGE::Prog::make_block([
         'for', 'i', 0, [ '*', 'n', 'n' ], [
             'for', 'j', 0, 'n', [
                 'if', [ '==', 'i', 'j' ], [
                     'if', [ '<=', 'j', 10 ], [
-                        'for', 'k', 0, ['*', ['*', 'i', 'i'], 'n'], []
+                        'for', 'k', 0, [ '*', [ '*', 'i', 'i'], 'n' ], []
                     ]
                 ]
             ],

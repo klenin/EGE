@@ -50,6 +50,8 @@ sub count_if {
     $count;
 }
 
+sub get_type { (split ':', ref $_[0])[-1] }
+
 sub complexity { die; }
 
 sub needs_parens { 0 }
@@ -384,24 +386,54 @@ sub run {
 }
 
 sub complexity {
-    my ($self, $env, $mistakes, $iter, $rnd_case) = @_;
+    my $self = shift;
+    my ($env, $mistakes, $iter, $rnd_case) = @_;
     my ($cond, $body) = ($self->{cond}, $self->{body});
-    if ($cond->{op} eq '==') {
-        my @names = map $cond->{$_}->{name}, qw(left right);
-        defined $_ or die "IfThen complexity for condition with such arguments is unavaible" for @names;
-        ($mistakes->{ignore_if_eq} || $names[0] eq $names[1]) and return $body->complexity($env, $mistakes, $iter, $rnd_case);
-        defined $iter->{$names[0]} and defined $iter->{$names[1]} or 
-            die "IfThen complexity with condition a == b, expected both var as iterator";
+    my @sides = qw(left right);
 
-        my ($old_val, $new_val, $side);
-        $_ = EGE::Utils::last_key($iter, $_) for @names;
-        $side = $iter->{$names[1]} > $iter->{$names[0]};
-        $new_val = $names[!$side];
-      
-        ($old_val, $iter->{$names[$side]}) = ($iter->{$names[$side]}, $new_val);
-        my $ret = $body->complexity($env, $mistakes, $iter, $rnd_case);
-        $iter->{$names[$side]} = $old_val;
-        return $ret;
+    # TODO: сделать нормально проверку структуры выражений, использовать visit_dfs 
+    if ($cond->{op} eq '==') {
+        my $is_vars = 1;
+        $is_vars &&= $cond->{$_}->get_type eq 'Var' for @sides;
+        if ($is_vars)
+        {
+            my @names = map $cond->{$_}->{name}, @sides;
+            ($mistakes->{ignore_if_eq} || $names[0] eq $names[1]) and return $body->complexity(@_);
+            defined $iter->{$names[0]} and defined $iter->{$names[1]} or 
+                die "IfThen complexity with condition a == b, expected both var as iterator";
+
+            my ($old_val, $new_val, $side);
+            $_ = EGE::Utils::last_key($iter, $_) for @names;
+            $side = $iter->{$names[1]} > $iter->{$names[0]};
+            $new_val = $names[!$side];
+          
+            ($old_val, $iter->{$names[$side]}) = ($iter->{$names[$side]}, $new_val);
+            my $ret = $body->complexity(@_);
+            $iter->{$names[$side]} = $old_val;
+            return $ret;
+        }
+
+        my $isno_const;
+        ($cond->{$sides[$_]}->get_type eq 'Const') and ($isno_const = $cond->{$sides[!$_]})  for 0 .. 1;
+        if (defined $isno_const && defined $isno_const->{op} && $isno_const->{op} eq '%') {
+            my $name = $isno_const->{left}->{name};
+            defined $iter->{$name} or die "IfThen complexity with condition a % b == 0, expected a as iterator, given: '$isno_const->{left}'";
+            $name = EGE::Utils::last_key($iter, $name);
+            my $n = $isno_const->{right}->polinom_degree(@_);
+
+            $iter->{$name} -= $n;
+            my $ret = $body->complexity(@_);
+            $iter->{$name} += $n;
+            return $ret;
+        }
+        if (defined $isno_const && $isno_const->get_type eq 'Var') {
+            my $name = EGE::Utils::last_key($iter, $isno_const->{name});
+            my $old_val = $iter->{$name};
+            $iter->{$name} = 0;
+            my $ret = $body->complexity(@_);
+            $iter->{$name} = $old_val;
+            return $ret;
+        }
     }
     elsif (my $side = $cond->{op} eq '>=' or $cond->{op} eq '<=') {
         my @operands = qw(left right);
@@ -410,11 +442,11 @@ sub complexity {
         defined $iter->{$name} or die "IfThen complexity with condition a >= b, expected b as iterator, $name is not iterator";
         $name = EGE::Utils::last_key($iter, $name);
         my $old_val = $iter->{$name};
-        my $new_val = $cond->{$operands[!$side]}->polinom_degree($env, $mistakes, $iter, $rnd_case);
-        ($mistakes->{ignore_if_less} || $new_val >= $old_val) and return $body->complexity($env, $mistakes, $iter, $rnd_case);
+        my $new_val = $cond->{$operands[!$side]}->polinom_degree(@_);
+        ($mistakes->{ignore_if_less} || $new_val >= $old_val) and return $body->complexity(@_);
 
         $iter->{$name} = $new_val;
-        my $ret = $body->complexity($env, $mistakes, $iter, $rnd_case);
+        my $ret = $body->complexity(@_);
         $iter->{$name} = $old_val;
         return $ret;
     }
