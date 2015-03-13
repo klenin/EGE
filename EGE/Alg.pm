@@ -8,7 +8,7 @@ use warnings;
 
 use EGE::Random;
 use base 'Exporter';
-our @EXPORT_OK = qw(to_logic big_o make_rnd_block);
+our @EXPORT_OK = qw(to_logic big_o make_rnd_block pow make_rnd_if);
 
 
 sub to_logic { EGE::Prog::make_expr($_[0])->to_lang_named('Logic') }
@@ -58,6 +58,18 @@ sub rnd_poly {
     $poly;
 }
 
+sub make_rnd_if {
+    my ($main_var, $iters) = @_;
+    my @vars = rnd->shuffle(keys $iters);
+    my $case = rnd->in_range(0, 3);
+
+    $case == 0 and return 'if', [ '==', @vars ];
+    $case == 1 and return 'if', [ '==', [ '%', $vars[0], pow($main_var, rnd->in_range(1, $iters->{$vars[0]})) ], 0 ];
+    $case == 2 and return 'if', [ '==', $vars[0], 0 ];
+    $case == 3 and return 'if', [ '<=', $vars[0], pow($main_var, rnd->in_range(1, $iters->{$vars[0]} - 1)) ];
+}
+
+# TODO: Добавить генерацию if_mod!
 sub make_rnd_block {
     my ($for_count, $other_counts, $vars) = @_;
     if ($for_count) {

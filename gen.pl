@@ -239,6 +239,7 @@ binmode STDOUT, ':utf8';
 #g3('CallCount', 'super_recursion');
 #g3('Tree', 'node_count');
 #g3('Tree', 'height');
+#g3('Complexity', 'amortized');
 #$questions = EGE::Generate::all;
 #$questions = EGE::AsmGenerate::all;
 #$questions = EGE::DatabaseGenerate::all;
