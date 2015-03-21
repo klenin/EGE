@@ -15,12 +15,12 @@ use EGE::Html;
 use EGE::Russian::Jobs;
 use EGE::SQL::Table;
 use EGE::SQL::Utils qw(create_table check_cond expr_1);
+use EGE::SQL::RandomTable qw(create_table);
+
 
 sub trivial_select {
     my ($self) = @_;
-    my @fields = qw(Профессия Зарплата);
-    my @jobs = rnd->pick_n(9, @EGE::Russian::Jobs::list);
-    my ($products, $values) = EGE::SQL::Utils::create_table(\@fields, \@jobs, 'jobs');
+    my $products = EGE::SQL::RandomTable::create_table(column => 2, row => 8);
     my $gen_expr = sub {
         EGE::Prog::make_expr([ rnd->pick(ops::comp), 'Зарплата', $products->random_val($values) ])
     };
@@ -36,9 +36,7 @@ sub trivial_select {
 
 sub trivial_delete {
     my ($self) = @_;
-    my @fields = qw(Товар Количество Цена Затраты);
-    my @candy = rnd->pick_n(9, @EGE::Russian::Product::candy);
-    my ($products, $values) = EGE::SQL::Utils::create_table(\@fields, \@candy, 'products');
+    my $products = EGE::SQL::RandomTable::create_table(column => 4, row => 6);
     my $text =  $products->table_html;
     my $count = $products->count();
     my $delete = EGE::SQL::Delete->new($products,

@@ -15,13 +15,11 @@ use EGE::Html;
 use EGE::SQL::Table;
 use EGE::Russian::Product;
 use EGE::SQL::Queries;
+use EGE::SQL::RandomTable qw(create_table);
 
 sub insert_delete {
     my ($self) = @_;
-    my @fields = qw(Товар Количество Цена Затраты);
-    my @candy = rnd->pick_n(14, @EGE::Russian::Product::candy);
-    my ($products, $values) = EGE::SQL::Utils::create_table(
-        \@fields, [ map $candy[$_] , 0..$#candy - 5 ], 'products');
+    my $products = EGE::SQL::RandomTable::create_table(column => 5, row => 13);
     my $text_table = $products->table_html;
     my (%ans, @query);
     my $ind = rnd->in_range(10, 13);

@@ -16,20 +16,9 @@ use EGE::SQL::Table;
 use EGE::Russian::Product;
 use EGE::SQL::Queries;
 
-my(@month);
-
-sub create_table {
-    my ($n, $m, $name) = @_;
-    @month = rnd->pick_n_sorted($n, @EGE::Russian::Time::month);
-    my @electronic = rnd->pick_n($m, @EGE::Russian::Product::electronic);
-    my ($products, $values) = EGE::SQL::Utils::create_table(
-        [ 'Товар', @month ], \@electronic, $name);
-    ($products, $values);
-}
-
 sub select_between {
     my ($self) = @_;
-    my ($products, $values) = create_table(5, 9, 'products');
+    my $products= EGE::SQL::RandomTable::create_table(column => 5, row => 9);
     my ($cond, $count,$l, $r, $m1);
     do {
         ($l, $r) = map $products->random_val($values), 1..2;
@@ -63,7 +52,7 @@ sub expression {
 
 sub select_expression {
     my ($self) = @_;
-    my ($products, $values) = create_table(5, 3, 'products');
+    my $products = EGE::SQL::RandomTable::create_table(column => 5, row => 3);
     my ($count, $ans, $l, @table_false);
     my ($m1, $m2, $m3, $m4) = rnd->shuffle(@month[0 .. $#month]);
     my $cond = expression($products, 0, $values);

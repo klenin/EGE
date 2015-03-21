@@ -15,6 +15,7 @@ use EGE::Html;
 use EGE::SQL::Table;
 use EGE::Russian::Product;
 use EGE::SQL::Queries;
+use EGE::SQL::RandomTable qw(create_table);
 
 
 sub expression {
@@ -48,9 +49,7 @@ sub func {
 
 sub choose_update {
     my ($self) = @_;
-    my @fields = qw(Товар Прибыль Цена Затраты Выручка);
-    my @electronic = rnd->pick_n(6, @EGE::Russian::Product::electronic);
-    my ($products, $values) = EGE::SQL::Utils::create_table(\@fields, \@electronic, 'products');
+    my $products = EGE::SQL::RandomTable::create_table(column => 5, row => 6);
     my $old_table_text = $products->table_html;
     my (@requests, $update);
     while(1) {

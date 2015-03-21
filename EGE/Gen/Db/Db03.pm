@@ -16,13 +16,11 @@ use EGE::SQL::Table;
 use EGE::Russian::Product;
 use EGE::Russian::Time;
 use EGE::SQL::Queries;
+use EGE::SQL::RandomTable qw(create_table);
 
 sub trivial_update {
     my ($self) = @_;
-    my @month = rnd->pick_n_sorted(5, @EGE::Russian::Time::month);
-    my @electronic = rnd->pick_n(9, @EGE::Russian::Product::electronic);
-    my ($products, $values) = EGE::SQL::Utils::create_table(
-        [ 'Товар', @month ], \@electronic, 'products');
+    my $products = EGE::SQL::RandomTable::create_table(column => 6, row => 8);
     my $old_products_text = $products->table_html;
     my ($cond, $update);
     my ($m1, $m2, $m3, $m4) = rnd->shuffle(@month[0 .. $#month]);

@@ -1,6 +1,7 @@
 # Copyright © 2014 Darya D. Gornak
 # Licensed under GPL version 2 or later.
 # http://github.com/dahin/EGE
+
 package EGE::Gen::Db::Db02;
 use base 'EGE::GenBase::MultipleChoice';
 
@@ -18,10 +19,7 @@ use EGE::SQL::Queries;
 
 sub select_where {
     my ($self) = @_;
-    my @fields = qw(Товар Количество Цена Затраты);
-    my @candy = rnd->pick_n(9, @EGE::Russian::Product::candy);
-    my ($products, $values) = EGE::SQL::Utils::create_table(\@fields, \@candy, 'products');
-    my $cond = EGE::SQL::Utils::check_cond($products, $values, \&EGE::SQL::Utils::expr_2, @fields);
+    my $products = EGE::SQL::RandomTable::create_table(column => 4, row => 6);
     my $query = EGE::SQL::Select->new($products, [ 'Товар' ], $cond);
     my $selected = $query->run();
     my %ans;
