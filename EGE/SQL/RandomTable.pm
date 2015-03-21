@@ -13,7 +13,7 @@ use EGE::SQL::Utils;
 sub create_table {
     my %p = @_;
     my @arr = ('EGE::SQL::Products', 'EGE::SQL::Jobs', 'EGE::SQL::ProductMonth',
-            'EGE::SQL::Cities');
+            'EGE::SQL::Cities', 'EGE::SQL::People');
     my $class = rnd->pick(grep ($_->get_column() >= $p{column} && grep (@$_ >= $p{row}, $_->get_rows_array()), @arr));
     $class->make_table($p{column}, $p{row});
 }
@@ -50,5 +50,11 @@ use base 'EGE::SQL::BaseTable';
 sub get_name { 'city' }
 sub get_column { my @city = ('Город', 'Жители', 'Площадь'); }
 sub get_rows_array { (\@EGE::Russian::City::city) }
+
+package EGE::SQL::People;
+use base 'EGE::SQL::BaseTable';
+sub get_name { 'people' }
+sub get_column { my @city = ('Фамилия', 'Зарплата'); }
+sub get_rows_array { (\@EGE::Russian::FamilyNames::list) }
 
 1;
