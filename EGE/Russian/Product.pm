@@ -89,30 +89,28 @@ our @electronic = (
 our @pcs = (
 'Компьютер DNS Extreme',
 'Компьютер DNS Home',
-'Компьютер DNS Home XL',
 'Компьютер DNS Office',
-'Компьютер DNS Office XL',
 'Компьютер HP',
+'Компьютер Samsung',
+'Компьютер Brother',
+'Компьютер Asus',
 'Компьютер Lenovo M4350',
-'Компьютер Lenovo H535',
 );
 
 our @printers = (
-'Принтер Brother HL-2250DNR',
-'Принтер Brother HL-5440D Laser Printer',
-'Принтер HP LaserJet P2035',
-'Принтер HP LaserJet Pro 400 M401a',
-'Принтер HP LaserJet Pro P1606dn',
-'Принтер Samsung ML-3310D',
+'Принтер Brother',
+'Принтер Brother Laser Printer',
+'Принтер HP LaserJet',
+'Принтер Samsung',
 'Принтер цветной HP LaserJet Pro',
 'Принтер цветной Samsung CLP-365W',
-'Принтер цветной Samsung CLP-415N',
+'Принтер Laser',
+'Принтер Simens',
 );
 
 our @laptops = (
 'Ноутбук Alienware',
 'Ноутбук Apple MacBook Pro',
-'Ноутбук Apple MacBook Air',
 'Ноутбук Asus',
 'Ноутбук DELL Inspiron',
 'Ноутбук DNS',

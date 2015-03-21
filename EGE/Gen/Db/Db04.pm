@@ -1,6 +1,8 @@
 # Copyright © 2014 Darya D. Gornak
 # Licensed under GPL version 2 or later.
 # http://github.com/dahin/EGE
+
+
 package EGE::Gen::Db::Db04;
 use base 'EGE::GenBase::SingleChoice';
 
@@ -15,6 +17,7 @@ use EGE::Html;
 use EGE::SQL::Table;
 use EGE::Russian::Product;
 use EGE::SQL::Queries;
+use EGE::SQL::RandomTable qw(create_table);
 
 
 sub expression {
@@ -48,17 +51,15 @@ sub func {
 
 sub choose_update {
     my ($self) = @_;
-    my @fields = qw(Товар Прибыль Цена Затраты Выручка);
-    my @electronic = rnd->pick_n(6, @EGE::Russian::Product::electronic);
-    my ($products, $values) = EGE::SQL::Utils::create_table(\@fields, \@electronic, 'products');
+    my $products = EGE::SQL::RandomTable::create_table(column => 5, row => 6);
     my $old_table_text = $products->table_html;
     my (@requests, $update);
     while(1) {
-        my ($f1, $f2, $f3, $f4) = rnd->shuffle(@fields[1 .. $#fields]);
-        my $cond = expression($f1, $f2, $f3, $f4, @fields);
+        my ($f1, $f2, $f3, $f4) = rnd->shuffle(@{$products->{fields}}[1 .. $#{$products->{fields}}]);
+        my $cond = expression($f1, $f2, $f3, $f4, @{$products->{fields}});
         my $count = $products->select([], $cond)->count();
         if ($count) {
-            @requests = func($count, $products, @fields);
+            @requests = func($count, $products, @{$products->{fields}});
             $update = EGE::SQL::Update->new($products, make_block([ '=', $f1, $f4 ]), $cond);
             $update->run();
             last;

@@ -16,23 +16,13 @@ use EGE::SQL::Table;
 use EGE::Russian::Product;
 use EGE::SQL::Queries;
 
-my(@month);
-
-sub create_table {
-    my ($n, $m, $name) = @_;
-    @month = rnd->pick_n_sorted($n, @EGE::Russian::Time::month);
-    my @electronic = rnd->pick_n($m, @EGE::Russian::Product::electronic);
-    my ($products, $values) = EGE::SQL::Utils::create_table(
-        [ 'Товар', @month ], \@electronic, $name);
-    ($products, $values);
-}
-
 sub select_between {
     my ($self) = @_;
-    my ($products, $values) = create_table(5, 9, 'products');
+    my $products= EGE::SQL::RandomTable::create_table(column => 5, row => 9);
+    my @month = @{$products->{fields}}[1 .. @{$products->{fields}} - 1];
     my ($cond, $count,$l, $r, $m1);
     do {
-        ($l, $r) = map $products->random_val($values), 1..2;
+        ($l, $r) = map $products->fetch_val($_), rnd->pick_n(2, @month);
         $m1 = rnd->shuffle(@month[1 .. $#month]);
         $cond = EGE::Prog::make_expr([ 'between', $m1, $l, $r ]);
         $count = $products->select([], $cond)->count();
@@ -46,10 +36,10 @@ sub select_between {
 }
 
 sub expression {
-    my ($self, $ans, $values) = @_;
+    my ($self, $ans, $values, @month) = @_;
     my ($cond, $count);
     do {
-        my $l = $self->random_val($values);
+        my $l = $self->fetch_val($values);
         my ($m1, $m2, $m3) = rnd->shuffle(@month[0 .. $#month]);
         $cond = EGE::Prog::make_expr([
             rnd->pick(ops::add),
@@ -63,10 +53,12 @@ sub expression {
 
 sub select_expression {
     my ($self) = @_;
-    my ($products, $values) = create_table(5, 3, 'products');
+    my $products = EGE::SQL::RandomTable::create_table(column => 5, row => 3);
+    my @month = @{$products->{fields}}[1 .. @{$products->{fields}} - 1];
     my ($count, $ans, $l, @table_false);
     my ($m1, $m2, $m3, $m4) = rnd->shuffle(@month[0 .. $#month]);
-    my $cond = expression($products, 0, $values);
+    my $values = rnd->pick(@month);
+    my $cond = expression($products, 0, $values, @month);
     my $query = EGE::SQL::Select->new($products, [ $m1, $m2, $cond ]);
     my $select = $query->run();
     my $text_ans = $select->table_html;
@@ -75,9 +67,9 @@ sub select_expression {
     for (0..2) {
         my $select;
         if ($_ % 2) {
-            $select = $products->select([ $m1, $m2, expression($products, $count, $values) ]);
+            $select = $products->select([ $m1, $m2, expression($products, $count, $values, @month) ]);
         } else {
-            $cond = expression($products, $j, $values);
+            $cond = expression($products, $j, $values, @month);
             $select =  $products->select([ rnd->pick_n(1, $m3, $m4), $m1, $cond ]);
             $j = ${$products->{data}}[2];
         }
