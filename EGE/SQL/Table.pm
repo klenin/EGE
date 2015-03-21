@@ -41,6 +41,15 @@ sub insert_rows {
     $self->insert_row(@$_) for @_;
     $self;
 }
+ 
+ sub insert_column {
+    my ($self, %p) = @_;
+    unshift $self->{fields}, $p{name};
+    my $i = 0; my $j = 0;
+    unshift $_, $p{array}[$i++] for @{$self->{data}};
+    $self->{field_index}->{$_} = $j++ for @{$self->{fields}};
+    $self;
+ }
 
 sub print_row { print join("\t", @{$_[0]}), "\n"; }
 
@@ -118,9 +127,9 @@ sub table_html {
     $table_text = html->table($table_text, { border => 1 });
 }
 
-sub random_val {
-   my ($self, @array) = @_;
-   rnd->pick(@{rnd->pick(@array)}) + rnd->pick(0, -50, 50);
+sub fetch_val {
+   my ($self, $field) = @_;
+   rnd->pick(@{rnd->pick($self->column_array($field))}) + rnd->pick(0, -50, 50);
 }
 
 sub random_row { rnd->pick(@{$_[0]->{data}}) }

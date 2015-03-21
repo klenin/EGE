@@ -18,30 +18,30 @@ sub create_table {
     my $products = EGE::SQL::Table->new($row, name => $name);
     my @values = map [ map rnd->in_range(10, 80) * 100, @$col ], 0 .. @$row - 2;
     $products->insert_rows(@{EGE::Utils::transpose($col, @values)});
-    $products, @values;
+    $products;
 }
 
 sub check_cond {
-    my ($products, $values, $expr, @fields) = @_;
+    my ($products, $expr) = @_;
     my ($ans, $cond);
     my $count = $products->count();
     do {
-        $cond = $expr->($products, $values, @fields);
+        $cond = $expr->($products, @{$products->{fields}});
         $ans = $products->select([], $cond)->count();
     } until (0 < $ans && $ans < $count);
     $cond;
 }
 
 sub expr_1 {
-    my ($tab, $values, @fields) = @_;
-    my ($f1,$f2) = rnd->shuffle(@fields[1 .. $#fields]);
+    my ($tab, @fields) = @_;
+    my ($f1, $f2) = rnd->shuffle(@fields[1 .. $#fields]);
     EGE::Prog::make_expr([ rnd->pick(ops::comp), $f1, $f2 ]);
 }
 
 sub expr_2 {
-    my ($tab, $values, @fields) = @_;
+    my ($tab, @fields) = @_;
     my ($f1, $f2, $f3) = rnd->shuffle(@fields[1 .. $#fields]);
-    my ($l, $r) = map $tab->random_val($values), 1..2;
+    my ($l, $r) = map $tab->fetch_val($_), ($f1,$f3);
     EGE::Prog::make_expr([
         rnd->pick('&&', '||'),
         [
@@ -54,9 +54,9 @@ sub expr_2 {
 }
 
 sub expr_3 {
-    my ($tab, $values, @fields) = @_;
+    my ($tab, @fields) = @_;
     my ($f1, $f2, $f3) = rnd->shuffle(@fields[1 .. $#fields]);
-    my ($l, $r) = map $tab->random_val($values), 1..2;
+    my $l = $tab->fetch_val($f1);
     EGE::Prog::make_expr([
         rnd->pick('&&', '||'),
         [ rnd->pick(ops::comp), $f1, $l ], 

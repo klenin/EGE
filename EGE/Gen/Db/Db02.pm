@@ -20,16 +20,17 @@ use EGE::SQL::Queries;
 sub select_where {
     my ($self) = @_;
     my $products = EGE::SQL::RandomTable::create_table(column => 4, row => 6);
-    my $query = EGE::SQL::Select->new($products, [ 'Товар' ], $cond);
+    my $cond = EGE::SQL::Utils::check_cond($products, \&EGE::SQL::Utils::expr_2);
+    my $query = EGE::SQL::Select->new($products, [ $products->{fields}[0] ], $cond);
     my $selected = $query->run();
     my %ans;
     $ans{$_->[0]} = 1 for @{$selected->{data}};
     $self->{text} = sprintf
-        "В таблице <tt>%s</tt> представлен список товаров:\n%s\n" .
+        "Есть таблица <tt>%s</tt>:\n%s\n" .
         'Какие товары в этой таблице удовлетворяют запросу %s?',
         $products->name, $products->table_html, $query->text_html;
-    $self->variants(@candy);
-    $self->{correct} = [ map $ans{$_} ? 1 : 0, @candy ];
+    $self->variants(@{$products->column_array($products->{fields}[0])});
+    $self->{correct} = [ map $ans{$_} ? 1 : 0, @{$products->column_array($products->{fields}[0])}];
 }
 
 1;
