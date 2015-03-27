@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 92;
+use Test::More tests => 137;
 use Test::Exception;
 
 use lib '..';
@@ -244,9 +244,6 @@ sub check_sub {
 
 {
     my $b = EGE::Prog::make_block([
-        'func', 'my_func', [ qw(x y z) ], [
-            '=', 'my_func', [ '-', 'x', 'y' ]
-        ],
         'func', 'g', [ qw(a b) ], [
             '=', 'g', [ '-', 'a', 'b' ]
         ],
@@ -254,10 +251,6 @@ sub check_sub {
     ]);
     my $c = {
         Basic => [
-            'FUNCTION my_func(x, y, z)',
-            '  my_func = x - y',
-            'END FUNCTION',
-            '',
             'FUNCTION g(a, b)',
             '  g = a - b',
             'END FUNCTION',
@@ -265,11 +258,6 @@ sub check_sub {
             'a = g(3, 2)',
         ],
         Alg => [
-            'алг цел my_func(цел x, y, z)',
-            'нач',
-            '  my_func := x - y',
-            'кон',
-            '',
             'алг цел g(цел a, b)',
             'нач',
             '  g := a - b',
@@ -278,11 +266,6 @@ sub check_sub {
             'a := g(3, 2)',
         ],
         Pascal => [
-            'function my_func(x, y, z: integer): integer;',
-            'begin',
-            '  my_func := x - y;',
-            'end;',
-            '',
             'function g(a, b: integer): integer;',
             'begin',
             '  g := a - b;',
@@ -291,31 +274,28 @@ sub check_sub {
             'a := g(3, 2);',
         ],
         C => [
-            'int my_func(int x, int y, int z) {',
-            '  my_func = x - y;',
-            '}',
-            '',
             'int g(int a, int b) {',
+            '  int g;',
             '  g = a - b;',
+            '  return g;',
             '}',
             '',
             'a = g(3, 2);',
         ],
         Perl => [
-            'sub my_func {',
-            '  my ($x, $y, $z) = @_;',
-            '  $my_func = $x - $y;',
-            '}',
-            '',
             'sub g {',
+            '  my $g;',
             '  my ($a, $b) = @_;',
             '  $g = $a - $b;',
+            '  return $g;',
             '}',
             '',
             '$a = g(3, 2);',
         ],        
     };
     check_sub($_, $b, $c->{$_}, "function calling, definition in $_") for keys $c;
+    is $b->run_val('a'), 1, 'run call function';
+    is eval($b->to_lang_named('Perl')), 3 - 2, 'eval perl funtion';
 }
 
 {
@@ -324,16 +304,6 @@ sub check_sub {
         'func', 'f', [ qw(a b) ], [],
     ]);
     throws_ok sub { $b->run({}) }, qr/f/, 'function redefinition'
-}
-
-{
-    my $b = EGE::Prog::make_block([
-        'func', 'f', [ qw(x y z) ], [
-            '=', 'f', [ '-', 'x', 'y' ]
-        ],
-        '=', 'a', [ '()', 'f', 1, 2, 3 ],
-    ]);
-    is $b->run_val('a'), -1, 'run call function';
 }
 
 {
@@ -351,6 +321,267 @@ sub check_sub {
     throws_ok sub { $b->run({}) }, qr/f/, 'not enough arguments';
 }
 
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, 9, [
+            'expr', [ 'print', 'i', 0 ]
+        ]
+    ]);
+    my $c = {
+        Basic => [
+            'FOR i = 0 TO 9',
+            '  PRINT i, 0',
+            'NEXT i',
+        ],
+        Alg => [
+            'нц для i от 0 до 9',
+            '  вывод i, 0',
+            'кц',
+        ],
+        Pascal => [
+            'for i := 0 to 9 do',
+            '  write(i, 0);',
+        ],
+        C => [
+            'for (i = 0; i <= 9; ++i)',
+            '  print(i, 0);',
+        ],
+        Perl => [
+            'for ($i = 0; $i <= 9; ++$i) {',
+            '  print($i, 0);',
+            '}',
+        ],
+    };
+    check_sub($_, $b, $c->{$_}, "print in $_") for keys $c;
+    is $b->run_val('<out>'), join("\n", map $_ . ' ' . 0, 0 .. 9), 'run print';    
+}
+
+{
+    my $e = make_expr([ '+', [ '*', 'x', ['**', 'x', 2] ], [ '+', 'x', 2 ] ]);
+    is $e->polinom_degree({ x => 1 }), 3, 'polinom degree'
+}
+
+{
+    my $e = make_expr([ '+', 'x', 'xyz' ]);
+    throws_ok sub { $e->polinom_degree({ x => 1 }) }, qr/Undefined variable xyz/, 'undefined var when calculating polinom degree' 
+}
+
+{
+    my $e = make_expr([ '%', 'x', 'x' ]);
+    throws_ok sub { $e->polinom_degree({ x => 1 }) }, qr/Polinom degree is unavaible for expr with operator: '%'/, 
+        'calculating polinom degree of expr with \'%\'' 
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, [ '*', 'n', 'n' ], []
+    ]);
+    is $b->complexity({ n => 1 }), 2, 'single forLoop complexity'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, [ '*', 'n', 'n' ], [
+            'for', 'j', 0, 'n', []
+        ]
+    ]);
+    is $b->complexity({ n => 1 }), 3, 'multi forLoop complexity'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, [ '*', 'n', 'n' ], [
+            'for', 'j', 0, 'n' , [],
+            'for', 'j', 0, [ '*', 'n', 'n' ], []
+        ]
+    ]);
+    is $b->complexity({ n => 1 }), 4, 'block complexity'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, 'n', [
+           'for', 'j', 0, 'i', []
+        ]
+    ]);
+    is $b->complexity({ n => 1 }), 2, 'complexity with using var as border'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, 'n', [
+            'for', 'j', 0, 'n', [
+                'if', [ '!=', 'i', 'j' ], []
+            ]
+        ]
+    ]);
+    throws_ok sub { $b->complexity({ n => 1 }) }, qr/!=/, 'IfThen complexity for condition with \'!=\''
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, 'n', [
+            'if', [ '==', 'i', 'i' ], [
+                'for', 'j', 0, 'n', []
+            ]
+        ]
+    ]);
+    is $b->complexity({ n => 1 }), 2, 'IfThen complexity for condition with same var'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, [ '*', 'n', 'n' ], [
+            'for', 'j', 0, 'n', [
+                'if', [ '==', 'i', 'j' ], [
+                    'for', 'l', 0, 'n', []
+                ]
+            ],
+            'for', 'k', 0, 'n', []
+        ]
+    ]);
+    is $b->complexity({ n => 1 }), 3, 'IfThen complexity 1'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, [ '*', 'n', 'n' ] , [
+            'for', 'j', 0, 'n', [
+                'if', [ '==', 'i', 'j' ], [
+                    'for', 'l', 0, 'n', []
+                ]
+            ],
+            'for', 'k', 0, [ '*', 'i', 'j' ], [
+                '=', [ '[]', 'M', 'i', 'j' ], [ '*', 'i', 'j' ]
+            ]
+        ]
+    ]);
+    is $b->complexity({ n => 1 }), 5, 'IfThen complexity 2'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, [ '*', 'n', 'n' ], [
+            'for', 'j', 0, 'n', [
+                'if', [ '==', 'i', 'j' ], [
+                    'for', 'l', 0, [ '*', 'n', [ '*', 'i', 'j' ] ], [
+                        'if', [ '==', 'i', 'l' ], []
+                    ]
+                ]
+            ]
+        ]
+    ]);
+    is $b->complexity({ n => 1} ), 4, 'multi IfThen complexity'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, ['*', [ '*', 'n', 'n' ], 'n'], [
+            'if', [ '<=', 'i', 'n' ], [
+                'for', 'j', 0, 'i', []
+            ]
+        ]
+    ]);
+    is $b->complexity({ n => 1} ), 3, 'IfThen complexity less condition'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, [ '*', 'n', 'n' ], [
+            'for', 'j', 0, 'n', [
+                'if', [ '==', 'i', 'j' ], [
+                    'if', [ '<=', 'i', 10 ], [
+                        'for', 'k', 0, ['*', ['*', 'i', 'n'], 'n'], []
+                    ]
+                ]
+            ]
+        ]
+    ]);
+    is $b->complexity({ n => 1} ), 3, 'IfThen complexity less and eq condition'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, 'n', [
+            'if', [ '<=', 1, 'i' ], []
+        ]
+    ]);
+    throws_ok sub { $b->complexity({ n => 1 }) }, qr/EGE::Prog::Const/, 'IfThen complexity without var in less condition'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, 'n', [
+            '=', 'i', 0
+        ]
+    ]);
+    throws_ok sub { $b->complexity({ n => 1 }) }, qr/i/, 'assign to iterator'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, 'n', [
+            '=', 'j', [ '*', 'i', 'i' ]
+        ]
+    ]);
+    throws_ok sub { $b->complexity({ n => 1 }) }, qr/j/, 'assign iterator to another var'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, 'n', [
+            'if', [ '==', 'i', 'n' ], [
+                'for', 'j', 0, 'n', []
+            ]
+        ]
+    ]);
+    throws_ok sub { $b->complexity({ n => 1 }) } , qr/a == b/, 'if_eq compare iterator with non-iterator'
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, [ '**', 'n', 2 ], [
+            'for', 'j', 0, 'n', [
+            	'if', [ '==', [ '%', 'i', 'n' ], 0 ], [
+            		'for', 'k', 0, [ '**', 'n', 3 ], []
+            	],
+                'for', 'l', 0, 1, []
+            ]
+    	]
+    ]);
+    is $b->complexity({ n => 1 }), 5, 'amortized analysis with if_mod';
+    is $b->complexity({ n => 1 }, { ignore_if_mod => 1 }), 6, 'complexity with mistake ignore_if_mod';
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, [ '*', 'n', 'n' ], [
+            'for', 'j', 0, 'n', [
+                'if', [ '==', 'i', 'j' ], [
+                    'if', [ '<=', 'j', 10 ], [
+                        'for', 'k', 0, [ '*', [ '*', 'i', 'i'], 'n' ], []
+                    ]
+                ]
+            ],
+            'for', 'l', 0, 'i', []
+        ]
+    ]);
+    my @mistakes_names = qw(var_as_const ignore_if_eq change_min ignore_if_less);
+    my @ans = (4, 3, 7, 3, 3, 2, 4, 2, 4, 3, 8, 4, 4, 2, 4, 2);
+
+    for (my $i = 1; $i < 2**@mistakes_names; $i++) {
+        my %mistakes = map(($mistakes_names[$_] => $i/2**$_ % 2), (0..@mistakes_names-1));
+        $mistakes{var_as_const} and $mistakes{var_as_const} = 'n';
+        is $b->complexity({ n => 1 }, \%mistakes), $ans[$i], "complexity with mistakes:" .
+            join ', ', map($mistakes{$_} ? $_ : (), @mistakes_names);
+    }
+}
+
+{
+    my $b = EGE::Prog::make_expr([ '#', 'BUMP' ]);
+    is $b->to_lang_named('C'), 'BUMP', 'to lang expr with plain text';
+    throws_ok sub { $b = $b->run() } , qr/BUMP/, 'run expr with plain text'
+}
 
 {
     sub check_sql { is make_expr($_[0])->to_lang_named('SQL'), $_[1], "SQL $_[2]" }
@@ -364,4 +595,3 @@ sub check_sub {
         [ '&&', [ '||', 'x', 'y' ], [ '==', 'a', 1 ] ],
         '(x OR y) AND a = 1', 'priorities');
 }
-

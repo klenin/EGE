@@ -5,8 +5,8 @@ use strict;
 use warnings;
 use utf8;
 
+use EGE::Utils;
 use EGE::Prog::Lang;
-
 package EGE::Prog::SynElement;
 
 sub new {
@@ -50,6 +50,10 @@ sub count_if {
     $count;
 }
 
+sub get_type { (split ':', ref $_[0])[-1] }
+
+sub complexity { die; }
+
 sub needs_parens { 0 }
 
 package EGE::Prog::BlackBox;
@@ -82,6 +86,20 @@ sub run {
 }
 
 sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for qw(var expr) }
+
+sub complexity {
+    my ($self, $env, $mistakes, $iter, $rnd_case) = @_;
+    my $name;
+    defined($name = $self->{var}->{name}) or return ();
+    defined $iter->{$name} and die "Assign to iterator: '$name'";
+
+    # провека, что все переменные expr определены
+    $self->{expr}->polinom_degree($env, $mistakes, $iter, $rnd_case);
+    # вычисляем степень выражения без итераторов, если ошибка, значит в выражении присутсвует итератор
+    $env->{$self->{var}->{name}} = eval { $self->{expr}->polinom_degree($env, $mistakes, {}, $rnd_case) };
+    $@ and die "Assign iterator to: '$name'";
+    ()
+}
 
 package EGE::Prog::Index;
 use base 'EGE::Prog::SynElement';
@@ -121,9 +139,23 @@ sub to_lang {
 
 sub run {
     my ($self, $env) = @_;
+    my @arg_val = map $_->run($env), @{$self->{args}};
     my $func = $env->{'&'}->{$self->{func}} or die "Undefined function $self->{func}";
-    my $args = [ map $_->run($env), @{$self->{args}} ];
-    $func->call($args, $env);
+    $func->call( [ @arg_val ], $env);
+}
+
+package EGE::Prog::Print;
+use base 'EGE::Prog::SynElement';
+
+sub to_lang {
+    my ($self, $lang) = @_; 
+    sprintf $lang->print_fmt,
+        join $lang->args_separator, map $_->to_lang($lang), @{$self->{args}};
+}
+
+sub run {
+    my ($self, $env) = @_;
+    $env->{'<out>'} .= ($env->{'<out>'} ? "\n" : '') . join(' ', map $_->run($env), @{$self->{args}});
 }
 
 package EGE::Prog::Op;
@@ -165,6 +197,8 @@ sub to_lang_fmt {}
 sub gather_vars { $_[0]->{$_}->gather_vars($_[1]) for $_[0]->_children; }
 sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for $self->_children; }
 
+sub polinom_degree { die "Polinom degree is unavaible for expr with operator: '$@_[0]->{op}'"; }
+
 package EGE::Prog::BinOp;
 use base 'EGE::Prog::Op';
 
@@ -174,6 +208,15 @@ sub to_lang_fmt {
 }
 
 sub _children { qw(left right) }
+
+sub polinom_degree {
+    my $self = shift;
+    my ($env, $mistakes, $iter) = @_;
+    if ($self->{op} eq '*') { $self->{left}->polinom_degree(@_) + $self->{right}->polinom_degree(@_) }
+    elsif ($self->{op} eq '+') { List::Util::max(map $self->{$_}->polinom_degree(@_), $self->_children) }
+    elsif ($self->{op} eq '**') { $self->{left}->polinom_degree(@_) * $self->{right}->run({}) }
+    else { die "Polinom degree is unavaible for expr with operator: '$self->{op}'" }
+}
 
 package EGE::Prog::UnOp;
 use base 'EGE::Prog::Op';
@@ -224,6 +267,15 @@ sub get_ref {
 
 sub gather_vars { $_[1]->{$_[0]->{name}} = 1 }
 
+
+sub polinom_degree {
+    my ($self, $env, $mistakes, $iter) = @_;
+    my $name = $self->{name};
+    defined $env->{$name} and return $mistakes->{var_as_const} ? $name eq $mistakes->{var_as_const} : $env->{$name};
+    defined $iter->{$name} and return $mistakes->{var_as_const} ? 0 : $iter->{EGE::Utils::last_key($iter, $name)};
+    die "Undefined variable $self->{name}";
+}
+
 package EGE::Prog::Const;
 use base 'EGE::Prog::SynElement';
 
@@ -236,6 +288,8 @@ sub run {
     my ($self, $env) = @_;
     $self->{value} + 0;
 }
+
+sub polinom_degree { 0 }
 
 package EGE::Prog::RefConst;
 use base 'EGE::Prog::SynElement';
@@ -264,6 +318,12 @@ sub run {
 }
 
 sub _visit_children { my $self = shift; $_->visit_dfs(@_) for @{$self->{statements}} }
+
+sub complexity {
+    my $self = shift;
+    $_[1]->{change_min} and return List::Util::min(map($_->complexity(@_), @{$self->{statements}})) || 0;
+    List::Util::max(map($_->complexity(@_), @{$self->{statements}})) || 0;
+}
 
 package EGE::Prog::CompoundStatement;
 use base 'EGE::Prog::SynElement';
@@ -300,6 +360,19 @@ sub run {
     }
 }
 
+sub complexity {
+    my ($self, $env, $mistakes, $iter, $rnd_case) = @_;
+    my $name = $self->{var}->{name};
+    my $degree = $self->{ub}->polinom_degree($env, $mistakes, $iter, $rnd_case);
+    $iter->{$name} = $degree;
+
+    my $body_complexity = $self->{body}->complexity($env, $mistakes, $iter, $rnd_case);
+    $env->{$name} = $degree;
+    my $cur_complexity = List::Util::sum(grep $_ =~ m/^[\d|.]+$/, values $iter) || 0;
+    delete $iter->{$name};
+    $cur_complexity > $body_complexity ? $cur_complexity : $body_complexity;
+}
+
 package EGE::Prog::IfThen;
 use base 'EGE::Prog::CompoundStatement';
 
@@ -310,6 +383,79 @@ sub to_lang_fields { qw(cond) }
 sub run {
     my ($self, $env) = @_;
     $self->{body}->run($env) if $self->{cond}->run($env);
+}
+
+sub complexity {
+    my $self = shift;
+    my ($env, $mistakes, $iter, $rnd_case) = @_;
+    my ($cond, $body) = ($self->{cond}, $self->{body});
+    my @sides = qw(left right);
+
+    # TODO: сделать нормально проверку структуры выражений, использовать visit_dfs 
+    if ($cond->{op} eq '==') {
+        my $is_vars = 1;
+        $is_vars &&= $cond->{$_}->get_type eq 'Var' for @sides;
+        if ($is_vars)
+        {
+            my @names = map $cond->{$_}->{name}, @sides;
+            ($mistakes->{ignore_if_eq} || $names[0] eq $names[1]) and return $body->complexity(@_);
+            defined $iter->{$names[0]} and defined $iter->{$names[1]} or 
+                die "IfThen complexity with condition a == b, expected both var as iterator";
+
+            my ($old_val, $new_val, $side);
+            $_ = EGE::Utils::last_key($iter, $_) for @names;
+            $side = $iter->{$names[1]} > $iter->{$names[0]};
+            $new_val = $names[!$side];
+          
+            ($old_val, $iter->{$names[$side]}) = ($iter->{$names[$side]}, $new_val);
+            my $ret = $body->complexity(@_);
+            $iter->{$names[$side]} = $old_val;
+            return $ret;
+        }
+
+        my $isno_const;
+        ($cond->{$sides[$_]}->get_type eq 'Const') and ($isno_const = $cond->{$sides[!$_]})  for 0 .. 1;
+        if (defined $isno_const && defined $isno_const->{op} && $isno_const->{op} eq '%') {
+            $mistakes->{ignore_if_mod} and return $body->complexity(@_);
+            my $name = $isno_const->{left}->{name};
+            defined $iter->{$name} or die "IfThen complexity with condition a % b == 0, expected a as iterator, given: '$isno_const->{left}'";
+            $name = EGE::Utils::last_key($iter, $name);
+            my $n = $isno_const->{right}->polinom_degree(@_);
+
+            $iter->{$name} -= $n;
+            my $ret = $body->complexity(@_);
+            $iter->{$name} += $n;
+            return $ret;
+        }
+        if (defined $isno_const && $isno_const->get_type eq 'Var') {
+            $mistakes->{ignore_if_mod} and return $body->complexity(@_);
+            my $name = EGE::Utils::last_key($iter, $isno_const->{name});
+            my $old_val = $iter->{$name};
+            $iter->{$name} = 0;
+            my $ret = $body->complexity(@_);
+            $iter->{$name} = $old_val;
+            return $ret;
+        }
+    }
+    elsif (my $side = $cond->{op} eq '>=' or $cond->{op} eq '<=') {
+        my @operands = qw(left right);
+        my $name = $cond->{$operands[$side]}->{name} or 
+            die "IfThen complexity with condition a >= b, expected b as var, got $cond->{$operands[$side]}";
+        defined $iter->{$name} or die "IfThen complexity with condition a >= b, expected b as iterator, $name is not iterator";
+        $name = EGE::Utils::last_key($iter, $name);
+        my $old_val = $iter->{$name};
+        my $new_val = $cond->{$operands[!$side]}->polinom_degree(@_);
+        ($mistakes->{ignore_if_less} || $new_val >= $old_val) and return $body->complexity(@_);
+
+        $iter->{$name} = $new_val;
+        my $ret = $body->complexity(@_);
+        $iter->{$name} = $old_val;
+        return $ret;
+    }
+    else {
+        die "IfThen complexity for condition with operator: '$cond->{op}' is unavaible";
+    }
+
 }
 
 package EGE::Prog::CondLoop;
@@ -339,38 +485,56 @@ sub run {
     $self->{body}->run($env) until $self->{cond}->run($env);
 }
 
-package EGE::Prog::LangSpecificText;
+package EGE::Prog::PlainText;
 use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang) = @_;
-    $self->{text}->{$lang->name} || '';
+    my $t = $self->{text};
+    ref $t eq 'HASH' ? $t->{$lang->name} || '' : $t;
 };
 
-sub run {}
+sub run {
+    defined wantarray and die "required value of plain text: '$_[0]->{text}'";
+}
+
+package EGE::Prog::ExprStmt;
+use base 'EGE::Prog::SynElement';
+
+sub to_lang {
+    my ($self, $lang) = @_;
+    sprintf $lang->expr_fmt, $self->{expr}->to_lang($lang);
+}
+
+sub run {
+    my ($self, $env) = @_;
+    $self->{expr}->run($env);
+};
+
+sub complexity { 0 }
 
 package EGE::Prog::FuncDef;
 use base 'EGE::Prog::CompoundStatement';
 
 sub get_formats { qw(func_start_fmt func_end_fmt) }
 sub to_lang_fmt { '%3$s' }
-sub to_lang_fields { qw(var params) }
+sub to_lang_fields { qw(name params) }
 
 sub run {
     my ($self, $env) = @_;
-    $env->{'&'}->{$self->{var}->{name}} and die "Redefinition of function $self->{var}->{name}";
-    $env->{'&'}->{$self->{var}->{name}} = $self;
+    $env->{'&'}->{$self->{name}->{name}} and die "Redefinition of function $self->{name}->{name}";
+    $env->{'&'}->{$self->{name}->{name}} = $self;
 }
 
 sub call {
     my ($self, $args, $env) = @_;
     my $act_len = @$args;
     my $form_len = @{$self->{params}->{names}};
-    $act_len > $form_len and die "Too many arguments to function $self->{var}->{name}";    
-    $act_len < $form_len and die "Too few arguments to function $self->{var}->{name}";   
+    $act_len > $form_len and die "Too many arguments to function $self->{name}->{name}";    
+    $act_len < $form_len and die "Too few arguments to function $self->{name}->{name}";   
     
     my $new_env = { '&' => $env->{'&'}, map(($_ => shift $args), @{$self->{params}->{names}}) };
-    $self->{body}->run_val($self->{var}->{name}, $new_env);
+    $self->{body}->run_val($self->{name}->{name}, $new_env);
 }
 
 package EGE::Prog::FuncParams;
@@ -378,12 +542,22 @@ use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang) = @_;
-    join $lang->args_separator, map sprintf($lang->args_fmt, $_), @{$self->{names}};    
+    join $lang->args_separator, map sprintf($lang->args_fmt, $_), @{$self->{names}};
 }
 
 sub run {
 }
 
+package EGE::Prog::FuncName;
+use base 'EGE::Prog::SynElement';
+
+sub to_lang {
+    my ($self, $lang) = @_;
+    $self->{name};
+}
+
+sub run {
+}
 
 package EGE::Prog;
 use base 'Exporter';
@@ -393,8 +567,10 @@ our @EXPORT_OK = qw(make_expr make_block lang_names);
 sub make_expr {
     my ($src) = @_;
     ref($src) =~ /^EGE::Prog::/ and return $src;
-
     if (ref $src eq 'ARRAY') {
+        if (@$src == 2 && $src->[0] eq '#') {
+            return EGE::Prog::PlainText->new(text => $src->[1]);
+        }
         if (@$src >= 2 && $src->[0] eq '[]') {
             my @p = @$src;
             shift @p;
@@ -408,6 +584,12 @@ sub make_expr {
             my $func = shift @p;
             $_ = make_expr($_) for @p;
             return EGE::Prog::CallFunc->new(func => $func, args => \@p);
+        }
+        if (@$src >= 1 && $src->[0] eq 'print') {
+            my @p = @$src;
+            shift @p;
+            $_ = make_expr($_) for @p;
+            return EGE::Prog::Print->new(args => \@p);
         }
         if (@$src == 2) {
             return EGE::Prog::UnOp->new(
@@ -441,13 +623,14 @@ sub make_expr {
 }
 
 sub statements_descr {{
-    '#' => { type => 'LangSpecificText', args => ['C_text'] },
+    '#' => { type => 'PlainText', args => ['C_text'] },
     '=' => { type => 'Assign', args => [qw(E_var E_expr)] },
     'for' => { type => 'ForLoop', args => [qw(E_var E_lb E_ub B_body)] },
     'if' => { type => 'IfThen', args => [qw(E_cond B_body)] },
     'while' => { type => 'While', args => [qw(E_cond B_body)] },
     'until' => { type => 'Until', args => [qw(E_cond B_body)] },
-    'func' => { type => 'FuncDef', args => [qw(E_var P_params B_body)] },
+    'func' => { type => 'FuncDef', args => [qw(N_name P_params B_body)] },
+    'expr' => { type => 'ExprStmt', args => [qw(E_expr)] },
 }}
 
 sub arg_processors {{
@@ -455,7 +638,13 @@ sub arg_processors {{
     E => \&make_expr,
     B => \&make_block,
     P => \&make_func_params,
+    N => \&make_func_name,
 }}
+
+sub make_func_name {
+    my ($src) = @_;
+    EGE::Prog::FuncName->new(name => $src);
+}
 
 sub make_func_params {
     my ($src) = @_;
@@ -492,6 +681,7 @@ sub lang_names() {{
   'C' => 'Си',
   'Alg' => 'Алгоритмический',
   'SQL' => 'Структурированный язык запросов',
+  'Perl' => 'Перл',
 }}
 
 1;

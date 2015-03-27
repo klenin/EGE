@@ -63,7 +63,7 @@ sub pick_n_sorted {
     sort $self->pick_n(@_);
 }
 
-sub coin { rand(2) > 1 ? 1 : 0 }
+sub coin { (($_[1] || 0.5) > rand) ? 1 : 0 }
 
 sub shuffle {
     my $self = shift;
@@ -72,7 +72,7 @@ sub shuffle {
 
 sub index_var {
     my ($self, $n) = @_;
-    $self->pick_n($n || 1, 'i', 'j', 'k', 'm', 'n')
+    $self->pick_n($n || 1, 'i', 'j', 'k', 'a', 'b', 'c')
 }
 
 sub english_letter { $_[0]->pick('a' .. 'z') }
@@ -93,6 +93,10 @@ sub split_number {
     die if $parts > $number;
     my @p = sort { $a <=> $b } $self->pick_n($parts - 1, 1 .. $number - 1);
     $p[0], map($p[$_] - $p[$_ - 1], 1 .. $#p), $number - $p[-1];
+}
+
+sub const_value {
+    $_[0]->pick(10, 100, 1000, 10000, 42);
 }
 
 1;

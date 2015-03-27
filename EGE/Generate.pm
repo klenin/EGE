@@ -184,14 +184,14 @@ sub all {[
     gg('Db07', qw(trivial_inner_join)),
     gg('Db08', qw(parents grandchildren nuncle)),
     gg('Db09', qw(inner_join)),
-     
 ]}
 
 package EGE::AlgGenerate;
 
 use EGE::GenBase;
 use EGE::Gen::Alg::Complexity;
-
+use EGE::Gen::Alg::CallCount;
+use EGE::Gen::Alg::Tree;
 
 sub g {
     my ($p, $m) = @_;
@@ -204,8 +204,9 @@ sub gg {
 }
 
 sub all {[
-    gg('Complexity', qw(o_poly o_poly_cmp)),
+    gg('Complexity', qw(o_poly o_poly_cmp cycle_complexity complexity substitution amortized)),
+    gg('CallCount', qw(super_recursion)),
+    gg('Tree', qw(node_count height)),
 ]}
 
 1;
-
