@@ -10,6 +10,7 @@ use warnings;
 use utf8;
 
 use List::Util;
+use POSIX qw(ceil);
 
 use EGE::Prog;
 use EGE::Random;
@@ -24,39 +25,42 @@ sub node_count {
       { name => '', value => 1 + $k * $inner }, 
     );
     $self->{correct} = $unknown->{value};
-    $self->{text} = "Известно, что в дереве, каждая вершина которого имеет степень либо " .
-    "$k (внутренняя вершина), либо 0 (листовая вершина), имеется $known->{value} $known->{name}вершин. " .
-    "Определите количество $unknown->{name}вершин в этом дереве.";
+    $self->{text} =
+        "Известно, что в дереве, каждая вершина которого имеет степень либо " .
+        "$k (внутренняя вершина), либо 0 (листовая вершина), имеется $known->{value} $known->{name}вершин. " .
+        "Определите количество $unknown->{name}вершин в этом дереве.";
 }
 
 sub inverse_geom_sum {
     my ($x, $k) = @_;
     my ($sum, $i) = (1, 0);
-    while (($sum += $k ** ++$i) < $x) {}
+    1 while ($sum += $k ** ++$i) < $x;
     $i;
 }
 
-use POSIX qw/ceil/;
-
 sub height {
     my ($self) = @_;
-    my $k = rnd->in_range(2, 9);
-    my ($height_count, $max_min) = (map rnd->coin, 1 .. 2);
-    my @text_max_min = qw(Макс. Мин.);
-    my @text_height_count = ('высота', 'количество узлов');
-    my @text_eq = qw(равна равно);
 
-    my $know =  $height_count ? rnd->in_range(3, 7) : rnd->in_range(100, 20000);
-    my $num = 1 * $height_count + 2 * $max_min;
-    my $sol = $num == 0 ? ceil(($know - 1) / $k):
-        $num == 1 ? (1 - $k ** ($know + 1)) / (1 - $k):
-        $num == 2 ? inverse_geom_sum($know, $k):
-        1 + $know * $k;
-    $self->{correct} = $sol;
-    $self->{text} = "Известно, что в дереве, каждый узел которого имеет степень либо " .
-    "$k, либо 0, $text_height_count[!$height_count] $text_eq[!$height_count] $know." .
-    "$text_max_min[$max_min] $text_height_count[$height_count] такого дерева $text_eq[$height_count]?" .
-    "(Высота дерева - максимальная длина пути от узла дерева до его корня, " .
-    "напр. высота дерева состоящего только из корня равна 0)";
+    my $min_max = rnd->pick(qw(min max));
+    my $n = rnd->pick(2..5, 10);
+    my (%v, $x);
+    if (rnd->coin) {
+        %v = (known => 'количество вершин равно', possible => 'возможную высоту');
+        $x = rnd->in_range(100, 20000);
+        $self->{correct} = $min_max eq 'min' ? inverse_geom_sum($x, $n) : ceil(($x - 1) / $n);
+    }
+    else {
+        %v = (known => 'высота равна', possible => 'возможное количество вершин');
+        $x = rnd->in_range(3, 7);
+        $self->{correct} = $min_max eq 'min' ? 1 + $x * $n : ($n ** ($x + 1) - 1) / ($n - 1);
+    }
+    my %text_min_max = (min => 'минимально', max => 'максимально');
+    $self->{text} =
+        "Известно, что в дереве, каждая вершина которого имеет степень либо " .
+        "$n, либо 0, $v{known} $x. ".
+        "Определите $text_min_max{$min_max} $v{possible} такого дерева. " .
+        "(Высота дерева — максимальная длина пути от вершины дерева до его корня. " .
+        "Например, высота дерева, состоящего только из корня, равна 0.)";
 }
+
 1;
