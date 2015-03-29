@@ -223,4 +223,9 @@ sub xor_bits {
     $r;
 }
 
+sub indexes {
+    my ($self) = @_;
+    grep $self->get_bit($_), 0..$self->get_size;
+}
+
 1;

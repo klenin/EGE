@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 54;
+use Test::More tests => 55;
 
 use lib '..';
 use EGE::Bits;
@@ -130,5 +130,10 @@ use EGE::Bits;
     is $b->('1')->xor_bits, 1, 'xor_bits 2';
     is $b->('010101')->xor_bits, 1, 'xor_bits 3';
     is $b->('111001')->xor_bits, 0, 'xor_bits 4';
+}
+
+{
+    my $b = EGE::Bits->new->set_bin('101010');
+    is_deeply [ $b->indexes ], [ 1, 3, 5 ], 'indexes';
 }
 
