@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 137;
+use Test::More tests => 140;
 use Test::Exception;
 
 use lib '..';
@@ -353,23 +353,28 @@ sub check_sub {
         ],
     };
     check_sub($_, $b, $c->{$_}, "print in $_") for keys $c;
-    is $b->run_val('<out>'), join("\n", map $_ . ' ' . 0, 0 .. 9), 'run print';    
+    is $b->run_val('<out>'), join("\n", map $_ . ' ' . 0, 0 .. 9), 'run print';
 }
 
 {
-    my $e = make_expr([ '+', [ '*', 'x', ['**', 'x', 2] ], [ '+', 'x', 2 ] ]);
-    is $e->polinom_degree({ x => 1 }), 3, 'polinom degree'
+    my $e = make_expr([ '+', [ '*', 'x', [ '**', 'x', 2 ] ], [ '+', 'x', 2 ] ]);
+    is $e->polinom_degree({ x => 1 }), 3, 'polinom degree';
+    is make_expr('x')->polinom_degree({ x => 20 }), 1, 'polinom degree of var';
 }
 
 {
     my $e = make_expr([ '+', 'x', 'xyz' ]);
-    throws_ok sub { $e->polinom_degree({ x => 1 }) }, qr/Undefined variable xyz/, 'undefined var when calculating polinom degree' 
+    throws_ok { $e->polinom_degree({ x => 1 }) } qr/Undefined variable xyz/, 'undefined var when calculating polinom degree';
 }
 
 {
-    my $e = make_expr([ '%', 'x', 'x' ]);
-    throws_ok sub { $e->polinom_degree({ x => 1 }) }, qr/Polinom degree is unavaible for expr with operator: '%'/, 
-        'calculating polinom degree of expr with \'%\'' 
+    my $e = make_expr([ '**', 'x', 'y' ]);
+    throws_ok { $e->polinom_degree({ x => 2, y => 3 }) } qr/Undefined variable y/, 'polinom degree of non-const power';
+}
+
+{
+    throws_ok { make_expr([ '%', 'x', 'x' ])->polinom_degree({ x => 1 }) } qr/'%'/, 'polinom degree of expr with \'%\'';
+    throws_ok { make_expr([ '!', 'x' ])->polinom_degree({}) } qr/'!'/, 'polinom degree of expr with \'!\'';
 }
 
 {

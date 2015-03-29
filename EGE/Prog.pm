@@ -197,10 +197,11 @@ sub to_lang_fmt {}
 sub gather_vars { $_[0]->{$_}->gather_vars($_[1]) for $_[0]->_children; }
 sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for $self->_children; }
 
-sub polinom_degree { die "Polinom degree is unavaible for expr with operator: '$@_[0]->{op}'"; }
+sub polinom_degree { die "Polinom degree is unavaible for expr with operator: '$_[0]->{op}'"; }
 
 package EGE::Prog::BinOp;
 use base 'EGE::Prog::Op';
+use List::Util;
 
 sub to_lang_fmt {
     my ($self, $lang) = @_;
@@ -212,10 +213,10 @@ sub _children { qw(left right) }
 sub polinom_degree {
     my $self = shift;
     my ($env, $mistakes, $iter) = @_;
-    if ($self->{op} eq '*') { $self->{left}->polinom_degree(@_) + $self->{right}->polinom_degree(@_) }
-    elsif ($self->{op} eq '+') { List::Util::max(map $self->{$_}->polinom_degree(@_), $self->_children) }
-    elsif ($self->{op} eq '**') { $self->{left}->polinom_degree(@_) * $self->{right}->run({}) }
-    else { die "Polinom degree is unavaible for expr with operator: '$self->{op}'" }
+    $self->{op} eq '*' ? List::Util::sum(map $self->{$_}->polinom_degree(@_), $self->_children) :
+    $self->{op} eq '+' ? List::Util::max(map $self->{$_}->polinom_degree(@_), $self->_children) :
+    $self->{op} eq '**' ? $self->{left}->polinom_degree(@_) * $self->{right}->run({}) :
+    $self->SUPER::polinom_degree(@_)
 }
 
 package EGE::Prog::UnOp;
@@ -267,13 +268,12 @@ sub get_ref {
 
 sub gather_vars { $_[1]->{$_[0]->{name}} = 1 }
 
-
 sub polinom_degree {
     my ($self, $env, $mistakes, $iter) = @_;
     my $name = $self->{name};
-    defined $env->{$name} and return $mistakes->{var_as_const} ? $name eq $mistakes->{var_as_const} : $env->{$name};
+    defined $env->{$name} and return $mistakes->{var_as_const} ? $name eq $mistakes->{var_as_const} : 1;
     defined $iter->{$name} and return $mistakes->{var_as_const} ? 0 : $iter->{EGE::Utils::last_key($iter, $name)};
-    die "Undefined variable $self->{name}";
+    die "Undefined variable $name";
 }
 
 package EGE::Prog::Const;
