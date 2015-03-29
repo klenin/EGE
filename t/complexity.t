@@ -72,7 +72,7 @@ use EGE::Prog qw(make_block make_expr);
             ]
         ]
     ]);
-    throws_ok sub { $b->complexity({ n => 1 }) }, qr/!=/, 'IfThen complexity for condition with \'!=\''
+    throws_ok { $b->complexity({ n => 1 }) } qr/!=/, 'IfThen complexity for condition with \'!=\''
 }
 
 {
@@ -128,7 +128,7 @@ use EGE::Prog qw(make_block make_expr);
             ]
         ]
     ]);
-    is $b->complexity({ n => 1} ), 4, 'multi IfThen complexity'
+    is $b->complexity({ n => 1 }), 4, 'multi IfThen complexity'
 }
 
 {
@@ -139,7 +139,7 @@ use EGE::Prog qw(make_block make_expr);
             ]
         ]
     ]);
-    is $b->complexity({ n => 1} ), 3, 'IfThen complexity less condition'
+    is $b->complexity({ n => 1 }), 3, 'IfThen complexity less condition'
 }
 
 {
@@ -163,7 +163,7 @@ use EGE::Prog qw(make_block make_expr);
             'if', [ '<=', 1, 'i' ], []
         ]
     ]);
-    throws_ok sub { $b->complexity({ n => 1 }) }, qr/EGE::Prog::Const/, 'IfThen complexity without var in less condition'
+    throws_ok { $b->complexity({ n => 1 }) } qr/EGE::Prog::Const/, 'IfThen complexity without var in less condition'
 }
 
 {
@@ -172,7 +172,7 @@ use EGE::Prog qw(make_block make_expr);
             '=', 'i', 0
         ]
     ]);
-    throws_ok sub { $b->complexity({ n => 1 }) }, qr/i/, 'assign to iterator'
+    throws_ok { $b->complexity({ n => 1 }) } qr/i/, 'assign to iterator'
 }
 
 {
@@ -181,7 +181,7 @@ use EGE::Prog qw(make_block make_expr);
             '=', 'j', [ '*', 'i', 'i' ]
         ]
     ]);
-    throws_ok sub { $b->complexity({ n => 1 }) }, qr/j/, 'assign iterator to another var'
+    throws_ok { $b->complexity({ n => 1 }) } qr/j/, 'assign iterator to another var'
 }
 
 {
@@ -192,7 +192,7 @@ use EGE::Prog qw(make_block make_expr);
             ]
         ]
     ]);
-    throws_ok sub { $b->complexity({ n => 1 }) } , qr/a == b/, 'if_eq compare iterator with non-iterator'
+    throws_ok { $b->complexity({ n => 1 }) } qr/a == b/, 'if_eq compare iterator with non-iterator'
 }
 
 {
@@ -223,14 +223,14 @@ use EGE::Prog qw(make_block make_expr);
             'for', 'l', 0, 'i', []
         ]
     ]);
-    my @mistakes_names = qw(var_as_const ignore_if_eq change_min ignore_if_less);
+    my @mistake_names = qw(var_as_const ignore_if_eq change_min ignore_if_less);
     my @ans = (4, 3, 7, 3, 3, 2, 4, 2, 4, 3, 8, 4, 4, 2, 4, 2);
 
-    for (my $i = 1; $i < 2**@mistakes_names; $i++) {
-        my %mistakes = map(($mistakes_names[$_] => $i/2**$_ % 2), (0..@mistakes_names-1));
+    for (my $i = 1; $i < 2 ** @mistake_names; $i++) {
+        my %mistakes = map(($mistake_names[$_] => $i / 2 ** $_ % 2), 0..$#mistake_names);
         $mistakes{var_as_const} and $mistakes{var_as_const} = 'n';
-        is $b->complexity({ n => 1 }, \%mistakes), $ans[$i], "complexity with mistakes:" .
-            join ', ', map($mistakes{$_} ? $_ : (), @mistakes_names);
+        is $b->complexity({ n => 1 }, \%mistakes), $ans[$i], 'complexity with mistakes: ' .
+            join ', ', map($mistakes{$_} ? $_ : (), @mistake_names);
     }
 }
 
