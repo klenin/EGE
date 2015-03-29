@@ -18,12 +18,15 @@ use EGE::Utils;
 sub node_count {
     my ($self) = @_;
     my ($k, $inner) = (rnd->in_range(2, 9), rnd->in_range(50, 300));
-    my %data = ( внутренних => $inner, листовых => 1 + ($k - 1) * $inner, '' => 1 + $k * $inner );
-    my ($unknown, $know) = (rnd->shuffle(keys %data))[0 .. 1];
-    $self->{correct} = $data{$unknown};
-    $self->{text} = "Известно, что в дереве, каждый узел которого имеет степень либо " .
-    "$k(внутренний узел), либо 0(листовой узел), имеется $data{$know} $know узлов." .
-    " Определеите количество $unknown узлов в этом дереве";
+    my ($unknown, $known) = rnd->pick_n(2,
+      { name => 'внутренних ', value => $inner }, 
+      { name => 'листовых ', value => 1 + ($k - 1) * $inner }, 
+      { name => '', value => 1 + $k * $inner }, 
+    );
+    $self->{correct} = $unknown->{value};
+    $self->{text} = "Известно, что в дереве, каждая вершина которого имеет степень либо " .
+    "$k (внутренняя вершина), либо 0 (листовая вершина), имеется $known->{value} $known->{name}вершин. " .
+    "Определите количество $unknown->{name}вершин в этом дереве.";
 }
 
 sub inverse_geom_sum {
