@@ -53,7 +53,7 @@ sub rnd_pow {
 
 sub rnd_poly {
     my $poly = rnd_pow(@_);
-    $poly = [ '+', $poly, rnd_pow(@_) ] while (rnd->coin);
+    $poly = [ '+', $poly, rnd_pow(@_) ] while rnd->coin;
     $poly = [ '+', $poly, rnd->const_value ] if rnd->coin;
     $poly;
 }

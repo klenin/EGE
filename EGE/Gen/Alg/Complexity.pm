@@ -11,10 +11,11 @@ use utf8;
 
 use List::Util;
 
+use EGE::Alg;
+use EGE::LangTable;
 use EGE::Prog;
 use EGE::Random;
 use EGE::Utils;
-use EGE::Alg;
 
 sub elem { # ax^y
     my ($x, $a, $y) = @_;
@@ -47,7 +48,6 @@ sub o_poly_cmp {
 
 sub cycle_complexity {
     my ($self) = @_;
-    $self->{correct} = 0;
 
     my $n = rnd->pick(qw(n m));
     my @vars = rnd->index_var(3);
@@ -65,10 +65,12 @@ sub cycle_complexity {
     my $block = EGE::Prog::make_block($cycles);
     my $lt = EGE::LangTable::table($block, [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);
     $self->{text} = "Определите асимптотическую сложность следующего алгоритма: $lt";
-    my @variants = ( $block->complexity({ $n => 1 }),
+    my @variants = (
+        $block->complexity({ $n => 1 }),
         $degrees[0] + List::Util::min(@degrees[ 1 .. 2 ]),
         List::Util::sum(@degrees),
-        $degrees[0] );
+        $degrees[0]
+    );
     $self->variants(map EGE::Alg::big_o(EGE::Alg::to_logic([ '**', $n, $_ ])), @variants);
 }
 
@@ -145,12 +147,13 @@ sub substitution {
             for (@$subs) {
                 for my $i (0 .. 2) { $slot->[$i] = $_->[$i]; }
                 my $cur = EGE::Prog::make_block($code)->complexity({ $n => 1 });
-                $variants{$cur} = $_ if !$variants{$cur};
+                $variants{$cur} ||= $_;
                 if (keys %variants >= 4) {
-                    $self->{correct} = 0;
                     $self->variants(map EGE::Alg::to_logic($_), values %variants);
-                    $self->{text} = "На какое выражение следует заменить $mask, чтобы сложность алгоритма составила " .
-                    EGE::Alg::big_o(EGE::Alg::to_logic([ '**', $n, (keys %variants)[0]])) . $lt;
+                    $self->{text} =
+                        "Дан алгоритм $lt Чтобы сложность этого алгоритма составляла " .
+                        EGE::Alg::big_o(EGE::Alg::to_logic([ '**', $n, (keys %variants)[0]])) .
+                        ", строку $mask следует заменить на выражение" ;
                     return;
                 }
             }
