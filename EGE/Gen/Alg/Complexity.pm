@@ -81,6 +81,7 @@ sub complexity {
     my $max_counts = {
         if => 4,
         assign => 4,
+        rand => 0,
     };
     my $for_count = rnd->in_range(4, 6);
 
@@ -129,6 +130,7 @@ sub substitution {
 	        if => 2,
 	        assign => 2,
 	        subs => $mask,
+            rand => 0,
 	    };
 	    my $for_count = rnd->in_range(4, 6);
 	    my $vars = { all => { $n => 1 }, iterator => {}, if => {} };
@@ -164,6 +166,7 @@ sub amortized {
         my $other_counts = {
             if => 0,
             assign => 3,
+            rand => 0,
         };
 
         my $iters = { map(($_, rnd->in_range(1, 3)), @ij) };
