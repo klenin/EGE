@@ -126,35 +126,35 @@ sub substitution {
     my $n = rnd->pick(qw(n m));
     my $mask = 'XXXXX';
     while (1) {
-	    my $other_counts = {
-	        if => 2,
-	        assign => 2,
-	        subs => $mask,
+        my $other_counts = {
+            if => 2,
+            assign => 2,
+            subs => $mask,
             rand => 0,
-	    };
-	    my $for_count = rnd->in_range(4, 6);
-	    my $vars = { all => { $n => 1 }, iterator => {}, if => {} };
-	    my $code = [ EGE::Alg::make_rnd_block($for_count, $other_counts, $vars) ];
-	    my $subs = $other_counts->{subs};
-	    if (ref $subs eq 'ARRAY') {
+        };
+        my $for_count = rnd->in_range(4, 6);
+        my $vars = { all => { $n => 1 }, iterator => {}, if => {} };
+        my $code = [ EGE::Alg::make_rnd_block($for_count, $other_counts, $vars) ];
+        my $subs = $other_counts->{subs};
+        if (ref $subs eq 'ARRAY') {
             my $slot = shift $subs;
-	    	my $lt = EGE::LangTable::table(EGE::Prog::make_block($code), 
-	    		[ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);
-	    	my %variants;
+            my $lt = EGE::LangTable::table(EGE::Prog::make_block($code), 
+                [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);
+            my %variants;
 
-	    	for (@$subs) {
-	    		for my $i (0 .. 2) { $slot->[$i] = $_->[$i]; }
-	    		my $cur = EGE::Prog::make_block($code)->complexity({ $n => 1 });
-	    		$variants{$cur} = $_ if !$variants{$cur};
-	    		if (keys %variants >= 4) {
-	    			$self->{correct} = 0;
-	    			$self->variants(map EGE::Alg::to_logic($_), values %variants);
-	    			$self->{text} = "На какое выражение следует заменить $mask, чтобы сложность алгоритма составила " .
+            for (@$subs) {
+                for my $i (0 .. 2) { $slot->[$i] = $_->[$i]; }
+                my $cur = EGE::Prog::make_block($code)->complexity({ $n => 1 });
+                $variants{$cur} = $_ if !$variants{$cur};
+                if (keys %variants >= 4) {
+                    $self->{correct} = 0;
+                    $self->variants(map EGE::Alg::to_logic($_), values %variants);
+                    $self->{text} = "На какое выражение следует заменить $mask, чтобы сложность алгоритма составила " .
                     EGE::Alg::big_o(EGE::Alg::to_logic([ '**', $n, (keys %variants)[0]])) . $lt;
-					return;
-	    		}
-	    	}
-	    }
+                    return;
+                }
+            }
+        }
     }
 }
 

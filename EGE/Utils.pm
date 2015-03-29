@@ -15,10 +15,10 @@ sub transpose {
 }
 
 sub last_key {
-	my ($hash_ref, $key) = @_;
-	defined $hash_ref->{$key} or die "There is not such key: '$key' in hash";
-	$key = $hash_ref->{$key} while defined $hash_ref->{$hash_ref->{$key}};
-	$key;
+    my ($hash_ref, $key) = @_;
+    defined $hash_ref->{$key} or die "There is not such key: '$key' in hash";
+    $key = $hash_ref->{$key} while defined $hash_ref->{$hash_ref->{$key}};
+    $key;
 }
 
 1;
