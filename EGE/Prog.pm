@@ -271,7 +271,7 @@ sub gather_vars { $_[1]->{$_[0]->{name}} = 1 }
 sub polinom_degree {
     my ($self, $env, $mistakes, $iter) = @_;
     my $name = $self->{name};
-    defined $env->{$name} and return $mistakes->{var_as_const} ? $name eq $mistakes->{var_as_const} : 1;
+    defined $env->{$name} and return $mistakes->{var_as_const} ? $name eq $mistakes->{var_as_const} : $env->{$name};
     defined $iter->{$name} and return $mistakes->{var_as_const} ? 0 : $iter->{EGE::Utils::last_key($iter, $name)};
     die "Undefined variable $name";
 }
