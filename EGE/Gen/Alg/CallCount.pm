@@ -8,13 +8,13 @@ use strict;
 use warnings;
 use utf8;
 
-use List::Util;
+use EGE::LangTable;
 use EGE::Prog;
 use EGE::Random;
 
 sub super_recursion {
     my ($self) = @_;
-    my $n = 10**rnd->in_range(8, 12);
+    my $n = 10 ** rnd->in_range(8, 12);
     my ($fst_part, $sec_part) = (int($n / rnd->in_range(2, 20)), int($n / rnd->in_range(2, 20) / 10)); 
     my ($div, $sub) = (rnd->in_range(2, 5), rnd->in_range(2, 5));
     my $code = [ 
@@ -29,16 +29,14 @@ sub super_recursion {
                 '=', 'f', 1 
             ],
         ],
-        
-        '=', 'n', $n,
-        'expr', [ 'print', [ '()', 'f', 'n' ] ]
+        'expr', [ 'print', [ '()', 'f', $n ] ],
     ];
     my $lt = EGE::LangTable::table(EGE::Prog::make_block($code), [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);
 
     my $div_count = 1;
     $div_count++ while ($n /= $div) >= $fst_part;
     $self->{correct} = $div_count + int(($n - $sec_part) / $sub) + 2;
-    $self->{text} = "Определите количество вызовов функции <i>f</i> при исполнении следующего алгоритма$lt";
+    $self->{text} = "Определите количество вызовов функции <code>f</code> при исполнении следующего алгоритма: $lt";
 }
 
 1;
