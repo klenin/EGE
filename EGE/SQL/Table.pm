@@ -41,12 +41,12 @@ sub insert_rows {
     $self->insert_row(@$_) for @_;
     $self;
 }
- 
- sub insert_column {
+
+sub insert_column {
     my ($self, %p) = @_;
-    unshift $self->{fields}, $p{name};
+    unshift @{$self->{fields}}, $p{name};
     my $i = 0; my $j = 0;
-    unshift $_, $p{array}[$i++] for @{$self->{data}};
+    unshift @$_, $p{array}[$i++] for @{$self->{data}};
     $self->{field_index}->{$_} = $j++ for @{$self->{fields}};
     $self;
  }

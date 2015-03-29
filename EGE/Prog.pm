@@ -368,7 +368,7 @@ sub complexity {
 
     my $body_complexity = $self->{body}->complexity($env, $mistakes, $iter, $rnd_case);
     $env->{$name} = $degree;
-    my $cur_complexity = List::Util::sum(grep $_ =~ m/^[\d|.]+$/, values $iter) || 0;
+    my $cur_complexity = List::Util::sum(grep $_ =~ m/^[\d|.]+$/, values %$iter) || 0;
     delete $iter->{$name};
     $cur_complexity > $body_complexity ? $cur_complexity : $body_complexity;
 }
@@ -533,7 +533,7 @@ sub call {
     $act_len > $form_len and die "Too many arguments to function $self->{name}->{name}";    
     $act_len < $form_len and die "Too few arguments to function $self->{name}->{name}";   
     
-    my $new_env = { '&' => $env->{'&'}, map(($_ => shift $args), @{$self->{params}->{names}}) };
+    my $new_env = { '&' => $env->{'&'}, map(($_ => shift @$args), @{$self->{params}->{names}}) };
     $self->{body}->run_val($self->{name}->{name}, $new_env);
 }
 

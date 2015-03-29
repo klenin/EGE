@@ -88,7 +88,7 @@ sub complexity {
     while(1) {
         my $vars = { all => { $n => 1 }, iterator => {}, if => {} };
         my $cycle = [ EGE::Alg::make_rnd_block($for_count, $max_counts, $vars) ];
-        MAKE_COUNTER and unshift $cycle, '=', 'counter', 0; 
+        MAKE_COUNTER and unshift @$cycle, '=', 'counter', 0; 
         
         my $block = EGE::Prog::make_block($cycle);        
         my @indexes = rnd->shuffle(1 .. 7);
@@ -111,7 +111,7 @@ sub complexity {
                 $self->{correct} = 0;
                 $self->{text} = "Определите асимптотическую сложность следующего алгоритма: $lt";
                 if (MAKE_COUNTER) {
-                    unshift($cycle, '=', $n, 10);
+                    unshift @$cycle, '=', $n, 10;
                     $self->{text} .= EGE::Prog::make_block($cycle)->run_val('counter');
                 }
                 $self->variants(map EGE::Alg::big_o(EGE::Alg::to_logic([ '**', $n, $_ ])), @variants);
@@ -137,7 +137,7 @@ sub substitution {
         my $code = [ EGE::Alg::make_rnd_block($for_count, $other_counts, $vars) ];
         my $subs = $other_counts->{subs};
         if (ref $subs eq 'ARRAY') {
-            my $slot = shift $subs;
+            my $slot = shift @$subs;
             my $lt = EGE::LangTable::table(EGE::Prog::make_block($code), 
                 [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);
             my %variants;
@@ -194,7 +194,7 @@ sub amortized {
                 ]
             ]);
             my $ans = $b->complexity({ $n => 1 });
-            my @variants = keys {
+            my $v = {
                 $ans => 1,
                 $b->complexity({ $n => 1 }, { map(($_, 1), qw(ignore_if_eq ignore_if_less ignore_if_mod)) } ) => 1,
                 $comp[0] => 1,
@@ -202,6 +202,7 @@ sub amortized {
                 $iters->{i} => 1,
                 $iters->{j} => 1,
             };
+            my @variants = keys %$v;
 
             if (@variants >= 4) {
                 $self->{correct} = 0;

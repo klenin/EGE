@@ -293,7 +293,7 @@ sub check_sub {
             '$a = g(3, 2);',
         ],        
     };
-    check_sub($_, $b, $c->{$_}, "function calling, definition in $_") for keys $c;
+    check_sub($_, $b, $c->{$_}, "function calling, definition in $_") for keys %$c;
     is $b->run_val('a'), 1, 'run call function';
     is eval($b->to_lang_named('Perl')), 3 - 2, 'eval perl funtion';
 }
@@ -352,7 +352,7 @@ sub check_sub {
             '}',
         ],
     };
-    check_sub($_, $b, $c->{$_}, "print in $_") for keys $c;
+    check_sub($_, $b, $c->{$_}, "print in $_") for keys %$c;
     is $b->run_val('<out>'), join("\n", map $_ . ' ' . 0, 0 .. 9), 'run print';
 }
 
