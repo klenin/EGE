@@ -212,6 +212,17 @@ use EGE::Prog qw(make_block make_expr);
 
 {
     my $b = EGE::Prog::make_block([
+        'for', 'i', 0, [ '**', 'n', 2 ], [
+            'if', [ '==', [ '%', 'i', [ '**', 'n', 3 ] ], 0 ], [
+                'for', 'j', 0, [ '**', 'n', 3 ], []
+            ]
+        ]
+    ]);
+    is $b->complexity({ n => 1 }), 3, 'complexity if_mod, divisor greater then dividend';
+}
+
+{
+    my $b = EGE::Prog::make_block([
         'for', 'i', 0, [ '*', 'n', 'n' ], [
             'for', 'j', 0, 'n', [
                 'if', [ '==', 'i', 'j' ], [
