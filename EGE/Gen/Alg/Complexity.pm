@@ -173,16 +173,18 @@ sub amortized {
         };
 
         my $iters = { map(($_, rnd->in_range(1, 3)), @ij) };
-        my $vars = { 
-            all => { $n => 1, %$iters }, 
+        my $vars = {
+            all => { $n => 1, %$iters },
             iterator => $iters,
-            if => { map(($_, 1), @ij) } 
+            if => {}
         };
+        my ($cond, @used_vars) = EGE::Alg::make_rnd_cond($vars);
+        $vars->{if}->{$_} = 1 for @used_vars;
         my $fst = [
-            EGE::Alg::make_rnd_block(rnd->in_range(1, 2), $other_counts, $vars) 
+            EGE::Alg::make_rnd_block(rnd->in_range(1, 2), $other_counts, $vars)
         ];
-        my $sec = [ 
-            EGE::Alg::make_rnd_if($n, $iters),
+        my $sec = [
+            'if', $cond,
             [ EGE::Alg::make_rnd_block(rnd->in_range(1, 2), $other_counts, $vars) ] 
         ];
         my $env = { $n => 1 };
