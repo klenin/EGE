@@ -41,6 +41,7 @@ sub visit_dfs {
     $_[0]->_visit_children($fn, $depth + 1);
     $_[0];
 }
+
 sub _visit_children {}
 
 sub count_if {
@@ -391,7 +392,6 @@ sub complexity {
     my ($cond, $body) = ($self->{cond}, $self->{body});
     my @sides = qw(left right);
 
-    # TODO: сделать нормально проверку структуры выражений, использовать visit_dfs 
     if ($cond->{op} eq '==') {
         my $is_vars = 1;
         $is_vars &&= $cond->{$_}->get_type eq 'Var' for @sides;
@@ -422,9 +422,11 @@ sub complexity {
             $name = EGE::Utils::last_key($iter, $name);
             my $n = $isno_const->{right}->polinom_degree(@_);
 
+            my $old_val = $iter->{$name};
             $iter->{$name} -= $n;
+            $iter->{$name} < 0 and $iter->{$name} = 0;
             my $ret = $body->complexity(@_);
-            $iter->{$name} += $n;
+            $iter->{$name} = $old_val;
             return $ret;
         }
         if (defined $isno_const && $isno_const->get_type eq 'Var') {
