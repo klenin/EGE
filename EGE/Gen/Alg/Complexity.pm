@@ -19,9 +19,13 @@ use EGE::Utils;
 
 sub elem { # ax^y
     my ($x, $a, $y) = @_;
-    return $a if $y == 0;
-    my $p = $y == 1 ? $x : [ '**', $x, $y ];
-    $a == 1 ? $p : [ '*', $a, $p ];
+    return $a if $y eq '0';
+    my $p = $y eq '1' ? $x : [ '**', $x, $y ];
+    $a eq '1' ? $p : [ '*', $a, $p ];
+}
+
+sub _log {
+    [ '()', 'log', $_[0] ]
 }
 
 sub o_poly {
@@ -41,9 +45,19 @@ sub o_poly_cmp {
     my ($self) = @_;
     my $power = rnd->in_range(3, 6);
     my ($func, @variants) = map EGE::Alg::big_o(EGE::Alg::to_logic(elem 'n', 1, $_)),
-        $power, $power + 1, $power - 1, [ '/', 1, $power ], 0, -$power;
+        $power, $power - rnd->in_range(1, 3), [ '/', 1, $power ], -$power;
+    push @variants, map EGE::Alg::big_o(EGE::Alg::to_logic($_)), 
+        elem('n', _log('n'), $power - rnd->in_range(1, 2)),
+        _log(elem 'n', 1, $power),
+        [ '+', _log('n'), elem 'n', 1, $power - rnd->in_range(1, 3) ];
+    my $correct = rnd->pick(map EGE::Alg::big_o(EGE::Alg::to_logic($_)),
+        elem('n', 1, $power + rnd->in_range(1, 3)),
+        elem($power, 1, 'n'),
+        elem($power - 1, 1, 'n'),
+        elem('n', _log('n'), $power + rnd->in_range(0, 2)),
+    );
     $self->{text} ="Всякая функция, являющаяся $func, является также и";
-    $self->variants(@variants);
+    $self->variants($correct, rnd->pick_n(3, @variants));
 }
 
 sub cycle_complexity {
@@ -110,7 +124,6 @@ sub complexity {
                     next MISTAKE;
                 }
                 my $lt = EGE::LangTable::table($block, [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);   
-                $self->{correct} = 0;
                 $self->{text} = "Определите асимптотическую сложность следующего алгоритма: $lt";
                 if (MAKE_COUNTER) {
                     unshift @$cycle, '=', $n, 10;
@@ -210,7 +223,6 @@ sub amortized {
             my @variants = keys %$v;
 
             if (@variants >= 4) {
-                $self->{correct} = 0;
                 my $lt = EGE::LangTable::table($b, [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);
                 $variants[$_] == $ans and ($variants[$_], $variants[0]) = ($variants[0], $variants[$_]) for 0 .. @variants - 1;    
                 $self->{text} = "Определите асимптотическую сложность следующего алгоритма: $lt";
