@@ -194,6 +194,7 @@ use EGE::GenBase;
 use EGE::Gen::Alg::Complexity;
 use EGE::Gen::Alg::CallCount;
 use EGE::Gen::Alg::Tree;
+use EGE::Gen::Alg::Graph;
 
 sub g {
     my ($p, $m) = @_;
@@ -210,6 +211,7 @@ sub all {[
     gg('Complexity::ComplexityDI', qw(cycle_complexity)),
     gg('CallCount', qw(super_recursion)),
     gg('Tree', qw(node_count height)),
+    gg('Graph', qw(graph_seq)),
 ]}
 
 1;
