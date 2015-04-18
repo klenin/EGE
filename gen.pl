@@ -233,7 +233,7 @@ binmode STDOUT, ':utf8';
 #g2('Db09', 'inner_join');
 #g3('Complexity', 'o_poly');
 #g3('Complexity', 'o_poly_cmp');
-#g3('Complexity', 'cycle_complexity');
+#g3('Complexity::ComplexityDI', 'cycle_complexity');
 #g3('Complexity', 'complexity');
 #g3('Complexity', 'substitution');
 #g3('CallCount', 'super_recursion');
