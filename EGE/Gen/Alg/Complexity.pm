@@ -19,9 +19,13 @@ use EGE::Utils;
 
 sub elem { # ax^y
     my ($x, $a, $y) = @_;
-    return $a if $y == 0;
-    my $p = $y == 1 ? $x : [ '**', $x, $y ];
-    $a == 1 ? $p : [ '*', $a, $p ];
+    return $a if $y eq '0';
+    my $p = $y eq '1' ? $x : [ '**', $x, $y ];
+    $a eq '1' ? $p : [ '*', $a, $p ];
+}
+
+sub _log {
+    [ '()', 'log', $_[0] ]
 }
 
 sub o_poly {
@@ -41,37 +45,19 @@ sub o_poly_cmp {
     my ($self) = @_;
     my $power = rnd->in_range(3, 6);
     my ($func, @variants) = map EGE::Alg::big_o(EGE::Alg::to_logic(elem 'n', 1, $_)),
-        $power, $power + 1, $power - 1, [ '/', 1, $power ], 0, -$power;
-    $self->{text} ="Всякая функция, являющаяся $func, является также и";
-    $self->variants(@variants);
-}
-
-sub cycle_complexity {
-    my ($self) = @_;
-
-    my $n = rnd->pick(qw(n m));
-    my @vars = rnd->index_var(3);
-    my @degrees = rnd->shuffle(1 .. 5);
-    my $cycles = [
-        'for', $vars[0], 0, EGE::Alg::pow($n, $degrees[0]), [
-            'for', $vars[1], 0, EGE::Alg::pow($n, $degrees[1]), [
-                '=', [ '[]', 'buf', $vars[1] ], $vars[1]
-            ],
-            'for', $vars[2], 0, EGE::Alg::pow($n, $degrees[2]), [
-                '=', [ '[]', 'buf', $vars[2] ], $vars[2]
-            ]
-        ]
-    ];
-    my $block = EGE::Prog::make_block($cycles);
-    my $lt = EGE::LangTable::table($block, [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);
-    $self->{text} = "Определите асимптотическую сложность следующего алгоритма: $lt";
-    my @variants = (
-        $block->complexity({ $n => 1 }),
-        $degrees[0] + List::Util::min(@degrees[ 1 .. 2 ]),
-        List::Util::sum(@degrees),
-        $degrees[0]
+        $power, $power - rnd->in_range(1, 3), [ '/', 1, $power ], -$power;
+    push @variants, map EGE::Alg::big_o(EGE::Alg::to_logic($_)), 
+        elem('n', _log('n'), $power - rnd->in_range(1, 2)),
+        _log(elem 'n', 1, $power),
+        [ '+', _log('n'), elem 'n', 1, $power - rnd->in_range(1, 3) ];
+    my $correct = rnd->pick(map EGE::Alg::big_o(EGE::Alg::to_logic($_)),
+        elem('n', 1, $power + rnd->in_range(1, 3)),
+        elem($power, 1, 'n'),
+        elem($power - 1, 1, 'n'),
+        elem('n', _log('n'), $power + rnd->in_range(0, 2)),
     );
-    $self->variants(map EGE::Alg::big_o(EGE::Alg::to_logic([ '**', $n, $_ ])), @variants);
+    $self->{text} ="Всякая функция, являющаяся $func, является также и";
+    $self->variants($correct, rnd->pick_n(3, @variants));
 }
 
 use constant MAKE_COUNTER => 0;
@@ -110,13 +96,12 @@ sub complexity {
                     next MISTAKE;
                 }
                 my $lt = EGE::LangTable::table($block, [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);   
-                $self->{correct} = 0;
                 $self->{text} = "Определите асимптотическую сложность следующего алгоритма: $lt";
                 if (MAKE_COUNTER) {
                     unshift @$cycle, '=', $n, 10;
                     $self->{text} .= EGE::Prog::make_block($cycle)->run_val('counter');
                 }
-                $self->variants(map EGE::Alg::big_o(EGE::Alg::to_logic([ '**', $n, $_ ])), @variants);
+                $self->variants(map EGE::Alg::big_theta(EGE::Alg::to_logic([ '**', $n, $_ ])), @variants);
                 return;
             }
         } 
@@ -152,7 +137,7 @@ sub substitution {
                     $self->variants(map EGE::Alg::to_logic($_), values %variants);
                     $self->{text} =
                         "Дан алгоритм $lt Чтобы сложность этого алгоритма составляла " .
-                        EGE::Alg::big_o(EGE::Alg::to_logic([ '**', $n, (keys %variants)[0]])) .
+                        EGE::Alg::big_theta(EGE::Alg::to_logic([ '**', $n, (keys %variants)[0]])) .
                         ", строку $mask следует заменить на выражение" ;
                     return;
                 }
@@ -173,16 +158,18 @@ sub amortized {
         };
 
         my $iters = { map(($_, rnd->in_range(1, 3)), @ij) };
-        my $vars = { 
-            all => { $n => 1, %$iters }, 
+        my $vars = {
+            all => { $n => 1, %$iters },
             iterator => $iters,
-            if => { map(($_, 1), @ij) } 
+            if => {}
         };
+        my ($cond, @used_vars) = EGE::Alg::make_rnd_cond($vars);
+        $vars->{if}->{$_} = 1 for @used_vars;
         my $fst = [
-            EGE::Alg::make_rnd_block(rnd->in_range(1, 2), $other_counts, $vars) 
+            EGE::Alg::make_rnd_block(rnd->in_range(1, 2), $other_counts, $vars)
         ];
-        my $sec = [ 
-            EGE::Alg::make_rnd_if($n, $iters),
+        my $sec = [
+            'if', $cond,
             [ EGE::Alg::make_rnd_block(rnd->in_range(1, 2), $other_counts, $vars) ] 
         ];
         my $env = { $n => 1 };
@@ -208,15 +195,44 @@ sub amortized {
             my @variants = keys %$v;
 
             if (@variants >= 4) {
-                $self->{correct} = 0;
                 my $lt = EGE::LangTable::table($b, [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);
                 $variants[$_] == $ans and ($variants[$_], $variants[0]) = ($variants[0], $variants[$_]) for 0 .. @variants - 1;    
                 $self->{text} = "Определите асимптотическую сложность следующего алгоритма: $lt";
-                $self->variants(map EGE::Alg::big_o(EGE::Alg::to_logic([ '**', $n, $_ ])), @variants[0 .. 3]);
+                $self->variants(map EGE::Alg::big_theta(EGE::Alg::to_logic([ '**', $n, $_ ])), @variants[0 .. 3]);
                 return;
             }
         }
     }
+}
+
+package EGE::Gen::Alg::Complexity::ComplexityDI;
+use base 'EGE::GenBase::DirectInput';
+
+use EGE::Prog;
+use EGE::Random;
+
+sub cycle_complexity {
+    my ($self) = @_;
+
+    my $n = rnd->pick(qw(n m));
+    my @vars = rnd->index_var(3);
+    my @degrees = rnd->shuffle(1 .. 5);
+    my $cycles = [
+        'for', $vars[0], 0, EGE::Alg::pow($n, $degrees[0]), [
+            'for', $vars[1], 0, EGE::Alg::pow($n, $degrees[1]), [
+                '=', [ '[]', 'buf', $vars[1] ], $vars[1]
+            ],
+            'for', $vars[2], 0, EGE::Alg::pow($n, $degrees[2]), [
+                '=', [ '[]', 'buf', $vars[2] ], $vars[2]
+            ]
+        ]
+    ];
+    my $block = EGE::Prog::make_block($cycles);
+    my $pow_n_x = EGE::Alg::big_theta(EGE::Alg::to_logic([ '**', $n, 'x' ]));
+    my $lt = EGE::LangTable::table($block, [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);
+    $self->{text} = "Асимптотическую сложность следующего алгоритма равна $pow_n_x: $lt Чему равно x?";
+    $self->accept_number();
+    $self->{correct} = $block->complexity({ $n => 1 });
 }
 
 1;
