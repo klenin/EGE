@@ -230,6 +230,7 @@ sub cycle_complexity {
     my $block = EGE::Prog::make_block($cycles);
     my $lt = EGE::LangTable::table($block, [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);
     $self->{text} = "Определите асимптотическую сложность следующего алгоритма: $lt";
+    $self->accept_number();
     $self->{correct} = $block->complexity({ $n => 1 });
 }
 
