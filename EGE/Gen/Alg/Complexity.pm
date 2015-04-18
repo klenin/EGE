@@ -60,34 +60,6 @@ sub o_poly_cmp {
     $self->variants($correct, rnd->pick_n(3, @variants));
 }
 
-sub cycle_complexity {
-    my ($self) = @_;
-
-    my $n = rnd->pick(qw(n m));
-    my @vars = rnd->index_var(3);
-    my @degrees = rnd->shuffle(1 .. 5);
-    my $cycles = [
-        'for', $vars[0], 0, EGE::Alg::pow($n, $degrees[0]), [
-            'for', $vars[1], 0, EGE::Alg::pow($n, $degrees[1]), [
-                '=', [ '[]', 'buf', $vars[1] ], $vars[1]
-            ],
-            'for', $vars[2], 0, EGE::Alg::pow($n, $degrees[2]), [
-                '=', [ '[]', 'buf', $vars[2] ], $vars[2]
-            ]
-        ]
-    ];
-    my $block = EGE::Prog::make_block($cycles);
-    my $lt = EGE::LangTable::table($block, [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);
-    $self->{text} = "Определите асимптотическую сложность следующего алгоритма: $lt";
-    my @variants = (
-        $block->complexity({ $n => 1 }),
-        $degrees[0] + List::Util::min(@degrees[ 1 .. 2 ]),
-        List::Util::sum(@degrees),
-        $degrees[0]
-    );
-    $self->variants(map EGE::Alg::big_o(EGE::Alg::to_logic([ '**', $n, $_ ])), @variants);
-}
-
 use constant MAKE_COUNTER => 0;
 
 sub complexity {
@@ -231,6 +203,34 @@ sub amortized {
             }
         }
     }
+}
+
+package EGE::Gen::Alg::Complexity::ComplexityDI;
+use base 'EGE::GenBase::DirectInput';
+
+use EGE::Prog;
+use EGE::Random;
+
+sub cycle_complexity {
+    my ($self) = @_;
+
+    my $n = rnd->pick(qw(n m));
+    my @vars = rnd->index_var(3);
+    my @degrees = rnd->shuffle(1 .. 5);
+    my $cycles = [
+        'for', $vars[0], 0, EGE::Alg::pow($n, $degrees[0]), [
+            'for', $vars[1], 0, EGE::Alg::pow($n, $degrees[1]), [
+                '=', [ '[]', 'buf', $vars[1] ], $vars[1]
+            ],
+            'for', $vars[2], 0, EGE::Alg::pow($n, $degrees[2]), [
+                '=', [ '[]', 'buf', $vars[2] ], $vars[2]
+            ]
+        ]
+    ];
+    my $block = EGE::Prog::make_block($cycles);
+    my $lt = EGE::LangTable::table($block, [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);
+    $self->{text} = "Определите асимптотическую сложность следующего алгоритма: $lt";
+    $self->{correct} = $block->complexity({ $n => 1 });
 }
 
 1;

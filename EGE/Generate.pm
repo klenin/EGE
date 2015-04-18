@@ -206,7 +206,8 @@ sub gg {
 }
 
 sub all {[
-    gg('Complexity', qw(o_poly o_poly_cmp cycle_complexity complexity substitution amortized)),
+    gg('Complexity', qw(o_poly o_poly_cmp complexity substitution amortized)),
+    gg('Complexity::ComplexityDI', qw(cycle_complexity)),
     gg('CallCount', qw(super_recursion)),
     gg('Tree', qw(node_count height)),
 ]}
