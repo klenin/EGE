@@ -101,7 +101,7 @@ sub complexity {
                     unshift @$cycle, '=', $n, 10;
                     $self->{text} .= EGE::Prog::make_block($cycle)->run_val('counter');
                 }
-                $self->variants(map EGE::Alg::big_o(EGE::Alg::to_logic([ '**', $n, $_ ])), @variants);
+                $self->variants(map EGE::Alg::big_theta(EGE::Alg::to_logic([ '**', $n, $_ ])), @variants);
                 return;
             }
         } 
@@ -137,7 +137,7 @@ sub substitution {
                     $self->variants(map EGE::Alg::to_logic($_), values %variants);
                     $self->{text} =
                         "Дан алгоритм $lt Чтобы сложность этого алгоритма составляла " .
-                        EGE::Alg::big_o(EGE::Alg::to_logic([ '**', $n, (keys %variants)[0]])) .
+                        EGE::Alg::big_theta(EGE::Alg::to_logic([ '**', $n, (keys %variants)[0]])) .
                         ", строку $mask следует заменить на выражение" ;
                     return;
                 }
@@ -198,7 +198,7 @@ sub amortized {
                 my $lt = EGE::LangTable::table($b, [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);
                 $variants[$_] == $ans and ($variants[$_], $variants[0]) = ($variants[0], $variants[$_]) for 0 .. @variants - 1;    
                 $self->{text} = "Определите асимптотическую сложность следующего алгоритма: $lt";
-                $self->variants(map EGE::Alg::big_o(EGE::Alg::to_logic([ '**', $n, $_ ])), @variants[0 .. 3]);
+                $self->variants(map EGE::Alg::big_theta(EGE::Alg::to_logic([ '**', $n, $_ ])), @variants[0 .. 3]);
                 return;
             }
         }
@@ -228,8 +228,9 @@ sub cycle_complexity {
         ]
     ];
     my $block = EGE::Prog::make_block($cycles);
+    my $pow_n_x = EGE::Alg::big_theta(EGE::Alg::to_logic([ '**', $n, 'x' ]));
     my $lt = EGE::LangTable::table($block, [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);
-    $self->{text} = "Определите асимптотическую сложность следующего алгоритма: $lt";
+    $self->{text} = "Асимптотическую сложность следующего алгоритма равна $pow_n_x: $lt Чему равно x?";
     $self->accept_number();
     $self->{correct} = $block->complexity({ $n => 1 });
 }
