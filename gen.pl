@@ -249,6 +249,7 @@ binmode STDOUT, ':utf8';
 #g3('Tree', 'height');
 #g3('Complexity', 'amortized');
 #g3('Graph', 'graph_seq');
+#g3('List', 'dial_command');
 #$questions = EGE::Generate::all;
 #$questions = EGE::AsmGenerate::all;
 #$questions = EGE::DatabaseGenerate::all;
