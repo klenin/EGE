@@ -52,7 +52,7 @@ $q->{text}
             @v = @{$q->{variants}};
             $correct[$q->{correct}] = 1;
         }
-        elsif ($q->{type} eq 'mc' || $q->{type} eq 'sr') {
+        elsif ($q->{type} =~ /^(mc)|(sr)|(dl)$/) {
             @v = @{$q->{variants}};
             @correct = @{$q->{correct}};
         }
@@ -65,12 +65,19 @@ $q->{text}
             @correct = ();
         }
         for my $i (0..$#v) {
-            my $style = $correct[$i] ? ' class="correct"' : '';
+            my $style = $correct[$i] && ($q->{type} =~ /^(mc)|(sc)$/) ? ' class="correct"' : '';
             print
-                $q->{type} eq 'sr' ? "<li>$v[$i] ($v[$correct[$i]])</li>\n" :
-                $q->{type} eq 'mt' ? "<li>$v[$i] - $q->{variants}->[1]->[$i] ($q->{variants}->[1]->[$correct[$i]])</li>\n" :
-                "<li$style>$v[$i]</li>\n";
+                "<li$style>$v[$i]" . ($q->{type} eq 'mt' ? " - $q->{variants}->[1]->[$i]" : '') . "</li>\n";
         }
+        if ($q->{type} =~ /^(mt)|(sr)|(dl)$/) {
+            print "</ol>\n<ol>";
+            for my $i (0..$#correct) {
+                print
+                    '<li class="correct">', $q->{type} eq 'mt' ? 
+                        "$v[$i] - $q->{variants}->[1]->[$correct[$i]]</li>\n" :
+                        "$v[$correct[$i]]</li>\n";
+                }
+            }
         print "</ol>\n</div>\n";
     }
     print "</body>\n</html>";
@@ -192,9 +199,9 @@ binmode STDOUT, ':utf8';
 #g('B08', 'identify_letter');
 #g('B10', 'trans_rate');
 #g('B11', 'ip_mask');
-#g('B12', 'search_query'),
-#g('B13', 'plus_minus'),
-#g('B14', 'find_func_min'),
+#g('B12', 'search_query');
+#g('B13', 'plus_minus');
+#g('B14', 'find_func_min');
 #g('B15', 'logic_var_set');
 #g1('Arch01', 'reg_value_add');
 #g1('Arch01', 'reg_value_logic');

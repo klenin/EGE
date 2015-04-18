@@ -134,4 +134,12 @@ sub post_process {
     $_[0]->{variants} = [ $_[0]->{left_column}, $_[0]->{variants} ];
 }
 
+package EGE::GenBase::Dialing;
+use base 'EGE::GenBase';
+
+sub init {
+    $_[0]->{type} = 'dl';
+    $_[0]->{correct} = [];    
+}
+
 1;
