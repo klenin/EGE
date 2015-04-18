@@ -72,7 +72,7 @@ sub make_rnd_block {
         my $assign = [];
         my $children = [];
         my (@head, @used_vars, $type);
-        if ($other_counts->{if} && rnd->coin(P_IF) && keys %{$vars->{iterator}} - keys %{$vars->{if}} >= 2) {
+        if ($other_counts->{if} && rnd->coin(P_IF) && keys(%{$vars->{iterator}}) - keys(%{$vars->{if}}) >= 2) {
             $type = $vars->{if};
             my @conds;
             my $make_subs = 
