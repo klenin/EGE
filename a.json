@@ -1,0 +1,408 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ru" xml:lang="ru">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <style type="text/css">li.correct { color: red; } div.q { border-bottom: 1px solid black; } </style>
+</head>
+<body>
+
+<div class="q">
+Функция 3 ⋅ <i>n</i><sup>6</sup> + 3 ⋅ <i>n</i><sup>2</sup> + 2 + 6 ⋅ <i>n</i><sup>3</sup> является
+<ol>
+<li><i>O</i>(<i>n</i><sup>3</sup>)</li>
+<li class="correct"><i>O</i>(<i>n</i><sup>6</sup>)</li>
+<li><i>O</i>(6)</li>
+<li><i>O</i>(<i>n</i><sup>2</sup>)</li>
+</ol>
+</div>
+
+<div class="q">
+Всякая функция, являющаяся <i>O</i>(<i>n</i><sup>5</sup>), является также и
+<ol>
+<li><i>O</i>(log(<i>n</i>) + <i>n</i><sup>3</sup>)</li>
+<li><i>O</i>(<i>n</i><sup>-5</sup>)</li>
+<li class="correct"><i>O</i>(log(<i>n</i>) ⋅ <i>n</i><sup>7</sup>)</li>
+<li><i>O</i>(log(<i>n</i><sup>5</sup>))</li>
+</ol>
+</div>
+
+<div class="q">
+Определите асимптотическую сложность следующего алгоритма: <table border="1">
+<tr><th>Си</th><th>Бейсик</th></tr>
+<tr><td><pre><![CDATA[for (i = 0; i <= pow(m, 3); ++i)
+  for (c = 0; c <= pow(i, 2); ++c){
+    for (cb = 0; cb <= pow(m, 3); ++cb)
+      print(c, cb, i);
+    for (a = 0; a <= pow(c, 3); ++a)
+      print(c, a, i);
+  }]]></pre></td><td><pre><![CDATA[FOR i = 0 TO m ^ 3
+  FOR c = 0 TO i ^ 2
+    FOR cb = 0 TO m ^ 3
+      PRINT c, cb, i
+    NEXT cb
+    FOR a = 0 TO c ^ 3
+      PRINT c, a, i
+    NEXT a
+  NEXT c
+NEXT i]]></pre></td></tr>
+<tr><th>Паскаль</th><th>Алгоритмический</th><th>Перл</th></tr>
+<tr><td><pre><![CDATA[for i := 0 to m ** 3 do
+  for c := 0 to i ** 2 do begin
+    for cb := 0 to m ** 3 do
+      write(c, cb, i);
+    for a := 0 to c ** 3 do
+      write(c, a, i);
+  end;]]></pre></td><td><pre><![CDATA[нц для i от 0 до m ** 3
+  нц для c от 0 до i ** 2
+    нц для cb от 0 до m ** 3
+      вывод c, cb, i
+    кц
+    нц для a от 0 до c ** 3
+      вывод c, a, i
+    кц
+  кц
+кц]]></pre></td><td><pre><![CDATA[for ($i = 0; $i <= $m ** 3; ++$i) {
+  for ($c = 0; $c <= $i ** 2; ++$c) {
+    for ($cb = 0; $cb <= $m ** 3; ++$cb) {
+      print($c, $cb, $i);
+    }
+    for ($a = 0; $a <= $c ** 3; ++$a) {
+      print($c, $a, $i);
+    }
+  }
+}]]></pre></td></tr>
+</table>
+
+<ol>
+<li class="correct"><i>&Theta;</i>(<i>m</i><sup>27</sup>)</li>
+<li><i>&Theta;</i>(<i>m</i><sup>3</sup>)</li>
+<li><i>&Theta;</i>(<i>m</i><sup>6</sup>)</li>
+<li><i>&Theta;</i>(<i>m</i><sup>12</sup>)</li>
+</ol>
+</div>
+
+<div class="q">
+Дан алгоритм <table border="1">
+<tr><th>Си</th><th>Бейсик</th></tr>
+<tr><td><pre><![CDATA[a = pow(m, 2);
+for (j = 0; j <= pow(a, 2); ++j)
+  for (k = 0; k <= pow(a, 2); ++k){
+    ak = pow(m, 2);
+    for (ka = 0; ka <= pow(ak, 2); ++ka)
+      if (XXXXX)
+        for (aa = 0; aa <= pow(ka, 3); ++aa)
+          print(k, ka, aa, j);
+  }]]></pre></td><td><pre><![CDATA[a = m ^ 2
+FOR j = 0 TO a ^ 2
+  FOR k = 0 TO a ^ 2
+    ak = m ^ 2
+    FOR ka = 0 TO ak ^ 2
+      IF XXXXX THEN FOR aa = 0 TO ka ^ 3
+        PRINT k, ka, aa, j
+      NEXT aa
+    NEXT ka
+  NEXT k
+NEXT j]]></pre></td></tr>
+<tr><th>Паскаль</th><th>Алгоритмический</th><th>Перл</th></tr>
+<tr><td><pre><![CDATA[a := m ** 2;
+for j := 0 to a ** 2 do
+  for k := 0 to a ** 2 do begin
+    ak := m ** 2;
+    for ka := 0 to ak ** 2 do
+      if XXXXX then
+        for aa := 0 to ka ** 3 do
+          write(k, ka, aa, j);
+  end;]]></pre></td><td><pre><![CDATA[a := m ** 2
+нц для j от 0 до a ** 2
+  нц для k от 0 до a ** 2
+    ak := m ** 2
+    нц для ka от 0 до ak ** 2
+      если XXXXX то
+        нц для aa от 0 до ka ** 3
+          вывод k, ka, aa, j
+        кц
+      все
+    кц
+  кц
+кц]]></pre></td><td><pre><![CDATA[$a = $m ** 2;
+for ($j = 0; $j <= $a ** 2; ++$j) {
+  for ($k = 0; $k <= $a ** 2; ++$k) {
+    $ak = $m ** 2;
+    for ($ka = 0; $ka <= $ak ** 2; ++$ka) {
+      if (XXXXX) {
+        for ($aa = 0; $aa <= $ka ** 3; ++$aa) {
+          print($k, $ka, $aa, $j);
+        }
+      }
+    }
+  }
+}]]></pre></td></tr>
+</table>
+ Чтобы сложность этого алгоритма составляла <i>&Theta;</i>(<i>m</i><sup>24</sup>), строку XXXXX следует заменить на выражение
+<ol>
+<li><i>k</i> = <i>j</i></li>
+<li><i>j</i> % <i>m</i> = 0</li>
+<li class="correct"><i>ka</i> ≤ <i>ak</i><sup>2</sup></li>
+<li><i>ka</i> % <i>m</i><sup>2</sup> = 0</li>
+</ol>
+</div>
+
+<div class="q">
+Определите асимптотическую сложность следующего алгоритма: <table border="1">
+<tr><th>Си</th><th>Бейсик</th></tr>
+<tr><td><pre><![CDATA[for (i = 0; i <= n; ++i)
+  for (j = 0; j <= n; ++j){
+    for (ja = 0; ja <= pow(n, 3); ++ja)
+      print(ja, j, i);
+    if (i == j)
+      for (b = 0; b <= n; ++b){
+        ba = pow(n, 3);
+        for (a = 0; a <= ba; ++a)
+          print(a, b, j, i);
+      }
+  }]]></pre></td><td><pre><![CDATA[FOR i = 0 TO n
+  FOR j = 0 TO n
+    FOR ja = 0 TO n ^ 3
+      PRINT ja, j, i
+    NEXT ja
+    IF i = j THEN FOR b = 0 TO n
+      ba = n ^ 3
+      FOR a = 0 TO ba
+        PRINT a, b, j, i
+      NEXT a
+    NEXT b
+  NEXT j
+NEXT i]]></pre></td></tr>
+<tr><th>Паскаль</th><th>Алгоритмический</th><th>Перл</th></tr>
+<tr><td><pre><![CDATA[for i := 0 to n do
+  for j := 0 to n do begin
+    for ja := 0 to n ** 3 do
+      write(ja, j, i);
+    if i = j then
+      for b := 0 to n do begin
+        ba := n ** 3;
+        for a := 0 to ba do
+          write(a, b, j, i);
+      end;
+  end;]]></pre></td><td><pre><![CDATA[нц для i от 0 до n
+  нц для j от 0 до n
+    нц для ja от 0 до n ** 3
+      вывод ja, j, i
+    кц
+    если i = j то
+      нц для b от 0 до n
+        ba := n ** 3
+        нц для a от 0 до ba
+          вывод a, b, j, i
+        кц
+      кц
+    все
+  кц
+кц]]></pre></td><td><pre><![CDATA[for ($i = 0; $i <= $n; ++$i) {
+  for ($j = 0; $j <= $n; ++$j) {
+    for ($ja = 0; $ja <= $n ** 3; ++$ja) {
+      print($ja, $j, $i);
+    }
+    if ($i == $j) {
+      for ($b = 0; $b <= $n; ++$b) {
+        $ba = $n ** 3;
+        for ($a = 0; $a <= $ba; ++$a) {
+          print($a, $b, $j, $i);
+        }
+      }
+    }
+  }
+}]]></pre></td></tr>
+</table>
+
+<ol>
+<li><i>&Theta;</i>(<i>n</i><sup>6</sup>)</li>
+<li class="correct"><i>&Theta;</i>(<i>n</i><sup>5</sup>)</li>
+<li><i>&Theta;</i>(<i>n</i><sup>2</sup>)</li>
+<li><i>&Theta;</i>(<i>n</i><sup>1</sup>)</li>
+</ol>
+</div>
+
+<div class="q">
+Асимптотическая сложность следующего алгоритма равна <i>&Theta;</i>(<i>m</i><sup><i>x</i></sup>): <table border="1">
+<tr><th>Си</th><th>Бейсик</th></tr>
+<tr><td><pre><![CDATA[for (k = 0; k <= pow(m, 3); ++k){
+  for (i = 0; i <= m; ++i)
+    buf[i] = i;
+  for (c = 0; c <= pow(m, 5); ++c)
+    buf[c] = c;
+}]]></pre></td><td><pre><![CDATA[FOR k = 0 TO m ^ 3
+  FOR i = 0 TO m
+    buf(i) = i
+  NEXT i
+  FOR c = 0 TO m ^ 5
+    buf(c) = c
+  NEXT c
+NEXT k]]></pre></td></tr>
+<tr><th>Паскаль</th><th>Алгоритмический</th><th>Перл</th></tr>
+<tr><td><pre><![CDATA[for k := 0 to m ** 3 do begin
+  for i := 0 to m do
+    buf[i] := i;
+  for c := 0 to m ** 5 do
+    buf[c] := c;
+end;]]></pre></td><td><pre><![CDATA[нц для k от 0 до m ** 3
+  нц для i от 0 до m
+    buf[i] := i
+  кц
+  нц для c от 0 до m ** 5
+    buf[c] := c
+  кц
+кц]]></pre></td><td><pre><![CDATA[for ($k = 0; $k <= $m ** 3; ++$k) {
+  for ($i = 0; $i <= $m; ++$i) {
+    $$buf[$i] = $i;
+  }
+  for ($c = 0; $c <= $m ** 5; ++$c) {
+    $$buf[$c] = $c;
+  }
+}]]></pre></td></tr>
+</table>
+ Чему равно x?
+<ol>
+<li>8</li>
+</ol>
+</div>
+
+<div class="q">
+Определите количество вызовов функции <code>f</code> при исполнении следующего алгоритма: <table border="1">
+<tr><th>Си</th><th>Бейсик</th></tr>
+<tr><td><pre><![CDATA[int f(int n) {
+  int f;
+  if (n >= 71428571428)
+    f = f(n / 5) + 1;
+  if (n < 71428571428 && n >= 6666666666)
+    f = f(n - 2) + 1;
+  if (n < 6666666666)
+    f = 1;
+  return f;
+}
+
+print(f(1000000000000));]]></pre></td><td><pre><![CDATA[FUNCTION f(n)
+  IF n >= 71428571428 THEN f = f(n / 5) + 1
+  IF n < 71428571428 AND n >= 6666666666 THEN f = f(n - 2) + 1
+  IF n < 6666666666 THEN f = 1
+END FUNCTION
+
+PRINT f(1000000000000)]]></pre></td></tr>
+<tr><th>Паскаль</th><th>Алгоритмический</th><th>Перл</th></tr>
+<tr><td><pre><![CDATA[function f(n: integer): integer;
+begin
+  if n >= 71428571428 then
+    f := f(n / 5) + 1;
+  if (n < 71428571428) and (n >= 6666666666) then
+    f := f(n - 2) + 1;
+  if n < 6666666666 then
+    f := 1;
+end;
+
+write(f(1000000000000));]]></pre></td><td><pre><![CDATA[алг цел f(цел n)
+нач
+  если n >= 71428571428 то
+    f := f(n / 5) + 1
+  все
+  если n < 71428571428 и n >= 6666666666 то
+    f := f(n - 2) + 1
+  все
+  если n < 6666666666 то
+    f := 1
+  все
+кон
+
+вывод f(1000000000000)]]></pre></td><td><pre><![CDATA[sub f {
+  my $f;
+  my ($n) = @_;
+  if ($n >= 71428571428) {
+    $f = f($n / 5) + 1;
+  }
+  if ($n < 71428571428 && $n >= 6666666666) {
+    $f = f($n - 2) + 1;
+  }
+  if ($n < 6666666666) {
+    $f = 1;
+  }
+  return $f;
+}
+
+print(f(1000000000000));]]></pre></td></tr>
+</table>
+
+<ol>
+<li>16666666671</li>
+</ol>
+</div>
+
+<div class="q">
+Известно, что в дереве, каждый узел которого имеет степень либо 6 (внутренний узел), либо 0 (листовой узел), имеется 886 листовых узлов. Определите количество внутренних узлов в этом дереве.
+<ol>
+<li>177</li>
+</ol>
+</div>
+
+<div class="q">
+Известно, что в дереве, каждый узел которого имеет степень либо 2, либо 0, количество узлов равно 4693. Определите минимально возможную высоту такого дерева. (Высота дерева — максимальная длина пути от вершины дерева до его корня. Например, высота дерева, состоящего только из корня, равна 0.)
+<ol>
+<li>12</li>
+</ol>
+</div>
+
+<div class="q">
+Графическая последовательность чисел — последовательность целых неотрицательных чисел такая, что существует граф, последовательность степеней вершин которого совпадает с ней. Какие из следющих последовательностей являются графическими.
+<ol>
+<li>4,4,4,2,1,1</li>
+<li class="correct">5,4,3,3,2,1</li>
+<li class="correct">5,4,4,3,2,2</li>
+<li>5,5,3,1,1,1</li>
+</ol>
+</div>
+
+<div class="q">
+Выберите набор из ровно 4 команд, необходимый для того чтобы из списка <b>(2,3,1)</b> получить список <b>(3,1,3)</b>
+<ol>
+<li>добавить справа 3</li>
+<li>удалить справа</li>
+<li>заменить все 2 на 1</li>
+<li>заменить все 1 на 2</li>
+<li>удалить все 1</li>
+<li>добавить справа 1</li>
+</ol>
+<ol><li class="correct">заменить все 2 на 1</li>
+<li class="correct">удалить все 1</li>
+<li class="correct">добавить справа 1</li>
+<li class="correct">добавить справа 3</li>
+</ol>
+</div>
+
+<div class="q">
+Отсортируйте команды таким образом, чтобы они образовали алгоритм сортировки массива a, длинной n.
+Прим. начало и конец условных операторов и операторов цикла должны иметь одинаковый цвет, недопустимо использовать начало и конец разного цвета, даже если они имеют одинаковый текст.
+<ol>
+<li><pre class="Basic"><![CDATA[a(j) = tmp]]></pre><pre class="C"><![CDATA[a[j] = tmp;]]></pre><pre class="Alg"><![CDATA[a[j] := tmp]]></pre><pre class="Pascal"><![CDATA[a[j] := tmp;]]></pre></li>
+<li><pre class="Basic" style="color: fuchsia"><![CDATA[FOR i = j + 1 TO n1]]></pre><pre class="C" style="color: fuchsia"><![CDATA[for (i = j + 1; i <= n1; ++i){]]></pre><pre class="Alg" style="color: fuchsia"><![CDATA[нц для i от j + 1 до n1]]></pre><pre class="Pascal" style="color: fuchsia"><![CDATA[for i := j + 1 to n1 do begin]]></pre></li>
+<li><pre class="Basic" style="color: green"><![CDATA[IF a(i) < a(j) THEN]]></pre><pre class="C" style="color: green"><![CDATA[if (a[i] < a[j]) {]]></pre><pre class="Alg" style="color: green"><![CDATA[если a[i] < a[j] то]]></pre><pre class="Pascal" style="color: green"><![CDATA[if a[i] < a[j] then begin]]></pre></li>
+<li><pre class="Basic"><![CDATA[n1 = n - 1]]></pre><pre class="C"><![CDATA[n1 = n - 1;]]></pre><pre class="Alg"><![CDATA[n1 := n - 1]]></pre><pre class="Pascal"><![CDATA[n1 := n - 1;]]></pre></li>
+<li><pre class="Basic" style="color: fuchsia"><![CDATA[NEXT i]]></pre><pre class="C" style="color: fuchsia"><![CDATA[}]]></pre><pre class="Alg" style="color: fuchsia"><![CDATA[кц]]></pre><pre class="Pascal" style="color: fuchsia"><![CDATA[end;]]></pre></li>
+<li><pre class="Basic" style="color: green"><![CDATA[END IF]]></pre><pre class="C" style="color: green"><![CDATA[}]]></pre><pre class="Alg" style="color: green"><![CDATA[все]]></pre><pre class="Pascal" style="color: green"><![CDATA[end;]]></pre></li>
+<li><pre class="Basic"><![CDATA[a(i) = a(j)]]></pre><pre class="C"><![CDATA[a[i] = a[j];]]></pre><pre class="Alg"><![CDATA[a[i] := a[j]]]></pre><pre class="Pascal"><![CDATA[a[i] := a[j];]]></pre></li>
+<li><pre class="Basic"><![CDATA[tmp = a(i)]]></pre><pre class="C"><![CDATA[tmp = a[i];]]></pre><pre class="Alg"><![CDATA[tmp := a[i]]]></pre><pre class="Pascal"><![CDATA[tmp := a[i];]]></pre></li>
+<li><pre class="Basic" style="color: blue"><![CDATA[FOR j = 0 TO n1]]></pre><pre class="C" style="color: blue"><![CDATA[for (j = 0; j <= n1; ++j){]]></pre><pre class="Alg" style="color: blue"><![CDATA[нц для j от 0 до n1]]></pre><pre class="Pascal" style="color: blue"><![CDATA[for j := 0 to n1 do begin]]></pre></li>
+<li><pre class="Basic" style="color: blue"><![CDATA[NEXT j]]></pre><pre class="C" style="color: blue"><![CDATA[}]]></pre><pre class="Alg" style="color: blue"><![CDATA[кц]]></pre><pre class="Pascal" style="color: blue"><![CDATA[end;]]></pre></li>
+</ol>
+<ol><li class="correct"><pre class="Basic"><![CDATA[n1 = n - 1]]></pre><pre class="C"><![CDATA[n1 = n - 1;]]></pre><pre class="Alg"><![CDATA[n1 := n - 1]]></pre><pre class="Pascal"><![CDATA[n1 := n - 1;]]></pre></li>
+<li class="correct"><pre class="Basic" style="color: blue"><![CDATA[FOR j = 0 TO n1]]></pre><pre class="C" style="color: blue"><![CDATA[for (j = 0; j <= n1; ++j){]]></pre><pre class="Alg" style="color: blue"><![CDATA[нц для j от 0 до n1]]></pre><pre class="Pascal" style="color: blue"><![CDATA[for j := 0 to n1 do begin]]></pre></li>
+<li class="correct"><pre class="Basic" style="color: fuchsia"><![CDATA[FOR i = j + 1 TO n1]]></pre><pre class="C" style="color: fuchsia"><![CDATA[for (i = j + 1; i <= n1; ++i){]]></pre><pre class="Alg" style="color: fuchsia"><![CDATA[нц для i от j + 1 до n1]]></pre><pre class="Pascal" style="color: fuchsia"><![CDATA[for i := j + 1 to n1 do begin]]></pre></li>
+<li class="correct"><pre class="Basic" style="color: green"><![CDATA[IF a(i) < a(j) THEN]]></pre><pre class="C" style="color: green"><![CDATA[if (a[i] < a[j]) {]]></pre><pre class="Alg" style="color: green"><![CDATA[если a[i] < a[j] то]]></pre><pre class="Pascal" style="color: green"><![CDATA[if a[i] < a[j] then begin]]></pre></li>
+<li class="correct"><pre class="Basic"><![CDATA[tmp = a(i)]]></pre><pre class="C"><![CDATA[tmp = a[i];]]></pre><pre class="Alg"><![CDATA[tmp := a[i]]]></pre><pre class="Pascal"><![CDATA[tmp := a[i];]]></pre></li>
+<li class="correct"><pre class="Basic"><![CDATA[a(i) = a(j)]]></pre><pre class="C"><![CDATA[a[i] = a[j];]]></pre><pre class="Alg"><![CDATA[a[i] := a[j]]]></pre><pre class="Pascal"><![CDATA[a[i] := a[j];]]></pre></li>
+<li class="correct"><pre class="Basic"><![CDATA[a(j) = tmp]]></pre><pre class="C"><![CDATA[a[j] = tmp;]]></pre><pre class="Alg"><![CDATA[a[j] := tmp]]></pre><pre class="Pascal"><![CDATA[a[j] := tmp;]]></pre></li>
+<li class="correct"><pre class="Basic" style="color: green"><![CDATA[END IF]]></pre><pre class="C" style="color: green"><![CDATA[}]]></pre><pre class="Alg" style="color: green"><![CDATA[все]]></pre><pre class="Pascal" style="color: green"><![CDATA[end;]]></pre></li>
+<li class="correct"><pre class="Basic" style="color: fuchsia"><![CDATA[NEXT i]]></pre><pre class="C" style="color: fuchsia"><![CDATA[}]]></pre><pre class="Alg" style="color: fuchsia"><![CDATA[кц]]></pre><pre class="Pascal" style="color: fuchsia"><![CDATA[end;]]></pre></li>
+<li class="correct"><pre class="Basic" style="color: blue"><![CDATA[NEXT j]]></pre><pre class="C" style="color: blue"><![CDATA[}]]></pre><pre class="Alg" style="color: blue"><![CDATA[кц]]></pre><pre class="Pascal" style="color: blue"><![CDATA[end;]]></pre></li>
+</ol>
+</div>
+</body>
+</html>

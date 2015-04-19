@@ -12,7 +12,7 @@ sub mult { '*', '/', '%', '//' }
 sub add { '+', '-' }
 sub comp { '>', '<', '==', '!=', '>=', '<=' }
 sub logic { '&&', '||', '^', '=>', 'eq' }
-sub unary { '!', '+', '-' }
+sub unary { '++%s', '--%s', '%s++', '%s--', '!', '+', '-' }
 sub prio_unary { map "`$_", unary }
 
 sub between { between => [ '&&', [ '<=', 2, 1 ], [ '<=', 1, 3 ] ] }

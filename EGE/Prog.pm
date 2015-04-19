@@ -232,6 +232,19 @@ sub to_lang_fmt {
 
 sub _children { qw(arg) }
 
+package EGE::Prog::Inc;
+use base 'EGE::Prog::UnOp';
+
+sub to_lang_fmt {
+    my ($self, $lang) = @_;
+    $lang->translate_un_op->{$self->{op}} || $self->{op};
+}
+
+sub run {
+    my ($self, $env) = @_;
+    eval sprintf $self->{op}, '${$self->{arg}->get_ref($env)}';
+}
+
 package EGE::Prog::TernaryOp;
 use base 'EGE::Prog::Op';
 
@@ -593,10 +606,14 @@ sub make_expr {
             $_ = make_expr($_) for @p;
             return EGE::Prog::Print->new(args => \@p);
         }
+        if (@$src == 2 && $src->[0] =~ /\+\+|--/) {
+            return EGE::Prog::Inc->new(
+                op => $src->[0], arg => make_expr($src->[1]));
+        }        
         if (@$src == 2) {
             return EGE::Prog::UnOp->new(
                 op => $src->[0], arg => make_expr($src->[1]));
-        }
+        }        
         if (@$src == 3) {
             return EGE::Prog::BinOp->new(
                 op => $src->[0],
