@@ -2,7 +2,7 @@
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
 package EGE::Gen::Alg::List;
-use base 'EGE::GenBase::Dialing';
+use base 'EGE::GenBase::Construct';
 
 use strict;
 use warnings;
@@ -102,7 +102,7 @@ sub get_unique_cmds {
     $ret, to_radix($result_id{$ret}, $count)
 }
 
-sub dial_command {
+sub construct_command {
     my ($self) = @_;
     my ($sl, @variants, $el_str, @correct);
 
@@ -115,7 +115,7 @@ sub dial_command {
     } while (!$el_str);
     my $sl_str = ls2str @$sl;
     $self->{text} = "Выберите набор из ровно " . COM_COUNT . 
-        " команд, необходимый для того чтобы из списка ($sl_str) получить список ($el_str)";
+        " команд, необходимый для того чтобы из списка <b>($sl_str)</b> получить список <b>($el_str)</b>";
     $self->{variants} = [ map cmd2str(@$_), @variants ];
     $self->{correct} = [ @correct ];
 }

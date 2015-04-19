@@ -213,7 +213,7 @@ sub all {[
     gg('CallCount', qw(super_recursion)),
     gg('Tree', qw(node_count height)),
     gg('Graph', qw(graph_seq)),
-    gg('List', qw(dial_command)),
+    gg('List', qw(construct_command)),
 ]}
 
 1;
