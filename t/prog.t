@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 102;
+use Test::More tests => 107;
 use Test::Exception;
 
 use lib '..';
@@ -354,6 +354,18 @@ sub check_sub {
     };
     check_sub($_, $b, $c->{$_}, "print in $_") for keys %$c;
     is $b->run_val('<out>'), join("\n", map $_ . ' ' . 0, 0 .. 9), 'run print';
+}
+
+{
+    is make_expr([ '++%s', 'i' ])->run({ i => 2 }), 3, 'run prefix increment';
+    is make_expr([ '%s--', 'i' ])->run({ i => 4 }), 4, 'run postfix decrement';
+    
+    my $e = make_expr([ '+', [ '++%s', 'i' ], [ '++%s', 'i' ] ]);
+    is $e->to_lang_named('C'), '++i + ++i', 'to lang increment';
+    
+    my $env = { i => 5 };
+    is $e->run($env), 13, 'run increment return value';
+    is $env->{i}, 7, 'run increment side effect';
 }
 
 {
