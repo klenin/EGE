@@ -52,7 +52,7 @@ $q->{text}
             @v = @{$q->{variants}};
             $correct[$q->{correct}] = 1;
         }
-        elsif ($q->{type} =~ /^(mc)|(sr)|(dl)$/) {
+        elsif ($q->{type} =~ /^(mc)|(sr)|(cn)$/) {
             @v = @{$q->{variants}};
             @correct = @{$q->{correct}};
         }
@@ -69,7 +69,7 @@ $q->{text}
             print
                 "<li$style>$v[$i]" . ($q->{type} eq 'mt' ? " - $q->{variants}->[1]->[$i]" : '') . "</li>\n";
         }
-        if ($q->{type} =~ /^(mt)|(sr)|(dl)$/) {
+        if ($q->{type} =~ /^(mt)|(sr)|(cn)$/) {
             print "</ol>\n<ol>";
             for my $i (0..$#correct) {
                 print
@@ -248,11 +248,11 @@ binmode STDOUT, ':utf8';
 #g3('Tree', 'height');
 #g3('Complexity', 'amortized');
 #g3('Graph', 'graph_seq');
-#g3('List', 'dial_command');
+#g3('List', 'construct_command');
 #$questions = EGE::Generate::all;
 #$questions = EGE::AsmGenerate::all;
 #$questions = EGE::DatabaseGenerate::all;
-$questions = EGE::AlgGenerate::all;
+#$questions = EGE::AlgGenerate::all;
 
 #push @$questions, EGE::Gen::Math::Summer::g($_) for qw(p1 p2 p3 p4 p5 p6 p7);
 
