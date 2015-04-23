@@ -21,7 +21,7 @@ use EGE::SQL::RandomTable qw(create_table);
 
 
 sub expression {
-    my ($f1, $f2, $f3, $f4, @field) = @_;
+    my ($f1, $f2, $f3, $f4) = @_;
     my $cond = make_expr([
             rnd->pick('&&', '||'),
             [rnd->pick('>','<','<=','>='), $f1, $f2],
@@ -37,8 +37,8 @@ sub func {
         my ($f1, $f2, $f3, $f4);
         while(1) {
             $tab = $table->select([@fields]);
-            ($f1, $f2, $f3, $f4) = rnd->shuffle(@fields[1 .. $#fields]); ;
-            $cond = expression($f1, $f2, $f3, $f4, @fields);
+            ($f1, $f2, $f3, $f4) = rnd->shuffle(@fields[1 .. $#fields]);
+            $cond = expression($f1, $f2, $f3, $f4);
             if ($tab->select([], $cond)->count() > 1 && $tab->select([], $cond)->count() != $count) {
                 last;
             }
@@ -51,14 +51,14 @@ sub func {
 
 sub choose_update {
     my ($self) = @_;
-    my $products = EGE::SQL::RandomTable::create_table(column => 5, row => 6);
+    my $products = EGE::SQL::RandomTable::create_table(column => 6, row => 6);
     my $old_table_text = $products->table_html;
     my (@requests, $update);
     while(1) {
         my ($f1, $f2, $f3, $f4) = rnd->shuffle(@{$products->{fields}}[1 .. $#{$products->{fields}}]);
         my $cond = expression($f1, $f2, $f3, $f4, @{$products->{fields}});
         my $count = $products->select([], $cond)->count();
-        if ($count) {
+        if ($count > 1) {
             @requests = func($count, $products, @{$products->{fields}});
             $update = EGE::SQL::Update->new($products, make_block([ '=', $f1, $f4 ]), $cond);
             $update->run();
