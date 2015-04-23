@@ -19,10 +19,16 @@ use EGE::SQL::Queries;
 
 sub select_where {
     my ($self) = @_;
-    my $products = EGE::SQL::RandomTable::create_table(column => 4, row => 6);
-    my $cond = EGE::SQL::Utils::check_cond($products, \&EGE::SQL::Utils::expr_2);
-    my $query = EGE::SQL::Select->new($products, [ $products->{fields}[0] ], $cond);
-    my $selected = $query->run();
+    my $products = EGE::SQL::RandomTable::create_table(column => 4, row => 8);
+    my ($selected, $query);
+    while(1) {
+        my $cond = EGE::SQL::Utils::check_cond($products, \&EGE::SQL::Utils::expr_2);
+        $query = EGE::SQL::Select->new($products, [ $products->{fields}[0] ], $cond);
+        if ($query->run()->count() > 1) {
+            $selected = $query->run();
+            last;
+        }
+    }
     my %ans;
     $ans{$_->[0]} = 1 for @{$selected->{data}};
     $self->{text} = sprintf
