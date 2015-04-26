@@ -1,6 +1,45 @@
 # Copyright © 2014 Darya D. Gornak
 # Licensed under GPL version 2 or later.
 # http://github.com/dahin/EGE
+
+package EGE::Prog::Field;
+use base "EGE::Prog::Var";
+
+use strict;
+use warnings;
+
+use overload '""' => sub { $_[0]->{name} },
+    'ne' => \&not_equal, 'eq' => \&equal;
+
+sub new {
+    my ($class, $attr) = @_;
+    my $self;
+    if (ref $attr eq 'HASH') {
+        $self = $attr;
+    } else  {
+        $self = {
+            name => $attr,
+          };
+    }
+    bless $self, $class;
+    $self;
+}
+
+sub to_lang {
+    my ($self, $lang) = @_;
+    $self->{name_alias} ? $self->{name_alias} . '.' . $self->{name} : $self->{name};
+}
+
+sub not_equal {
+    my ($self, $val) = @_;
+    $self->{name} ne $val;
+}
+
+sub equal {
+    my ($self, $val) = @_;
+    $self->{name} eq $val;
+}
+
 package EGE::SQL::Table;
 
 use strict;
@@ -12,6 +51,7 @@ use EGE::Random;
 sub new {
     my ($class, $fields, %p) = @_;
     $fields or die;
+    @$fields = map ref $_ eq 'EGE::Prog::Field' ? $_ : EGE::Prog::Field->new($_), @$fields;
     my $self = {
         name => $p{name},
         fields => $fields,
@@ -21,6 +61,7 @@ sub new {
     my $i = 0;
     $self->{field_index}->{$_} = $i++ for @$fields;
     bless $self, $class;
+    $_->{table} = $self for @{$self->{fields}};
     $self;
 }
 
@@ -44,6 +85,8 @@ sub insert_rows {
 
 sub insert_column {
     my ($self, %p) = @_;
+    $p{name} = ref $p{name} eq 'EGE::Prog::Field' ? $p{name} : EGE::Prog::Field->new($p{name});
+    $p{name}->{table} = $self;
     unshift @{$self->{fields}}, $p{name};
     my $i = 0; my $j = 0;
     unshift @$_, $p{array}[$i++] for @{$self->{data}};
@@ -69,9 +112,10 @@ sub select {
     my ($self, $fields, $where, $ref) = @_;
 
     my $k = 0;
-    my $result = EGE::SQL::Table->new([ map ref $_ ? 'expr_' . ++$k : $_, @$fields ]);
 
-    my @values = map ref $_ ? $_ : make_expr($_), @$fields;
+    my $result = EGE::SQL::Table->new([ map {ref $_ ne 'EGE::Prog::Field' && ref $_ ?  'expr_' . ++$k : $_ } @$fields ]);
+
+    my @values = map {ref $_  ? $_ : make_expr($_) } @$fields;
     my $calc_row = sub { map $_->run($_[0]), @values };
 
     my $tab_where = $self->where($where, $ref);
@@ -104,6 +148,11 @@ sub delete {
     my ($self, $where) = @_;
     $self->{data} = $self->select( [ @{$self->{fields}} ], make_expr(['!', $where]), 1)->{data};
     $self;
+}
+
+sub natural_join{
+    my ($self, $field) = @_;
+    $field->{table}->inner_join($field->{ref_field}->{table}, $field, $field->{ref_field});
 }
 
 sub inner_join {

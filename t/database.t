@@ -260,3 +260,10 @@ sub pack_table {
     is pack_table($tab->select([ make_expr sub { $_[0]->{name} . 'x' } ])), 'expr_1|ax|bx|cx|dx', 'select sub';
 }
 
+{
+    my $t1 = EGE::SQL::Table->new([ qw(x y) ], name => 't1');
+    is @{$t1->{fields}}[0]->to_lang, 'x', 'field text';
+    is @{$t1->{fields}}[0], 'x', 'field name';
+    ok @{$t1->{fields}}[1] eq 'y', 'equal';
+    ok @{$t1->{fields}}[1] ne 'x', 'not_equal';
+}

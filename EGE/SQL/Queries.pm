@@ -26,6 +26,7 @@ use base 'EGE::SQL::Query';
 sub new {
     my ($class, $table, $fields, $where, %p) = @_;
     $fields or die;
+    @$fields = map ref $_ ? $_ : EGE::Prog::Field->new($_), @$fields;
     my $self = {
         fields => $fields,
         where => $where,
