@@ -50,8 +50,9 @@ sub inner_join {
     };
     my $id = $buyers->random_row->[0];
     my $where = make_expr([ '==', 'id_buyer', $id ]);
+    my @names_fields = map $_->{name}. '.' . ${$_->{fields}}[1], @tables;
     $self->variants(map EGE::SQL::Select->new(
-        $make_joins->($_), [ qw(name_pc name_printer name_laptop) ], $where)->text_html, -1..$#tables);
+        $make_joins->($_), \@names_fields, $where)->text_html, -1..$#tables);
     $self->{text} = sprintf
         "В фрагменте базы данных интернет-магазина представлены сведения о покупках:\n%s\n" .
         'Какой из приведенных ниже запросов покажет названия предметов, приобретенных покупателем с id = %s?',

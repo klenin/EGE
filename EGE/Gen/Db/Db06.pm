@@ -18,7 +18,7 @@ use EGE::SQL::Queries;
 
 sub select_between {
     my ($self) = @_;
-    my $products= EGE::SQL::RandomTable::create_table(column => 5, row => 9);
+    my $products = EGE::SQL::RandomTable::create_table(column => 5, row => 9);
     my @month = @{$products->{fields}}[1 .. @{$products->{fields}} - 1];
     my ($cond, $count,$l, $r, $m1);
     do {

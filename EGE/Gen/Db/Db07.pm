@@ -17,22 +17,14 @@ use EGE::SQL::Table;
 use EGE::SQL::Queries;
 use EGE::SQL::Utils;
 
-sub create_table {
-    my ($n, $m, $k) = @_;
-    my @city = rnd->pick_n($n, @EGE::Russian::City::city);
-    my @families = rnd->pick_n_sorted($m, @EGE::Russian::FamilyNames::list);
-    my $table_city = EGE::SQL::Table->new([ qw(id Город) ], name => 'cities');
-    my $table_person = EGE::SQL::Table->new([ qw(Фамилия cid) ], name => 'persons');
-    $table_city->insert_rows(@{EGE::Utils::transpose([ 1..@city ], \@city)});
-    my @id_city = rnd->pick_n($m, 1 .. @city + $k);
-    $table_person->insert_rows(@{EGE::Utils::transpose(\@families, \@id_city)});
-    $table_city, $table_person;
-}
-
 sub trivial_inner_join{
     my ($self) = @_;
-    my ($table_city, $table_person) = create_table(12, 7, 10);
-    my $count = $table_person->inner_join($table_city, 'cid', 'id')->count();
+    my $table_person = EGE::SQL::People->make_table(1, 7);
+    my $table_city  = EGE::SQL::Cities->make_table(1, 7);
+    $table_person->insert_column(name => 'id', array=>[1..$table_person->count()]);
+    my @arr = rnd->pick_n(scalar $table_city->count(), 1 .. $table_city->count() + 10);
+    $table_city->insert_column(name => 'cid', array => \@arr, index => 1);
+    my $count = $table_person->inner_join($table_city, 'id', 'cid')->count();
     my $inner = EGE::SQL::Inner_join->new(
         { tab => $table_person, field => 'cid' },
         { tab => $table_city, field => 'id' });
