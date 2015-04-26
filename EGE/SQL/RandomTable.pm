@@ -13,7 +13,7 @@ use EGE::SQL::Utils;
 sub create_table {
     my %p = @_;
     my @arr = ('EGE::SQL::Products', 'EGE::SQL::Jobs', 'EGE::SQL::ProductMonth',
-            'EGE::SQL::Cities', 'EGE::SQL::People');
+            'EGE::SQL::Cities', 'EGE::SQL::People', 'EGE::SQL::Subjects');
     my $class = rnd->pick(grep ($_->get_column() >= $p{column} && grep (@$_ >= $p{row}, $_->get_rows_array()), @arr));
     $class->make_table($p{column}, $p{row});
 }
@@ -30,8 +30,8 @@ sub make_table {
 
 package EGE::SQL::Products;
 use base 'EGE::SQL::BaseTable';
-sub get_name { 'product' }
-sub get_column { my @product = ('Товар', 'Прибыль', 'Цена', 'Затраты', 'Выручка'); }
+sub get_name { 'products' }
+sub get_column { my @product = ('Товар', 'Цена', 'Прибыль', 'Затраты', 'Выручка'); }
 sub get_rows_array { (\@EGE::Russian::Product::candy, \@EGE::Russian::Product::electronic, \@EGE::Russian::Product::pcs,
     \@EGE::Russian::Product::printers, \@EGE::Russian::Product::laptops) }
 
@@ -43,18 +43,25 @@ sub get_rows_array { (\@EGE::Russian::Jobs::list)}
 
 package EGE::SQL::ProductMonth;
 use base 'EGE::SQL::Products';
-sub get_column { my @product = ('Товар', @EGE::Russian::Time::month); }
+sub get_column { my @products = ('Товар', @EGE::Russian::Time::month); }
 
 package EGE::SQL::Cities;
 use base 'EGE::SQL::BaseTable';
-sub get_name { 'city' }
-sub get_column { my @city = ('Город', 'Жители', 'Площадь'); }
+sub get_name { 'cities' }
+sub get_column { my @cities = ('Город', 'Жители', 'Площадь'); }
 sub get_rows_array { (\@EGE::Russian::City::city) }
 
 package EGE::SQL::People;
 use base 'EGE::SQL::BaseTable';
 sub get_name { 'people' }
-sub get_column { my @city = ('Фамилия', 'Зарплата'); }
+sub get_column { my @people = ('Фамилия', 'Зарплата'); }
 sub get_rows_array { (\@EGE::Russian::FamilyNames::list) }
+
+package EGE::SQL::Subjects;
+use base 'EGE::SQL::BaseTable';
+sub get_name { 'subject' }
+sub get_column { my @people = ('Предмет', 'Часы'); }
+sub get_rows_array { (\@EGE::Russian::Subjects::list) }
+
 
 1;
