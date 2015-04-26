@@ -69,6 +69,17 @@ sub name { $_[0]->{name} = $_[1] // $_[0]->{name} }
 
 sub fields { $_[0]->{fields} }
 
+sub find_field {
+    my ($self, $field) = @_;
+    grep $field eq $_, @{$self->{fields}};
+}
+
+sub assign_field_alias {
+    my ($self, $alias) = @_;
+    $_->{name_alias} = $alias for @{$self->{fields}};
+    $self;
+}
+
 sub insert_row {
     my $self = shift;
     @_ == @{$self->{fields}}
@@ -87,9 +98,9 @@ sub insert_column {
     my ($self, %p) = @_;
     $p{name} = ref $p{name} eq 'EGE::Prog::Field' ? $p{name} : EGE::Prog::Field->new($p{name});
     $p{name}->{table} = $self;
-    unshift @{$self->{fields}}, $p{name};
+    splice(@{$self->{fields}}, ($p{index} ? $p{index} : 0), 0, $p{name});
     my $i = 0; my $j = 0;
-    unshift @$_, $p{array}[$i++] for @{$self->{data}};
+    splice(@$_, ($p{index} ? $p{index}: 0), 0, $p{array}[$i++]) for @{$self->{data}};
     $self->{field_index}->{$_} = $j++ for @{$self->{fields}};
     $self;
  }

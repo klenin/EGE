@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 58;
+use Test::More tests => 70;
 use Test::Exception;
 
 use lib '..';
@@ -266,4 +266,33 @@ sub pack_table {
     is @{$t1->{fields}}[0], 'x', 'field name';
     ok @{$t1->{fields}}[1] eq 'y', 'equal';
     ok @{$t1->{fields}}[1] ne 'x', 'not_equal';
+}
+
+{
+    my $t2 = EGE::SQL::Table->new([ my $x = EGE::Prog::Field->new({name => 'x', name_alias => 'test'}),
+        EGE::Prog::Field->new({name => 'y', name_alias => 'test'}) ], name => 't2');
+    my $q = EGE::SQL::Select->new($t2, $t2->{fields}, make_expr [ '<', $x, 7 ]);
+    is $q->text, 'SELECT test.x, test.y FROM t2 WHERE test.x < 7', 'query text: field name alias';
+    $t2->assign_field_alias('t2');
+    is $q->text, 'SELECT t2.x, t2.y FROM t2 WHERE t2.x < 7', 'query text: field name alias';
+}
+
+{
+    my $t1 = EGE::SQL::Table->new([ qw(x y) ], name => 't1');
+    ok $t1->find_field('x'), 'find field x';
+    ok $t1->find_field('z') == 0, 'find not existing field';
+}
+
+{
+    my $t1 = EGE::SQL::Table->new([ qw(x y) ]);
+    $t1->insert_rows([ 1, 2 ], [ 1, 3 ], [ 1, 4 ]);
+    $t1->insert_column(array => [ 1, 2, 3 ], name => 'id');
+    is pack_table($t1), 'id x y|1 1 2|2 1 3|3 1 4', 'insert column unshift';
+    my $t2 = EGE::SQL::Table->new([ qw(z) ]);
+    $t2->insert_rows([ 1 ], [ 2 ]);
+    is pack_table($t1->inner_join($t2, 'id', 'z')), 'id x y z|1 1 2 1|2 1 3 2', 'inner join insert column';
+    $t1->insert_column(array => [ 1, 2, 3 ], name => 'name', index => 3);
+    is pack_table($t1), 'id x y name|1 1 2 1|2 1 3 2|3 1 4 3', 'insert column push';
+    $t1->insert_column(array => [ 1, 2, 3 ], name => 'z', index => 2);
+    is pack_table($t1), 'id x z y name|1 1 1 2 1|2 1 2 3 2|3 1 3 4 3', 'insert column index 2';
 }
