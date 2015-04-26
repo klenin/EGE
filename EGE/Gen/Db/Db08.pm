@@ -72,18 +72,21 @@ sub parents {
         my $inner2 = EGE::SQL::Inner_join->new(
             { tab => $inner1, field => 'id_child' },
             { tab => EGE::SQL::SubqueryAlias->new($table_person, 'per'), field => 'id' });
-        my $where = EGE::Prog::make_expr([ '&&',[ '==', 'id_parent', $f1 ],[ '==', 'Пол', \$sex ] ]);
-        $query = EGE::SQL::Select->new($inner2, ['Фамилия', 'Имя'], $where);
+        my $where = EGE::Prog::make_expr([ '&&',[ '==', EGE::Prog::Field->new({name =>'id_parent', name_alias => 'kinship'}), $f1 ],
+            [ '==', EGE::Prog::Field->new({name =>'Пол', name_alias => 'per'}), \$sex ] ]);
+        my $query_fields = [EGE::Prog::Field->new({name =>'Фамилия', name_alias => 'per'}),
+                EGE::Prog::Field->new({name => 'Имя', name_alias => 'per'})];
+        $query = EGE::SQL::Select->new($inner2, $query_fields , $where);
         my $count = $inner2->run->select(['Фамилия'], $where)->count();
         if ($count) {
             $gen = $sex ? q~сыновья~ : q~дочери~;
             $sex = $sex ? q~'м'~ : q~'ж'~;
-            push @requests, EGE::SQL::Select->new($inner1, ['Фамилия', 'Имя'], $where)->text_html;
+            push @requests, EGE::SQL::Select->new($inner1, $query_fields, $where)->text_html;
             my $inner3 = EGE::SQL::Inner_join->new(
                 { tab => $table_person, field => 'id_child' },
                 { tab => $table_kinship, field => 'id' });
-            push @requests, EGE::SQL::Select->new($inner3, ['Фамилия', 'Имя'], $where)->text_html;
-            push @requests, EGE::SQL::Select->new($inner2, ['Фамилия', 'Имя'],
+            push @requests, EGE::SQL::Select->new($inner3, $query_fields, $where)->text_html;
+            push @requests, EGE::SQL::Select->new($inner2, $query_fields,
                 EGE::Prog::make_expr( ['||',[ '==', 'id_parent', $f1 ],[ '==', 'Пол', \$sex ] ]))->text_html;
             my $par = ${$table_person->select(['Фамилия', 'Имя', 'Пол'],
                 EGE::Prog::make_expr(['==', 'id', $f1]))->{data}}[0];
@@ -116,8 +119,9 @@ sub grandchildren{
     my $inner2 = EGE::SQL::Inner_join->new(
         { tab => $inner1, field => 'id_child' },
         { tab => EGE::SQL::SubqueryAlias->new($table_person, 'per'), field => 'id' });
-    my $where = EGE::Prog::make_expr([ '!=', 'id_parent', $parents ]);
-    $query = EGE::SQL::Select->new($inner2, ['Фамилия'], $where);
+    my $where = EGE::Prog::make_expr([ '!=', EGE::Prog::Field->new({name =>'id_parent', name_alias => 'kinship'}), $parents ]);
+    my $query_fields = [EGE::Prog::Field->new({name =>'Фамилия', name_alias => 'per'})];
+    $query = EGE::SQL::Select->new($inner2, $query_fields, $where);
     my $par = ${$table_person->select(['Фамилия', 'Имя', 'Пол'],
         EGE::Prog::make_expr(['==', 'id', $parents]))->{data}}[0];
     $name = @$par[0];
@@ -128,12 +132,12 @@ sub grandchildren{
         $name .=  q~а~;
     }
     $name .= " " . substr(@$par[1], 0, 1) . ".";
-    push @requests, EGE::SQL::Select->new($inner1, ['Фамилия'], $where)->text_html;
+    push @requests, EGE::SQL::Select->new($inner1, $query_fields, $where)->text_html;
     my $inner3 = EGE::SQL::Inner_join->new(
         { tab => $table_person, field => 'id_child' },
         { tab => $table_kinship, field => 'id' });
-    push @requests, EGE::SQL::Select->new($inner3, ['Фамилия'], $where)->text_html;
-    push @requests, EGE::SQL::Select->new($inner2, ['Фамилия'],
+    push @requests, EGE::SQL::Select->new($inner3, $query_fields, $where)->text_html;
+    push @requests, EGE::SQL::Select->new($inner2, $query_fields,
         EGE::Prog::make_expr([ '==', 'id_parent', $parents ]))->text_html;
     $table_person->update(EGE::Prog::make_block [ '=', 'Пол', sub { $_[0]->{'Пол'} ? 'м' : 'ж' } ]);
     $self->{text} = sprintf
@@ -162,7 +166,9 @@ sub nuncle {
     my $inner5 = EGE::SQL::Inner_join->new(
         { tab => $inner4, field => 'k2.id_child' },
         { tab => $table_person, field => 'id' });
-    my $query2 = EGE::SQL::Select->new($inner5, [ 'Фамилия', 'Имя' ]);
+    my $query_fields = [EGE::Prog::Field->new({name =>'Фамилия'}),
+                EGE::Prog::Field->new({name => 'Имя'})];
+    my $query2 = EGE::SQL::Select->new($inner5, $query_fields);
     my $par = ${$table_person->select(['Фамилия', 'Имя', 'Пол'],
         EGE::Prog::make_expr(['==', 'id', $f1]))->{data}}[0];
     $name = @$par[0];
@@ -173,9 +179,9 @@ sub nuncle {
         $name .=  q~а~;
     }
     $name .= " " . substr(@$par[1], 0, 1) . ".";
-    push @requests, EGE::SQL::Select->new($inner2, ['Фамилия', 'Имя'], $where)->text_html;
-    push @requests, EGE::SQL::Select->new($inner4, ['Фамилия'], $where)->text_html;
-    push @requests, EGE::SQL::Select->new($table_person, ['Фамилия', 'Имя'],
+    push @requests, EGE::SQL::Select->new($inner2, $query_fields, $where)->text_html;
+    push @requests, EGE::SQL::Select->new($inner4, $query_fields, $where)->text_html;
+    push @requests, EGE::SQL::Select->new($table_person, $query_fields,
         EGE::Prog::make_expr([ '==', 'id_parent', $parents ]))->text_html;
     $table_person->update(EGE::Prog::make_block [ '=', 'Пол', sub { $_[0]->{'Пол'} ? 'м' : 'ж' } ]);
     $self->{text} = sprintf
