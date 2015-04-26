@@ -20,23 +20,21 @@ use EGE::SQL::Queries;
 sub select_where {
     my ($self) = @_;
     my $products = EGE::SQL::RandomTable::create_table(column => 4, row => 8);
+    my $name_fld = $products->{fields}[0];
     my ($selected, $query);
-    while(1) {
+    do {
         my $cond = EGE::SQL::Utils::check_cond($products, \&EGE::SQL::Utils::expr_2);
-        $query = EGE::SQL::Select->new($products, [ $products->{fields}[0] ], $cond);
-        if ($query->run()->count() > 1) {
-            $selected = $query->run();
-            last;
-        }
-    }
+        $query = EGE::SQL::Select->new($products, [ $name_fld ], $cond);
+        $selected = $query->run;
+    } until $selected->count > 1;
     my %ans;
     $ans{$_->[0]} = 1 for @{$selected->{data}};
     $self->{text} = sprintf
-        "Есть таблица <tt>%s</tt>:\n%s\n" .
+        "Имеется таблица <tt>%s</tt>:\n%s\n" .
         'Какие товары в этой таблице удовлетворяют запросу %s?',
         $products->name, $products->table_html, $query->text_html;
-    $self->variants(@{$products->column_array($products->{fields}[0])});
-    $self->{correct} = [ map $ans{$_} ? 1 : 0, @{$products->column_array($products->{fields}[0])}];
+    $self->variants(my @v = @{$products->column_array($name_fld)});
+    $self->{correct} = [ map $ans{$_} ? 1 : 0, @v ];
 }
 
 1;
