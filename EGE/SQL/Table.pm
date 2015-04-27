@@ -3,41 +3,23 @@
 # http://github.com/dahin/EGE
 
 package EGE::Prog::Field;
-use base "EGE::Prog::Var";
+use base 'EGE::Prog::Var';
 
 use strict;
 use warnings;
 
-use overload '""' => sub { $_[0]->{name} },
-    'ne' => \&not_equal, 'eq' => \&equal;
+use overload
+    '""' => sub { $_[0]->{name} }, 'cmp' => sub { $_[0]->{name} cmp $_[1] };
 
 sub new {
     my ($class, $attr) = @_;
-    my $self;
-    if (ref $attr eq 'HASH') {
-        $self = $attr;
-    } else  {
-        $self = {
-            name => $attr,
-          };
-    }
+    my $self = ref $attr eq 'HASH' ? $attr : { name => $attr };
     bless $self, $class;
-    $self;
 }
 
 sub to_lang {
     my ($self, $lang) = @_;
     $self->{name_alias} ? $self->{name_alias} . '.' . $self->{name} : $self->{name};
-}
-
-sub not_equal {
-    my ($self, $val) = @_;
-    $self->{name} ne $val;
-}
-
-sub equal {
-    my ($self, $val) = @_;
-    $self->{name} eq $val;
 }
 
 package EGE::SQL::Table;
@@ -50,19 +32,24 @@ use EGE::Random;
 
 sub new {
     my ($class, $fields, %p) = @_;
-    $fields or die;
-    @$fields = map ref $_ eq 'EGE::Prog::Field' ? $_ : EGE::Prog::Field->new($_), @$fields;
+    $fields or die 'No fields';
+    $fields = [ map _make_field($_), @$fields ];
     my $self = {
         name => $p{name},
         fields => $fields,
         data => [],
         field_index => {},
     };
-    my $i = 0;
-    $self->{field_index}->{$_} = $i++ for @$fields;
+    _update_field_index($self);
+    $_->{table} = $self for @$fields;
     bless $self, $class;
-    $_->{table} = $self for @{$self->{fields}};
-    $self;
+}
+
+sub _make_field { $_[0]->isa('EGE::Prog::Field') ? $_[0] : EGE::Prog::Field->new($_[0]) }
+
+sub _update_field_index {
+    my $i = 0;
+    $_[0]->{field_index}->{$_} = $i++ for @{$_[0]->{fields}};
 }
 
 sub name { $_[0]->{name} = $_[1] // $_[0]->{name} }
@@ -71,7 +58,8 @@ sub fields { $_[0]->{fields} }
 
 sub find_field {
     my ($self, $field) = @_;
-    grep $field eq $_, @{$self->{fields}};
+    my $i = $self->{field_index}->{$field};
+    defined $i ? $self->{fields}->[$i] : undef;
 }
 
 sub assign_field_alias {
@@ -96,14 +84,15 @@ sub insert_rows {
 
 sub insert_column {
     my ($self, %p) = @_;
-    $p{name} = ref $p{name} eq 'EGE::Prog::Field' ? $p{name} : EGE::Prog::Field->new($p{name});
-    $p{name}->{table} = $self;
-    splice(@{$self->{fields}}, ($p{index} ? $p{index} : 0), 0, $p{name});
-    my $i = 0; my $j = 0;
-    splice(@$_, ($p{index} ? $p{index}: 0), 0, $p{array}[$i++]) for @{$self->{data}};
-    $self->{field_index}->{$_} = $j++ for @{$self->{fields}};
+    my $field = _make_field($p{name});
+    $field->{table} = $self;
+    $p{index} ||= 0;
+    splice(@{$self->{fields}}, $p{index}, 0, $field);
+    my $i = 0;
+    splice(@$_, $p{index}, 0, $p{array}[$i++]) for @{$self->{data}};
+    $self->_update_field_index;
     $self;
- }
+}
 
 sub print_row { print join("\t", @{$_[0]}), "\n"; }
 
@@ -112,7 +101,7 @@ sub print {
     print_row $_ for $self->{fields}, @{$self->{data}};
 }
 
-sub count { @{$_[0]->{data}}; }
+sub count { @{$_[0]->{data}} }
 
 sub _row_hash {
     my ($self, $row) = @_;
@@ -124,9 +113,9 @@ sub select {
 
     my $k = 0;
 
-    my $result = EGE::SQL::Table->new([ map {ref $_ ne 'EGE::Prog::Field' && ref $_ ?  'expr_' . ++$k : $_ } @$fields ]);
+    my $result = EGE::SQL::Table->new([ map { ref $_ ne 'EGE::Prog::Field' && ref $_ ? 'expr_' . ++$k : $_ } @$fields ]);
 
-    my @values = map {ref $_  ? $_ : make_expr($_) } @$fields;
+    my @values = map { ref $_  ? $_ : make_expr($_) } @$fields;
     my $calc_row = sub { map $_->run($_[0]), @values };
 
     my $tab_where = $self->where($where, $ref);
@@ -161,7 +150,7 @@ sub delete {
     $self;
 }
 
-sub natural_join{
+sub natural_join {
     my ($self, $field) = @_;
     $field->{table}->inner_join($field->{ref_field}->{table}, $field, $field->{ref_field});
 }
