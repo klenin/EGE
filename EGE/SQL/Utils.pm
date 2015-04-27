@@ -73,4 +73,28 @@ sub multi_table_html {
     )
 }
 
+sub related {
+    my ($field1, $field2, @array) = @_;
+    my $table = EGE::SQL::Table->new([ map $_.'_'.$_->{table}->{name} , ($field1, $field2) ],
+        name => $field1->{table}->{name}.'_'.$field2->{table}->{name});
+    my $start = 1;
+    $table->insert_rows(@{EGE::Utils::transpose(
+        [ rnd->shuffle(@array) ], [ rnd->shuffle(@{$field1->{table}->column_array($field1)}) ])});
+    ${$table->{fields}}[0]->{ref_field} = $field1;
+    ${$table->{fields}}[1]->{ref_field} = $field2;
+    $table;
+}
+
+sub table_related{
+    my ($self, $field, @array) = @_;
+    my $table = $field->{table};
+    my @ans;
+    foreach my $tab (@array) {
+        foreach  (@{$tab->{fields}}) {
+            push @ans, $tab if $_->{ref_field}->{table} == $table && $_->{ref_field}->{name} eq $field->{name};
+        }
+    }
+    @ans;
+}
+
 1;
