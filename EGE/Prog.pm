@@ -17,8 +17,8 @@ sub new {
 }
 
 sub to_lang_named {
-    my ($self, $lang_name) = @_;
-    $self->to_lang(EGE::Prog::Lang::lang($lang_name));
+    my ($self, $lang_name, $unformated) = @_;
+    $self->to_lang(EGE::Prog::Lang::lang($lang_name), $unformated);
 }
 
 sub to_lang { die; }
@@ -132,7 +132,7 @@ package EGE::Prog::CallFunc;
 use base 'EGE::Prog::SynElement';
 
 sub to_lang {
-    my ($self, $lang) = @_; 
+    my ($self, $lang) = @_;
     sprintf $lang->call_func_fmt,
         $self->{func},
         join $lang->args_separator, map $_->to_lang($lang), @{$self->{args}};
@@ -149,7 +149,7 @@ package EGE::Prog::Print;
 use base 'EGE::Prog::SynElement';
 
 sub to_lang {
-    my ($self, $lang) = @_; 
+    my ($self, $lang) = @_;
     sprintf $lang->print_fmt,
         join $lang->args_separator, map $_->to_lang($lang), @{$self->{args}};
 }
@@ -322,8 +322,8 @@ package EGE::Prog::Block;
 use base 'EGE::Prog::SynElement';
 
 sub to_lang {
-    my ($self, $lang) = @_;
-    join $lang->block_stmt_separator, map $_->to_lang($lang), @{$self->{statements}};
+    my ($self, $lang, $unformated) = @_;
+    join $lang->block_stmt_separator, map $_->to_lang($lang, $unformated), @{$self->{statements}};
 };
 
 sub run {
@@ -345,16 +345,17 @@ use base 'EGE::Prog::SynElement';
 sub to_lang_fields {}
 
 sub to_lang {
-    my ($self, $lang) = @_;
+    my ($self, $lang, $unformated) = @_;
     my $body_is_block = @{$self->{body}->{statements}} > 1;
     no strict 'refs';
     my ($fmt_start, $fmt_end) =
-        map $lang->$_($body_is_block), $self->get_formats;
-    my $body = $self->{body}->to_lang($lang);
+        map $lang->$_($body_is_block || $unformated), $self->get_formats;
+    my $body = $self->{body}->to_lang($lang, $unformated);
+    
     $body =~ s/^/  /mg if $fmt_start =~ /\n$/; # отступы
     sprintf
         $fmt_start . $self->to_lang_fmt . $fmt_end,
-        map($self->{$_}->to_lang($lang), $self->to_lang_fields), $body;
+        map($self->{$_}->to_lang($lang, $unformated), $self->to_lang_fields), $body;
 }
 
 sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for $_->to_lang_fields, 'body' }
@@ -412,7 +413,7 @@ sub complexity {
         {
             my @names = map $cond->{$_}->{name}, @sides;
             ($mistakes->{ignore_if_eq} || $names[0] eq $names[1]) and return $body->complexity(@_);
-            defined $iter->{$names[0]} and defined $iter->{$names[1]} or 
+            defined $iter->{$names[0]} and defined $iter->{$names[1]} or
                 die "IfThen complexity with condition a == b, expected both var as iterator";
 
             my ($old_val, $new_val, $side);
@@ -454,7 +455,7 @@ sub complexity {
     }
     elsif (my $side = $cond->{op} eq '>=' or $cond->{op} eq '<=') {
         my @operands = qw(left right);
-        my $name = $cond->{$operands[$side]}->{name} or 
+        my $name = $cond->{$operands[$side]}->{name} or
             die "IfThen complexity with condition a >= b, expected b as var, got $cond->{$operands[$side]}";
         defined $iter->{$name} or die "IfThen complexity with condition a >= b, expected b as iterator, $name is not iterator";
         $name = EGE::Utils::last_key($iter, $name);
@@ -545,8 +546,8 @@ sub call {
     my ($self, $args, $env) = @_;
     my $act_len = @$args;
     my $form_len = @{$self->{params}->{names}};
-    $act_len > $form_len and die "Too many arguments to function $self->{name}->{name}";    
-    $act_len < $form_len and die "Too few arguments to function $self->{name}->{name}";   
+    $act_len > $form_len and die "Too many arguments to function $self->{name}->{name}";
+    $act_len < $form_len and die "Too few arguments to function $self->{name}->{name}";
     
     my $new_env = { '&' => $env->{'&'}, map(($_ => shift @$args), @{$self->{params}->{names}}) };
     $self->{body}->run_val($self->{name}->{name}, $new_env);
@@ -609,11 +610,11 @@ sub make_expr {
         if (@$src == 2 && $src->[0] =~ /\+\+|--/) {
             return EGE::Prog::Inc->new(
                 op => $src->[0], arg => make_expr($src->[1]));
-        }        
+        }
         if (@$src == 2) {
             return EGE::Prog::UnOp->new(
                 op => $src->[0], arg => make_expr($src->[1]));
-        }        
+        }
         if (@$src == 3) {
             return EGE::Prog::BinOp->new(
                 op => $src->[0],
