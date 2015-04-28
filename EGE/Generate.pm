@@ -102,7 +102,7 @@ sub all {[
     gg('B11', qw(ip_mask)),
     gg('B12', qw(search_query)),
     gg('B13', qw(plus_minus)),
-    gg('B14', qw(find_func_min)),    
+    gg('B14', qw(find_func_min)),
     gg('B15', qw(logic_var_set)),
 ]}
 
@@ -194,6 +194,7 @@ use EGE::Gen::Alg::CallCount;
 use EGE::Gen::Alg::Tree;
 use EGE::Gen::Alg::Graph;
 use EGE::Gen::Alg::List;
+use EGE::Gen::Alg::Sorting;
 
 sub g {
     my ($p, $m) = @_;
@@ -212,6 +213,7 @@ sub all {[
     gg('Tree', qw(node_count height)),
     gg('Graph', qw(graph_seq)),
     gg('List', qw(construct_command)),
+    gg('Sorting', qw(sort_command)),
 ]}
 
 1;
