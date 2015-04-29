@@ -11,7 +11,7 @@ use base 'Exporter';
 our @EXPORT_OK = qw(to_logic big_o big_theta make_rnd_block pow make_rnd_if);
 
 sub big_o { "<i>O</i>($_[0])" }
-sub big_theta { "<i>&Theta;</i>($_[0])" }
+sub big_theta { "<i>&#920;</i>($_[0])" }
 sub to_logic { EGE::Prog::make_expr($_[0])->to_lang_named('Logic') }
 
 sub pow { $_[1] == 1 ? $_[0] : [ '**', @_ ] }
