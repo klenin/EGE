@@ -53,6 +53,11 @@ sub row_n { row(@_) . "\n" }
 
 sub cdata { "<![CDATA[$_[1]]]>" }
 
+sub pre {
+    my ($self, $data, $attr) = @_;
+    $self->tag('pre', $self->cdata($data), $attr);
+ }
+
 sub style {
     my ($self, %p) = @_;
     style => join ' ', map "$_: $p{$_};", sort keys %p;

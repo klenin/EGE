@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 102;
+use Test::More tests => 107;
 use Test::Exception;
 
 use lib '..';
@@ -148,13 +148,13 @@ sub check_prio_C { check_lang 'C', @_[0..1], "priorities $_[2]" }
 }
 
 {
-    my $b = EGE::Prog::make_block([ '=', [ '[]', 'A', 2 ], 5 ]);
+    my $b = make_block([ '=', [ '[]', 'A', 2 ], 5 ]);
     is $b->to_lang_named('Pascal'), 'A[2] := 5;';
     is_deeply $b->run_val('A'), [ undef, undef, 5 ];
 }
 
 {
-    my $b = EGE::Prog::make_block([
+    my $b = make_block([
         'for', 'i', 0, 4, [ '=', ['[]', 'M', 'i'], 'i' ]
     ]);
     my $p = q~for i := 0 to 4 do
@@ -164,7 +164,7 @@ sub check_prio_C { check_lang 'C', @_[0..1], "priorities $_[2]" }
 }
 
 {
-    my $b = EGE::Prog::make_block([
+    my $b = make_block([
         'for', 'i', 0, 4, [
             '=', ['[]', 'M', 'i'], 'i',
             '=', ['[]', 'M', 'i'], 'i',
@@ -178,7 +178,7 @@ end;~;
 }
 
 {
-    my $b = EGE::Prog::make_block([
+    my $b = make_block([
         '=', 'a', 1,
         'for', 'i', 1, 3, [ '=', 'a', ['*', 'a', '2'] ]
     ]);
@@ -191,7 +191,7 @@ end;~;
 }
 
 {
-    my $b = EGE::Prog::make_block([
+    my $b = make_block([
         'if', 'a', [ '=', 'x', 7 ],
     ]);
     is $b->to_lang_named('Basic'), 'IF a THEN x = 7', 'if in Basic';
@@ -201,7 +201,7 @@ end;~;
 }
 
 {
-    my $b = EGE::Prog::make_block([
+    my $b = make_block([
         'while', [ '>', 'a', 0 ], [ '=', 'a', [ '-', 'a', 1 ] ]
     ]);
     is $b->to_lang_named('Basic'),
@@ -211,7 +211,7 @@ end;~;
 }
 
 {
-    my $b = EGE::Prog::make_block([
+    my $b = make_block([
         '=', 'x', '64',
         'while', [ '>', 'x', 7 ], [
             '=', 'x', [ '/', 'x', 2 ]
@@ -221,7 +221,7 @@ end;~;
 }
 
 {
-    my $b = EGE::Prog::make_block([
+    my $b = make_block([
         'until', [ '==', 'a', 0 ], [ '=', 'a', [ '-', 'a', 1 ] ]
     ]);
     is $b->to_lang_named('Basic'),
@@ -243,7 +243,7 @@ sub check_sub {
 }
 
 {
-    my $b = EGE::Prog::make_block([
+    my $b = make_block([
         'func', 'g', [ qw(a b) ], [
             '=', 'g', [ '-', 'a', 'b' ]
         ],
@@ -299,7 +299,7 @@ sub check_sub {
 }
 
 {
-    my $b = EGE::Prog::make_block([
+    my $b = make_block([
         'func', 'f', [ qw(x y z) ], [],
         'func', 'f', [ qw(a b) ], [],
     ]);
@@ -307,14 +307,14 @@ sub check_sub {
 }
 
 {
-    my $b = EGE::Prog::make_block([
+    my $b = make_block([
         '=', 'a', [ '()', 'g', 1, 2, 3 ],
     ]);
     throws_ok sub { $b->run({}) }, qr/g/, 'call undefined function';
 }
 
 {
-    my $b = EGE::Prog::make_block([
+    my $b = make_block([
         'func', 'f', [ qw(x y z) ], [],
         '=', 'a', [ '()', 'f', 1, 2 ],
     ]);
@@ -322,7 +322,7 @@ sub check_sub {
 }
 
 {
-    my $b = EGE::Prog::make_block([
+    my $b = make_block([
         'for', 'i', 0, 9, [
             'expr', [ 'print', 'i', 0 ]
         ]
@@ -357,7 +357,19 @@ sub check_sub {
 }
 
 {
-    my $b = EGE::Prog::make_expr([ '#', 'BUMP' ]);
+    is make_expr([ '++%s', 'i' ])->run({ i => 2 }), 3, 'run prefix increment';
+    is make_expr([ '%s--', 'i' ])->run({ i => 4 }), 4, 'run postfix decrement';
+    
+    my $e = make_expr([ '+', [ '++%s', 'i' ], [ '++%s', 'i' ] ]);
+    is $e->to_lang_named('C'), '++i + ++i', 'to lang increment';
+    
+    my $env = { i => 5 };
+    is $e->run($env), 13, 'run increment return value';
+    is $env->{i}, 7, 'run increment side effect';
+}
+
+{
+    my $b = make_expr([ '#', 'BUMP' ]);
     is $b->to_lang_named('C'), 'BUMP', 'to lang expr with plain text';
     throws_ok sub { $b = $b->run() } , qr/BUMP/, 'run expr with plain text'
 }

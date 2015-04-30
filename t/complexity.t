@@ -2,7 +2,7 @@
 use warnings;
 use utf8;
 
-use Test::More tests => 38;
+use Test::More tests => 39;
 use Test::Exception;
 
 use lib '..';
@@ -208,6 +208,17 @@ use EGE::Prog qw(make_block make_expr);
     ]);
     is $b->complexity({ n => 1 }), 5, 'amortized analysis with if_mod';
     is $b->complexity({ n => 1 }, { ignore_if_mod => 1 }), 6, 'complexity with mistake ignore_if_mod';
+}
+
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, [ '**', 'n', 2 ], [
+            'if', [ '==', [ '%', 'i', [ '**', 'n', 3 ] ], 0 ], [
+                'for', 'j', 0, [ '**', 'n', 3 ], []
+            ]
+        ]
+    ]);
+    is $b->complexity({ n => 1 }), 3, 'complexity if_mod, divisor greater then dividend';
 }
 
 {
