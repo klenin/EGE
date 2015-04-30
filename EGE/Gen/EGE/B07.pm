@@ -58,7 +58,7 @@ sub make_stmts {
     my ($n) = @_;
     my $row_powers = make_powers($n);
     my $ans = {};
-    for my $i (0 .. $n) {
+    for my $i (0 .. $n-1) {
         my @select = rnd->pick_n($row_powers->[$i], 0 .. $n-1);
         $ans->{$i}{$_} = 1 for @select;
     }
