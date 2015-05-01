@@ -511,7 +511,7 @@ sub to_lang {
 };
 
 sub run {
-    defined wantarray and die "required value of plain text: '$_[0]->{text}'";
+    defined wantarray and die "Required value of plain text: '$_[0]->{text}'";
 }
 
 package EGE::Prog::ExprStmt;
@@ -532,7 +532,16 @@ sub complexity { 0 }
 package EGE::Prog::FuncDef;
 use base 'EGE::Prog::CompoundStatement';
 
-sub get_formats { qw(func_start_fmt func_end_fmt) }
+sub new {
+    my ($class, %init) = @_;
+    my $self = delete $init{func};
+    $self->{$_} = $init{$_} for keys %init;
+    bless $self, $class;
+    $self;
+}
+
+sub get_formats { map(($_[0]->{c_style} ? 'c' : 'p') . $_, qw(_func_start_fmt _func_end_fmt)); }
+
 sub to_lang_fmt { '%3$s' }
 sub to_lang_fields { qw(name params) }
 
@@ -550,7 +559,16 @@ sub call {
     $act_len < $form_len and die "Too few arguments to function $self->{name}->{name}";
     
     my $new_env = { '&' => $env->{'&'}, map(($_ => shift @$args), @{$self->{params}->{names}}) };
-    $self->{body}->run_val($self->{name}->{name}, $new_env);
+    # return реализован с использованием die
+    eval { $self->{body}->run($new_env); };
+    return (split /<return>/, $@)[1] if $@ =~ /^<return>/;
+    if (!$@) {
+        my $fn = $self->{name}->{name};
+        defined $new_env->{$fn} or
+            die "Undefined result of function $fn";
+        return $new_env->{$self->{name}->{name}};
+    }
+    die $@;
 }
 
 package EGE::Prog::FuncParams;
@@ -573,6 +591,41 @@ sub to_lang {
 }
 
 sub run {
+}
+
+package EGE::Prog::Return;
+use base 'EGE::Prog::SynElement';
+
+sub new {
+    my ($class, %init) = @_;
+    my $self = EGE::Prog::SynElement::new($class, %init);
+    my $t = $self->{expr} ? 1 : 0;
+    defined $self->{func} or die "return outside a function";
+    defined $self->{func}->{c_style} and $t != $self->{func}->{c_style} and
+        die "Use different types of return in the same func";
+    $self->{func}->{c_style} = $t;
+    $self;
+}
+
+sub to_lang {
+    my ($self, $lang) = @_;
+    my ($fmt_t, $value) = $self->{func}->{c_style} ?
+        ('c_return_fmt', $self->{expr}->to_lang($lang)) :
+        ('p_return_fmt', $self->{func}->{name});
+    sprintf $lang->$fmt_t, $value;
+}
+
+sub run {
+    my ($self, $env) = @_;
+    my $fn = $self->{func}->{name}->{name};
+    if (!$self->{func}->{c_style}) {
+        defined $env->{$fn} or
+            die "Undefined result of function $fn";
+    }
+    my $val = $self->{func}->{c_style} ?
+        $self->{expr}->run($env) :
+        $env->{$fn};
+    die '<return>' . $val . '<return>';
 }
 
 package EGE::Prog;
@@ -628,6 +681,9 @@ sub make_expr {
                 map { +"arg$_" => make_expr($src->[$_]) } 1..3
             );
         }
+        if (@$src == 0) {
+            return undef;
+        }
         die @$src;
     }
     if (ref $src eq 'SCALAR') {
@@ -651,6 +707,7 @@ sub statements_descr {{
     'until' => { type => 'Until', args => [qw(E_cond B_body)] },
     'func' => { type => 'FuncDef', args => [qw(N_name P_params B_body)] },
     'expr' => { type => 'ExprStmt', args => [qw(E_expr)] },
+    'return' => { type => 'Return', args => [qw(E_expr)] },
 }}
 
 sub arg_processors {{
@@ -673,26 +730,30 @@ sub make_func_params {
 }
 
 sub make_statement {
-    my ($next) = @_;
+    my ($next, $cur_func) = @_;
     my $name = $next->();
     my $d = statements_descr->{$name};
     $d or die "Unknown statement $name";
+    if ($name eq 'func') {
+        defined $cur_func and die "Local function definition";
+        $cur_func = {};
+    }
     my %args;
     for (@{$d->{args}}) {
         my ($p, $n) = /(\w)_(\w+)/;
-        $args{$n} = arg_processors->{$p}->($next->());
+        $args{$n} = arg_processors->{$p}->($next->(), $cur_func);
     }
-    "EGE::Prog::$d->{type}"->new(%args);
+    "EGE::Prog::$d->{type}"->new(%args, func => $cur_func);
 }
 
 sub make_block {
-    my ($src) = @_;
+    my ($src, $cur_func) = @_;
     ref $src eq 'ARRAY' or die;
     my @s;
     for (my $i = 0; $i < @$src; ) {
-        push @s, make_statement(sub { $src->[$i++] });
+        push @s, make_statement(sub { $src->[$i++] }, $cur_func);
     }
-    EGE::Prog::Block->new(statements => \@s);
+    EGE::Prog::Block->new(statements => \@s, func => $cur_func);
 }
 
 sub lang_names() {{
