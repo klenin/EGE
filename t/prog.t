@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 107;
+use Test::More tests => 124;
 use Test::Exception;
 
 use lib '..';
@@ -106,7 +106,7 @@ sub check_prio_C { check_lang 'C', @_[0..1], "priorities $_[2]" }
 }
 
 {
-    check_lang 'Pascal', [ '+', 'x', [ '**', 'x', 2 ] ], 'x + x ** 2', 'Pascal power' 
+    check_lang 'Pascal', [ '+', 'x', [ '**', 'x', 2 ] ], 'x + x ** 2', 'Pascal power'
 }
 
 {
@@ -291,11 +291,64 @@ sub check_sub {
             '}',
             '',
             '$a = g(3, 2);',
-        ],        
+        ],
     };
     check_sub($_, $b, $c->{$_}, "function calling, definition in $_") for keys %$c;
     is $b->run_val('a'), 1, 'run call function';
     is eval($b->to_lang_named('Perl')), 3 - 2, 'eval perl funtion';
+}
+
+{
+    my $b = make_block([
+        'func', 'g', [ qw(a b) ], [
+            'return', [ '-', 'a', 'b' ]
+        ],
+        '=', 'a', [ '()', 'g', 3, 2 ]
+    ]);
+    my $c = {
+        Basic => [
+            'FUNCTION g(a, b)',
+            '  Return a - b',
+            'END FUNCTION',
+            '',
+            'a = g(3, 2)',
+        ],
+        Alg => [
+            'алг цел g(цел a, b)',
+            'нач',
+            '  выход_алг a - b | выход_алг выраж - оператор выхода из алгоритма, с возвращением результата выраж',
+            'кон',
+            '',
+            'a := g(3, 2)',
+        ],
+        Pascal => [
+            'function g(a, b: integer): integer;',
+            'begin',
+            '  exit(a - b);',
+            'end;',
+            '',
+            'a := g(3, 2);',
+        ],
+        C => [
+            'int g(int a, int b) {',
+            '  return a - b;',
+            '}',
+            '',
+            'a = g(3, 2);',
+        ],
+        Perl => [
+            'sub g {',
+            '  my ($a, $b) = @_;',
+            '  return $a - $b;',
+            '}',
+            '',
+            '$a = g(3, 2);',
+        ],
+    };
+    check_sub($_, $b, $c->{$_}, "c style function calling, definition in $_") for keys %$c;
+    is $b->run_val('a'), 1, 'run call c style function';
+    undef &g;
+    is eval($b->to_lang_named('Perl')), 3 - 2, 'eval perl c style funtion';
 }
 
 {
@@ -372,6 +425,83 @@ sub check_sub {
     my $b = make_expr([ '#', 'BUMP' ]);
     is $b->to_lang_named('C'), 'BUMP', 'to lang expr with plain text';
     throws_ok sub { $b = $b->run() } , qr/BUMP/, 'run expr with plain text'
+}
+
+{
+    throws_ok sub { make_block([
+        'func', 'f', [ qw(x y z) ], [
+            'func', 'g', [ qw(x y z) ], []
+        ]
+    ]) }, qr/Local function definition/, 'local func def';
+}
+
+{
+    throws_ok sub { make_block([
+        'func', 'f', [ qw(x y z) ], [
+            'return', 1,
+            'return', []
+        ]
+    ]) }, qr/Use different types of return in the same func/, 'dif return type';
+}
+
+{
+    throws_ok sub { make_block([
+    	'return', 1,
+        'func', 'f', [ qw(x y z) ], []
+    ]) }, qr/return outside a function/, 'return outside a func';
+}
+
+{
+    throws_ok sub { make_block([
+        'func', 'myfunc', [ qw(x y z) ], [],
+        '=', 'a', [ '()', 'myfunc', 1, 2, 3 ]
+    ])->run({}) }, qr/Undefined result of function myfunc/, 'undefined func result with ret';
+}
+
+{
+    throws_ok sub { make_block([
+        'func', 'myfunc', [ qw(x y z) ], [
+            'return', [],
+            '=', 'myfunc', 1
+        ],
+        '=', 'a', [ '()', 'myfunc', 1, 2, 3 ]
+    ])->run({}) }, qr/Undefined result of function myfunc/, 'undefined func result without ret';
+}
+
+{
+    throws_ok sub { make_block([
+        'func', 'myfunc', [ qw(x y z) ], [
+            '=', 'vara', 'varb'
+        ],
+        '=', 'a', [ '()', 'myfunc', 1, 2, 3 ]
+    ])->run({}) }, qr/varb/, 'error in function';
+}
+
+{
+    my $b = make_block([
+        'func', 'f', [ qw(x y) ], [
+            'if', [ '==', 'x', 'y' ], [ 'return', 1 ],
+            'return', 0 
+        ],
+        '=', 'a', [ '()', 'f', 1, 2 ],
+        '=', 'b', [ '()', 'f', 3, 3 ]
+    ]);
+    is $b->run_val('a'), 0, 'return c_style func 0';
+    is $b->run_val('b'), 1, 'return c_style func 1'
+}
+
+{
+    my $b = make_block([
+        'func', 'f', [ qw(x y) ], [
+            '=', 'f', 1,
+            'if', [ '==', 'x', 'y' ], [ 'return', [] ],
+            '=', 'f', 0,
+        ],
+        '=', 'a', [ '()', 'f', 1, 2 ],
+        '=', 'b', [ '()', 'f', 3, 3 ]
+    ]);
+    is $b->run_val('a'), 0, 'return p_style func 0';
+    is $b->run_val('b'), 1, 'return p_style func 1'
 }
 
 {
