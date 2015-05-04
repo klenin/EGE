@@ -336,6 +336,7 @@ sub _visit_children { my $self = shift; $_->visit_dfs(@_) for @{$self->{statemen
 sub complexity {
     my $self = shift;
     $_[1]->{change_min} and return List::Util::min(map($_->complexity(@_), @{$self->{statements}})) || 0;
+    $_[1]->{change_sum} and return List::Util::sum(map($_->complexity(@_), @{$self->{statements}})) || 0;
     List::Util::max(map($_->complexity(@_), @{$self->{statements}})) || 0;
 }
 
