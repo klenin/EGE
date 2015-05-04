@@ -66,7 +66,7 @@ use constant MAKE_COUNTER => 0;
 sub complexity {
     my ($self) = @_;
     my $n = rnd->pick(qw(m n));
-    my @mistakes_names = qw(var_as_const ignore_if_eq change_min ignore_if_less ignore_if_mod);
+    my @mistakes_names = qw(var_as_const ignore_if_eq change_min change_sum ignore_if_less ignore_if_mod);
     my $max_counts = {
         if => 3,
         assign => 2,
@@ -80,7 +80,7 @@ sub complexity {
         MAKE_COUNTER and unshift @$cycle, '=', 'counter', 0;
         
         my $block = EGE::Prog::make_block($cycle);
-        my @indexes = rnd->shuffle(1 .. 7);
+        my @indexes = rnd->shuffle(1 .. 2 ** (@mistakes_names - 1) - 1);
         my @variants = $block->complexity({ $n => 1 });
         MISTAKE:
         while (@indexes) {
