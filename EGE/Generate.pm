@@ -215,7 +215,7 @@ sub all {[
     gg('Tree', qw(node_count height)),
     gg('Graph', qw(graph_seq)),
     gg('List', qw(construct_command)),
-    gg('Sorting', qw(sort_command)),
+    gg('Sorting', qw(sort_line)),
 ]}
 
 1;
