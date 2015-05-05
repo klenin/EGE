@@ -250,7 +250,7 @@ binmode STDOUT, ':utf8';
 #g3('Tree', 'height');
 #g3('Graph', 'graph_seq');
 #g3('List', 'construct_command');
-#g3('Sorting', 'sort_command');
+#g3('Sorting', 'sort_line');
 #$questions = EGE::Generate::all;
 #$questions = EGE::AsmGenerate::all;
 #$questions = EGE::DatabaseGenerate::all;
