@@ -114,7 +114,7 @@ sub construct_command {
         ($el_str, @correct) = get_unique_cmds($sl, @variants);
     } while (!$el_str);
     my $sl_str = ls2str @$sl;
-    $self->{text} = "Выберите набор из ровно " . COM_COUNT . 
+    $self->{text} = "Выберите набор ровно из " . COM_COUNT . 
         " команд, необходимый для того чтобы из списка <b>($sl_str)</b> получить список <b>($el_str)</b>";
     $self->{variants} = [ map cmd2str(@$_), @variants ];
     $self->{correct} = [ @correct ];
