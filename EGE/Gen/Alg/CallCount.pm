@@ -36,7 +36,8 @@ sub super_recursion {
     my $div_count = 1;
     $div_count++ while ($n /= $div) >= $fst_part;
     $self->{correct} = $div_count + int(($n - $sec_part) / $sub) + 2;
-    $self->{text} = "Определите количество вызовов функции <code>f</code> при исполнении следующего алгоритма: $lt";
+    $self->{text} = "Определите количество вызовов функции <code>f</code> при исполнении следующего алгоритма:" .
+    "<p><i>Прим.</i> Пренебречь размерностью целочисленных переменных.</p> $lt";
 }
 
 1;
