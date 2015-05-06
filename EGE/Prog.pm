@@ -537,6 +537,7 @@ sub new {
     my ($class, %init) = @_;
     my $self = delete $init{func};
     $self->{$_} = $init{$_} for keys %init;
+    $self->{$_} = $init{head}->{$_} for qw(name params);
     bless $self, $class;
     $self;
 }
@@ -544,57 +545,46 @@ sub new {
 sub get_formats { map(($_[0]->{c_style} ? 'c' : 'p') . $_, qw(_func_start_fmt _func_end_fmt)); }
 
 sub to_lang_fmt { '%3$s' }
-sub to_lang_fields { qw(name params) }
+sub to_lang_fields { qw(head) }
 
 sub run {
     my ($self, $env) = @_;
-    $env->{'&'}->{$self->{name}->{name}} and die "Redefinition of function $self->{name}->{name}";
-    $env->{'&'}->{$self->{name}->{name}} = $self;
+    $env->{'&'}->{$self->{name}} and die "Redefinition of function $self->{name}";
+    $env->{'&'}->{$self->{name}} = $self;
 }
 
 sub call {
     my ($self, $args, $env) = @_;
     my $act_len = @$args;
-    my $form_len = @{$self->{params}->{names}};
-    $act_len > $form_len and die "Too many arguments to function $self->{name}->{name}";
-    $act_len < $form_len and die "Too few arguments to function $self->{name}->{name}";
+    my $form_len = @{$self->{params}};
+    $act_len > $form_len and die "Too many arguments to function $self->{name}";
+    $act_len < $form_len and die "Too few arguments to function $self->{name}";
     
-    my $new_env = { '&' => $env->{'&'}, map(($_ => shift @$args), @{$self->{params}->{names}}) };
+    my $new_env = { '&' => $env->{'&'}, map(($_ => shift @$args), @{$self->{params}}) };
     # return реализован с использованием die
     eval { $self->{body}->run($new_env); };
-    my $e =  = $@;
+    my $e = $@;
     if (!$e || $e->{p_return}) {
-        my $fn = $self->{name}->{name};
+        my $fn = $self->{name};
         defined $new_env->{$fn} or die "Undefined result of function $fn";
         return $new_env->{$fn};
     }
-    elsif (defined $e->{return})
+    elsif (defined $e->{return}) {
         return $e->{return};
-    {
+    }
     die $e;
 }
 
-package EGE::Prog::FuncParams;
+package EGE::Prog::FuncHead;
 use base 'EGE::Prog::SynElement';
 
-sub to_lang {
-    my ($self, $lang) = @_;
-    join $lang->args_separator, map sprintf($lang->args_fmt, $_), @{$self->{names}};
+sub to_lang { 
+    my ($self, $lang) = @_; 
+    my $params = join $lang->args_separator, map sprintf($lang->args_fmt, $_), @{$self->{params}};
+    ($self->{name}, $params); 
 }
 
-sub run {
-}
-
-package EGE::Prog::FuncName;
-use base 'EGE::Prog::SynElement';
-
-sub to_lang {
-    my ($self, $lang) = @_;
-    $self->{name};
-}
-
-sub run {
-}
+sub run {}
 
 package EGE::Prog::Return;
 use base 'EGE::Prog::SynElement';
@@ -620,11 +610,10 @@ sub to_lang {
 
 sub run {
     my ($self, $env) = @_;
-    my $fn = $self->{func}->{name}->{name};
+    my $fn = $self->{func}->{name};
     die $self->{func}->{c_style} ?
-        { return => $self->{expr}->run($env) }
-        { p_retrun => 1 };
-    }
+        { return => $self->{expr}->run($env) } :
+        { p_return => 1 };
 }
 
 package EGE::Prog;
@@ -704,7 +693,7 @@ sub statements_descr {{
     'if' => { type => 'IfThen', args => [qw(E_cond B_body)] },
     'while' => { type => 'While', args => [qw(E_cond B_body)] },
     'until' => { type => 'Until', args => [qw(E_cond B_body)] },
-    'func' => { type => 'FuncDef', args => [qw(N_name P_params B_body)] },
+    'func' => { type => 'FuncDef', args => [qw(H_head B_body)] },
     'expr' => { type => 'ExprStmt', args => [qw(E_expr)] },
     'return' => { type => 'Return', args => [qw(E_expr)] },
 }}
@@ -713,19 +702,13 @@ sub arg_processors {{
     C => sub { $_[0] },
     E => \&make_expr,
     B => \&make_block,
-    P => \&make_func_params,
-    N => \&make_func_name,
+    H => \&make_func_head,
 }}
 
-sub make_func_name {
+sub make_func_head {
     my ($src) = @_;
-    EGE::Prog::FuncName->new(name => $src);
-}
-
-sub make_func_params {
-    my ($src) = @_;
-    ref $src eq 'ARRAY' or die;
-    EGE::Prog::FuncParams->new(names => $src);
+    my $name = shift @$src;
+    EGE::Prog::FuncHead->new(name => $name, params => $src);
 }
 
 sub make_statement {

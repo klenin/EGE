@@ -18,7 +18,7 @@ sub super_recursion {
     my ($fst_part, $sec_part) = (int($n / rnd->in_range(2, 20)), int($n / rnd->in_range(2, 20) / 10)); 
     my ($div, $sub) = (rnd->in_range(2, 5), rnd->in_range(2, 5));
     my $code = [ 
-        'func', 'f', [ 'n' ], [
+        'func', [ 'f', 'n' ], [
             'if', [ '>=', 'n', $fst_part ], [
                 '=', 'f', [ '+', [ '()', 'f', [ '/', 'n', $div] ], 1 ]
             ],

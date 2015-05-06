@@ -21,6 +21,7 @@ sub first_space {
 }
 
 sub sort_line {
+    # не используется construct, потому что на Basic'е end выглядят по разному
     my ($self) = @_;
     my @colors = qw(blue fuchsia green maroon navy olive purple red silver teal yellow);
     $self->{text} = "Отсортируйте строки таким образом, чтобы они образовали алгоритм сортировки " .
