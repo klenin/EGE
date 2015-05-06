@@ -244,7 +244,7 @@ sub check_sub {
 
 {
     my $b = make_block([
-        'func', 'g', [ qw(a b) ], [
+        'func', [ qw(g a b) ], [
             '=', 'g', [ '-', 'a', 'b' ]
         ],
         '=', 'a', [ '()', 'g', 3, 2 ]
@@ -300,7 +300,7 @@ sub check_sub {
 
 {
     my $b = make_block([
-        'func', 'g', [ qw(a b) ], [
+        'func', [ qw(g a b) ], [
             'return', [ '-', 'a', 'b' ]
         ],
         '=', 'a', [ '()', 'g', 3, 2 ]
@@ -353,8 +353,8 @@ sub check_sub {
 
 {
     my $b = make_block([
-        'func', 'f', [ qw(x y z) ], [],
-        'func', 'f', [ qw(a b) ], [],
+        'func', [ qw(f x y z) ], [],
+        'func', [ qw(f a b) ], [],
     ]);
     throws_ok sub { $b->run({}) }, qr/f/, 'function redefinition'
 }
@@ -368,7 +368,7 @@ sub check_sub {
 
 {
     my $b = make_block([
-        'func', 'f', [ qw(x y z) ], [],
+        'func', [ qw(f x y z) ], [],
         '=', 'a', [ '()', 'f', 1, 2 ],
     ]);
     throws_ok sub { $b->run({}) }, qr/f/, 'not enough arguments';
@@ -429,15 +429,15 @@ sub check_sub {
 
 {
     throws_ok sub { make_block([
-        'func', 'f', [ qw(x y z) ], [
-            'func', 'g', [ qw(x y z) ], []
+        'func', [ qw(f x y z) ], [
+            'func', [ qw(g x y z) ], []
         ]
     ]) }, qr/Local function definition/, 'local func def';
 }
 
 {
     throws_ok sub { make_block([
-        'func', 'f', [ qw(x y z) ], [
+        'func', [ qw(f x y z) ], [
             'return', 1,
             'return', []
         ]
@@ -447,30 +447,30 @@ sub check_sub {
 {
     throws_ok sub { make_block([
     	'return', 1,
-        'func', 'f', [ qw(x y z) ], []
+        'func', [ qw(f x y z) ], []
     ]) }, qr/return outside a function/, 'return outside a func';
 }
 
 {
     throws_ok sub { make_block([
-        'func', 'myfunc', [ qw(x y z) ], [],
-        '=', 'a', [ '()', 'myfunc', 1, 2, 3 ]
-    ])->run({}) }, qr/Undefined result of function myfunc/, 'undefined func result with ret';
-}
-
-{
-    throws_ok sub { make_block([
-        'func', 'myfunc', [ qw(x y z) ], [
-            'return', [],
-            '=', 'myfunc', 1
-        ],
+        'func', [ qw(myfunc x y z) ], [],
         '=', 'a', [ '()', 'myfunc', 1, 2, 3 ]
     ])->run({}) }, qr/Undefined result of function myfunc/, 'undefined func result without ret';
 }
 
 {
     throws_ok sub { make_block([
-        'func', 'myfunc', [ qw(x y z) ], [
+        'func', [ qw(myfunc x y z) ], [
+            'return', [],
+            '=', 'myfunc', 1
+        ],
+        '=', 'a', [ '()', 'myfunc', 1, 2, 3 ]
+    ])->run({}) }, qr/Undefined result of function myfunc/, 'undefined func result with ret';
+}
+
+{
+    throws_ok sub { make_block([
+        'func', [ qw(myfunc x y z) ], [
             '=', 'vara', 'varb'
         ],
         '=', 'a', [ '()', 'myfunc', 1, 2, 3 ]
@@ -479,7 +479,7 @@ sub check_sub {
 
 {
     my $b = make_block([
-        'func', 'f', [ qw(x y) ], [
+        'func', [ qw(f x y) ], [
             'if', [ '==', 'x', 'y' ], [ 'return', 1 ],
             'return', 0 
         ],
@@ -492,7 +492,7 @@ sub check_sub {
 
 {
     my $b = make_block([
-        'func', 'f', [ qw(x y) ], [
+        'func', [ qw(f x y) ], [
             '=', 'f', 1,
             'if', [ '==', 'x', 'y' ], [ 'return', [] ],
             '=', 'f', 0,
