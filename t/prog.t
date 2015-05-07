@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 124;
+use Test::More tests => 126;
 use Test::Exception;
 
 use lib '..';
@@ -43,7 +43,8 @@ use EGE::Prog qw(make_block make_expr);
 {
     my $e = make_expr([ '!', [ '>', 'A', 'B' ] ]);
     is $e->to_lang_named('Basic'), 'NOT (A > B)', 'not()';
-    is $e->to_lang_named('Logic'), '¬ (<i>A</i> > <i>B</i>)', 'not in logic';
+    is $e->to_lang_named('Logic', { html => 1 }), '¬ (<i>A</i> &gt; <i>B</i>)', 'not in html logic';
+    is $e->to_lang_named('Logic'), '¬ (A > B)', 'not in logic';
     ok make_expr([ '||', [ '!', [ '&&', 1, 1 ] ], 1 ]), 'all logic';
 }
 
@@ -52,6 +53,7 @@ use EGE::Prog qw(make_block make_expr);
     is $e->run({ a => 3 }), 1, 'between 1';
     is $e->run({ a => 8 }), 0, 'between 2';
     is $e->to_lang_named('C'), '1 <= a && a <= 2 + 5', 'between C';
+    is $e->to_lang_named('C', { html => 1 }), '1 &lt;= a &amp;&amp; a &lt;= 2 + 5', 'between html C';    
     is $e->to_lang_named('Pascal'), 'InRange(a, 1, 2 + 5)', 'between Pascal';
     is $e->to_lang_named('SQL'), 'a BETWEEN 1 AND 2 + 5', 'between SQL';
 }

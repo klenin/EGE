@@ -22,8 +22,9 @@ package EGE::Prog::Lang;
 my %lang_cache;
 
 sub lang {
-    my ($name) = @_;
-    $lang_cache{$name} ||= "EGE::Prog::Lang::$name"->new;
+    my ($name, $options) = @_;
+    my %o = $options ? %{$options} : ();
+    $lang_cache{$name . join '', %o} ||= "EGE::Prog::Lang::$name"->new(%o);
 }
 
 sub new {
@@ -34,6 +35,16 @@ sub new {
     $self;
 }
 
+sub to_html {
+    my %subs = (
+        '<' => '&lt;',
+        '>' => '&gt;',
+        '&' => '&amp;',
+    );
+    my $keys = join '|', keys %subs;
+    $_[0] =~ s/($keys)/$subs{$1}/g;
+}
+
 sub op_fmt {
     my ($self, $op) = @_;
     my $fmt = $self->translate_op->{$op} || $op;
@@ -41,9 +52,22 @@ sub op_fmt {
     ref $fmt || $fmt =~ /%\w/ ? $fmt : "%s $fmt %s";
 }
 
+sub un_op_fmt {
+    my ($self, $op) = @_;
+    my $fmt = $self->translate_un_op->{$op} || $op;
+    $fmt =~ m/%s/ ? $fmt : $fmt . ' %s';
+}
+
 sub name {
     ref($_[0]) =~ /::(\w+)$/;
     $1;
+}
+
+sub get_fmt {
+    my ($self, $name_fmt, @args) = @_;
+    my $fmt = $self->$name_fmt(@args);
+    to_html($fmt) if $self->{html};
+    $fmt;
 }
 
 sub var_fmt { '%s' }
@@ -262,7 +286,13 @@ sub prio_list {
     [ ops::comp ], [ '&&' ], [ '||', '^' ], [ '=>', 'eq' ]
 }
 
-sub var_fmt { '<i>%s</i>' }
+sub get_fmt {
+    my $self = shift;
+    my ($fmt_name, @args) = @_;
+    my $fmt = $self->SUPER::get_fmt(@_);
+    $self->{html} && $fmt_name eq 'var_fmt' ? "<i>$fmt</i>" : $fmt;
+}
+
 sub index_fmt { '%s<sub>%s</sub>' }
 
 sub translate_op {{

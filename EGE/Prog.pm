@@ -17,8 +17,8 @@ sub new {
 }
 
 sub to_lang_named {
-    my ($self, $lang_name, $unformated) = @_;
-    $self->to_lang(EGE::Prog::Lang::lang($lang_name), $unformated);
+    my ($self, $lang_name, $options) = @_;
+    $self->to_lang(EGE::Prog::Lang::lang($lang_name, $options));
 }
 
 sub to_lang { die; }
@@ -77,7 +77,7 @@ use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang) = @_;
-    sprintf $lang->assign_fmt,
+    sprintf $lang->get_fmt('assign_fmt'),
         map $self->{$_}->to_lang($lang), qw(var expr);
 }
 
@@ -107,7 +107,7 @@ use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang) = @_;
-    sprintf $lang->index_fmt,
+    sprintf $lang->get_fmt('index_fmt'),
         $self->{array}->to_lang($lang),
         join ', ', map $_->to_lang($lang), @{$self->{indices}};
 }
@@ -133,9 +133,9 @@ use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang) = @_;
-    sprintf $lang->call_func_fmt,
+    sprintf $lang->get_fmt('call_func_fmt'),
         $self->{func},
-        join $lang->args_separator, map $_->to_lang($lang), @{$self->{args}};
+        join $lang->get_fmt('args_separator'), map $_->to_lang($lang), @{$self->{args}};
 }
 
 sub run {
@@ -150,8 +150,8 @@ use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang) = @_;
-    sprintf $lang->print_fmt,
-        join $lang->args_separator, map $_->to_lang($lang), @{$self->{args}};
+    sprintf $lang->get_fmt('print_fmt'),
+        join $lang->get_fmt('args_separator'), map $_->to_lang($lang), @{$self->{args}};
 }
 
 sub run {
@@ -206,7 +206,7 @@ use List::Util;
 
 sub to_lang_fmt {
     my ($self, $lang) = @_;
-    $lang->op_fmt($self->{op});
+    $lang->get_fmt('op_fmt', $self->{op});
 }
 
 sub _children { qw(left right) }
@@ -227,19 +227,14 @@ sub prio { $_[1]->{prio}->{'`' . $_[0]->{op}} or die $_[0]->{op} }
 
 sub to_lang_fmt {
     my ($self, $lang) = @_;
-    ($lang->translate_un_op->{$self->{op}} || $self->{op}) . ' %s';
+    $lang->get_fmt('un_op_fmt', $self->{op});
 }
 
 sub _children { qw(arg) }
 
 package EGE::Prog::Inc;
 use base 'EGE::Prog::UnOp';
-
-sub to_lang_fmt {
-    my ($self, $lang) = @_;
-    $lang->translate_un_op->{$self->{op}} || $self->{op};
-}
-
+    
 sub run {
     my ($self, $env) = @_;
     eval sprintf $self->{op}, '${$self->{arg}->get_ref($env)}';
@@ -250,7 +245,7 @@ use base 'EGE::Prog::Op';
 
 sub to_lang_fmt {
     my ($self, $lang) = @_;
-    my $r = $lang->op_fmt($self->{op});
+    my $r = $lang->get_fmt('op_fmt', $self->{op});
     return $r unless ref $r;
     my $s = EGE::Prog::make_expr($r)->to_lang($lang);
     $s =~ s/(\d+)/%$1\$s/g;
@@ -264,7 +259,7 @@ use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang) = @_;
-    sprintf $lang->var_fmt, $self->{name};
+    sprintf $lang->get_fmt('var_fmt'), $self->{name};
 }
 
 sub run {
@@ -323,7 +318,8 @@ use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang, $unformated) = @_;
-    join $lang->block_stmt_separator, map $_->to_lang($lang, $unformated), @{$self->{statements}};
+    join $lang->get_fmt('block_stmt_separator'),
+        map $_->to_lang($lang, $unformated), @{$self->{statements}};
 };
 
 sub run {
@@ -350,7 +346,7 @@ sub to_lang {
     my $body_is_block = @{$self->{body}->{statements}} > 1;
     no strict 'refs';
     my ($fmt_start, $fmt_end) =
-        map $lang->$_($body_is_block || $unformated), $self->get_formats;
+        map $lang->$_($body_is_block || $unformated), $self->get_fmt_names;
     my $body = $self->{body}->to_lang($lang, $unformated);
     
     $body =~ s/^/  /mg if $fmt_start =~ /\n$/; # отступы
@@ -364,7 +360,7 @@ sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for $_->to_la
 package EGE::Prog::ForLoop;
 use base 'EGE::Prog::CompoundStatement';
 
-sub get_formats { qw(for_start_fmt for_end_fmt) }
+sub get_fmt_names { qw(for_start_fmt for_end_fmt) }
 sub to_lang_fmt { '%4$s' }
 sub to_lang_fields { qw(var lb ub) }
 
@@ -392,7 +388,7 @@ sub complexity {
 package EGE::Prog::IfThen;
 use base 'EGE::Prog::CompoundStatement';
 
-sub get_formats { qw(if_start_fmt if_end_fmt) }
+sub get_fmt_names { qw(if_start_fmt if_end_fmt) }
 sub to_lang_fmt { '%2$s' }
 sub to_lang_fields { qw(cond) }
 
@@ -481,7 +477,7 @@ use base 'EGE::Prog::CompoundStatement';
 package EGE::Prog::While;
 use base 'EGE::Prog::CondLoop';
 
-sub get_formats { qw(while_start_fmt while_end_fmt) }
+sub get_fmt_names { qw(while_start_fmt while_end_fmt) }
 sub to_lang_fmt { '%2$s' }
 sub to_lang_fields { qw(cond) }
 
@@ -493,7 +489,7 @@ sub run {
 package EGE::Prog::Until;
 use base 'EGE::Prog::CondLoop';
 
-sub get_formats { qw(until_start_fmt until_end_fmt) }
+sub get_fmt_names { qw(until_start_fmt until_end_fmt) }
 sub to_lang_fmt { '%2$s' }
 sub to_lang_fields { qw(cond) }
 
@@ -520,7 +516,7 @@ use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang) = @_;
-    sprintf $lang->expr_fmt, $self->{expr}->to_lang($lang);
+    sprintf $lang->get_fmt('expr_fmt'), $self->{expr}->to_lang($lang);
 }
 
 sub run {
@@ -542,7 +538,7 @@ sub new {
     $self;
 }
 
-sub get_formats { map(($_[0]->{c_style} ? 'c' : 'p') . $_, qw(_func_start_fmt _func_end_fmt)); }
+sub get_fmt_names { map(($_[0]->{c_style} ? 'c' : 'p') . $_, qw(_func_start_fmt _func_end_fmt)); }
 
 sub to_lang_fmt { '%3$s' }
 sub to_lang_fields { qw(head) }
@@ -580,7 +576,8 @@ use base 'EGE::Prog::SynElement';
 
 sub to_lang { 
     my ($self, $lang) = @_; 
-    my $params = join $lang->args_separator, map sprintf($lang->args_fmt, $_), @{$self->{params}};
+    my $params = join $lang->get_fmt('args_separator'),
+        map sprintf($lang->get_fmt('args_fmt'), $_), @{$self->{params}};
     ($self->{name}, $params); 
 }
 
