@@ -19,14 +19,6 @@ sub between { between => [ '&&', [ '<=', 2, 1 ], [ '<=', 1, 3 ] ] }
 
 package EGE::Prog::Lang;
 
-my %lang_cache;
-
-sub lang {
-    my ($name, $options) = @_;
-    my %o = $options ? %{$options} : ();
-    $lang_cache{$name . join '', %o} ||= "EGE::Prog::Lang::$name"->new(%o);
-}
-
 sub new {
     my ($class, %init) = @_;
     my $self = { %init };

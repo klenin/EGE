@@ -34,7 +34,7 @@ use EGE::Prog qw(make_block make_expr);
 {
     is make_expr(sub { $_[0]->{z} * 2 })->run({ z => 9 }), 18, 'black box';
     my $bb = EGE::Prog::BlackBox->new(lang => { 'C' => 'test' });
-    is $bb->to_lang(EGE::Prog::Lang::lang('C')), 'test', 'black box text';
+    is $bb->to_lang(EGE::Prog::Lang::C->new), 'test', 'black box text';
     my $h = { y => 5 };
     make_expr(sub { $_[0]->{y} = 6 })->run($h);
     is $h->{y}, 6, 'black box assign';
