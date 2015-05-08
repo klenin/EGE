@@ -18,7 +18,7 @@ sub new {
 
 sub to_lang_named {
     my ($self, $lang_name, $options) = @_;
-    $self->to_lang(EGE::Prog::Lang::lang($lang_name, $options));
+    $self->to_lang("EGE::Prog::Lang::$lang_name"->new(%{$options}));
 }
 
 sub to_lang { die; }
@@ -192,7 +192,7 @@ sub needs_parens {
     $parent_prio < $self->prio($lang);
 }
 
-sub run_fmt { $_[0]->to_lang_fmt(EGE::Prog::Lang::lang('Perl')) }
+sub run_fmt { $_[0]->to_lang_fmt(EGE::Prog::Lang::Perl->new) }
 sub to_lang_fmt {}
 
 sub gather_vars { $_[0]->{$_}->gather_vars($_[1]) for $_[0]->_children; }
