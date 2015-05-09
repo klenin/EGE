@@ -521,10 +521,10 @@ sub check_sub {
     check_sub('Basic', $b, $c1, 'Basic html with coloring', { html => { coloring => 0 } });
     
     my $c2 = [
-        '<span class="C"><span style="color: blue;">while (a &gt; 0) {</span></span>',
-        '<span class="C">  a = a - 1;</span>',
-        '<span class="C">  2 * 2;</span>',
-        '<span class="C"><span style="color: blue;">}</span></span>',
+        '<pre class="C"><span style="color: blue;">while (a &gt; 0) {</span></pre>',
+        '<pre class="C">  a = a - 1;</pre>',
+        '<pre class="C">  2 * 2;</pre>',
+        '<pre class="C"><span style="color: blue;">}</span></pre>',
     ];
     check_sub('C', $b, $c2, 'C html with coloring+lang_marking', { html => { coloring => 0, lang_marking => 1 } });
     
@@ -545,14 +545,14 @@ sub check_sub {
         ]
     ]);
     my $c4 = [
-        '<span style="color: blue;">while (a &gt; 0) {</span>',
-        '  <span style="color: fuchsia;">if (a % 10) {</span>',
+        '<span style="color: purple;">while (a &gt; 0) {</span>',
+        '  <span style="color: red;">if (a % 10) {</span>',
         '    a = 20;',
-        '  <span style="color: fuchsia;">}</span>',
+        '  <span style="color: red;">}</span>',
         '  a = a - 1;',      
-        '<span style="color: blue;">}</span>',
+        '<span style="color: purple;">}</span>',
     ];
-    check_sub('C', $b1, $c4, 'C html with multicoloring', { html => { coloring => 0 }, body_is_block => 1 });
+    check_sub('C', $b1, $c4, 'C html with multicoloring', { html => { coloring => 6 }, body_is_block => 1 });
 }
 
 {

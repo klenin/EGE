@@ -31,8 +31,9 @@ sub sort_line {
         "заканчивается <code>n-1</code>.</p>";
 
     my $b = rnd->pick(values %EGE::Prog::Alg::sortings);
-    my $fst_color = rnd->in_range(0 .. 11);
-    for my $lang (qw(Basic C Alg Pascal))
+    my $fst_color = rnd->in_range(0, 11);
+    my @langs = qw(Basic C Alg Pascal);
+    for my $lang (@langs)
     {
         my $code = EGE::Prog::make_block($b)->to_lang_named($lang, { 
                 html => {
@@ -47,7 +48,7 @@ sub sort_line {
         $self->{variants}->[$_] .= $cur_v[$_] for 0 .. scalar(@cur_v) - 1;
     }
     $self->{correct} = [ 0 .. scalar(@{$self->{variants}}) - 1 ];
-    $self->{options} = [ qw(Basic C Alg Pascal) ];
+    $self->{options} = { map { $_ => EGE::Prog::lang_names->{$_} } @langs };
     1;
 }
 1;

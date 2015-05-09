@@ -24,10 +24,10 @@ sub to_lang_named {
     my $ret = $self->to_lang($lang);
     if (ref $lang->{html} eq 'HASH' && $lang->{html}->{lang_marking}) {
         my @lines = split("\n", $ret);
-        $_ = EGE::Html::html->tag('span', $_, { class => $lang_name }) for @lines;
+        $_ = EGE::Html::html->tag('pre', $_, { class => $lang_name }) for @lines;
         $ret = join "\n", @lines;
     }
-    $ret = EGE::Html::html->tag('pre', $ret) if $lang->{html}->{pre};
+    $ret = EGE::Html::html->tag('pre', $ret) if ref $lang->{html} eq 'HASH' && $lang->{html}->{pre};
     $ret;
 }
 
