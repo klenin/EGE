@@ -28,10 +28,12 @@ sub tag {
     $self->open_tag($tag, $attrs, defined $body ? ">$body</$tag>" : '/>');
 }
 
+sub attrs_str { join('', map qq~ $_="$_[1]->{$_}"~, sort keys %{$_[1]}) }
+
 sub open_tag {
     my ($self, $tag, $attrs, $rest) = @_;
     $attrs ||= {};
-    "<$tag" . join('', map qq~ $_="$attrs->{$_}"~, sort keys %$attrs) . ($rest || '>');
+    "<$tag" . $self->attrs_str($attrs) . ($rest || '>');
 }
 
 sub close_tag {

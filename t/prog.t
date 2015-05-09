@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 126;
+use Test::More tests => 130;
 use Test::Exception;
 
 use lib '..';
@@ -53,7 +53,7 @@ use EGE::Prog qw(make_block make_expr);
     is $e->run({ a => 3 }), 1, 'between 1';
     is $e->run({ a => 8 }), 0, 'between 2';
     is $e->to_lang_named('C'), '1 <= a && a <= 2 + 5', 'between C';
-    is $e->to_lang_named('C', { html => 1 }), '1 &lt;= a &amp;&amp; a &lt;= 2 + 5', 'between html C';    
+    is $e->to_lang_named('C', { html => 1 }), '1 &lt;= a &amp;&amp; a &lt;= 2 + 5', 'between html C';
     is $e->to_lang_named('Pascal'), 'InRange(a, 1, 2 + 5)', 'between Pascal';
     is $e->to_lang_named('SQL'), 'a BETWEEN 1 AND 2 + 5', 'between SQL';
 }
@@ -240,8 +240,8 @@ end;~;
 }
 
 sub check_sub {
-    my ($lang, $block, $code, $name) = @_;
-    is $block->to_lang_named($lang), join("\n", @$code), $name;
+    my ($lang, $block, $code, $name, $opts) = @_;
+    is $block->to_lang_named($lang, $opts), join("\n", @$code), $name;
 }
 
 {
@@ -414,10 +414,10 @@ sub check_sub {
 {
     is make_expr([ '++%s', 'i' ])->run({ i => 2 }), 3, 'run prefix increment';
     is make_expr([ '%s--', 'i' ])->run({ i => 4 }), 4, 'run postfix decrement';
-    
+
     my $e = make_expr([ '+', [ '++%s', 'i' ], [ '++%s', 'i' ] ]);
     is $e->to_lang_named('C'), '++i + ++i', 'to lang increment';
-    
+
     my $env = { i => 5 };
     is $e->run($env), 13, 'run increment return value';
     is $env->{i}, 7, 'run increment side effect';
@@ -428,7 +428,6 @@ sub check_sub {
     is $b->to_lang_named('C'), 'BUMP', 'to lang expr with plain text';
     throws_ok sub { $b = $b->run() } , qr/BUMP/, 'run expr with plain text'
 }
-
 {
     throws_ok sub { make_block([
         'func', [ qw(f x y z) ], [
@@ -483,7 +482,7 @@ sub check_sub {
     my $b = make_block([
         'func', [ qw(f x y) ], [
             'if', [ '==', 'x', 'y' ], [ 'return', 1 ],
-            'return', 0 
+            'return', 0
         ],
         '=', 'a', [ '()', 'f', 1, 2 ],
         '=', 'b', [ '()', 'f', 3, 3 ]
@@ -504,6 +503,59 @@ sub check_sub {
     ]);
     is $b->run_val('a'), 0, 'return p_style func 0';
     is $b->run_val('b'), 1, 'return p_style func 1'
+}
+
+{
+    my $b = make_block([
+        'while', [ '>', 'a', 0 ], [
+            '=', 'a', [ '-', 'a', 1 ],
+            'expr', [ '*', 2, 2 ]
+        ]
+    ]);
+    my $c1 = [
+        '<span style="color: blue;">DO WHILE a &gt; 0</span>',
+        '  a = a - 1',
+        '  2 * 2',
+        '<span style="color: blue;">END DO</span>',
+    ];
+    check_sub('Basic', $b, $c1, 'Basic html with coloring',
+        { html => { coloring => [ 'blue' ] } });
+
+    my $c2 = [
+        '<pre class="C"><span style="color: blue;">while (a &gt; 0) {</span></pre>',
+        '<pre class="C">  a = a - 1;</pre>',
+        '<pre class="C">  2 * 2;</pre>',
+        '<pre class="C"><span style="color: blue;">}</span></pre>',
+    ];
+    check_sub('C', $b, $c2, 'C html with coloring+lang_marking',
+        { html => { coloring => [ 'blue' ], lang_marking => 1 } });
+
+    my $c3 = [
+        'while a > 0 do begin',
+        'a := a - 1;',
+        '2 * 2;',
+        'end;',
+    ];
+    check_sub('Pascal', $b, $c3, 'Pascal unindent', { unindent => 1 });
+
+    my $b1 = make_block([
+        'while', [ '>', 'a', 0 ], [
+            'if', [ '%', 'a', 10 ], [
+                '=', 'a', 20
+            ],
+            '=', 'a', [ '-', 'a', 1 ],
+        ]
+    ]);
+    my $c4 = [
+        '<span style="color: blue;">while (a &gt; 0) {</span>',
+        '  <span style="color: fuchsia;">if (a % 10) {</span>',
+        '    a = 20;',
+        '  <span style="color: fuchsia;">}</span>',
+        '  a = a - 1;',
+        '<span style="color: blue;">}</span>',
+    ];
+    check_sub('C', $b1, $c4, 'C html with multicoloring',
+        { html => { coloring => [ 'blue', 'fuchsia' ] }, body_is_block => 1 });
 }
 
 {

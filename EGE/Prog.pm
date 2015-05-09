@@ -7,6 +7,8 @@ use utf8;
 
 use EGE::Utils;
 use EGE::Prog::Lang;
+use EGE::Html;
+
 package EGE::Prog::SynElement;
 
 sub new {
@@ -18,7 +20,18 @@ sub new {
 
 sub to_lang_named {
     my ($self, $lang_name, $options) = @_;
-    $self->to_lang("EGE::Prog::Lang::$lang_name"->new(%{$options}));
+    my $lang = "EGE::Prog::Lang::$lang_name"->new(%{$options});
+    my $ret = $self->to_lang($lang);
+    if (ref(my $h = $lang->{html}) eq 'HASH') {
+        if ($h->{lang_marking}) {
+            my @lines = split "\n", $ret;
+            $_ = EGE::Html::html->tag('pre', $_, { class => $lang_name }) for @lines;
+            $ret = join "\n", @lines;
+        }
+        
+        $ret = EGE::Html::html->tag('pre', $ret) if $h->{pre};
+    }
+    $ret;
 }
 
 sub to_lang { die; }
@@ -337,9 +350,9 @@ package EGE::Prog::Block;
 use base 'EGE::Prog::SynElement';
 
 sub to_lang {
-    my ($self, $lang, $unformated) = @_;
+    my ($self, $lang) = @_;
     join $lang->get_fmt('block_stmt_separator'),
-        map $_->to_lang($lang, $unformated), @{$self->{statements}};
+        map $_->to_lang($lang), @{$self->{statements}};
 };
 
 sub run {
@@ -362,17 +375,22 @@ use base 'EGE::Prog::SynElement';
 sub to_lang_fields {}
 
 sub to_lang {
-    my ($self, $lang, $unformated) = @_;
+    my ($self, $lang) = @_;
     my $body_is_block = @{$self->{body}->{statements}} > 1;
     no strict 'refs';
     my ($fmt_start, $fmt_end) =
-        map $lang->$_($body_is_block || $unformated), $self->get_fmt_names;
-    my $body = $self->{body}->to_lang($lang, $unformated);
-    
-    $body =~ s/^/  /mg if $fmt_start =~ /\n$/; # отступы
+        map $lang->get_fmt($_, $body_is_block || $lang->{body_is_block}), $self->get_fmt_names;
+
+    if (ref $lang->{html} eq 'HASH' && defined(my $c = $lang->{html}->{coloring})) {
+        my $s = { EGE::Html::html->style(color => shift @$c) };
+        $_ =~ s/([^\n]+)/EGE::Html::html->tag('span', $1, $s)/ge for ($fmt_start, $fmt_end);
+    }
+
+    my $body = $self->{body}->to_lang($lang);
+    $body =~ s/^/  /mg if !$lang->{unindent} && $fmt_start =~ /\n$/; # отступы
     sprintf
         $fmt_start . $self->to_lang_fmt . $fmt_end,
-        map($self->{$_}->to_lang($lang, $unformated), $self->to_lang_fields), $body;
+        map($self->{$_}->to_lang($lang), $self->to_lang_fields), $body;
 }
 
 sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for $_->to_lang_fields, 'body' }

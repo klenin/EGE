@@ -23,7 +23,6 @@ sub first_space {
 sub sort_line {
     # не используется construct, потому что на Basic'е end выглядят по разному
     my ($self) = @_;
-    my @colors = qw(blue fuchsia green maroon navy olive purple red silver teal yellow);
     $self->{text} = "Отсортируйте строки таким образом, чтобы они образовали алгоритм сортировки " .
         "массива <code>a</code>, длинной <code>n</code>." .
         "<p><i>Прим1.</i> Начало и конец условных операторов и операторов цикла должны иметь одинаковый цвет, " .
@@ -32,23 +31,20 @@ sub sort_line {
         "заканчивается <code>n-1</code>.</p>";
 
     my $b = rnd->pick(values %EGE::Prog::Alg::sortings);
-
+    my @colors = rnd->shuffle(qw(blue fuchsia green maroon navy olive purple red silver teal yellow));
     for my $lang (qw(Basic C Alg Pascal))
     {
-        my @lines = split '\n', EGE::Prog::make_block($b)->to_lang_named($lang, 1);
-        my @copy = @lines;
-        $_ =~ s/^ +// for @copy;
-        my @vars =  map html->pre($_, { class => $lang }), @copy;
-        for my $i (0 .. @vars - 2) {
-            my ($fst, $sec) = map first_space($lines[$_]), ($i, $i + 1);
-            my ($index, $num) = $fst < $sec ? ($i, $fst) : ($i + 1, $sec);
-            my $attr = {
-                style => "color: $colors[$num / 2]",
-                class => $lang
-            };
-            $vars[$index] = html->pre($copy[$index], $attr) if $fst != $sec;
-        }
-        $self->{variants}->[$_] .= $vars[$_] for 0 .. scalar(@vars) - 1;
+        my $code = EGE::Prog::make_block($b)->to_lang_named($lang, { 
+                html => {
+                    coloring => [ @colors ],
+                    lang_marking => 1,
+                },
+                body_is_block => 1,
+                lang_marking => 1,
+                unindent => 1,
+            });
+        my @cur_v = split '\n', $code;
+        $self->{variants}->[$_] .= $cur_v[$_] for 0 .. scalar(@cur_v) - 1;
     }
     $self->{correct} = [ 0 .. scalar(@{$self->{variants}}) - 1 ];
     $self->{langs} = [ qw(Basic C Alg Pascal) ];
