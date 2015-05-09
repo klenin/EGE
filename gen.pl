@@ -108,7 +108,7 @@ sub print_json {
     print "[\n";
     for my $q (@$questions) {
         print
-            json({ filter_hash($q, [qw(type text correct variants langs)]) }),
+            json({ filter_hash($q, [qw(type text correct variants options)]) }),
             $q eq $questions->[$#$questions] ? "\n" : ",\n";
     }
     print "]\n";

@@ -32,9 +32,10 @@ sub sort_line {
 
     my $b = rnd->pick(values %EGE::Prog::Alg::sortings);
     my @colors = rnd->shuffle(qw(blue fuchsia green maroon navy olive purple red silver teal yellow));
-    for my $lang (qw(Basic C Alg Pascal))
+    my @langs = qw(Basic C Alg Pascal);
+    for my $lang (@langs)
     {
-        my $code = EGE::Prog::make_block($b)->to_lang_named($lang, { 
+        my $code = EGE::Prog::make_block($b)->to_lang_named($lang, {
                 html => {
                     coloring => [ @colors ],
                     lang_marking => 1,
@@ -47,7 +48,7 @@ sub sort_line {
         $self->{variants}->[$_] .= $cur_v[$_] for 0 .. scalar(@cur_v) - 1;
     }
     $self->{correct} = [ 0 .. scalar(@{$self->{variants}}) - 1 ];
-    $self->{langs} = [ qw(Basic C Alg Pascal) ];
+    $self->{options} = { map { $_ => EGE::Prog::lang_names->{$_} } @langs };
     1;
 }
 1;
