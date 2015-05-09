@@ -47,7 +47,7 @@ sub sort_line {
         $self->{variants}->[$_] .= $cur_v[$_] for 0 .. scalar(@cur_v) - 1;
     }
     $self->{correct} = [ 0 .. scalar(@{$self->{variants}}) - 1 ];
-    $self->{langs} = [ qw(Basic C Alg Pascal) ];
+    $self->{options} = [ qw(Basic C Alg Pascal) ];
     1;
 }
 1;
