@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 126;
+use Test::More tests => 130;
 use Test::Exception;
 
 use lib '..';
@@ -240,8 +240,8 @@ end;~;
 }
 
 sub check_sub {
-    my ($lang, $block, $code, $name) = @_;
-    is $block->to_lang_named($lang), join("\n", @$code), $name;
+    my ($lang, $block, $code, $name, $opts) = @_;
+    is $block->to_lang_named($lang, $opts), join("\n", @$code), $name;
 }
 
 {
@@ -428,7 +428,6 @@ sub check_sub {
     is $b->to_lang_named('C'), 'BUMP', 'to lang expr with plain text';
     throws_ok sub { $b = $b->run() } , qr/BUMP/, 'run expr with plain text'
 }
-
 {
     throws_ok sub { make_block([
         'func', [ qw(f x y z) ], [
@@ -504,6 +503,56 @@ sub check_sub {
     ]);
     is $b->run_val('a'), 0, 'return p_style func 0';
     is $b->run_val('b'), 1, 'return p_style func 1'
+}
+
+{
+    my $b = make_block([
+        'while', [ '>', 'a', 0 ], [ 
+            '=', 'a', [ '-', 'a', 1 ],
+            'expr', [ '*', 2, 2 ]
+        ]
+    ]);
+    my $c1 = [
+        '<span style="color: blue;">DO WHILE a &gt; 0</span>',
+        '  a = a - 1',
+        '  2 * 2',
+        '<span style="color: blue;">END DO</span>',
+    ];
+    check_sub('Basic', $b, $c1, 'Basic html with coloring', { html => { coloring => 0 } });
+    
+    my $c2 = [
+        '<span class="C"><span style="color: blue;">while (a &gt; 0) {</span></span>',
+        '<span class="C">  a = a - 1;</span>',
+        '<span class="C">  2 * 2;</span>',
+        '<span class="C"><span style="color: blue;">}</span></span>',
+    ];
+    check_sub('C', $b, $c2, 'C html with coloring+lang_marking', { html => { coloring => 0, lang_marking => 1 } });
+    
+    my $c3 = [
+        'while a > 0 do begin',
+        'a := a - 1;',
+        '2 * 2;',
+        'end;',
+    ];
+    check_sub('Pascal', $b, $c3, 'Pascal unindent', { unindent => 1 });
+
+    my $b1 = make_block([
+        'while', [ '>', 'a', 0 ], [ 
+            'if', [ '%', 'a', 10 ], [
+                '=', 'a', 20
+            ],
+            '=', 'a', [ '-', 'a', 1 ],
+        ]
+    ]);
+    my $c4 = [
+        '<span style="color: blue;">while (a &gt; 0) {</span>',
+        '  <span style="color: fuchsia;">if (a % 10) {</span>',
+        '    a = 20;',
+        '  <span style="color: fuchsia;">}</span>',
+        '  a = a - 1;',      
+        '<span style="color: blue;">}</span>',
+    ];
+    check_sub('C', $b1, $c4, 'C html with multicoloring', { html => { coloring => 0 }, body_is_block => 1 });
 }
 
 {

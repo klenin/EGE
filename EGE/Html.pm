@@ -23,15 +23,22 @@ sub new {
     $self;
 }
 
+sub color { 
+    my @cs = qw(blue fuchsia green maroon navy olive purple red silver teal yellow);
+    return $cs[$_[1] % scalar(@cs)];
+}
+
 sub tag {
     my ($self, $tag, $body, $attrs) = @_;
     $self->open_tag($tag, $attrs, defined $body ? ">$body</$tag>" : '/>');
 }
 
+sub attrs_str { join('', map qq~ $_="$_[1]->{$_}"~, sort keys %{$_[1]}) }
+
 sub open_tag {
     my ($self, $tag, $attrs, $rest) = @_;
     $attrs ||= {};
-    "<$tag" . join('', map qq~ $_="$attrs->{$_}"~, sort keys %$attrs) . ($rest || '>');
+    "<$tag" . $self->attrs_str($attrs) . ($rest || '>');
 }
 
 sub close_tag {
