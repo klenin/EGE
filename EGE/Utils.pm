@@ -13,8 +13,8 @@ our @EXPORT_OK = qw(transpose last_key aggregate_function);
 sub aggregate_function {
     my ($name) = @_;
     my %aggr = %EGE::SQL::Table::Aggregate::;
-    return !undef $aggr{$name} if defined $name;
-    my @a = map substr ($_, -(length($_)), -2) , keys %aggr;
+    return defined $aggr{ $name . '::' } if defined $name;
+    map substr ($_, -length($_), -2), keys %aggr;
 }
 
 sub transpose {
