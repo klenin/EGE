@@ -104,13 +104,26 @@ sub print {
 sub count { @{$_[0]->{data}} }
 
 sub _row_hash {
-    my ($self, $row) = @_;
-    +{ map { +$_ => $row->[$self->{field_index}->{$_}] } @{$self->{fields}} };
+    my ($self, $row, $env) = @_;
+    $env->{$_} = $row->[$self->{field_index}->{$_}] for @{$self->{fields}};
+    $env;
+}
+sub _hash {
+    my ($self) = @_;
+    my $env = {};
+    $env->{'&columns'} =  +{ map { $_ => $self->column_array($_) } @{$self->{fields}} };
+    $env->{'&'} = +{ map { $_ => 'EGE::SQL::Table::Aggregate::' . $_ } EGE::Utils::aggregate_function };
+    $env->{'&count'} = $self->count;
+    $env;
 }
 
 sub select {
-    my ($self, $fields, $where, $ref) = @_;
-
+    my ($self, $fields, $where, $p) = @_;
+    my ($ref, $aggr, $group) = 0;
+    if (ref $p eq 'HASH') {
+        $ref = $p->{ref};
+    }
+    $aggr =  ref $_ eq 'EGE::Prog::CallFuncAggregate' ? 1: $aggr for @$fields;
     my $k = 0;
 
     my $result = EGE::SQL::Table->new([ map { ref $_ ne 'EGE::Prog::Field' && ref $_ ? 'expr_' . ++$k : $_ } @$fields ]);
@@ -119,7 +132,10 @@ sub select {
     my $calc_row = sub { map $_->run($_[0]), @values };
 
     my $tab_where = $self->where($where, $ref);
-    $result->{data} = [ map [ $calc_row->($self->_row_hash($_)) ], @{$tab_where->{data}} ];
+        my @ans;
+        my $evn = $tab_where->_hash;
+        push @ans, [ $calc_row->($tab_where->_row_hash($_, $evn)) ] for @{$tab_where->{data}};
+        $result->{data} = $aggr ? [ $ans[0] ] : [ @ans ];
     $result;
 }
 
