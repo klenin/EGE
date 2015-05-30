@@ -27,26 +27,26 @@ sub _create_inner_join {
 
 sub many_inner_join {
     my ($self) = @_;
-    my ($tabs, @tables) = rnd->coin ? EGE::SQL::RandomTable->education_db : EGE::SQL::RandomTable->product_db;
+    my ($tabs, @tables) = rnd->coin ? EGE::SQL::RandomTable->education_db(rnd->in_range(5,8)) : EGE::SQL::RandomTable->product_db(rnd->in_range(5,8));
     my @tab = rnd->pick_n(2, @tables);
     my (@answer, @wrong_ans);
     my @arrs = grep $tab[0]->find_field($_), @{$tab[1]->{fields}};
     my $field = $arrs[0];
-    my @arr_tab = grep $_ ne $field, @{$tab[1]->fields};
+    my @arr_tab = grep $_ ne $field, @{$tab[1]->{fields}};
     my ($question, $name_table, $select);
-    my $f = $tab[0]->fields->[0];
-    push @answer, _create_inner_join($f->{ref_field}->{table}, $tab[0], $f->{ref_field}, $f);
+    my @f = grep $_ ne $field, @{$tab[0]->{fields}};
+    push @answer, _create_inner_join($f[0]->{ref_field}->{table}, $tab[0], $f[0]->{ref_field}, $f[0]);
     if (rnd->coin) {
         push @answer, _create_inner_join($tab[0], $tab[1], $field, $field);
-        $question = $f->{ref_field}->{table};
-        my $f2 = $tab[1]->fields->[0];
+        my $f2 = $arr_tab[0];
         push @answer, _create_inner_join($tab[1], $f2->{ref_field}->{table}, $f2, $f2->{ref_field});
-        $name_table = $f2->{ref_field}->{table}->{name};
-        $select = EGE::SQL::Select->new($question, [])->text_html;
+        $name_table = $f[0]->{ref_field}->{table}->{name};
+        $question = $f2->{ref_field}->{table};
+        $select = EGE::SQL::Select->new($f[0]->{ref_field}->{table}, [])->text_html;
         push @$tabs, @tab;
     } else {
-        my @arr = @{$tab[0]->{fields}};
-        push @answer, _create_inner_join($tab[0], $arr[1]->{ref_field}->{table}, $arr[1], $arr[1]->{ref_field});
+        my @arr = grep $_ ne $field, @{$tab[0]->{fields}};
+        push @answer, _create_inner_join($tab[0], $field->{ref_field}->{table}, $field, $field->{ref_field});
         push @wrong_ans, _create_inner_join(
             $tab[0], $arr_tab[0]->{ref_field}->{table},
             'id_' . rnd->pick(@$tabs[0]->{name}, @$tabs[1]->{name}, @$tabs[2]->{name}), 'id');
@@ -74,7 +74,7 @@ sub many_inner_join {
         EGE::SQL::Query::where_sql({ where =>
             EGE::Prog::make_expr([ '==', $question->{fields}[0], @$name[0]]) });
     $self->variants(map $_->text_html, @answer, @wrong_ans);
-    $self->{correct} = \@answer;
+    $self->{correct} = [ map $_ <= @answer ? 1 : 0 , 1.. @answer + @wrong_ans];
 }
 
 1;

@@ -308,3 +308,56 @@ sub pack_table {
     is pack_table($t1), 'id x z y name|1 1 1 2 1|2 1 2 3 2|3 1 3 4 3', 'insert column index 2';
     is $t1->find_field('z'), 'z', 'find column after insert';
 }
+
+{
+    my $t1 = EGE::SQL::Table->new([ my $x = EGE::Prog::Field->new({name => 'x'}),
+        my $y = EGE::Prog::Field->new({name => 'y'}) ], name => 't1');
+    $t1->insert_rows([ 1, 2 ], [ 1, 3 ], [ 2, 4 ]);
+    my $q = EGE::SQL::Select->new($t1, [ make_expr ['()', 'count', $x] ]);
+    is $q->text, 'SELECT count(x) FROM t1', 'query text: count(x)';
+    is pack_table($q->run()), 'expr_1|2', 'table count (x)';
+
+    $q = EGE::SQL::Select->new($t1, [ make_expr ['()', 'min', $y] ]);
+    is $q->text, 'SELECT min(y) FROM t1', 'query text: min(y)';
+    is pack_table($q->run()), 'expr_1|2', 'table min(y)';
+
+    $q = EGE::SQL::Select->new($t1, [ make_expr ['()', 'max', $y] ]);
+    is $q->text, 'SELECT max(y) FROM t1', 'query text: max(y)';
+    is pack_table($q->run()), 'expr_1|4', 'table max(y)';
+
+    $q = EGE::SQL::Select->new($t1, [ make_expr ['()', 'sum', $x] ]);
+    is $q->text, 'SELECT sum(x) FROM t1', 'query text: sum(x)';
+    is pack_table($q->run()), 'expr_1|4', 'table sum(x)';
+
+    $q = EGE::SQL::Select->new($t1, [ make_expr ['()', 'avg', $y] ]);
+    is $q->text, 'SELECT avg(y) FROM t1', 'query text: avg(y)';
+    is pack_table($q->run()), 'expr_1|3', 'table avg(y)';
+
+    $q = EGE::SQL::Select->new($t1, [ make_expr ['()', 'sum', make_expr(['+', $y, $x]) ]]);
+    is $q->text, 'SELECT sum(y + x) FROM t1', 'query text: sum(y+x)';
+    is pack_table($q->run()), 'expr_1|13', 'table sum(y+x)';
+
+    $q = EGE::SQL::Select->new($t1, [ make_expr ['()', 'sum', make_expr(['+', make_expr(['()', 'max', $y]), $x]) ]]);
+    is $q->text, 'SELECT sum(max(y) + x) FROM t1', 'query text: sum(max(y)+x)';
+    is pack_table($q->run()), 'expr_1|16', 'table sum(max(y)+x)';
+
+    $q = EGE::SQL::Select->new($t1, [ make_expr ['()', 'sum', make_expr(['+', make_expr(['()', 'max',
+        make_expr(['+', make_expr(['()', 'min', $x]), $y]) ]), $x]) ]]);
+    is $q->text, 'SELECT sum(max(min(x) + y) + x) FROM t1', 'query text: sum(max(min(x)+y)+x)';
+    is pack_table($q->run()), 'expr_1|19', 'table sum(max(min(x)+y)+x)';
+
+    $q = EGE::SQL::Select->new($t1, [ make_expr ['()', 'sum', make_expr(['+', make_expr(['()', 'max',
+        make_expr(['+', make_expr(['()', 'max', $x]), $y]) ]), $x]) ]]);
+    is $q->text, 'SELECT sum(max(max(x) + y) + x) FROM t1', 'query text: sum(max(max(x)+y)+x)';
+    is pack_table($q->run()), 'expr_1|22', 'table sum(max(max(x)+y)+x)';
+
+    $q = EGE::SQL::Select->new($t1, [ make_expr (['()', 'sum', make_expr(['+', make_expr(['()', 'max',
+        make_expr(['+', make_expr(['()', 'max', $x]), $y]) ]), $x])]),  make_expr(['()', 'max', $x])]);
+    is $q->text, 'SELECT sum(max(max(x) + y) + x), max(x) FROM t1', 'query text: sum(max(max(x)+y)+x), max(x)';
+    is pack_table($q->run()), 'expr_1 expr_2|22 2', 'table sum(max(max(x)+y)+x), max(x)';
+
+    $q = EGE::SQL::Select->new($t1, [ make_expr ['()', 'sum', make_expr(['+',
+        make_expr(['+', make_expr(['()', 'max', $x]),  make_expr(['()', 'max', $y])]) , $x]) ]]);
+    is $q->text, 'SELECT sum(max(x) + max(y) + x) FROM t1', 'query text: sum(max(x)+ max(y)+x)';
+    is pack_table($q->run()), 'expr_1|22', 'table sum(max(x)+max(y)+x)';
+}
