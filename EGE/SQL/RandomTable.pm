@@ -21,8 +21,7 @@ sub create_table {
 }
 
 sub education_db {
-    my ($self) = @_;
-    my $m = rnd->in_range(5,8);
+    my ($self, $m) = @_;
     my $lecturer = EGE::SQL::People->make_table(1, $m, 'lecturers');
     my $student = EGE::SQL::People->make_table(1, $m, 'students');
     my $subject = EGE::SQL::Subjects->make_table(2, int($m / 2));
@@ -34,25 +33,24 @@ sub education_db {
     $student->{text} = { $lecturer->{name} => 'Какие преподаватели преподают у студента' };
     $subject->{text} = { $student->{name} => 'Кто изучает предмет' , $lecturer->{name} => 'Кто преподаёт предмет' };
     [ $lecturer, $student, $subject ],
-        EGE::SQL::Utils::related($lecturer->fields->[0], $subject->fields->[0], @{$subject->column_array('id')}),
-        EGE::SQL::Utils::related($student->fields->[0], $subject->fields->[0], map rnd->pick(@{$subject->column_array('id')}), 1 .. $m);
+        EGE::SQL::Utils::related($student->fields->[0], $subject->fields->[0], map rnd->pick(@{$subject->column_array('id')}), 1 .. $m),
+        EGE::SQL::Utils::related($lecturer->fields->[0], $subject->fields->[0], @{$subject->column_array('id')});
 }
 
 sub product_db {
-    my ($self) = @_;
-    my $m = rnd->in_range(5,8);
+    my ($self, $m) = @_;
     my $buyers = EGE::SQL::People->make_table(1, $m);
-    my $product = EGE::SQL::Products->make_table(2, $m);
-    my $cities = EGE::SQL::Cities->make_table(1, $m);
+    my $product = EGE::SQL::Products->make_table(2, int($m / 2));
+    my $cities = EGE::SQL::Cities->make_table(1, int($m / 2));
     my @males = EGE::Russian::Names::different_males($m);
     $buyers->insert_column(name => 'Имя', array => \@males , index => 1);
     $_->insert_column(name => 'id', array => [ 1..$_->count ]) for $cities, $product, $buyers;
     $cities->{text} = { $product->{name} => 'Какие товары покупают в городе' };
     $product->{text} = { $cities->{name} => 'Где покупали' };
     $buyers->{text} = { $cities->{name} => 'Где живет', $product->{name} => 'Что купил' };
-    [ $cities, $product, $buyers ],
-        EGE::SQL::Utils::related($cities->fields->[0], $buyers->{fields}->[0], @{$buyers->column_array('id')}),
-        EGE::SQL::Utils::related($product->fields->[0], $buyers->{fields}->[0], @{$buyers->column_array('id')});
+    [ $buyers, $cities, $product ],
+        EGE::SQL::Utils::related($buyers->{fields}->[0], $cities->fields->[0],  map rnd->pick(@{$cities->column_array('id')}), 1 .. $m),
+        EGE::SQL::Utils::related($buyers->{fields}->[0], $product->fields->[0], map rnd->pick(@{$product->column_array('id')}), 1 .. $m);
 }
 
 package EGE::SQL::BaseTable;
