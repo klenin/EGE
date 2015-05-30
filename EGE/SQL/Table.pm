@@ -189,4 +189,62 @@ sub column_array {
     [ map $_->[$column], @{$self->{data}} ];
 }
 
+package EGE::SQL::Table::Aggregate::count;
+use strict;
+use warnings;
+use EGE::Prog qw(make_expr);
+
+sub call {
+    my ($self, $params, $env, $id) = @_;
+    my $val = @$params[0];
+    $env->{'count_field'} = $env->{'count_field'} ? $env->{'count_field'} : {};
+    if (!$env->{'count_field'}->{$val}) {
+        $env->{$id}->{count} = $env->{$id}->{count} ? $env->{$id}->{count} + 1 : 1;
+    }
+    $env->{'count_field'}->{$val} = 1;
+    $env->{$id}->{count};
+}
+
+package EGE::SQL::Table::Aggregate::sum;
+use strict;
+use warnings;
+
+sub call {
+    my ($self, $params, $env, $id) = @_;
+    my $val = @$params[0];
+    $env->{$id}->{sum} += $val;
+}
+
+package EGE::SQL::Table::Aggregate::avg;
+use strict;
+use warnings;
+
+sub call {
+    my ($self, $params, $env, $id) = @_;
+    my $val = @$params[0];
+    $env->{$id}->{sum} += $val;
+    $env->{$id}->{count}++;
+    $env->{$id}->{sum} / $env->{$id}->{count};
+}
+
+package EGE::SQL::Table::Aggregate::min;
+use strict;
+use warnings;
+
+sub call {
+    my ($self, $params, $env, $id) = @_;
+    $env->{$id}->{min} = @$params[0] if (!defined $env->{$id}->{min});
+    $env->{$id}->{min} = @$params[0] < $env->{$id}->{min} ? @$params[0] : $env->{$id}->{min};
+}
+
+package EGE::SQL::Table::Aggregate::max;
+use strict;
+use warnings;
+
+sub call {
+    my ($self, $params, $env, $id) = @_;
+    $env->{$id}->{max} = @$params[0] if (!defined $env->{$id}->{max});
+    $env->{$id}->{max} = @$params[0] > $env->{$id}->{max} ? @$params[0] : $env->{$id}->{max};
+}
+
 1;
