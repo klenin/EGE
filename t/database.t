@@ -2,7 +2,8 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 74;
+use Test::More tests => 104;
+
 use Test::Exception;
 
 use lib '..';
@@ -360,4 +361,35 @@ sub pack_table {
         make_expr(['+', make_expr(['()', 'max', $x]),  make_expr(['()', 'max', $y])]) , $x]) ]]);
     is $q->text, 'SELECT sum(max(x) + max(y) + x) FROM t1', 'query text: sum(max(x)+ max(y)+x)';
     is pack_table($q->run()), 'expr_1|22', 'table sum(max(x)+max(y)+x)';
+}
+
+{
+    my $t1 = EGE::SQL::Table->new([
+        my $x = EGE::Prog::Field->new({name => 'x'}),
+        my $y = EGE::Prog::Field->new({name => 'y'}) ], name => 't1');
+    $t1->insert_rows([ 1, 2 ], [ 1, 3 ], [ 2, 4 ], [2, 5]);
+
+    my $q = EGE::SQL::Select->new($t1, [$x, make_expr ['()', 'sum', $y] ], 0, group => [ $x ]);
+    is $q->text, 'SELECT x, sum(y) FROM t1 GROUP BY x', 'query text: x, sum(x) group by';
+    is pack_table($q->run()), 'x expr_1|1 5|2 9', 'group by one field';
+
+    my $t2 = EGE::SQL::Table->new([
+        my $z = EGE::Prog::Field->new({name => 'z'}),
+        my $r = EGE::Prog::Field->new({name => 'r'}),
+        my $k = EGE::Prog::Field->new({name => 'k'}) ], name => 't2');
+    $t2->insert_rows([ 1, 2, 3], [ 1, 4, 5 ], [ 2, 4, 5 ], [2, 5, 7]);
+
+    $q = EGE::SQL::Select->new($t2, [$k, $r, make_expr ['()', 'sum', 'z'] ], 0, group => [ $k, $r ]);
+    is $q->text, 'SELECT k, r, sum(z) FROM t2 GROUP BY k, r', 'query text: k, r, sum(z) group by';
+    is pack_table($q->run()), 'k r expr_1|3 2 1|5 4 3|7 5 2', 'group by two fields';
+
+    my $t3 = EGE::SQL::Table->new([
+        my $m = EGE::Prog::Field->new({name => 'm', type => 'str'}),
+        my $n = EGE::Prog::Field->new({name => 'n'}) ], name => 't3');
+    $t3->insert_rows([ 'str', 2], [ 'str', 4 ], [ 'aaa', 4 ], ['aaa', 5]);
+
+    $q = EGE::SQL::Select->new($t3, [ $m, make_expr [ '()', 'sum', 'n' ] ], 0, group => [ $m ]);
+    is $q->text, 'SELECT m, sum(n) FROM t3 GROUP BY m', 'query text: m, sum(n) group by';
+    is pack_table($q->run()), 'm expr_1|str 6|aaa 9', 'table m sum(n) group by';
+}
 }

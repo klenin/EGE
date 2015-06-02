@@ -122,8 +122,9 @@ sub select {
     my ($ref, $aggr, $group) = 0;
     if (ref $p eq 'HASH') {
         $ref = $p->{ref};
+        $group = $p->{group};
     }
-    $aggr =  ref $_ eq 'EGE::Prog::CallFuncAggregate' ? 1: $aggr for @$fields;
+    $aggr =  grep ref $_ eq 'EGE::Prog::CallFuncAggregate', @$fields;
     my $k = 0;
 
     my $result = EGE::SQL::Table->new([ map { ref $_ ne 'EGE::Prog::Field' && ref $_ ? 'expr_' . ++$k : $_ } @$fields ]);
@@ -132,13 +133,32 @@ sub select {
     my $calc_row = sub { map $_->run($_[0]), @values };
 
     my $tab_where = $self->where($where, $ref);
+    if ($group) {
+        $result->{data} = $tab_where->group_by($calc_row, $group);
+    } else {
         my @ans;
         my $evn = $tab_where->_hash;
         push @ans, [ $calc_row->($tab_where->_row_hash($_, $evn)) ] for @{$tab_where->{data}};
         $result->{data} = $aggr ? [ $ans[0] ] : [ @ans ];
+    }
     $result;
 }
 
+sub group_by {
+    my ($self, $calc_row, $fields, $having) = @_;
+    my $val = {};
+    for my $data (@{$self->{data}}) {
+        my $text = join ('\0', map @$data[$self->{field_index}->{$_}], @$fields);
+        $val->{$text} = EGE::SQL::Table->new($self->{fields}) if (!defined $val->{$text});
+        push @{$val->{$text}->{data}}, $data;
+    }
+    my @ans;
+    for my $tab (sort values (%$val)) {
+        my $row_hash = $tab->_row_hash(@{$tab->{data}}[0], $tab->_hash);
+        push @ans, [ $calc_row->($row_hash) ];
+    }
+    [ @ans ];
+}
 sub where {
     my ($self, $where, $ref) = @_;
     $where or return $self;

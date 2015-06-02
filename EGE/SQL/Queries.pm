@@ -9,7 +9,9 @@ use warnings;
 use EGE::Html;
 
 sub text_html { html->tag('tt', html->cdata($_[0]->text)); }
+sub _field_sql { ref $_ ? $_->to_lang_named('SQL') : $_ }
 sub where_sql { $_[0]->{where} ? ' WHERE '. $_[0]->{where}->to_lang_named('SQL') : '' }
+sub group_by_sql { $_[0]->{group} ?  ' GROUP BY '. join(', ', map &_field_sql, @{$_[0]->{group}}) : '' }
 sub _maybe_run { $_[1]->can('run') ? $_[1]->run : $_[1]; }
 
 sub init_table {
@@ -30,6 +32,7 @@ sub new {
     my $self = {
         fields => $fields,
         where => $where,
+        group => $p{group},
     };
     bless $self, $class;
     $self->init_table($table);
@@ -38,19 +41,18 @@ sub new {
 sub run {
     my ($self) = @_;
     my $table = $self->{table}->can('run') ? $self->{table}->run : $self->{table};
-    $table->select($self->{fields}, $self->{where});
+    $table->select($self->{fields}, $self->{where}, { group => $self->{group} });
 }
 
 sub name { $_[0]->{table_name} }
 
-sub _field_sql { ref $_ ? $_->to_lang_named('SQL') : $_ }
 
 sub text {
     my ($self) = @_;
-    my $fields = join(', ', map &_field_sql, @{$self->{fields}}) || '*';
+    my $fields = join(', ', map $self->_field_sql, @{$self->{fields}}) || '*';
     my $table = $self->{table_name};
     $table = $self->{table}->can('text') ? $self->{table}->text : $self->{table_name} if $self->{table};
-    "SELECT $fields FROM $table" . $self->where_sql;
+    "SELECT $fields FROM $table" . $self->where_sql . $self->group_by_sql;
 }
 
 package EGE::SQL::SubqueryAlias;
