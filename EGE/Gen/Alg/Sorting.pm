@@ -20,34 +20,35 @@ sub first_space {
     $i;
 }
 
-sub sort_command {
+sub sort_line {
+    # не используется construct, потому что на Basic'е end выглядят по разному
     my ($self) = @_;
-    my @colors = qw(blue fuchsia green maroon navy olive purple red silver teal yellow);
-    $self->{text} = "Отсортируйте команды таким образом, чтобы они образовали алгоритм сортировки " .
+    $self->{text} = "Отсортируйте строки таким образом, чтобы они образовали алгоритм сортировки " .
         "массива <code>a</code>, длинной <code>n</code>." .
-        "<p><i>Прим.</i> начало и конец условных операторов и операторов цикла должны иметь одинаковый цвет, " .
-        "недопустимо использовать начало и конец разного цвета, даже если они имеют одинаковый текст.</p>";
-    my $b = rnd->pick(values %EGE::Prog::Alg::sortings);
+        "<p><i>Прим1.</i> Начало и конец условных операторов и операторов цикла должны иметь одинаковый цвет, " .
+        "недопустимо использовать начало и конец разного цвета, даже если они имеют одинаковый текст.</p>" .
+        "<p><i>Прим2.</i> Индексация массивов на всех языках начинается с <code>0</code> и " .
+        "заканчивается <code>n-1</code>.</p>";
 
-    for my $lang (qw(Basic C Alg Pascal))
+    my $b = rnd->pick(values %EGE::Prog::Alg::sortings);
+    my $fst_color = rnd->in_range(0, 11);
+    my @langs = qw(Basic C Alg Pascal);
+    for my $lang (@langs)
     {
-        my @lines = split '\n', EGE::Prog::make_block($b)->to_lang_named($lang, 1);
-        my @copy = @lines;
-        $_ =~ s/^ +// for @copy;
-        my @vars =  map html->pre($_, { class => $lang }), @copy;
-        for my $i (0 .. @vars - 2) {
-            my ($fst, $sec) = map first_space($lines[$_]), ($i, $i + 1);
-            my ($index, $num) = $fst < $sec ? ($i, $fst) : ($i + 1, $sec);
-            my $attr = {
-                style => "color: $colors[$num / 2]",
-                class => $lang
-            };
-            $vars[$index] = html->pre($copy[$index], $attr) if $fst != $sec;
-        }
-        $self->{variants}->[$_] .= $vars[$_] for 0 .. scalar(@vars) - 1;
+        my $code = EGE::Prog::make_block($b)->to_lang_named($lang, { 
+                html => {
+                    coloring => $fst_color,
+                    lang_marking => 1,
+                },
+                body_is_block => 1,
+                lang_marking => 1,
+                unindent => 1,
+            });
+        my @cur_v = split '\n', $code;
+        $self->{variants}->[$_] .= $cur_v[$_] for 0 .. scalar(@cur_v) - 1;
     }
     $self->{correct} = [ 0 .. scalar(@{$self->{variants}}) - 1 ];
-    $self->{langs} = [ qw(Basic C Alg Pascal) ];
+    $self->{options} = { map { $_ => EGE::Prog::lang_names->{$_} } @langs };
     1;
 }
 1;

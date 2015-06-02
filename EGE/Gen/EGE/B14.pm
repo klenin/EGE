@@ -21,7 +21,7 @@ sub find_func_min {
     my $x2 = rnd->in_range($bord - 10, $bord);
     my $param = rnd->index_var;
     my $b = EGE::Prog::make_block([
-        'func', 'F', [ $param ], [
+        'func', [ 'F', $param ], [
             '=', 'F', [
                 '*', 
                     [ '+', $param, -$x1 ], 

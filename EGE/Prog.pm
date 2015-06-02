@@ -7,6 +7,8 @@ use utf8;
 
 use EGE::Utils;
 use EGE::Prog::Lang;
+use EGE::Html;
+
 package EGE::Prog::SynElement;
 
 sub new {
@@ -17,8 +19,16 @@ sub new {
 }
 
 sub to_lang_named {
-    my ($self, $lang_name, $unformated) = @_;
-    $self->to_lang(EGE::Prog::Lang::lang($lang_name), $unformated);
+    my ($self, $lang_name, $options) = @_;
+    my $lang = "EGE::Prog::Lang::$lang_name"->new(%{$options});
+    my $ret = $self->to_lang($lang);
+    if (ref $lang->{html} eq 'HASH' && $lang->{html}->{lang_marking}) {
+        my @lines = split("\n", $ret);
+        $_ = EGE::Html::html->tag('pre', $_, { class => $lang_name }) for @lines;
+        $ret = join "\n", @lines;
+    }
+    $ret = EGE::Html::html->tag('pre', $ret) if ref $lang->{html} eq 'HASH' && $lang->{html}->{pre};
+    $ret;
 }
 
 sub to_lang { die; }
@@ -77,7 +87,7 @@ use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang) = @_;
-    sprintf $lang->assign_fmt,
+    sprintf $lang->get_fmt('assign_fmt'),
         map $self->{$_}->to_lang($lang), qw(var expr);
 }
 
@@ -107,7 +117,7 @@ use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang) = @_;
-    sprintf $lang->index_fmt,
+    sprintf $lang->get_fmt('index_fmt'),
         $self->{array}->to_lang($lang),
         join ', ', map $_->to_lang($lang), @{$self->{indices}};
 }
@@ -133,9 +143,9 @@ use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang) = @_;
-    sprintf $lang->call_func_fmt,
+    sprintf $lang->get_fmt('call_func_fmt'),
         $self->{func},
-        join $lang->args_separator, map $_->to_lang($lang), @{$self->{args}};
+        join $lang->get_fmt('args_separator'), map $_->to_lang($lang), @{$self->{args}};
 }
 
 sub run {
@@ -170,8 +180,8 @@ use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang) = @_;
-    sprintf $lang->print_fmt,
-        join $lang->args_separator, map $_->to_lang($lang), @{$self->{args}};
+    sprintf $lang->get_fmt('print_fmt'),
+        join $lang->get_fmt('args_separator'), map $_->to_lang($lang), @{$self->{args}};
 }
 
 sub run {
@@ -212,7 +222,7 @@ sub needs_parens {
     $parent_prio < $self->prio($lang);
 }
 
-sub run_fmt { $_[0]->to_lang_fmt(EGE::Prog::Lang::lang('Perl')) }
+sub run_fmt { $_[0]->to_lang_fmt(EGE::Prog::Lang::Perl->new) }
 sub to_lang_fmt {}
 
 sub gather_vars { $_[0]->{$_}->gather_vars($_[1]) for $_[0]->_children; }
@@ -226,7 +236,7 @@ use List::Util;
 
 sub to_lang_fmt {
     my ($self, $lang) = @_;
-    $lang->op_fmt($self->{op});
+    $lang->get_fmt('op_fmt', $self->{op});
 }
 
 sub _children { qw(left right) }
@@ -247,19 +257,14 @@ sub prio { $_[1]->{prio}->{'`' . $_[0]->{op}} or die $_[0]->{op} }
 
 sub to_lang_fmt {
     my ($self, $lang) = @_;
-    ($lang->translate_un_op->{$self->{op}} || $self->{op}) . ' %s';
+    $lang->get_fmt('un_op_fmt', $self->{op});
 }
 
 sub _children { qw(arg) }
 
 package EGE::Prog::Inc;
 use base 'EGE::Prog::UnOp';
-
-sub to_lang_fmt {
-    my ($self, $lang) = @_;
-    $lang->translate_un_op->{$self->{op}} || $self->{op};
-}
-
+    
 sub run {
     my ($self, $env) = @_;
     eval sprintf $self->{op}, '${$self->{arg}->get_ref($env)}';
@@ -270,7 +275,7 @@ use base 'EGE::Prog::Op';
 
 sub to_lang_fmt {
     my ($self, $lang) = @_;
-    my $r = $lang->op_fmt($self->{op});
+    my $r = $lang->get_fmt('op_fmt', $self->{op});
     return $r unless ref $r;
     my $s = EGE::Prog::make_expr($r)->to_lang($lang);
     $s =~ s/(\d+)/%$1\$s/g;
@@ -284,7 +289,7 @@ use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang) = @_;
-    sprintf $lang->var_fmt, $self->{name};
+    sprintf $lang->get_fmt('var_fmt'), $self->{name};
 }
 
 sub run {
@@ -342,8 +347,9 @@ package EGE::Prog::Block;
 use base 'EGE::Prog::SynElement';
 
 sub to_lang {
-    my ($self, $lang, $unformated) = @_;
-    join $lang->block_stmt_separator, map $_->to_lang($lang, $unformated), @{$self->{statements}};
+    my ($self, $lang) = @_;
+    join $lang->get_fmt('block_stmt_separator'),
+        map $_->to_lang($lang), @{$self->{statements}};
 };
 
 sub run {
@@ -356,6 +362,7 @@ sub _visit_children { my $self = shift; $_->visit_dfs(@_) for @{$self->{statemen
 sub complexity {
     my $self = shift;
     $_[1]->{change_min} and return List::Util::min(map($_->complexity(@_), @{$self->{statements}})) || 0;
+    $_[1]->{change_sum} and return List::Util::sum(map($_->complexity(@_), @{$self->{statements}})) || 0;
     List::Util::max(map($_->complexity(@_), @{$self->{statements}})) || 0;
 }
 
@@ -365,17 +372,23 @@ use base 'EGE::Prog::SynElement';
 sub to_lang_fields {}
 
 sub to_lang {
-    my ($self, $lang, $unformated) = @_;
+    my ($self, $lang) = @_;
     my $body_is_block = @{$self->{body}->{statements}} > 1;
     no strict 'refs';
     my ($fmt_start, $fmt_end) =
-        map $lang->$_($body_is_block || $unformated), $self->get_formats;
-    my $body = $self->{body}->to_lang($lang, $unformated);
-    
-    $body =~ s/^/  /mg if $fmt_start =~ /\n$/; # отступы
+        map $lang->get_fmt($_, $body_is_block || $lang->{body_is_block}), $self->get_fmt_names;
+
+    if (ref $lang->{html} eq 'HASH' && defined $lang->{html}->{coloring}) {
+        my $c = EGE::Html::html->color($lang->{html}->{coloring}++);
+        my $s = { EGE::Html::html->style(color => $c) };
+        $_ =~ s/([^\n]+)/EGE::Html::html->tag('span', $1, $s)/ge for ($fmt_start, $fmt_end);
+    }
+
+    my $body = $self->{body}->to_lang($lang);
+    $body =~ s/^/  /mg if !$lang->{unindent} && $fmt_start =~ /\n$/; # отступы
     sprintf
         $fmt_start . $self->to_lang_fmt . $fmt_end,
-        map($self->{$_}->to_lang($lang, $unformated), $self->to_lang_fields), $body;
+        map($self->{$_}->to_lang($lang), $self->to_lang_fields), $body;
 }
 
 sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for $_->to_lang_fields, 'body' }
@@ -383,7 +396,7 @@ sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for $_->to_la
 package EGE::Prog::ForLoop;
 use base 'EGE::Prog::CompoundStatement';
 
-sub get_formats { qw(for_start_fmt for_end_fmt) }
+sub get_fmt_names { qw(for_start_fmt for_end_fmt) }
 sub to_lang_fmt { '%4$s' }
 sub to_lang_fields { qw(var lb ub) }
 
@@ -411,7 +424,7 @@ sub complexity {
 package EGE::Prog::IfThen;
 use base 'EGE::Prog::CompoundStatement';
 
-sub get_formats { qw(if_start_fmt if_end_fmt) }
+sub get_fmt_names { qw(if_start_fmt if_end_fmt) }
 sub to_lang_fmt { '%2$s' }
 sub to_lang_fields { qw(cond) }
 
@@ -500,7 +513,7 @@ use base 'EGE::Prog::CompoundStatement';
 package EGE::Prog::While;
 use base 'EGE::Prog::CondLoop';
 
-sub get_formats { qw(while_start_fmt while_end_fmt) }
+sub get_fmt_names { qw(while_start_fmt while_end_fmt) }
 sub to_lang_fmt { '%2$s' }
 sub to_lang_fields { qw(cond) }
 
@@ -512,7 +525,7 @@ sub run {
 package EGE::Prog::Until;
 use base 'EGE::Prog::CondLoop';
 
-sub get_formats { qw(until_start_fmt until_end_fmt) }
+sub get_fmt_names { qw(until_start_fmt until_end_fmt) }
 sub to_lang_fmt { '%2$s' }
 sub to_lang_fields { qw(cond) }
 
@@ -531,7 +544,7 @@ sub to_lang {
 };
 
 sub run {
-    defined wantarray and die "required value of plain text: '$_[0]->{text}'";
+    defined wantarray and die "Required value of plain text: '$_[0]->{text}'";
 }
 
 package EGE::Prog::ExprStmt;
@@ -539,7 +552,7 @@ use base 'EGE::Prog::SynElement';
 
 sub to_lang {
     my ($self, $lang) = @_;
-    sprintf $lang->expr_fmt, $self->{expr}->to_lang($lang);
+    sprintf $lang->get_fmt('expr_fmt'), $self->{expr}->to_lang($lang);
 }
 
 sub run {
@@ -552,47 +565,88 @@ sub complexity { 0 }
 package EGE::Prog::FuncDef;
 use base 'EGE::Prog::CompoundStatement';
 
-sub get_formats { qw(func_start_fmt func_end_fmt) }
+sub new {
+    my ($class, %init) = @_;
+    my $self = delete $init{func};
+    $self->{$_} = $init{$_} for keys %init;
+    $self->{$_} = $init{head}->{$_} for qw(name params);
+    bless $self, $class;
+    $self;
+}
+
+sub get_fmt_names { map(($_[0]->{c_style} ? 'c' : 'p') . $_, qw(_func_start_fmt _func_end_fmt)); }
+
 sub to_lang_fmt { '%3$s' }
-sub to_lang_fields { qw(name params) }
+sub to_lang_fields { qw(head) }
 
 sub run {
     my ($self, $env) = @_;
-    $env->{'&'}->{$self->{name}->{name}} and die "Redefinition of function $self->{name}->{name}";
-    $env->{'&'}->{$self->{name}->{name}} = $self;
+    $env->{'&'}->{$self->{name}} and die "Redefinition of function $self->{name}";
+    $env->{'&'}->{$self->{name}} = $self;
 }
 
 sub call {
     my ($self, $args, $env) = @_;
     my $act_len = @$args;
-    my $form_len = @{$self->{params}->{names}};
-    $act_len > $form_len and die "Too many arguments to function $self->{name}->{name}";
-    $act_len < $form_len and die "Too few arguments to function $self->{name}->{name}";
+    my $form_len = @{$self->{params}};
+    $act_len > $form_len and die "Too many arguments to function $self->{name}";
+    $act_len < $form_len and die "Too few arguments to function $self->{name}";
     
-    my $new_env = { '&' => $env->{'&'}, map(($_ => shift @$args), @{$self->{params}->{names}}) };
-    $self->{body}->run_val($self->{name}->{name}, $new_env);
+    my $new_env = { '&' => $env->{'&'}, map(($_ => shift @$args), @{$self->{params}}) };
+    # return реализован с использованием die
+    eval { $self->{body}->run($new_env); };
+    my $e = $@;
+    if (!$e || $e->{p_return}) {
+        my $fn = $self->{name};
+        defined $new_env->{$fn} or die "Undefined result of function $fn";
+        return $new_env->{$fn};
+    }
+    elsif (defined $e->{return}) {
+        return $e->{return};
+    }
+    die $e;
 }
 
-package EGE::Prog::FuncParams;
+package EGE::Prog::FuncHead;
 use base 'EGE::Prog::SynElement';
+
+sub to_lang { 
+    my ($self, $lang) = @_; 
+    my $params = join $lang->get_fmt('args_separator'),
+        map sprintf($lang->get_fmt('args_fmt'), $_), @{$self->{params}};
+    ($self->{name}, $params); 
+}
+
+sub run {}
+
+package EGE::Prog::Return;
+use base 'EGE::Prog::SynElement';
+
+sub new {
+    my ($class, %init) = @_;
+    my $self = EGE::Prog::SynElement::new($class, %init);
+    my $t = $self->{expr} ? 1 : 0;
+    defined $self->{func} or die "return outside a function";
+    defined $self->{func}->{c_style} and $t != $self->{func}->{c_style} and
+        die "Use different types of return in the same func";
+    $self->{func}->{c_style} = $t;
+    $self;
+}
 
 sub to_lang {
     my ($self, $lang) = @_;
-    join $lang->args_separator, map sprintf($lang->args_fmt, $_), @{$self->{names}};
+    my ($fmt_t, $value) = $self->{func}->{c_style} ?
+        ('c_return_fmt', $self->{expr}->to_lang($lang)) :
+        ('p_return_fmt', $self->{func}->{name});
+    sprintf $lang->$fmt_t, $value;
 }
 
 sub run {
-}
-
-package EGE::Prog::FuncName;
-use base 'EGE::Prog::SynElement';
-
-sub to_lang {
-    my ($self, $lang) = @_;
-    $self->{name};
-}
-
-sub run {
+    my ($self, $env) = @_;
+    my $fn = $self->{func}->{name};
+    die $self->{func}->{c_style} ?
+        { return => $self->{expr}->run($env) } :
+        { p_return => 1 };
 }
 
 package EGE::Prog;
@@ -649,6 +703,9 @@ sub make_expr {
                 map { +"arg$_" => make_expr($src->[$_]) } 1..3
             );
         }
+        if (@$src == 0) {
+            return undef;
+        }
         die @$src;
     }
     if (ref $src eq 'SCALAR') {
@@ -670,50 +727,49 @@ sub statements_descr {{
     'if' => { type => 'IfThen', args => [qw(E_cond B_body)] },
     'while' => { type => 'While', args => [qw(E_cond B_body)] },
     'until' => { type => 'Until', args => [qw(E_cond B_body)] },
-    'func' => { type => 'FuncDef', args => [qw(N_name P_params B_body)] },
+    'func' => { type => 'FuncDef', args => [qw(H_head B_body)] },
     'expr' => { type => 'ExprStmt', args => [qw(E_expr)] },
+    'return' => { type => 'Return', args => [qw(E_expr)] },
 }}
 
 sub arg_processors {{
     C => sub { $_[0] },
     E => \&make_expr,
     B => \&make_block,
-    P => \&make_func_params,
-    N => \&make_func_name,
+    H => \&make_func_head,
 }}
 
-sub make_func_name {
+sub make_func_head {
     my ($src) = @_;
-    EGE::Prog::FuncName->new(name => $src);
-}
-
-sub make_func_params {
-    my ($src) = @_;
-    ref $src eq 'ARRAY' or die;
-    EGE::Prog::FuncParams->new(names => $src);
+    my $name = shift @$src;
+    EGE::Prog::FuncHead->new(name => $name, params => $src);
 }
 
 sub make_statement {
-    my ($next) = @_;
+    my ($next, $cur_func) = @_;
     my $name = $next->();
     my $d = statements_descr->{$name};
     $d or die "Unknown statement $name";
+    if ($name eq 'func') {
+        defined $cur_func and die "Local function definition";
+        $cur_func = {};
+    }
     my %args;
     for (@{$d->{args}}) {
         my ($p, $n) = /(\w)_(\w+)/;
-        $args{$n} = arg_processors->{$p}->($next->());
+        $args{$n} = arg_processors->{$p}->($next->(), $cur_func);
     }
-    "EGE::Prog::$d->{type}"->new(%args);
+    "EGE::Prog::$d->{type}"->new(%args, func => $cur_func);
 }
 
 sub make_block {
-    my ($src) = @_;
+    my ($src, $cur_func) = @_;
     ref $src eq 'ARRAY' or die;
     my @s;
     for (my $i = 0; $i < @$src; ) {
-        push @s, make_statement(sub { $src->[$i++] });
+        push @s, make_statement(sub { $src->[$i++] }, $cur_func);
     }
-    EGE::Prog::Block->new(statements => \@s);
+    EGE::Prog::Block->new(statements => \@s, func => $cur_func);
 }
 
 sub lang_names() {{

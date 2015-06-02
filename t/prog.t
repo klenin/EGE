@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 107;
+use Test::More tests => 130;
 use Test::Exception;
 
 use lib '..';
@@ -34,7 +34,7 @@ use EGE::Prog qw(make_block make_expr);
 {
     is make_expr(sub { $_[0]->{z} * 2 })->run({ z => 9 }), 18, 'black box';
     my $bb = EGE::Prog::BlackBox->new(lang => { 'C' => 'test' });
-    is $bb->to_lang(EGE::Prog::Lang::lang('C')), 'test', 'black box text';
+    is $bb->to_lang(EGE::Prog::Lang::C->new), 'test', 'black box text';
     my $h = { y => 5 };
     make_expr(sub { $_[0]->{y} = 6 })->run($h);
     is $h->{y}, 6, 'black box assign';
@@ -43,7 +43,8 @@ use EGE::Prog qw(make_block make_expr);
 {
     my $e = make_expr([ '!', [ '>', 'A', 'B' ] ]);
     is $e->to_lang_named('Basic'), 'NOT (A > B)', 'not()';
-    is $e->to_lang_named('Logic'), '¬ (<i>A</i> > <i>B</i>)', 'not in logic';
+    is $e->to_lang_named('Logic', { html => 1 }), '¬ (<i>A</i> &gt; <i>B</i>)', 'not in html logic';
+    is $e->to_lang_named('Logic'), '¬ (A > B)', 'not in logic';
     ok make_expr([ '||', [ '!', [ '&&', 1, 1 ] ], 1 ]), 'all logic';
 }
 
@@ -52,6 +53,7 @@ use EGE::Prog qw(make_block make_expr);
     is $e->run({ a => 3 }), 1, 'between 1';
     is $e->run({ a => 8 }), 0, 'between 2';
     is $e->to_lang_named('C'), '1 <= a && a <= 2 + 5', 'between C';
+    is $e->to_lang_named('C', { html => 1 }), '1 &lt;= a &amp;&amp; a &lt;= 2 + 5', 'between html C';    
     is $e->to_lang_named('Pascal'), 'InRange(a, 1, 2 + 5)', 'between Pascal';
     is $e->to_lang_named('SQL'), 'a BETWEEN 1 AND 2 + 5', 'between SQL';
 }
@@ -106,7 +108,7 @@ sub check_prio_C { check_lang 'C', @_[0..1], "priorities $_[2]" }
 }
 
 {
-    check_lang 'Pascal', [ '+', 'x', [ '**', 'x', 2 ] ], 'x + x ** 2', 'Pascal power' 
+    check_lang 'Pascal', [ '+', 'x', [ '**', 'x', 2 ] ], 'x + x ** 2', 'Pascal power'
 }
 
 {
@@ -238,13 +240,13 @@ end;~;
 }
 
 sub check_sub {
-    my ($lang, $block, $code, $name) = @_;
-    is $block->to_lang_named($lang), join("\n", @$code), $name;
+    my ($lang, $block, $code, $name, $opts) = @_;
+    is $block->to_lang_named($lang, $opts), join("\n", @$code), $name;
 }
 
 {
     my $b = make_block([
-        'func', 'g', [ qw(a b) ], [
+        'func', [ qw(g a b) ], [
             '=', 'g', [ '-', 'a', 'b' ]
         ],
         '=', 'a', [ '()', 'g', 3, 2 ]
@@ -291,7 +293,7 @@ sub check_sub {
             '}',
             '',
             '$a = g(3, 2);',
-        ],        
+        ],
     };
     check_sub($_, $b, $c->{$_}, "function calling, definition in $_") for keys %$c;
     is $b->run_val('a'), 1, 'run call function';
@@ -300,8 +302,61 @@ sub check_sub {
 
 {
     my $b = make_block([
-        'func', 'f', [ qw(x y z) ], [],
-        'func', 'f', [ qw(a b) ], [],
+        'func', [ qw(g a b) ], [
+            'return', [ '-', 'a', 'b' ]
+        ],
+        '=', 'a', [ '()', 'g', 3, 2 ]
+    ]);
+    my $c = {
+        Basic => [
+            'FUNCTION g(a, b)',
+            '  Return a - b',
+            'END FUNCTION',
+            '',
+            'a = g(3, 2)',
+        ],
+        Alg => [
+            'алг цел g(цел a, b)',
+            'нач',
+            '  выход_алг a - b | выход_алг выраж - оператор выхода из алгоритма, с возвращением результата выраж',
+            'кон',
+            '',
+            'a := g(3, 2)',
+        ],
+        Pascal => [
+            'function g(a, b: integer): integer;',
+            'begin',
+            '  exit(a - b);',
+            'end;',
+            '',
+            'a := g(3, 2);',
+        ],
+        C => [
+            'int g(int a, int b) {',
+            '  return a - b;',
+            '}',
+            '',
+            'a = g(3, 2);',
+        ],
+        Perl => [
+            'sub g {',
+            '  my ($a, $b) = @_;',
+            '  return $a - $b;',
+            '}',
+            '',
+            '$a = g(3, 2);',
+        ],
+    };
+    check_sub($_, $b, $c->{$_}, "c style function calling, definition in $_") for keys %$c;
+    is $b->run_val('a'), 1, 'run call c style function';
+    undef &g;
+    is eval($b->to_lang_named('Perl')), 3 - 2, 'eval perl c style funtion';
+}
+
+{
+    my $b = make_block([
+        'func', [ qw(f x y z) ], [],
+        'func', [ qw(f a b) ], [],
     ]);
     throws_ok sub { $b->run({}) }, qr/f/, 'function redefinition'
 }
@@ -315,7 +370,7 @@ sub check_sub {
 
 {
     my $b = make_block([
-        'func', 'f', [ qw(x y z) ], [],
+        'func', [ qw(f x y z) ], [],
         '=', 'a', [ '()', 'f', 1, 2 ],
     ]);
     throws_ok sub { $b->run({}) }, qr/f/, 'not enough arguments';
@@ -372,6 +427,132 @@ sub check_sub {
     my $b = make_expr([ '#', 'BUMP' ]);
     is $b->to_lang_named('C'), 'BUMP', 'to lang expr with plain text';
     throws_ok sub { $b = $b->run() } , qr/BUMP/, 'run expr with plain text'
+}
+{
+    throws_ok sub { make_block([
+        'func', [ qw(f x y z) ], [
+            'func', [ qw(g x y z) ], []
+        ]
+    ]) }, qr/Local function definition/, 'local func def';
+}
+
+{
+    throws_ok sub { make_block([
+        'func', [ qw(f x y z) ], [
+            'return', 1,
+            'return', []
+        ]
+    ]) }, qr/Use different types of return in the same func/, 'dif return type';
+}
+
+{
+    throws_ok sub { make_block([
+    	'return', 1,
+        'func', [ qw(f x y z) ], []
+    ]) }, qr/return outside a function/, 'return outside a func';
+}
+
+{
+    throws_ok sub { make_block([
+        'func', [ qw(myfunc x y z) ], [],
+        '=', 'a', [ '()', 'myfunc', 1, 2, 3 ]
+    ])->run({}) }, qr/Undefined result of function myfunc/, 'undefined func result without ret';
+}
+
+{
+    throws_ok sub { make_block([
+        'func', [ qw(myfunc x y z) ], [
+            'return', [],
+            '=', 'myfunc', 1
+        ],
+        '=', 'a', [ '()', 'myfunc', 1, 2, 3 ]
+    ])->run({}) }, qr/Undefined result of function myfunc/, 'undefined func result with ret';
+}
+
+{
+    throws_ok sub { make_block([
+        'func', [ qw(myfunc x y z) ], [
+            '=', 'vara', 'varb'
+        ],
+        '=', 'a', [ '()', 'myfunc', 1, 2, 3 ]
+    ])->run({}) }, qr/varb/, 'error in function';
+}
+
+{
+    my $b = make_block([
+        'func', [ qw(f x y) ], [
+            'if', [ '==', 'x', 'y' ], [ 'return', 1 ],
+            'return', 0 
+        ],
+        '=', 'a', [ '()', 'f', 1, 2 ],
+        '=', 'b', [ '()', 'f', 3, 3 ]
+    ]);
+    is $b->run_val('a'), 0, 'return c_style func 0';
+    is $b->run_val('b'), 1, 'return c_style func 1'
+}
+
+{
+    my $b = make_block([
+        'func', [ qw(f x y) ], [
+            '=', 'f', 1,
+            'if', [ '==', 'x', 'y' ], [ 'return', [] ],
+            '=', 'f', 0,
+        ],
+        '=', 'a', [ '()', 'f', 1, 2 ],
+        '=', 'b', [ '()', 'f', 3, 3 ]
+    ]);
+    is $b->run_val('a'), 0, 'return p_style func 0';
+    is $b->run_val('b'), 1, 'return p_style func 1'
+}
+
+{
+    my $b = make_block([
+        'while', [ '>', 'a', 0 ], [ 
+            '=', 'a', [ '-', 'a', 1 ],
+            'expr', [ '*', 2, 2 ]
+        ]
+    ]);
+    my $c1 = [
+        '<span style="color: blue;">DO WHILE a &gt; 0</span>',
+        '  a = a - 1',
+        '  2 * 2',
+        '<span style="color: blue;">END DO</span>',
+    ];
+    check_sub('Basic', $b, $c1, 'Basic html with coloring', { html => { coloring => 0 } });
+    
+    my $c2 = [
+        '<pre class="C"><span style="color: blue;">while (a &gt; 0) {</span></pre>',
+        '<pre class="C">  a = a - 1;</pre>',
+        '<pre class="C">  2 * 2;</pre>',
+        '<pre class="C"><span style="color: blue;">}</span></pre>',
+    ];
+    check_sub('C', $b, $c2, 'C html with coloring+lang_marking', { html => { coloring => 0, lang_marking => 1 } });
+    
+    my $c3 = [
+        'while a > 0 do begin',
+        'a := a - 1;',
+        '2 * 2;',
+        'end;',
+    ];
+    check_sub('Pascal', $b, $c3, 'Pascal unindent', { unindent => 1 });
+
+    my $b1 = make_block([
+        'while', [ '>', 'a', 0 ], [ 
+            'if', [ '%', 'a', 10 ], [
+                '=', 'a', 20
+            ],
+            '=', 'a', [ '-', 'a', 1 ],
+        ]
+    ]);
+    my $c4 = [
+        '<span style="color: purple;">while (a &gt; 0) {</span>',
+        '  <span style="color: red;">if (a % 10) {</span>',
+        '    a = 20;',
+        '  <span style="color: red;">}</span>',
+        '  a = a - 1;',      
+        '<span style="color: purple;">}</span>',
+    ];
+    check_sub('C', $b1, $c4, 'C html with multicoloring', { html => { coloring => 6 }, body_is_block => 1 });
 }
 
 {
