@@ -158,7 +158,7 @@ sub text {
     "INSERT INTO $self->{table_name} ($fields) VALUES ($values)";
 }
 
-package EGE::SQL::Inner_join;
+package EGE::SQL::InnerJoin;
 use base 'EGE::SQL::Query';
 
 sub new {

@@ -25,7 +25,7 @@ sub trivial_inner_join{
     my @arr = rnd->pick_n(scalar $table_city->count(), 1 .. $table_city->count() + 10);
     $table_city->insert_column(name => 'cid', array => \@arr, index => 1);
     my $count = $table_person->inner_join($table_city, 'id', 'cid')->count();
-    my $inner = EGE::SQL::Inner_join->new(
+    my $inner = EGE::SQL::InnerJoin->new(
         { tab => $table_person, field => 'cid' },
         { tab => $table_city, field => 'id' });
     my $query = EGE::SQL::Select->new($inner, []);

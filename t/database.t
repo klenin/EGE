@@ -164,7 +164,7 @@ sub pack_table {
 {
     my $t1 = EGE::SQL::Table->new([ qw(x y) ], name => 't1');
     my $t2 = EGE::SQL::Table->new([ qw(z) ], name => 't2');
-    my $q = EGE::SQL::Inner_join->new({ tab => $t1, field => 'x'}, { tab => $t2, field => 'z'} );
+    my $q = EGE::SQL::InnerJoin->new({ tab => $t1, field => 'x'}, { tab => $t2, field => 'z'} );
     is $q->text, 't1 INNER JOIN t2 ON t1.x = t2.z', 'query text: inner_join';
     my $s = EGE::SQL::Select->new($q, [ 'x' ]);
     is $s->text, 'SELECT x FROM t1 INNER JOIN t2 ON t1.x = t2.z', 'query text: select with inner join';
@@ -172,7 +172,7 @@ sub pack_table {
 }
 
 {
-    my $q = EGE::SQL::Inner_join->new(
+    my $q = EGE::SQL::InnerJoin->new(
         { tab => 't1', field => 'x'},
         { tab => EGE::SQL::SubqueryAlias->new('t2', 't3'), field => 'z'}
     );
@@ -180,7 +180,7 @@ sub pack_table {
 }
 
 {
-    my $q = EGE::SQL::Inner_join->new(
+    my $q = EGE::SQL::InnerJoin->new(
         { tab => 't1', field => 'p1.x'},
         { tab => 't2', field => 'p1x'},
     );
@@ -188,11 +188,11 @@ sub pack_table {
 }
 
 {
-    my $q1 = EGE::SQL::Inner_join->new(
+    my $q1 = EGE::SQL::InnerJoin->new(
         { tab => 't1', field => 'id'},
         { tab => 't2', field => 'id'},
     );
-    my $q2 = EGE::SQL::Inner_join->new(
+    my $q2 = EGE::SQL::InnerJoin->new(
         { tab => $q1, field => 'id'},
         { tab => 't3', field => 'id'},
     );
