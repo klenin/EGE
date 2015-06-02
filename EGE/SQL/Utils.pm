@@ -79,7 +79,7 @@ sub related {
         name => $field1->{table}->{name}.'_'.$field2->{table}->{name});
     my $start = 1;
     $table->insert_rows(@{EGE::Utils::transpose(
-        [ rnd->shuffle(@array) ], [ rnd->shuffle(@{$field1->{table}->column_array($field1)}) ])});
+        [ rnd->pick_n(scalar @array, @{$field1->{table}->column_array($field1)}) ], [ rnd->shuffle(@array) ])});
     ${$table->{fields}}[0]->{ref_field} = $field1;
     ${$table->{fields}}[1]->{ref_field} = $field2;
     $table;

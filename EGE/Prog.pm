@@ -145,6 +145,26 @@ sub run {
     $func->call( [ @arg_val ], $env);
 }
 
+package EGE::Prog::CallFuncAggregate;
+use base 'EGE::Prog::CallFunc';
+
+sub run {
+    my ($self, $env) = @_;
+    my $func = $env->{'&'}->{$self->{func}} or die "Undefined function $self->{func}";
+    return $env->{'&result'}->{$self} if defined $env->{'&result'}->{$self};
+    my ($ans, $new_env);
+    %$new_env = %$env;
+    for my $i (0 .. $new_env->{'&count'} - 1) {
+        while (my ($key, $values)  = each $new_env->{'&columns'}) {
+            $new_env->{$key} = @$values[$i];
+        }
+        my @arg_val = map $_->run($new_env), @{$self->{args}};
+        $ans = $func->call( [ @arg_val ], $new_env, $self);
+    }
+    $env->{'&result'}->{$self} = $ans;
+    $ans;
+}
+
 package EGE::Prog::Print;
 use base 'EGE::Prog::SynElement';
 
@@ -599,7 +619,8 @@ sub make_expr {
             shift @p;
             my $func = shift @p;
             $_ = make_expr($_) for @p;
-            return EGE::Prog::CallFunc->new(func => $func, args => \@p);
+            my $name = EGE::Utils::aggregate_function($func)? 'EGE::Prog::CallFuncAggregate': 'EGE::Prog::CallFunc';
+            return $name->new(func => $func, args => \@p);
         }
         if (@$src >= 1 && $src->[0] eq 'print') {
             my @p = @$src;

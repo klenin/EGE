@@ -2,7 +2,8 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 70;
+use Test::More tests => 107;
+
 use Test::Exception;
 
 use lib '..';
@@ -16,6 +17,7 @@ sub pack_table {
 }
 
 {
+    throws_ok { EGE::SQL::Table->new } qr/fields/, 'no fields';
     my $t = EGE::SQL::Table->new([ qw(a b c) ], name => 'table');
     is $t->name, 'table', 'table name';
 }
@@ -162,7 +164,7 @@ sub pack_table {
 {
     my $t1 = EGE::SQL::Table->new([ qw(x y) ], name => 't1');
     my $t2 = EGE::SQL::Table->new([ qw(z) ], name => 't2');
-    my $q = EGE::SQL::Inner_join->new({ tab => $t1, field => 'x'}, { tab => $t2, field => 'z'} );
+    my $q = EGE::SQL::InnerJoin->new({ tab => $t1, field => 'x'}, { tab => $t2, field => 'z'} );
     is $q->text, 't1 INNER JOIN t2 ON t1.x = t2.z', 'query text: inner_join';
     my $s = EGE::SQL::Select->new($q, [ 'x' ]);
     is $s->text, 'SELECT x FROM t1 INNER JOIN t2 ON t1.x = t2.z', 'query text: select with inner join';
@@ -170,7 +172,7 @@ sub pack_table {
 }
 
 {
-    my $q = EGE::SQL::Inner_join->new(
+    my $q = EGE::SQL::InnerJoin->new(
         { tab => 't1', field => 'x'},
         { tab => EGE::SQL::SubqueryAlias->new('t2', 't3'), field => 'z'}
     );
@@ -178,7 +180,7 @@ sub pack_table {
 }
 
 {
-    my $q = EGE::SQL::Inner_join->new(
+    my $q = EGE::SQL::InnerJoin->new(
         { tab => 't1', field => 'p1.x'},
         { tab => 't2', field => 'p1x'},
     );
@@ -186,11 +188,11 @@ sub pack_table {
 }
 
 {
-    my $q1 = EGE::SQL::Inner_join->new(
+    my $q1 = EGE::SQL::InnerJoin->new(
         { tab => 't1', field => 'id'},
         { tab => 't2', field => 'id'},
     );
-    my $q2 = EGE::SQL::Inner_join->new(
+    my $q2 = EGE::SQL::InnerJoin->new(
         { tab => $q1, field => 'id'},
         { tab => 't3', field => 'id'},
     );
@@ -262,25 +264,34 @@ sub pack_table {
 
 {
     my $t1 = EGE::SQL::Table->new([ qw(x y) ], name => 't1');
-    is @{$t1->{fields}}[0]->to_lang, 'x', 'field text';
-    is @{$t1->{fields}}[0], 'x', 'field name';
-    ok @{$t1->{fields}}[1] eq 'y', 'equal';
-    ok @{$t1->{fields}}[1] ne 'x', 'not_equal';
+    is $t1->fields->[0]->to_lang, 'x', 'field text';
+    is $t1->fields->[0], 'x', 'field name';
+    ok $t1->fields->[1] eq 'y', 'equal';
+    ok $t1->fields->[1] ne 'x', 'not_equal';
 }
 
 {
-    my $t2 = EGE::SQL::Table->new([ my $x = EGE::Prog::Field->new({name => 'x', name_alias => 'test'}),
-        EGE::Prog::Field->new({name => 'y', name_alias => 'test'}) ], name => 't2');
+    my $f = EGE::Prog::Field->new('f');
+    is $f->{name}, 'f', 'create field 1';
+    my $t = EGE::SQL::Table->new([ $f, 'g' ]);
+    isa_ok($t->fields->[1], 'EGE::Prog::Field', 'create field 2');
+}
+
+{
+    my $t2 = EGE::SQL::Table->new([
+        my $x = EGE::Prog::Field->new({ name => 'x', name_alias => 'test' }),
+        EGE::Prog::Field->new({ name => 'y', name_alias => 'test' }) ],
+        name => 't2');
     my $q = EGE::SQL::Select->new($t2, $t2->{fields}, make_expr [ '<', $x, 7 ]);
-    is $q->text, 'SELECT test.x, test.y FROM t2 WHERE test.x < 7', 'query text: field name alias';
+    is $q->text, 'SELECT test.x, test.y FROM t2 WHERE test.x < 7', 'query text: field name alias 1';
     $t2->assign_field_alias('t2');
-    is $q->text, 'SELECT t2.x, t2.y FROM t2 WHERE t2.x < 7', 'query text: field name alias';
+    is $q->text, 'SELECT t2.x, t2.y FROM t2 WHERE t2.x < 7', 'query text: field name alias 2';
 }
 
 {
     my $t1 = EGE::SQL::Table->new([ qw(x y) ], name => 't1');
-    ok $t1->find_field('x'), 'find field x';
-    ok $t1->find_field('z') == 0, 'find not existing field';
+    is $t1->find_field('x'), 'x', 'find field x';
+    is $t1->find_field('z'), undef, 'find non-existing field';
 }
 
 {
@@ -288,11 +299,118 @@ sub pack_table {
     $t1->insert_rows([ 1, 2 ], [ 1, 3 ], [ 1, 4 ]);
     $t1->insert_column(array => [ 1, 2, 3 ], name => 'id');
     is pack_table($t1), 'id x y|1 1 2|2 1 3|3 1 4', 'insert column unshift';
-    my $t2 = EGE::SQL::Table->new([ qw(z) ]);
+
+    my $t2 = EGE::SQL::Table->new([ 'z' ]);
     $t2->insert_rows([ 1 ], [ 2 ]);
     is pack_table($t1->inner_join($t2, 'id', 'z')), 'id x y z|1 1 2 1|2 1 3 2', 'inner join insert column';
     $t1->insert_column(array => [ 1, 2, 3 ], name => 'name', index => 3);
     is pack_table($t1), 'id x y name|1 1 2 1|2 1 3 2|3 1 4 3', 'insert column push';
     $t1->insert_column(array => [ 1, 2, 3 ], name => 'z', index => 2);
     is pack_table($t1), 'id x z y name|1 1 1 2 1|2 1 2 3 2|3 1 3 4 3', 'insert column index 2';
+    is $t1->find_field('z'), 'z', 'find column after insert';
+}
+
+{
+    my $t1 = EGE::SQL::Table->new([ my $x = EGE::Prog::Field->new({name => 'x'}),
+        my $y = EGE::Prog::Field->new({name => 'y'}) ], name => 't1');
+    $t1->insert_rows([ 1, 2 ], [ 1, 3 ], [ 2, 4 ]);
+    my $q = EGE::SQL::Select->new($t1, [ make_expr ['()', 'count', $x] ]);
+    is $q->text, 'SELECT count(x) FROM t1', 'query text: count(x)';
+    is pack_table($q->run()), 'expr_1|2', 'table count (x)';
+
+    $q = EGE::SQL::Select->new($t1, [ make_expr ['()', 'min', $y] ]);
+    is $q->text, 'SELECT min(y) FROM t1', 'query text: min(y)';
+    is pack_table($q->run()), 'expr_1|2', 'table min(y)';
+
+    $q = EGE::SQL::Select->new($t1, [ make_expr ['()', 'max', $y] ]);
+    is $q->text, 'SELECT max(y) FROM t1', 'query text: max(y)';
+    is pack_table($q->run()), 'expr_1|4', 'table max(y)';
+
+    $q = EGE::SQL::Select->new($t1, [ make_expr ['()', 'sum', $x] ]);
+    is $q->text, 'SELECT sum(x) FROM t1', 'query text: sum(x)';
+    is pack_table($q->run()), 'expr_1|4', 'table sum(x)';
+
+    $q = EGE::SQL::Select->new($t1, [ make_expr ['()', 'avg', $y] ]);
+    is $q->text, 'SELECT avg(y) FROM t1', 'query text: avg(y)';
+    is pack_table($q->run()), 'expr_1|3', 'table avg(y)';
+
+    $q = EGE::SQL::Select->new($t1, [ make_expr ['()', 'sum', make_expr(['+', $y, $x]) ]]);
+    is $q->text, 'SELECT sum(y + x) FROM t1', 'query text: sum(y+x)';
+    is pack_table($q->run()), 'expr_1|13', 'table sum(y+x)';
+
+    $q = EGE::SQL::Select->new($t1, [ make_expr ['()', 'sum', make_expr(['+', make_expr(['()', 'max', $y]), $x]) ]]);
+    is $q->text, 'SELECT sum(max(y) + x) FROM t1', 'query text: sum(max(y)+x)';
+    is pack_table($q->run()), 'expr_1|16', 'table sum(max(y)+x)';
+
+    $q = EGE::SQL::Select->new($t1, [ make_expr ['()', 'sum', make_expr(['+', make_expr(['()', 'max',
+        make_expr(['+', make_expr(['()', 'min', $x]), $y]) ]), $x]) ]]);
+    is $q->text, 'SELECT sum(max(min(x) + y) + x) FROM t1', 'query text: sum(max(min(x)+y)+x)';
+    is pack_table($q->run()), 'expr_1|19', 'table sum(max(min(x)+y)+x)';
+
+    $q = EGE::SQL::Select->new($t1, [ make_expr ['()', 'sum', make_expr(['+', make_expr(['()', 'max',
+        make_expr(['+', make_expr(['()', 'max', $x]), $y]) ]), $x]) ]]);
+    is $q->text, 'SELECT sum(max(max(x) + y) + x) FROM t1', 'query text: sum(max(max(x)+y)+x)';
+    is pack_table($q->run()), 'expr_1|22', 'table sum(max(max(x)+y)+x)';
+
+    $q = EGE::SQL::Select->new($t1, [ make_expr (['()', 'sum', make_expr(['+', make_expr(['()', 'max',
+        make_expr(['+', make_expr(['()', 'max', $x]), $y]) ]), $x])]),  make_expr(['()', 'max', $x])]);
+    is $q->text, 'SELECT sum(max(max(x) + y) + x), max(x) FROM t1', 'query text: sum(max(max(x)+y)+x), max(x)';
+    is pack_table($q->run()), 'expr_1 expr_2|22 2', 'table sum(max(max(x)+y)+x), max(x)';
+
+    $q = EGE::SQL::Select->new($t1, [ make_expr ['()', 'sum', make_expr(['+',
+        make_expr(['+', make_expr(['()', 'max', $x]),  make_expr(['()', 'max', $y])]) , $x]) ]]);
+    is $q->text, 'SELECT sum(max(x) + max(y) + x) FROM t1', 'query text: sum(max(x)+ max(y)+x)';
+    is pack_table($q->run()), 'expr_1|22', 'table sum(max(x)+max(y)+x)';
+}
+
+{
+    my $t1 = EGE::SQL::Table->new([
+        my $x = EGE::Prog::Field->new({name => 'x'}),
+        my $y = EGE::Prog::Field->new({name => 'y'}) ], name => 't1');
+    $t1->insert_rows([ 1, 2 ], [ 1, 3 ], [ 2, 4 ], [2, 5]);
+
+    my $q = EGE::SQL::Select->new($t1, [$x, make_expr ['()', 'sum', $y] ], 0, group => [ $x ]);
+    is $q->text, 'SELECT x, sum(y) FROM t1 GROUP BY x', 'query text: x, sum(x) group by';
+    is pack_table($q->run()), 'x expr_1|1 5|2 9', 'group by one field';
+
+    $q = EGE::SQL::Select->new($t1, [$x, make_expr ['()', 'sum', $y] ], 0, group => [ $x ],
+        having => make_expr([ '>', make_expr(['()', 'sum', $y]), 5 ]));
+    is $q->text, 'SELECT x, sum(y) FROM t1 GROUP BY x HAVING sum(y) > 5', 'query text: x, sum(x) group by having sum(y) > 5 ';
+    is pack_table($q->run()), 'x expr_1|2 9', 'table sum(y) group by having sum(y) > 5';
+
+    my $t2 = EGE::SQL::Table->new([
+        my $z = EGE::Prog::Field->new({name => 'z'}),
+        my $r = EGE::Prog::Field->new({name => 'r'}),
+        my $k = EGE::Prog::Field->new({name => 'k'}) ], name => 't2');
+    $t2->insert_rows([ 1, 2, 3], [ 1, 4, 5 ], [ 2, 4, 5 ], [2, 5, 7]);
+
+    $q = EGE::SQL::Select->new($t2, [$k, $r, make_expr ['()', 'sum', 'z'] ], 0, group => [ $k, $r ]);
+    is $q->text, 'SELECT k, r, sum(z) FROM t2 GROUP BY k, r', 'query text: k, r, sum(z) group by';
+    is pack_table($q->run()), 'k r expr_1|3 2 1|5 4 3|7 5 2', 'group by two fields';
+
+    my $t3 = EGE::SQL::Table->new([
+        my $m = EGE::Prog::Field->new({name => 'm', type => 'str'}),
+        my $n = EGE::Prog::Field->new({name => 'n'}) ], name => 't3');
+    $t3->insert_rows([ 'str', 2], [ 'str', 4 ], [ 'aaa', 4 ], ['aaa', 5]);
+
+    $q = EGE::SQL::Select->new($t3, [ $m, make_expr [ '()', 'sum', 'n' ] ], 0, group => [ $m ]);
+    is $q->text, 'SELECT m, sum(n) FROM t3 GROUP BY m', 'query text: m, sum(n) group by';
+    is pack_table($q->run()), 'm expr_1|str 6|aaa 9', 'table m sum(n) group by';
+}
+
+{
+    my $t1 = EGE::SQL::Table->new([ qw(x y) ], name => 't1');
+    my $t2 = EGE::SQL::Table->new([ qw(z) ], name => 't2');
+    my $expr = make_expr([ '<', @{$t1->fields}[0], @{$t2->fields}[0] ]);
+    $_->assign_field_alias($_->{name}) for ($t1, $t2);
+    $t1->insert_rows([ 1, 2], [ 2, 4 ]);
+    $t2->insert_rows([ 4 ], [ 2 ]);
+
+    my $q = EGE::SQL::InnerJoinExpr->new( $expr, { tab => $t1, field => 'x'}, { tab => $t2, field => 'z'} );
+    is $q->text, 't1 INNER JOIN t2 ON t1.x < t2.z', 'query text: inner_join_expr';
+
+    my $s = EGE::SQL::Select->new($q, [ 'x' ]);
+    is $s->text, 'SELECT x FROM t1 INNER JOIN t2 ON t1.x < t2.z', 'query text: select with inner join expr';
+    is pack_table($s->run), 'x|1|1|2', 'query run: inner_join_expr';
+
 }

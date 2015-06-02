@@ -3,11 +3,19 @@
 # http://github.com/klenin/EGE
 package EGE::Utils;
 
+
 use strict;
 use warnings;
 
 use base 'Exporter';
-our @EXPORT_OK = qw(transpose last_key);
+our @EXPORT_OK = qw(transpose last_key aggregate_function);
+
+sub aggregate_function {
+    my ($name) = @_;
+    my %aggr = %EGE::SQL::Table::Aggregate::;
+    return defined $aggr{ $name . '::' } if defined $name;
+    map substr ($_, -length($_), -2), keys %aggr;
+}
 
 sub transpose {
     @_ or die;

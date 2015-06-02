@@ -9,7 +9,10 @@ use warnings;
 use EGE::Html;
 
 sub text_html { html->tag('tt', html->cdata($_[0]->text)); }
+sub _field_sql { ref $_ ? $_->to_lang_named('SQL') : $_ }
 sub where_sql { $_[0]->{where} ? ' WHERE '. $_[0]->{where}->to_lang_named('SQL') : '' }
+sub having_sql { $_[0]->{having} ?  ' HAVING '. $_[0]->{having}->to_lang_named('SQL') : '' }
+sub group_by_sql { $_[0]->{group} ?  ' GROUP BY '. join(', ', map &_field_sql, @{$_[0]->{group}}) : '' }
 sub _maybe_run { $_[1]->can('run') ? $_[1]->run : $_[1]; }
 
 sub init_table {
@@ -30,6 +33,8 @@ sub new {
     my $self = {
         fields => $fields,
         where => $where,
+        group => $p{group},
+        having => $p{having},
     };
     bless $self, $class;
     $self->init_table($table);
@@ -38,19 +43,18 @@ sub new {
 sub run {
     my ($self) = @_;
     my $table = $self->{table}->can('run') ? $self->{table}->run : $self->{table};
-    $table->select($self->{fields}, $self->{where});
+    $table->select($self->{fields}, $self->{where}, { group => $self->{group}, having => $self->{having} });
 }
 
 sub name { $_[0]->{table_name} }
 
-sub _field_sql { ref $_ ? $_->to_lang_named('SQL') : $_ }
 
 sub text {
     my ($self) = @_;
-    my $fields = join(', ', map &_field_sql, @{$self->{fields}}) || '*';
+    my $fields = join(', ', map $self->_field_sql, @{$self->{fields}}) || '*';
     my $table = $self->{table_name};
     $table = $self->{table}->can('text') ? $self->{table}->text : $self->{table_name} if $self->{table};
-    "SELECT $fields FROM $table" . $self->where_sql;
+    "SELECT $fields FROM $table" . $self->where_sql . $self->group_by_sql . $self->having_sql;
 }
 
 package EGE::SQL::SubqueryAlias;
@@ -154,7 +158,7 @@ sub text {
     "INSERT INTO $self->{table_name} ($fields) VALUES ($values)";
 }
 
-package EGE::SQL::Inner_join;
+package EGE::SQL::InnerJoin;
 use base 'EGE::SQL::Query';
 
 sub new {
@@ -188,7 +192,27 @@ sub text {
         $_->{field} =~ /\./ ? $_->{field} :
         (ref $_->{tab} ? $_->{tab}->name : $_->{tab}) . ".$_->{field}"
     } $self->tables;
-    "$t1 INNER JOIN $t2 ON $f1 = $f2";
+    my $where = defined $self->{where} ? $self->{where}->to_lang_named('SQL') : "$f1 = $f2";
+    "$t1 INNER JOIN $t2 ON $where";
+}
+
+package EGE::SQL::InnerJoinExpr;
+use base 'EGE::SQL::InnerJoin';
+
+sub new {
+    my ($class, $where, @tables) = @_;
+    my $self = {
+        tables => \@tables,
+        where => $where,
+    };
+    bless $self, $class;
+    $self;
+}
+
+sub run {
+    my ($self) = @_;
+    my ($t1, $t2) = map $self->_maybe_run($_->{tab}), $self->tables;
+    $t1->inner_join_expr($t2, $self->{where});
 }
 
 1;
