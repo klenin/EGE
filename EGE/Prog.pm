@@ -102,15 +102,15 @@ sub run {
 sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for qw(var expr) }
 
 sub complexity {
-    my ($self, $env, $mistakes, $iter, $rnd_case) = @_;
+    my ($self, $env, $mistakes, $iter) = @_;
     my $name;
     defined($name = $self->{var}->{name}) or return ();
     defined $iter->{$name} and die "Assign to iterator: '$name'";
 
     # провека, что все переменные expr определены
-    $self->{expr}->polinom_degree($env, $mistakes, $iter, $rnd_case);
+    $self->{expr}->polinom_degree($env, $mistakes, $iter);
     # вычисляем степень выражения без итераторов, если ошибка, значит в выражении присутсвует итератор
-    $env->{$self->{var}->{name}} = eval { $self->{expr}->polinom_degree($env, $mistakes, {}, $rnd_case) };
+    $env->{$self->{var}->{name}} = eval { $self->{expr}->polinom_degree($env, $mistakes, {}) };
     $@ and die "Assign iterator to: '$name'";
     ()
 }
@@ -411,12 +411,12 @@ sub run {
 }
 
 sub complexity {
-    my ($self, $env, $mistakes, $iter, $rnd_case) = @_;
+    my ($self, $env, $mistakes, $iter) = @_;
     my $name = $self->{var}->{name};
-    my $degree = $self->{ub}->polinom_degree($env, $mistakes, $iter, $rnd_case);
+    my $degree = $self->{ub}->polinom_degree($env, $mistakes, $iter);
     $iter->{$name} = $degree;
 
-    my $body_complexity = $self->{body}->complexity($env, $mistakes, $iter, $rnd_case);
+    my $body_complexity = $self->{body}->complexity($env, $mistakes, $iter);
     $env->{$name} = $degree;
     my $cur_complexity = List::Util::sum(grep $_ =~ m/^[\d|.]+$/, values %$iter) || 0;
     delete $iter->{$name};
