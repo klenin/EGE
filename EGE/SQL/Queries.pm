@@ -11,6 +11,7 @@ use EGE::Html;
 sub text_html { html->tag('tt', html->cdata($_[0]->text)); }
 sub _field_sql { ref $_ ? $_->to_lang_named('SQL') : $_ }
 sub where_sql { $_[0]->{where} ? ' WHERE '. $_[0]->{where}->to_lang_named('SQL') : '' }
+sub having_sql { $_[0]->{having} ?  ' HAVING '. $_[0]->{having}->to_lang_named('SQL') : '' }
 sub group_by_sql { $_[0]->{group} ?  ' GROUP BY '. join(', ', map &_field_sql, @{$_[0]->{group}}) : '' }
 sub _maybe_run { $_[1]->can('run') ? $_[1]->run : $_[1]; }
 
@@ -33,6 +34,7 @@ sub new {
         fields => $fields,
         where => $where,
         group => $p{group},
+        having => $p{having},
     };
     bless $self, $class;
     $self->init_table($table);
@@ -41,7 +43,7 @@ sub new {
 sub run {
     my ($self) = @_;
     my $table = $self->{table}->can('run') ? $self->{table}->run : $self->{table};
-    $table->select($self->{fields}, $self->{where}, { group => $self->{group} });
+    $table->select($self->{fields}, $self->{where}, { group => $self->{group}, having => $self->{having} });
 }
 
 sub name { $_[0]->{table_name} }
@@ -52,7 +54,7 @@ sub text {
     my $fields = join(', ', map $self->_field_sql, @{$self->{fields}}) || '*';
     my $table = $self->{table_name};
     $table = $self->{table}->can('text') ? $self->{table}->text : $self->{table_name} if $self->{table};
-    "SELECT $fields FROM $table" . $self->where_sql . $self->group_by_sql;
+    "SELECT $fields FROM $table" . $self->where_sql . $self->group_by_sql . $self->having_sql;
 }
 
 package EGE::SQL::SubqueryAlias;

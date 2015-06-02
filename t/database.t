@@ -373,6 +373,11 @@ sub pack_table {
     is $q->text, 'SELECT x, sum(y) FROM t1 GROUP BY x', 'query text: x, sum(x) group by';
     is pack_table($q->run()), 'x expr_1|1 5|2 9', 'group by one field';
 
+    $q = EGE::SQL::Select->new($t1, [$x, make_expr ['()', 'sum', $y] ], 0, group => [ $x ],
+        having => make_expr([ '>', make_expr(['()', 'sum', $y]), 5 ]));
+    is $q->text, 'SELECT x, sum(y) FROM t1 GROUP BY x HAVING sum(y) > 5', 'query text: x, sum(x) group by having sum(y) > 5 ';
+    is pack_table($q->run()), 'x expr_1|2 9', 'table sum(y) group by having sum(y) > 5';
+
     my $t2 = EGE::SQL::Table->new([
         my $z = EGE::Prog::Field->new({name => 'z'}),
         my $r = EGE::Prog::Field->new({name => 'r'}),

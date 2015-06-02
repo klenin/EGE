@@ -119,10 +119,11 @@ sub _hash {
 
 sub select {
     my ($self, $fields, $where, $p) = @_;
-    my ($ref, $aggr, $group) = 0;
+    my ($ref, $aggr, $group, $having) = 0;
     if (ref $p eq 'HASH') {
         $ref = $p->{ref};
         $group = $p->{group};
+        $having = $p->{having};
     }
     $aggr =  grep ref $_ eq 'EGE::Prog::CallFuncAggregate', @$fields;
     my $k = 0;
@@ -134,7 +135,7 @@ sub select {
 
     my $tab_where = $self->where($where, $ref);
     if ($group) {
-        $result->{data} = $tab_where->group_by($calc_row, $group);
+        $result->{data} = $tab_where->group_by($calc_row, $group, $having);
     } else {
         my @ans;
         my $evn = $tab_where->_hash;
@@ -155,7 +156,7 @@ sub group_by {
     my @ans;
     for my $tab (sort values (%$val)) {
         my $row_hash = $tab->_row_hash(@{$tab->{data}}[0], $tab->_hash);
-        push @ans, [ $calc_row->($row_hash) ];
+        push @ans, [ $calc_row->($row_hash) ] if !$having || $having->run($row_hash);
     }
     [ @ans ];
 }
