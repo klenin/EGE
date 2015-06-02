@@ -20,7 +20,7 @@ use EGE::SQL::RandomTable;
 
 sub _create_inner_join {
     my ($tab1, $tab2, $field1, $field2) = @_;
-    EGE::SQL::Inner_join->new(
+    EGE::SQL::InnerJoin->new(
         { tab => '', field => $tab1->{name} . ".$field1" },
         { tab => $tab2, field => $field2 });
 }

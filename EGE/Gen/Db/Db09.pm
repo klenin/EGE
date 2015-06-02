@@ -42,7 +42,7 @@ sub inner_join {
         my ($wrong) = @_;
         my $prev = $buyers;
         my @t = rnd->shuffle(@tables);
-        $prev = EGE::SQL::Inner_join->new(
+        $prev = EGE::SQL::InnerJoin->new(
             { tab => $prev, field => $t[$wrong == $_ ? rnd->in_range_except(0, $#t, $_) : $_]->{ref_field} },
             { tab => $t[$_], field => 'id' }
         ) for 0 .. $#t;

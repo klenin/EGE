@@ -119,11 +119,13 @@ sub _hash {
 
 sub select {
     my ($self, $fields, $where, $p) = @_;
-    my ($ref, $aggr, $group) = 0;
+    my ($ref, $aggr, $group, $having) = 0;
     if (ref $p eq 'HASH') {
         $ref = $p->{ref};
+        $group = $p->{group};
+        $having = $p->{having};
     }
-    $aggr =  ref $_ eq 'EGE::Prog::CallFuncAggregate' ? 1: $aggr for @$fields;
+    $aggr =  grep ref $_ eq 'EGE::Prog::CallFuncAggregate', @$fields;
     my $k = 0;
 
     my $result = EGE::SQL::Table->new([ map { ref $_ ne 'EGE::Prog::Field' && ref $_ ? 'expr_' . ++$k : $_ } @$fields ]);
@@ -132,11 +134,31 @@ sub select {
     my $calc_row = sub { map $_->run($_[0]), @values };
 
     my $tab_where = $self->where($where, $ref);
+    if ($group) {
+        $result->{data} = $tab_where->group_by($calc_row, $group, $having);
+    } else {
         my @ans;
         my $evn = $tab_where->_hash;
         push @ans, [ $calc_row->($tab_where->_row_hash($_, $evn)) ] for @{$tab_where->{data}};
         $result->{data} = $aggr ? [ $ans[0] ] : [ @ans ];
+    }
     $result;
+}
+
+sub group_by {
+    my ($self, $calc_row, $fields, $having) = @_;
+    my $val = {};
+    for my $data (@{$self->{data}}) {
+        my $text = join ('\0', map @$data[$self->{field_index}->{$_}], @$fields);
+        $val->{$text} = EGE::SQL::Table->new($self->{fields}) if (!defined $val->{$text});
+        push @{$val->{$text}->{data}}, $data;
+    }
+    my @ans;
+    for my $tab (sort values (%$val)) {
+        my $row_hash = $tab->_row_hash(@{$tab->{data}}[0], $tab->_hash);
+        push @ans, [ $calc_row->($row_hash) ] if !$having || $having->run($row_hash);
+    }
+    [ @ans ];
 }
 
 sub where {
@@ -181,6 +203,17 @@ sub inner_join {
     for my $row1 (@{$table1->{data}}) {
         my $rows2 = $h{$row1->[$index1]} or next;
         $result->insert_row(@$row1, @$_) for @$rows2;
+    }
+    $result;
+}
+
+sub inner_join_expr {
+    my ($table1, $table2, $where) = @_;
+    my $result = EGE::SQL::Table->new([ @{$table1->{fields}}, @{$table2->{fields}} ]);
+    for my $row1 (@{$table1->{data}}) {
+        for my $row2 (@{$table2->{data}}) {
+            $result->insert_row(@$row1, @$row2) if $where->run($result->_row_hash([ @$row1, @$row2 ]));
+        }
     }
     $result;
 }

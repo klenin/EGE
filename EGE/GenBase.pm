@@ -136,10 +136,31 @@ sub post_process {
 
 package EGE::GenBase::Construct;
 use base 'EGE::GenBase';
+use EGE::Random;
 
 sub init {
     $_[0]->{type} = 'cn';
     $_[0]->{correct} = [];    
 }
+
+sub shuffle_variants {
+    my ($self)= @_;
+    $self->{variants} or die;
+    my @order = rnd->shuffle(0 .. @{$self->{variants}} - 1);
+    my (@v, @c);
+    for my $o (@order) {
+        $v[$order[$o]] = $self->{variants}->[$o];
+        my $id = -1;
+        for my $i (0..$#{$self->{correct}}) {
+            if ($self->{correct}[$i] == $o) {
+                $c[$i] = $order[$o]
+            }
+        }
+    }
+    $self->{variants} = \@v;
+    $self->{correct} = \@c;
+}
+
+sub post_process { $_[0]->shuffle_variants; }
 
 1;
