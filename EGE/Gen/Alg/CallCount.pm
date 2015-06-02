@@ -15,7 +15,7 @@ use EGE::Random;
 sub super_recursion {
     my ($self) = @_;
     my $n = 10 ** rnd->in_range(8, 12);
-    my ($fst_part, $sec_part) = (int($n / rnd->in_range(2, 20)), int($n / rnd->in_range(2, 20) / 10)); 
+    my ($fst_part, $sec_part) = (int($n / rnd->in_range(20, 50)), int($n / rnd->in_range(20, 50) / 50));
     my ($div, $sub) = (rnd->in_range(2, 5), rnd->in_range(2, 5));
     my $code = [ 
         'func', [ 'f', 'n' ], [
