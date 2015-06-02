@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 104;
+use Test::More tests => 107;
 
 use Test::Exception;
 
@@ -397,4 +397,20 @@ sub pack_table {
     is $q->text, 'SELECT m, sum(n) FROM t3 GROUP BY m', 'query text: m, sum(n) group by';
     is pack_table($q->run()), 'm expr_1|str 6|aaa 9', 'table m sum(n) group by';
 }
+
+{
+    my $t1 = EGE::SQL::Table->new([ qw(x y) ], name => 't1');
+    my $t2 = EGE::SQL::Table->new([ qw(z) ], name => 't2');
+    my $expr = make_expr([ '<', @{$t1->fields}[0], @{$t2->fields}[0] ]);
+    $_->assign_field_alias($_->{name}) for ($t1, $t2);
+    $t1->insert_rows([ 1, 2], [ 2, 4 ]);
+    $t2->insert_rows([ 4 ], [ 2 ]);
+
+    my $q = EGE::SQL::InnerJoinExpr->new( $expr, { tab => $t1, field => 'x'}, { tab => $t2, field => 'z'} );
+    is $q->text, 't1 INNER JOIN t2 ON t1.x < t2.z', 'query text: inner_join_expr';
+
+    my $s = EGE::SQL::Select->new($q, [ 'x' ]);
+    is $s->text, 'SELECT x FROM t1 INNER JOIN t2 ON t1.x < t2.z', 'query text: select with inner join expr';
+    is pack_table($s->run), 'x|1|1|2', 'query run: inner_join_expr';
+
 }

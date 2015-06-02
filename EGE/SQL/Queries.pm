@@ -192,7 +192,27 @@ sub text {
         $_->{field} =~ /\./ ? $_->{field} :
         (ref $_->{tab} ? $_->{tab}->name : $_->{tab}) . ".$_->{field}"
     } $self->tables;
-    "$t1 INNER JOIN $t2 ON $f1 = $f2";
+    my $where = defined $self->{where} ? $self->{where}->to_lang_named('SQL') : "$f1 = $f2";
+    "$t1 INNER JOIN $t2 ON $where";
+}
+
+package EGE::SQL::InnerJoinExpr;
+use base 'EGE::SQL::InnerJoin';
+
+sub new {
+    my ($class, $where, @tables) = @_;
+    my $self = {
+        tables => \@tables,
+        where => $where,
+    };
+    bless $self, $class;
+    $self;
+}
+
+sub run {
+    my ($self) = @_;
+    my ($t1, $t2) = map $self->_maybe_run($_->{tab}), $self->tables;
+    $t1->inner_join_expr($t2, $self->{where});
 }
 
 1;

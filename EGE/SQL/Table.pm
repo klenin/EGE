@@ -160,6 +160,7 @@ sub group_by {
     }
     [ @ans ];
 }
+
 sub where {
     my ($self, $where, $ref) = @_;
     $where or return $self;
@@ -202,6 +203,17 @@ sub inner_join {
     for my $row1 (@{$table1->{data}}) {
         my $rows2 = $h{$row1->[$index1]} or next;
         $result->insert_row(@$row1, @$_) for @$rows2;
+    }
+    $result;
+}
+
+sub inner_join_expr {
+    my ($table1, $table2, $where) = @_;
+    my $result = EGE::SQL::Table->new([ @{$table1->{fields}}, @{$table2->{fields}} ]);
+    for my $row1 (@{$table1->{data}}) {
+        for my $row2 (@{$table2->{data}}) {
+            $result->insert_row(@$row1, @$row2) if $where->run($result->_row_hash([ @$row1, @$row2 ]));
+        }
     }
     $result;
 }
