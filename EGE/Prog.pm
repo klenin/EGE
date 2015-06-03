@@ -168,14 +168,13 @@ sub run {
     my ($ans, $new_env);
     %$new_env = %$env;
     for my $i (0 .. $new_env->{'&count'} - 1) {
-        while (my ($key, $values)  = each $new_env->{'&columns'}) {
+        while (my ($key, $values) = each %{$new_env->{'&columns'}}) {
             $new_env->{$key} = @$values[$i];
         }
         my @arg_val = map $_->run($new_env), @{$self->{args}};
-        $ans = $func->call( [ @arg_val ], $new_env, $self);
+        $ans = $func->call(\@arg_val, $new_env, $self);
     }
     $env->{'&result'}->{$self} = $ans;
-    $ans;
 }
 
 package EGE::Prog::Print;
