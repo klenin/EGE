@@ -55,9 +55,18 @@ sub name {
     $1;
 }
 
+sub print_tag {
+    my ($self, $t) = @_;
+    $t->{$_} ||= '' for qw(left inner right tag alt);
+    $self->{html} ?
+        "$t->{left}<$t->{tag}>$t->{inner}</$t->{tag}>$t->{right}" :
+        "$t->{left}$t->{alt}$t->{inner}$t->{right}"
+}
+
 sub get_fmt {
     my ($self, $name_fmt, @args) = @_;
     my $fmt = $self->$name_fmt(@args);
+    return $self->print_tag($fmt) if ref $fmt eq 'HASH';
     to_html($fmt) if $self->{html};
     $fmt;
 }
@@ -278,21 +287,15 @@ sub prio_list {
     [ ops::comp ], [ '&&' ], [ '||', '^' ], [ '=>', 'eq' ]
 }
 
-sub get_fmt {
-    my $self = shift;
-    my ($fmt_name, @args) = @_;
-    my $fmt = $self->SUPER::get_fmt(@_);
-    $self->{html} && $fmt_name eq 'var_fmt' ? "<i>$fmt</i>" : $fmt;
-}
-
-sub index_fmt { '%s<sub>%s</sub>' }
+sub index_fmt { { left => '%s', inner => '%s', tag => 'sub', alt => '_' } }
 
 sub translate_op {{
-    '**' => '%s<sup>%s</sup>',
+    '**' => { left => '%s', inner => '%s', tag => 'sup', alt => '^' },
     '-' => '−', '*' => '⋅',
     '==' => '=', '!=' => '≠', '>=' => '≥', '<=' => '≤',
     '&&' => '∧', '||' => '∨', '^' => '⊕', '=>' => '→', 'eq' => '≡',
 }}
+sub var_fmt { { inner => '%s', tag => 'i' } }
 
 sub translate_un_op { { '!' => '¬' } }
 

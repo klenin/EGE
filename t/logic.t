@@ -22,11 +22,11 @@ sub tts { EGE::Logic::truth_table_string($_[0]) }
     is tts(make_expr($_->{e})), $_->{r}, "tts $_->{c} vars" for @t;
 }
 
-is make_expr([ 'eq', [ '=>', 'a', 'b' ], [ '||', [ '!', 'a' ], 'b' ]])->to_lang_named('Logic'),
+is make_expr([ 'eq', [ '=>', 'a', 'b' ], [ '||', [ '!', 'a' ], 'b' ]])->to_lang_named('Logic', { html => 1 }),
     '<i>a</i> → <i>b</i> ≡ ¬ <i>a</i> ∨ <i>b</i>', 'logic text';
 
-is make_expr([ '**', 'a', 'b' ])->to_lang_named('Logic'), '<i>a</i><sup><i>b</i></sup>', 'logic power';
-is make_expr([ '[]', 'a', [ '+', 'i', 1 ] ])->to_lang_named('Logic'), '<i>a</i><sub><i>i</i> + 1</sub>', 'logic index';
+is make_expr([ '**', 'a', 'b' ])->to_lang_named('Logic', { html => 1 }), '<i>a</i><sup><i>b</i></sup>', 'logic power';
+is make_expr([ '[]', 'a', [ '+', 'i', 1 ] ])->to_lang_named('Logic', { html => 1 }), '<i>a</i><sub><i>i</i> + 1</sub>', 'logic index';
 
 {
     my @t = (
