@@ -11,9 +11,16 @@ use EGE::Prog qw(make_expr make_block);
 use EGE::SQL::Table;
 use EGE::SQL::Queries;
 
+sub join_sp { join ' ', @{$_[0]} }
+
 sub pack_table {
     my $self = shift;
-    join '|', map join(' ', @$_), $self->{fields}, @{$self->{data}};
+    join '|', map join_sp($_), $self->{fields}, @{$self->{data}};
+}
+
+sub pack_table_sorted {
+    my $self = shift;
+    join '|', join_sp($self->{fields}), sort map join_sp($_), @{$self->{data}};
 }
 
 {
@@ -371,7 +378,7 @@ sub pack_table {
 
     my $q = EGE::SQL::Select->new($t, [$x, make_expr [ '()', 'sum', $y ] ], undef, group => [ $x ]);
     is $q->text, 'SELECT x, sum(y) FROM t1 GROUP BY x', 'query text: x, sum(x) group by';
-    is pack_table($q->run()), 'x expr_1|1 5|2 9', 'group by one field';
+    is pack_table_sorted($q->run()), 'x expr_1|1 5|2 9', 'group by one field';
 
     $q = EGE::SQL::Select->new($t, [ $x, make_expr [ '()', 'sum', $y ] ], undef, group => [ $x ],
         having => make_expr([ '>', make_expr([ '()', 'sum', $y ]), 5 ]));
@@ -385,7 +392,7 @@ sub pack_table {
 
     my $q = EGE::SQL::Select->new($t, [ 'k', 'r', make_expr [ '()', 'sum', 'z'] ], undef, group => [ 'k', 'r' ]);
     is $q->text, 'SELECT k, r, sum(z) FROM t2 GROUP BY k, r', 'query text: group by two fields';
-    is pack_table($q->run()), 'k r expr_1|3 2 1|5 4 3|7 5 2', 'group by two fields';
+    is pack_table_sorted($q->run()), 'k r expr_1|3 2 1|5 4 3|7 5 2', 'group by two fields';
 }
 
 {
@@ -394,7 +401,7 @@ sub pack_table {
 
     my $q = EGE::SQL::Select->new($t, [ 'm', make_expr [ '()', 'sum', 'n' ] ], undef, group => [ 'm' ]);
     is $q->text, 'SELECT m, sum(n) FROM t3 GROUP BY m', 'query text: m, sum(n) group by';
-    is pack_table($q->run()), 'm expr_1|str 6|aaa 9', 'table m sum(n) group by';
+    is pack_table_sorted($q->run()), 'm expr_1|aaa 9|str 6', 'table m sum(n) group by';
 }
 
 {
