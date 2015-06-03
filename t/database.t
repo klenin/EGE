@@ -364,36 +364,35 @@ sub pack_table {
 }
 
 {
-    my $t1 = EGE::SQL::Table->new([
+    my $t = EGE::SQL::Table->new([
         my $x = EGE::Prog::Field->new({name => 'x'}),
         my $y = EGE::Prog::Field->new({name => 'y'}) ], name => 't1');
-    $t1->insert_rows([ 1, 2 ], [ 1, 3 ], [ 2, 4 ], [2, 5]);
+    $t->insert_rows([ 1, 2 ], [ 1, 3 ], [ 2, 4 ], [ 2, 5 ]);
 
-    my $q = EGE::SQL::Select->new($t1, [$x, make_expr ['()', 'sum', $y] ], 0, group => [ $x ]);
+    my $q = EGE::SQL::Select->new($t, [$x, make_expr [ '()', 'sum', $y ] ], undef, group => [ $x ]);
     is $q->text, 'SELECT x, sum(y) FROM t1 GROUP BY x', 'query text: x, sum(x) group by';
     is pack_table($q->run()), 'x expr_1|1 5|2 9', 'group by one field';
 
-    $q = EGE::SQL::Select->new($t1, [$x, make_expr ['()', 'sum', $y] ], 0, group => [ $x ],
-        having => make_expr([ '>', make_expr(['()', 'sum', $y]), 5 ]));
+    $q = EGE::SQL::Select->new($t, [ $x, make_expr [ '()', 'sum', $y ] ], undef, group => [ $x ],
+        having => make_expr([ '>', make_expr([ '()', 'sum', $y ]), 5 ]));
     is $q->text, 'SELECT x, sum(y) FROM t1 GROUP BY x HAVING sum(y) > 5', 'query text: x, sum(x) group by having sum(y) > 5 ';
     is pack_table($q->run()), 'x expr_1|2 9', 'table sum(y) group by having sum(y) > 5';
+}
 
-    my $t2 = EGE::SQL::Table->new([
-        my $z = EGE::Prog::Field->new({name => 'z'}),
-        my $r = EGE::Prog::Field->new({name => 'r'}),
-        my $k = EGE::Prog::Field->new({name => 'k'}) ], name => 't2');
-    $t2->insert_rows([ 1, 2, 3], [ 1, 4, 5 ], [ 2, 4, 5 ], [2, 5, 7]);
+{
+    my $t = EGE::SQL::Table->new([ qw(z r k) ], name => 't2');
+    $t->insert_rows([ 1, 2, 3], [ 1, 4, 5 ], [ 2, 4, 5 ], [2, 5, 7]);
 
-    $q = EGE::SQL::Select->new($t2, [$k, $r, make_expr ['()', 'sum', 'z'] ], 0, group => [ $k, $r ]);
-    is $q->text, 'SELECT k, r, sum(z) FROM t2 GROUP BY k, r', 'query text: k, r, sum(z) group by';
+    my $q = EGE::SQL::Select->new($t, [ 'k', 'r', make_expr [ '()', 'sum', 'z'] ], undef, group => [ 'k', 'r' ]);
+    is $q->text, 'SELECT k, r, sum(z) FROM t2 GROUP BY k, r', 'query text: group by two fields';
     is pack_table($q->run()), 'k r expr_1|3 2 1|5 4 3|7 5 2', 'group by two fields';
+}
 
-    my $t3 = EGE::SQL::Table->new([
-        my $m = EGE::Prog::Field->new({name => 'm', type => 'str'}),
-        my $n = EGE::Prog::Field->new({name => 'n'}) ], name => 't3');
-    $t3->insert_rows([ 'str', 2], [ 'str', 4 ], [ 'aaa', 4 ], ['aaa', 5]);
+{
+    my $t = EGE::SQL::Table->new([ 'm', 'n' ], name => 't3');
+    $t->insert_rows([ 'str', 2 ], [ 'str', 4 ], [ 'aaa', 4 ], [ 'aaa', 5 ]);
 
-    $q = EGE::SQL::Select->new($t3, [ $m, make_expr [ '()', 'sum', 'n' ] ], 0, group => [ $m ]);
+    my $q = EGE::SQL::Select->new($t, [ 'm', make_expr [ '()', 'sum', 'n' ] ], undef, group => [ 'm' ]);
     is $q->text, 'SELECT m, sum(n) FROM t3 GROUP BY m', 'query text: m, sum(n) group by';
     is pack_table($q->run()), 'm expr_1|str 6|aaa 9', 'table m sum(n) group by';
 }
