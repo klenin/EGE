@@ -2,7 +2,7 @@
 use warnings;
 use utf8;
 
-use Test::More tests => 39;
+use Test::More tests => 42;
 use Test::Exception;
 
 use lib '..';
@@ -245,3 +245,19 @@ use EGE::Prog qw(make_block make_expr);
     }
 }
 
+{
+    my $b = EGE::Prog::make_block([
+        'for', 'i', 0, [ '**', 'n', 2 ], [
+            'for', 'j', 0, [ '**', 'n', 3 ], [],
+            'if', [ '==', 'i', 0 ], [
+                'for', 'k', 0, [ '**', 'n', 4 ], []
+            ]
+        ]
+    ]);
+    is $b->complexity({ n => 1 }, { change_sum => 1 }), 9, 'complexity with change_sum';
+    is $b->complexity({ n => 1 }, { change_sum => 1, 
+                                    ignore_if_mod => 1 }), 11, 'complexity with change_sum + ignore_if_mod';    
+    # change_min имеет больший приоритет чем change_sum
+    is $b->complexity({ n => 1 }, { change_sum => 1,
+                                    change_min => 1 }), 4, 'complexity with change_sum + change_min';
+}

@@ -19,19 +19,22 @@ sub between { between => [ '&&', [ '<=', 2, 1 ], [ '<=', 1, 3 ] ] }
 
 package EGE::Prog::Lang;
 
-my %lang_cache;
-
-sub lang {
-    my ($name) = @_;
-    $lang_cache{$name} ||= "EGE::Prog::Lang::$name"->new;
-}
-
 sub new {
     my ($class, %init) = @_;
     my $self = { %init };
     bless $self, $class;
     $self->make_priorities;
     $self;
+}
+
+sub to_html {
+    my %subs = (
+        '<' => '&lt;',
+        '>' => '&gt;',
+        '&' => '&amp;',
+    );
+    my $keys = join '|', keys %subs;
+    $_[0] =~ s/($keys)/$subs{$1}/g;
 }
 
 sub op_fmt {
@@ -41,9 +44,31 @@ sub op_fmt {
     ref $fmt || $fmt =~ /%\w/ ? $fmt : "%s $fmt %s";
 }
 
+sub un_op_fmt {
+    my ($self, $op) = @_;
+    my $fmt = $self->translate_un_op->{$op} || $op;
+    $fmt =~ m/%s/ ? $fmt : $fmt . ' %s';
+}
+
 sub name {
     ref($_[0]) =~ /::(\w+)$/;
     $1;
+}
+
+sub print_tag {
+    my ($self, $t) = @_;
+    $t->{$_} ||= '' for qw(left inner right tag alt);
+    $self->{html} ?
+        "$t->{left}<$t->{tag}>$t->{inner}</$t->{tag}>$t->{right}" :
+        "$t->{left}$t->{alt}$t->{inner}$t->{right}"
+}
+
+sub get_fmt {
+    my ($self, $name_fmt, @args) = @_;
+    my $fmt = $self->$name_fmt(@args);
+    return $self->print_tag($fmt) if ref $fmt eq 'HASH';
+    to_html($fmt) if $self->{html};
+    $fmt;
 }
 
 sub var_fmt { '%s' }
@@ -72,6 +97,11 @@ sub call_func_fmt { '%s(%s)' }
 
 sub expr_fmt { '%s' }
 
+sub p_func_start_fmt { $_[0]->c_func_start_fmt; }
+sub p_func_end_fmt { $_[0]->c_func_end_fmt; }
+
+sub p_return_fmt { $_[0]->c_return_fmt; }
+
 package EGE::Prog::Lang::Basic;
 use base 'EGE::Prog::Lang';
 
@@ -98,10 +128,12 @@ sub while_end_fmt { "\nEND DO" }
 sub until_start_fmt { "DO UNTIL %s\n" }
 sub until_end_fmt { "\nEND DO" }
 
-sub func_start_fmt { "FUNCTION %s(%s)\n" }
-sub func_end_fmt { "\nEND FUNCTION\n" }
+sub c_func_start_fmt { "FUNCTION %s(%s)\n" }
+sub c_func_end_fmt { "\nEND FUNCTION\n" }
 
 sub print_fmt { 'PRINT %s' }
+
+sub c_return_fmt { 'Return %s' }
 
 package EGE::Prog::Lang::C;
 use base 'EGE::Prog::Lang';
@@ -126,14 +158,19 @@ sub while_end_fmt { $_[1] ? "\n}" : '' }
 sub until_start_fmt { 'while (!(%s))' . ($_[1] ? " {\n" : "\n") }
 sub until_end_fmt { $_[1] ? "\n}" : '' }
 
-sub func_start_fmt { "int %s(%s) {\n  int %1\$s;\n" }
-sub func_end_fmt { "\n  return %1\$s;\n}\n" }
+sub c_func_start_fmt { "int %s(%s) {\n" }
+sub c_func_end_fmt { "\n}\n" }
+
+sub p_func_start_fmt { "int %s(%s) {\n  int %1\$s;\n" }
+sub p_func_end_fmt { "\n  return %1\$s;\n}\n" }
 
 sub print_fmt { 'print(%s)' }
 
 sub expr_fmt { '%s;' }
 
 sub args_fmt {'int %s'}
+
+sub c_return_fmt { 'return %s;' }
 
 package EGE::Prog::Lang::Pascal;
 use base 'EGE::Prog::Lang';
@@ -165,12 +202,15 @@ sub while_end_fmt { $_[1] ? "\nend;" : '' }
 sub until_start_fmt { 'while not (%s) do' . ($_[1] ? " begin\n" : "\n") }
 sub until_end_fmt { $_[1] ? "\nend;" : '' }
 
-sub func_start_fmt { "function %s(%s: integer): integer;\nbegin\n" }
-sub func_end_fmt { "\nend;\n" }
+sub c_func_start_fmt { "function %s(%s: integer): integer;\nbegin\n" }
+sub c_func_end_fmt { "\nend;\n" }
 
 sub print_fmt { 'write(%s)' }
 
 sub expr_fmt { '%s;' }
+
+sub c_return_fmt { 'exit(%s);' }
+sub p_return_fmt { 'exit;' }
 
 package EGE::Prog::Lang::Alg;
 use base 'EGE::Prog::Lang';
@@ -197,10 +237,13 @@ sub while_end_fmt { "\nкц" }
 sub until_start_fmt { "пока не (%s) нц\n" }
 sub until_end_fmt { "\nкц" }
 
-sub func_start_fmt { "алг цел %s(цел %s)\nнач\n" }
-sub func_end_fmt { "\nкон\n" }
+sub c_func_start_fmt { "алг цел %s(цел %s)\nнач\n" }
+sub c_func_end_fmt { "\nкон\n" }
 
 sub print_fmt { 'вывод %s' }
+
+sub c_return_fmt { 'выход_алг %s | выход_алг выраж - оператор выхода из алгоритма, с возвращением результата выраж' }
+sub p_return_fmt { 'выход_алг | выход_алг - оператор выхода из алгоритма' }
 
 package EGE::Prog::Lang::Perl;
 use base 'EGE::Prog::Lang';
@@ -222,14 +265,19 @@ sub while_end_fmt { "\n}" }
 sub until_start_fmt { "until (%s) {\n" }
 sub until_end_fmt { "\n}" }
 
-sub func_start_fmt { "sub %s {\n  my \$%1\$s;\n  my (%s) = \@_;\n" } 
-sub func_end_fmt { "\n  return \$%1\$s;\n}\n" }
+sub c_func_start_fmt { "sub %s {\n  my (%s) = \@_;\n" }
+sub c_func_end_fmt { "\n}\n" }
+
+sub p_func_start_fmt { "sub %s {\n  my \$%1\$s;\n  my (%s) = \@_;\n" }
+sub p_func_end_fmt { "\n  return \$%1\$s;\n}\n" }
 
 sub print_fmt { 'print(%s)' }
 
 sub expr_fmt { '%s;' }
 
 sub args_fmt { '$%s' }
+
+sub c_return_fmt { 'return %s;' }
 
 package EGE::Prog::Lang::Logic;
 use base 'EGE::Prog::Lang';
@@ -239,15 +287,15 @@ sub prio_list {
     [ ops::comp ], [ '&&' ], [ '||', '^' ], [ '=>', 'eq' ]
 }
 
-sub var_fmt { '<i>%s</i>' }
-sub index_fmt { '%s<sub>%s</sub>' }
+sub index_fmt { { left => '%s', inner => '%s', tag => 'sub', alt => '_' } }
 
 sub translate_op {{
-    '**' => '%s<sup>%s</sup>',
+    '**' => { left => '%s', inner => '%s', tag => 'sup', alt => '^' },
     '-' => '−', '*' => '⋅',
     '==' => '=', '!=' => '≠', '>=' => '≥', '<=' => '≤',
     '&&' => '∧', '||' => '∨', '^' => '⊕', '=>' => '→', 'eq' => '≡',
 }}
+sub var_fmt { { inner => '%s', tag => 'i' } }
 
 sub translate_un_op { { '!' => '¬' } }
 

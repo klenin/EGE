@@ -108,7 +108,7 @@ sub print_json {
     print "[\n";
     for my $q (@$questions) {
         print
-            json({ filter_hash($q, [qw(type text correct variants langs)]) }),
+            json({ filter_hash($q, [qw(type text correct variants options)]) }),
             $q eq $questions->[$#$questions] ? "\n" : ",\n";
     }
     print "]\n";
@@ -244,13 +244,13 @@ binmode STDOUT, ':utf8';
 #g3('Complexity::ComplexityDI', 'cycle_complexity');
 #g3('Complexity', 'complexity');
 #g3('Complexity', 'substitution');
+#g3('Complexity', 'amortized');
 #g3('CallCount', 'super_recursion');
 #g3('Tree', 'node_count');
 #g3('Tree', 'height');
-#g3('Complexity', 'amortized');
 #g3('Graph', 'graph_seq');
 #g3('List', 'construct_command');
-#g3('Sorting', 'sort_command');
+#g3('Sorting', 'sort_line');
 #$questions = EGE::Generate::all;
 #$questions = EGE::AsmGenerate::all;
 #$questions = EGE::DatabaseGenerate::all;
