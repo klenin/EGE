@@ -290,7 +290,7 @@ sub prio_list {
 sub index_fmt { { left => '%s', inner => '%s', tag => 'sub', alt => '_' } }
 
 sub translate_op {{
-    '**' => { left => '%s', inner => '%s', tag => 'sup', alt => '^' },
+    '**' => { left => '%s', inner => '%s', tag => 'sup', alt => ' ^ ' },
     '-' => '−', '*' => '⋅',
     '==' => '=', '!=' => '≠', '>=' => '≥', '<=' => '≤',
     '&&' => '∧', '||' => '∨', '^' => '⊕', '=>' => '→', 'eq' => '≡',
