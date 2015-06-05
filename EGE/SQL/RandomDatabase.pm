@@ -35,9 +35,6 @@ use strict;
 use warnings;
 use utf8;
 
-use EGE::Random;
-use EGE::SQL::Utils;
-
 sub new {
     my ($class, $tables) = @_;
     my $self->{tables} = $tables;
@@ -76,7 +73,7 @@ sub relation {
                 students_subject => {
                     name_field => 'marks',
                     col_range => [ 2, 5],
-                    text => 'Выбрать студентов у которых есть больше %s оценок равных %s',
+                    text => 'Выбрать студентов имеющих оценку равную %s в больше %s случаев',
                     inversion => 1 },
                 students => { name_field => 'курс', text => 'Посчитать количество студентов на каждом курсе' },
             },
@@ -89,7 +86,7 @@ sub relation {
             },
             students_subject => {
                 lecturers_subject => { name_field => 'marks', text => 'Какая %s оценка была поставлена преподавателем' },
-                students_subject => { name_field => 'marks', text => 'Посчитать количество студентов по оценкам' },
+                students_subject => { name_field => 'marks', text => 'Посчитать количество студентов по качественному показателю имеющихся оценок' },
                 students => {
                     name_field => 'marks',
                     col_range => [ 2, 4 ],
@@ -99,7 +96,7 @@ sub relation {
                 lecturers => {
                     name_field => 'часы',
                     col_range => [ 100, 200 ],
-                    text => 'Выбрать преподавателей у которых часов по предмету больше %s и таких предметов больше %s' }
+                    text => 'Выбрать преподавателей, у которых часов по предмету больше %s и таких предметов больше %s' }
             },
         },
         potential_field => {
@@ -153,8 +150,8 @@ sub relation {
                 cities => { text => 'Где покупали' },
                 people_products => {
                     name_field => 'склад',
-                    col_range => [1, 5],
-                    text => 'Выбрать продукты которые купили больше %s человек, со склада № %s',
+                    col_range => [2, 5],
+                    text => 'Выбрать продукты, которые со склада № %s, купили больше %s человек',
                     inversion => 1 },
                 products => { name_field => 'склад', text => 'Посчитать количество товаров на каждом складе' }
             },
@@ -166,15 +163,15 @@ sub relation {
                 cities => {
                     name_field => 'количество',
                     col_range => [ 1, 4 ],
-                    text => 'Выбрать города в которых количество купленых товаров больше %s и таких товаров больше %s' }
+                    text => 'Выбрать города, в которых количество купленых товаров больше %s и таких товаров больше %s' }
             },
             people_products => {
-                people_cities => { name_field => 'marks', text => 'Какая %s оценка была поставлена товарам в городе' },
+                people_cities => { name_field => 'marks', text => 'Какая %s оценка была поставлена товарам купленным в городе' },
                 people_products => { name_field => 'rating', text => 'Посчитать количество товаров по оценкам' },
                 products => {
                     name_field => 'rating',
                     col_range => [ 2, 4 ],
-                    text => 'Выбрать товары у которых rating больше %s, у больше чем %s покупателей' }
+                    text => 'Выбрать товары, у которых rating больше %s у больше чем %s покупателей' }
             },
         },
         potential_field => {

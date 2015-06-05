@@ -69,16 +69,16 @@ sub group_by_having {
         EGE::Prog::make_expr(['()', 'count', $field_ne])->to_lang_named('SQL'),
         'GROUP BY', 'HAVING',
         EGE::Prog::make_expr(['==', $name_field, $col_f ])->to_lang_named('SQL'),
-        EGE::Prog::make_expr([ '>', EGE::Prog::make_expr(['()', 'count', $field_ne]), $col = rnd->pick(1..5)])->to_lang_named('SQL')),
+        EGE::Prog::make_expr([ '>', EGE::Prog::make_expr(['()', 'count', $field_ne]), $col = rnd->pick(2..5)])->to_lang_named('SQL')),
         EGE::Prog::make_expr(['==', $name_field, $col ])->to_lang_named('SQL'),
         EGE::Prog::make_expr([rnd->pick('>', '<', '=>', '<='), $name_field, $col_f ])->to_lang_named('SQL');
     push @variants, EGE::SQL::InnerJoin->new(
         { tab => '', field => $tab2->{name} . ".$arr_tab[0]->{ref_field}" },
         { tab => $tab, field => $arr_tab[0] })->text_html;
-    my @correct = (0, 7, 1, 5, 14, 2, 10, 8, 6, 9, 11);
+    my @correct = (0, 6, 1, 5, 14, 2, 10, 8, 6, 9, 11);
     $self->{text} = sprintf 'Дан фрагмент базы данных:%s' .
         "Составьте запрос отвечающий на вопрос <br/> $text->{text}?",
-        EGE::SQL::Utils::multi_table_html(@ans_tab), $col, $col_f;
+        EGE::SQL::Utils::multi_table_html(@ans_tab), $col_f, $col;
     $self->{variants} = [ @variants ];
     $self->{correct} = [ @correct ];
 }
