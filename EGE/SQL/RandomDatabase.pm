@@ -86,7 +86,7 @@ sub relation {
             },
             students_subject => {
                 lecturers_subject => { name_field => 'marks', text => 'Какая %s оценка была поставлена преподавателем' },
-                students_subject => { name_field => 'marks', text => 'Посчитать количество студентов по качественному показателю имеющихся оценок' },
+                students_subject => { name_field => 'marks', text => 'Подсчитать для каждой оценки количество получивших её студентов' },
                 students => {
                     name_field => 'marks',
                     col_range => [ 2, 4 ],
@@ -163,12 +163,12 @@ sub relation {
                 cities => {
                     name_field => 'количество',
                     col_range => [ 1, 4 ],
-                    text => 'Выбрать города, в которых количество купленых товаров больше %s и таких товаров больше %s' }
+                    text => 'Выбрать города, в которых более %2$s покупателей приобрели более %1$s товаров каждый' }
             },
             people_products => {
                 people_cities => { name_field => 'marks', text => 'Какая %s оценка была поставлена товарам купленным в городе' },
                 people_products => rnd->pick(
-                    { name_field => 'rating', text => 'Посчитать количество товаров по качественному показателю имеющихся оценок' },
+                    { name_field => 'rating', text => 'Подсчитать для каждой оценки количество получивших её товаров' },
                     { name_field => 'день', text => 'Посчитать количество купленных товаров в различные дни' }
                 ),
                 products => {
@@ -183,7 +183,7 @@ sub relation {
             price => [ 1000, 5000 ],
             rating => [ 2, 5 ],
             marks => [ 2, 5 ],
-            день => [ 1, 7],
+            день => [ 1, 7 ],
         }
     }
 }
