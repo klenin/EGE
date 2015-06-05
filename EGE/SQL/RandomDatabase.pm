@@ -167,7 +167,10 @@ sub relation {
             },
             people_products => {
                 people_cities => { name_field => 'marks', text => 'Какая %s оценка была поставлена товарам купленным в городе' },
-                people_products => { name_field => 'rating', text => 'Посчитать количество товаров по оценкам' },
+                people_products => rnd->pick(
+                    { name_field => 'rating', text => 'Посчитать количество товаров по качественному показателю имеющихся оценок' },
+                    { name_field => 'день', text => 'Посчитать количество купленных товаров в различные дни' }
+                ),
                 products => {
                     name_field => 'rating',
                     col_range => [ 2, 4 ],
@@ -180,6 +183,7 @@ sub relation {
             price => [ 1000, 5000 ],
             rating => [ 2, 5 ],
             marks => [ 2, 5 ],
+            день => [ 1, 7],
         }
     }
 }
