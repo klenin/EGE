@@ -187,7 +187,7 @@ sub all {[
     gg('Db08', qw(parents grandchildren nuncle)),
     gg('Db09', qw(inner_join)),
     gg('Db10', qw(many_inner_join)),
-    gg('Db11', qw(inner_join_count)),
+    gg('Db11', qw(inner_join_count trivial_aggregate_func)),
 ]}
 
 package EGE::AlgGenerate;

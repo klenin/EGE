@@ -20,6 +20,48 @@ use EGE::SQL::RandomTable;
 use EGE::Prog;
 use EGE::Prog::Lang;
 
+sub _create_inner_join {
+    my ($tab1, $tab2, $field1, $field2) = @_;
+    EGE::SQL::InnerJoin->new(
+        { tab => $tab1, field => $tab1->{name} . ".$field1" },
+        { tab => $tab2, field => $field2 });
+}
+
+sub trivial_aggregate_func {
+    my ($self) = @_;
+    my ($gen_db) = EGE::SQL::RandomDatabase::make_database(rnd->in_range(5,8));
+    my @tables = @{$gen_db->{relation_table}};
+    my (@wrong_ans, $a);
+    my @arrs = grep $tables[0]->find_field($_), @{$tables[1]->{fields}};
+    my $field = $arrs[0];
+    my @arr_tab = grep $_ ne $field, @{$tables[1]->{fields}};
+    my $table = $arr_tab[0]->{ref_field}->{table};
+    my $text = $gen_db->make_text($tables[0], $tables[1]);
+    my $name_field = $text->{name_field};
+    my $inner = _create_inner_join($tables[0], $tables[1], $field, $field);
+    my $func = rnd->pick('sum', 'avg', 'min', 'max');
+    my $name = rnd->pick(@{$tables[1]->{data}});
+    my $where = EGE::Prog::make_expr([ '==', $arr_tab[0], @$name[1]]);
+    my $select = EGE::SQL::Select->new($inner, [ EGE::Prog::make_expr(['()', $func, $name_field]) ], $where);
+    $_->assign_field_alias($_->{name}) for @tables;
+    push @wrong_ans, EGE::SQL::Select->new(_create_inner_join($_, $a = rnd->pick(@tables),  @{$_->{fields}}[0], $field), 
+        [ EGE::Prog::make_expr(['()', $func, $name_field])], 
+        EGE::Prog::make_expr([ rnd->pick('<', '>', '!='), @{$a->{fields}}[1], @$name[1]]))
+            for $tables[1], rnd->pick_n(2, @{$gen_db->{database}->{tables}});
+    my $ans = $table->select($table->{fields}, EGE::Prog::make_expr(['==', @{$table->{fields}}[0], @$name[1]]));
+    my $data = @{$ans->{data}}[0];
+    my $family_name = @{$ans->{fields}}[1] eq 'Фамилия' ?  @$data[1] . ' ' . @$data[2] : @$data[1];
+    my $aggr_func = { 'sum' => 'суммарная' , 'avg'=> 'средняя', 
+        'min'=> 'минимальная', 'max'=> 'максимальная'};
+    $self->{text} = sprintf
+        "Дан фрагмент базы данных:\n%s\n".
+        'Выберите запрос отвечающий на вопрос:<br/>'.$text->{text}.' %s?',
+        EGE::SQL::Utils::multi_table_html(@{$gen_db->{tables}}, @tables),
+        $aggr_func->{$func},
+        $family_name;
+    $self->variants($select->text_html, map $_->text_html, @wrong_ans);
+}
+
 sub inner_join_count {
     my ($self) = @_;
     my $table_person = EGE::SQL::RandomTable::create_table(column => 1, row => 0);
