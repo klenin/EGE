@@ -191,7 +191,7 @@ sub all {[
     gg('Db10', qw(many_inner_join)),
     gg('Db11', qw(inner_join_count trivial_aggregate_func)),
     gg('Db12', qw(create_nested_query)),
-    gg('Db13', qw(trivial_group_by)),
+    gg('Db13', qw(trivial_group_by group_by_having)),
 ]}
 
 package EGE::AlgGenerate;

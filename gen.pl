@@ -243,6 +243,7 @@ binmode STDOUT, ':utf8';
 #g2('Db11', 'trivial_aggregate_func');
 #g2('Db12', 'create_nested_query');
 #g2('Db13', 'trivial_group_by');
+#g2('Db13', 'group_by_having');
 #g3('Complexity', 'o_poly');
 #g3('Complexity', 'o_poly_cmp');
 #g3('Complexity::ComplexityDI', 'cycle_complexity');
