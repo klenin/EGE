@@ -163,6 +163,7 @@ use EGE::Gen::Db::Db07;
 use EGE::Gen::Db::Db08;
 use EGE::Gen::Db::Db09;
 use EGE::Gen::Db::Db10;
+use EGE::Gen::Db::Db11;
 
 
 sub g {
@@ -186,6 +187,7 @@ sub all {[
     gg('Db08', qw(parents grandchildren nuncle)),
     gg('Db09', qw(inner_join)),
     gg('Db10', qw(many_inner_join)),
+    gg('Db11', qw(inner_join_count)),
 ]}
 
 package EGE::AlgGenerate;
