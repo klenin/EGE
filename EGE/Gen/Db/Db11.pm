@@ -55,8 +55,8 @@ sub trivial_aggregate_func {
         'min'=> 'минимальная', 'max'=> 'максимальная'};
     $self->{text} = sprintf
         "Дан фрагмент базы данных:\n%s\n".
-        'Выберите запрос отвечающий на вопрос:<br/>'.$text->{text}.' %s?',
-        EGE::SQL::Utils::multi_table_html(@{$gen_db->{tables}}, @tables),
+        'Выберите запрос отвечающий на вопрос:<br/>' . $text->{text} . ' %s?',
+        EGE::SQL::Utils::multi_table_html(@{$gen_db->{database}->{tables}}, @tables),
         $aggr_func->{$func},
         $family_name;
     $self->variants($select->text_html, map $_->text_html, @wrong_ans);

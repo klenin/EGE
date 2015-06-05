@@ -169,7 +169,7 @@ sub relation {
                     text => 'Выбрать города в которых количество купленых товаров больше %s и таких товаров больше %s' }
             },
             people_products => {
-                people_cities => { name_field => 'rating', text => 'Какая %s оценка была поставлена товарам в городе' },
+                people_cities => { name_field => 'marks', text => 'Какая %s оценка была поставлена товарам в городе' },
                 people_products => { name_field => 'rating', text => 'Посчитать количество товаров по оценкам' },
                 products => {
                     name_field => 'rating',
@@ -182,6 +182,7 @@ sub relation {
             склад => [ 1, 5 ],
             price => [ 1000, 5000 ],
             rating => [ 2, 5 ],
+            marks => [ 2, 5 ],
         }
     }
 }
