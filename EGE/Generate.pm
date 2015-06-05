@@ -164,6 +164,7 @@ use EGE::Gen::Db::Db08;
 use EGE::Gen::Db::Db09;
 use EGE::Gen::Db::Db10;
 use EGE::Gen::Db::Db11;
+use EGE::Gen::Db::Db12;
 
 
 sub g {
@@ -188,6 +189,7 @@ sub all {[
     gg('Db09', qw(inner_join)),
     gg('Db10', qw(many_inner_join)),
     gg('Db11', qw(inner_join_count trivial_aggregate_func)),
+    gg('Db12', qw(create_nested_query)),
 ]}
 
 package EGE::AlgGenerate;

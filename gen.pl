@@ -241,6 +241,7 @@ binmode STDOUT, ':utf8';
 #g2('Db10', 'many_inner_join');
 #g2('Db11', 'inner_join_count');
 #g2('Db11', 'trivial_aggregate_func');
+#g2('Db12', 'create_nested_query');
 #g3('Complexity', 'o_poly');
 #g3('Complexity', 'o_poly_cmp');
 #g3('Complexity::ComplexityDI', 'cycle_complexity');
