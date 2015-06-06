@@ -46,7 +46,7 @@ sub expression {
             [ rnd->pick(ops::add), $m1, $m2 ],
             $m3,
         ]);
-        $count = ${$self->select([$cond])->{data}}[0];
+        $count = ${$self->select([$cond])->{data}}[0]->[0];
     } until ($count != $ans);
     $cond;
 }
