@@ -89,8 +89,8 @@ sub inner_join_count {
         "В таблице %s %s записей, структура таблицы следующая %s где " . html->tag('tt', html->cdata('%s')) . "<br/>".
         "Так в таблице %s %s записей, структура таблицы следующая %s где " . html->tag('tt', html->cdata('%s')) . "<br/>".
         'Сколько записей будет в таблице в результате выполнения запроса: %s',
-        $table_person->name, $n, $table_person->table_html, $if1->to_lang_named('SQL'),
-        $table_city->name, $m, $table_city->table_html, $if2->to_lang_named('SQL'),
+        $table_person->name, $n, $table_person->table_html, $if2->to_lang_named('SQL'),
+        $table_city->name, $m, $table_city->table_html, $if1->to_lang_named('SQL'),
         $select->text_html;
     $self->variants(@variants, $n, $m);
 }

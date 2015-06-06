@@ -26,8 +26,8 @@ sub trivial_inner_join{
     $table_city->insert_column(name => 'cid', array => \@arr, index => 1);
     my $count = $table_person->inner_join($table_city, 'id', 'cid')->count();
     my $inner = EGE::SQL::InnerJoin->new(
-        { tab => $table_person, field => 'cid' },
-        { tab => $table_city, field => 'id' });
+        { tab => $table_person, field => 'id' },
+        { tab => $table_city, field => 'cid' });
     my $query = EGE::SQL::Select->new($inner, []);
     $self->{text} = sprintf
         "Даны две таблицы:\n%s\n" .
