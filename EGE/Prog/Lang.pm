@@ -5,6 +5,7 @@ use strict;
 use warnings;
 use utf8;
 
+
 package ops;
 
 sub power { '**' }
@@ -18,6 +19,7 @@ sub prio_unary { map "`$_", unary }
 sub between { between => [ '&&', [ '<=', 2, 1 ], [ '<=', 1, 3 ] ] }
 
 package EGE::Prog::Lang;
+use EGE::Html;
 
 sub new {
     my ($class, %init) = @_;
@@ -59,8 +61,8 @@ sub print_tag {
     my ($self, $t) = @_;
     $t->{$_} ||= '' for qw(left inner right tag alt);
     $self->{html} ?
-        "$t->{left}<$t->{tag}>$t->{inner}</$t->{tag}>$t->{right}" :
-        "$t->{left}$t->{alt}$t->{inner}$t->{right}"
+        $t->{left} . html->tag($t->{tag}, $t->{inner}) . $t->{right} :
+        $t->{left} . $t->{alt} . $t->{inner} . $t->{right};
 }
 
 sub get_fmt {

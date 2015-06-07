@@ -436,7 +436,7 @@ sub run {
 
 sub complexity {
     my $self = shift;
-    my ($env, $mistakes, $iter, $rnd_case) = @_;
+    my ($env, $mistakes, $iter) = @_;
     my ($cond, $body) = ($self->{cond}, $self->{body});
     my @sides = qw(left right);
 
