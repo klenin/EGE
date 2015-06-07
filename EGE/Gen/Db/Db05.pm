@@ -21,11 +21,12 @@ use EGE::SQL::RandomTable qw(create_table);
 sub insert_delete {
     my ($self) = @_;
     my $products = EGE::SQL::RandomTable::create_table(column => 5, row => 13);
-    my $text_table = $products->table_html;
     my (%ans, @query);
     my $candy = $products->column_array($products->{fields}[0]);
     my $ind = rnd->in_range(7, 10);
-    my @val = map rnd->in_range(0, 50) * 100 , 1..@{$products->{fields}} - 1;
+    my @val = map rnd->in_range(10, 80) * 100 , 1..@{$products->{fields}} - 1;
+    $products->{data} = [ grep $_->[0] ne @$candy[$ind], @{$products->{data}} ];
+    my $text_table = $products->table_html;
     $products->insert_row(@$candy[$ind], @val);
     my $insert = EGE::SQL::Insert->new($products, [ @$candy[$ind] , @val ]);
     my $new_candy = $products->column_array($products->{fields}[0]);

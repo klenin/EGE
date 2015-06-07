@@ -28,7 +28,7 @@ sub check_cond {
     do {
         $cond = $expr->($products, @{$products->{fields}});
         $ans = $products->select([], $cond)->count();
-    } until (0 < $ans && $ans < $count);
+    } until (1 < $ans && $ans < $count - 1);
     $cond;
 }
 
