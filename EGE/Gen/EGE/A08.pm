@@ -16,7 +16,7 @@ sub tts { EGE::Logic::truth_table_string($_[0]) }
 
 sub rand_expr_text {
     my $e = EGE::Logic::random_logic_expr(@_);
-    ($e, $e->to_lang_named('Logic'));
+    ($e, $e->to_lang_named('Logic', { html => 1 }));
 }
 
 sub equiv_common {
@@ -31,7 +31,7 @@ sub equiv_common {
             # случайный перебор может работать долго, поэтому
             # через некоторое время применяем эквивалентное преобразование
             $e1 = EGE::Logic::equiv_not($e);
-            $e1_text = $e1->to_lang_named('Logic');
+            $e1_text = $e1->to_lang_named('Logic', { html => 1 });
         }
         else {
             do {

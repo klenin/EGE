@@ -18,7 +18,7 @@ use EGE::Russian;
 
 sub rand_expr_text {
     my $e = EGE::Logic::random_logic_expr(@_);
-    ($e, $e->to_lang_named('Logic'));
+    ($e, $e->to_lang_named('Logic', { html => 1 }));
 }
 
 sub tt_row {
