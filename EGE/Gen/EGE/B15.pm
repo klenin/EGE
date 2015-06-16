@@ -16,7 +16,7 @@ sub _connect {
     EGE::Prog::make_expr(['==', ['&&',
         ['||', [ 'eq', $_[0], $_[1] ], [ 'eq', $_[2], $_[3] ] ],
         ['||', [ '!', [ 'eq', $_[0], $_[1] ] ], [ '!', [ 'eq', $_[2], $_[3] ] ] ],
-    ], 1])->to_lang_named('Logic');
+    ], 1])->to_lang_named('Logic', { html => 1 });
 }
 
 sub logic_var_set {
@@ -26,7 +26,7 @@ sub logic_var_set {
     $self->accept_number();
     my @x = map [ '[]', 'x', $_ ], 1 .. 2*$n_2;
     my $conds = join '<br/>', map { _connect(@x[2 * $_ .. 2 * $_ + 3]) } 0 .. $n_2 - 2;
-    my $vars = join ', ', map EGE::Prog::make_expr($_)->to_lang_named('Logic'), @x;
+    my $vars = join ', ', map EGE::Prog::make_expr($_)->to_lang_named('Logic', { html => 1 }), @x;
     $self->{text} = <<EOL
 Сколько существует различных наборов значений логических переменных $vars которые
 удовлетворяют всем перечисленным ниже условиям? <p>$conds</p> В ответе
