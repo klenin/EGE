@@ -288,34 +288,43 @@ sub solve {
     $self->{correct} = join '',  map { substr($names[$_], 0, 1) } @ans;
 }
 
-sub calculation {
-	my ($f_v, $s_v, $f_n, $s_n, $n) = @_;
-	my $func;
-	for(my $i = 2; $i <= $n; $i++){
-		$func = $s_v * $f_n + $f_v * $s_n;
-		$f_v = $s_v;
-		$s_v = $func			
-	}
-	return $func;
+sub rec_func_calculation {
+    my ($f_v, $s_v, $f_n, $s_n, $n) = @_;
+    my $func;
+    for(my $i = 2; $i <= $n; $i++){
+      $func = $s_v * $f_n + $f_v * $s_n;
+      $f_v = $s_v;
+      $s_v = $func
+    }
+    return $func;
 } 
 
 sub recursive_function {
-	my ($self) = @_;
-	my $first_num = rnd->in_range(2, 6);
-	my $second_num = rnd->in_range(2, 6);
-	my $first_val = rnd->in_range(0, 5);
-	my $second_val = rnd->in_range(1, 5);
-	my $n = rnd->in_range(4, 7);
+    my ($self) = @_;
+    my $first_num = rnd->in_range(2, 6);
+    my $second_num = rnd->in_range(2, 6);
+    my $first_val = rnd->in_range(0, 5);
+    my $second_val = rnd->in_range(1, 5);
+    my $n = rnd->in_range(4, 7);
+    
+    my $first_expr = EGE::Prog::make_expr([ '==', 'F(0)', $first_val ]);
+    my $second_expr = EGE::Prog::make_expr([ '==', 'F(1)', $second_val ]);
+    my $rec_expr = EGE::Prog::make_expr( [ 
+        '==', 'F(n)', [ '+', ['*', 'F(n - 1)', $first_num ], ['*', 'F(n - 2)', $second_num ] ] 
+    ] ); 
 
-	$self->{text} = <<QUESTION
+    my $text_rec_expr = $rec_expr->to_lang_named('Logic', { html => 1 }); 
+    my $text_first_expr = $first_expr->to_lang_named('Logic', { html => 1 });
+    my $text_second_expr = $second_expr->to_lang_named('Logic', { html => 1 });
+
+    $self->{text} = <<QUESTION
 Алгоритм вычисления значения функции F(n), где n-натуральное число,
 задан следующими соотношениями:<br />
-F(0) = $first_val, F(1) = $second_val<br />
-F(n) = F(n - 1) * $first_num + F(n - 2) * $second_num, при n > 1<br />
+$text_first_expr, $text_second_expr <br /> 
+$text_rec_expr, при n > 1<br />
 Чему равно значение функции F($n)? В ответе запишите только натуральное число.
 QUESTION
 ;
-	my $answ = calculation($first_val, $second_val, $first_num, $second_num, $n);
-	$self->{correct} = $answ;                                                       
+    $self->{correct} = rec_func_calculation($first_val, $second_val, $first_num, $second_num, $n);
 }
 1;
