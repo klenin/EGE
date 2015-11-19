@@ -15,6 +15,7 @@ use EGE::Bits;
 use EGE::Logic;
 use EGE::Html;
 use EGE::Russian;
+use EGE::UberData;
 
 sub rand_expr_text {
     my $e = EGE::Logic::random_logic_expr(@_);
@@ -117,6 +118,58 @@ sub find_var_len_code {
         ++(my $last = $alph[-1]);
 }
 
+sub _get_other{
+	my @digits = ();
+	push @digits, @_;
+	my $count = 0;
+	my $flag = 0;
+	my $dig = 0;
+	my @result = ();
+	my @bindig = ();
+	while (scalar(@result) < 3){
+		$flag = 1;
+		$dig = int(rand(31));
+		@bindig = EGE::UberData::digit_to_bin($dig);
+		for my $i(1..3){
+			my @q = EGE::UberData::digit_to_bin($digits[$i]);
+			$count = 0;
+			for my $j(0..4) {
+				$count++ if $q[$j] != $bindig[$j];
+			} 
+			$flag = 0 if $count == 1 || $count == 2;
+		} 
+		
+		for (my $i = 0; $i < scalar(@result) - 1; $i++){
+			$flag = 1 if $result[$i] == $dig;
+		#print $flag;
+		}
+		push (@result, $dig) if $flag == 0;
+		
+	}
+@result;
+} 	
+
+sub find_code {
+    my ($self) = @_;
+    my @digit = EGE::UberData::get_question(int(rand(31)));
+	my @res = _get_other(@digit);
+    $self->variants(join ("", EGE::UberData::digit_to_bin($digit[0])),
+	join ("", EGE::UberData::digit_to_bin($res[0])),
+	join ("", EGE::UberData::digit_to_bin($res[1])),
+	join ("", EGE::UberData::digit_to_bin($res[2])));
+
+    $self->{text} .= sprintf
+        '<p>По каналу связи передаются сообщения, содержащие только 4 буквы А, И, С, Т.' .
+        'Для кодирования букв А, И, С используются 5-битовые кодовые слова:</p><p><tt> А - ' . join ("", EGE::UberData::digit_to_bin($digit[1])) .
+        ', И -'. join ("", EGE::UberData::digit_to_bin($digit[2])). ' , С - ' . join ("", EGE::UberData::digit_to_bin($digit[3])) . '</tt><p></p> Для этих кодовых слов выполнено такое свойство: кодовые ' .
+        'слова для разных букв отличаются не менее, чем в трех позициях. Это свойство' .
+        'важно для расшифровки сообщений при наличии помех. ' .
+        'Для буквы Т нужно выбрать кодовое слово так, чтобы оно тоже отличалось от кодовых' .
+        'слов для букв А, И, С не менее, чем в трех позициях.</p>' . 
+        '<p>Какое из перечисленных ниже кодовых слов можно использовать для буквы Т?</p>';
+}
+
+
 sub error_correction_code {
     my ($self) = @_;
     my $digits = rnd->in_range(5, 6);
@@ -175,6 +228,8 @@ __END__
 =item truth_table_fragment
 
 =item find_var_len_code
+
+=find_code
 
 =back
 
