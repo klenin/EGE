@@ -288,4 +288,34 @@ sub solve {
     $self->{correct} = join '',  map { substr($names[$_], 0, 1) } @ans;
 }
 
+sub calculation {
+	my ($f_v, $s_v, $f_n, $s_n, $n) = @_;
+	my $func;
+	for(my $i = 2; $i <= $n; $i++){
+		$func = $s_v * $f_n + $f_v * $s_n;
+		$f_v = $s_v;
+		$s_v = $func			
+	}
+	return $func;
+} 
+
+sub recursive_function {
+	my ($self) = @_;
+	my $first_num = rnd->in_range(2, 6);
+	my $second_num = rnd->in_range(2, 6);
+	my $first_val = rnd->in_range(0, 5);
+	my $second_val = rnd->in_range(1, 5);
+	my $n = rnd->in_range(4, 7);
+
+	$self->{text} = <<QUESTION
+Алгоритм вычисления значения функции F(n), где n-натуральное число,
+задан следующими соотношениями:<br />
+F(0) = $first_val, F(1) = $second_val<br />
+F(n) = F(n - 1) * $first_num + F(n - 2) * $second_num, при n > 1<br />
+Чему равно значение функции F($n)? В ответе запишите только натуральное число.
+QUESTION
+;
+	my $answ = calculation($first_val, $second_val, $first_num, $second_num, $n);
+	$self->{correct} = $answ;                                                       
+}
 1;
