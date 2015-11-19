@@ -69,55 +69,6 @@ $example_table_text
 EOL
 }
 
-sub bin_to_dec{
-	my(@self) = @_;
-	my $result;
-	for (my $i = 0; $i < 8; $i++){
-		$result += $self[$i] * (2 ** $i);
-	}
-	return $result;
-}
-
-sub subnet_mask{
-	my ($self) = @_;
-	my ($d) = rnd->in_range(1, 6);
-	my ($first) = rnd->in_range(200, 255);
-	my ($second) = rnd->in_range(30, 255);
-	my ($fourth) = rnd->pick(0, rnd->in_range(100, 255));
-
-	my(@mask) = ();
-	for (my $i = 0; $i < 8; $i++){        
-        	$mask[$i] = $i <= $d ? 0 : 1; 
-	}          
-    my($mask_third) = bin_to_dec(@mask);
-   
-	my(@ip) = ();
-    $ip[7] = 1;
-	for (my $i = 0; $i < 7; $i++){ 
-		$ip[$i] = rnd->in_range(0, 1);
-	}
-	my($ip_third) = bin_to_dec(@ip);
-
-	my (@net_address) = ();
-    $net_address[7] = 1;
-    for (my $i = 0; $i < 7; $i++) {
-        $net_address[$i] = $mask[$i] & $ip[$i];
-    }
-
-	my($net_third) = bin_to_dec(@net_address);    
-
-	$self->{text} = <<QUESTION 
-Адрес сети получается в результате применения поразрядной конъюнкции к заданному IP-адресу узла и маске. 
-Обычно маска записывается по тем же правилам, что и IP-адрес – в виде четырёх байтов, причём каждый байт 
-записывается в виде десятичного числа. <br />
-Пример. Пусть IP-адрес узла равен 231.32.255.131, а маска равна 255.255.240.0. Тогда адрес сети равен 231.32.240.0. <br />
-Для узла с IP-адресом $first.$second.$ip_third.$fourth адрес сети равен $first.$second.$net_third.0.
-Чему равен третий слева байт маски? Ответ запишите в виде десятиного числа.
-QUESTION
-;
-    $self->{correct} = $mask_third; 
-}                        
-
 1;
 
 __END__
