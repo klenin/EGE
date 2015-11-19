@@ -47,10 +47,10 @@ sub trans_rate {
 sub trans_time{
     my ($self) = @_;
     my $size = 10 * rnd->pick(5 .. 50);
-    my $speed1 = rnd->pick(18 .. 23);
-    my $speed2 = rnd->pick(18 .. 23);
+    my $speed1 = rnd->pick(20 .. 23);
+    my $speed2 = rnd->pick(20.. 23);
     my $latency = rnd->pick(13 .. 35);
-
+   
     $self->{text} =
         "Данные объемом $size Мбайт передаются из пункта А в пункт Б по каналу связи, обеспечивающему скорость" .
         "передачи данных <i><b>2<sup>$speed1</sup></b></i> бит в секунду, а затем из пункта Б в пункт В по каналу связи," . 
@@ -58,7 +58,12 @@ sub trans_time{
         "(время между окончанием приема данных из пункта А и началом передачи в пункт В) составляет $latency секунды. " . 
         "Сколько времени (в секундах) прошло с момента начала передачи данных из пункта А до их полного получения в " .
         "пункте В? В ответе укажите только число, слово «секунд» или букву «с» добавлять <b>не нужно</b>.";
-    $self->{correct} = 2**(23 - $speed1) * $size + 2**(23 - $speed2) * $size + $latency;
+    
+    # $self->{correct} = 2**(23 - $speed1) * $size + 2**(23 - $speed2) * $size + $latency;
+    my $temp1 = 23 - $speed1;
+    my $temp2 = 23 - $speed2;
+    $self->{correct} = (1<<$temp1) * $size + (1<<$temp2) * $size + $latency;
+
 }
 
 sub trans_latency{
@@ -67,7 +72,10 @@ sub trans_latency{
     my $speed1 = rnd->pick(18 .. 23);
     my $speed2 = rnd->pick(18 .. 23);
     my $latency = rnd->pick(13 .. 35);
-    my $time = 2**(23 - $speed1) * $size + 2**(23 - $speed2) * $size + $latency;
+    my $temp1 = 23 - $speed1;
+    my $temp2 = 23 - $speed2;
+    # my $time = 2**(23 - $speed1) * $size + 2**(23 - $speed2) * $size + $latency;
+    my $time = (1<<$temp1) * $size + (1<<$temp2) * $size + $latency;
     
     $self->{text} =
         "Данные объемом $size Мбайт передаются из пункта А в пункт Б по каналу связи, обеспечивающему скорость " .
