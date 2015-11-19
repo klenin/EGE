@@ -261,6 +261,10 @@ binmode STDOUT, ':utf8';
 #$questions = EGE::DatabaseGenerate::all;
 #$questions = EGE::AlgGenerate::all;
 
+g('B22', 'calculator_find_prgm_count');
+g('B11', 'recursive_function');
+g('B09', 'city_roads');
+
 #push @$questions, EGE::Gen::Math::Summer::g($_) for qw(p1 p2 p3 p4 p5 p6 p7);
 
 print_html;

@@ -69,6 +69,58 @@ $example_table_text
 EOL
 }
 
+my $max_func_operand = rnd->in_range(1, 3);
+my @func_results = map -1, 1..50;
+my $func_eval_code;
+
+sub F {
+	my $n = shift;
+	return $func_results[$n] if $func_results[$n] >= 0;
+	return $func_results[$n] = eval $func_eval_code;
+}
+
+sub make_F_text {
+	my $res = "F(n-$_[0])";
+	$res.='*'.rnd->in_range(2, 3) if rnd->coin();
+	return $res;
+}
+
+sub make_full_function_text {
+	my $res_text = '';
+	for (my $i = 0; $i < $max_func_operand; $i++) {
+		if ($i == 0) {
+			$res_text.=make_F_text(1);
+		} elsif ($i == 1) {
+			$res_text.=make_F_text($max_func_operand);
+		} else {
+			$res_text.=make_F_text(rnd->pick(1..$max_func_operand));
+		}
+		$res_text.='+';
+	};
+	$res_text.=rnd->in_range(1, 4);
+}
+
+sub recursive_function {
+	my ($self) = @_;
+	my $func_text_code = $func_eval_code = make_full_function_text();
+	$func_eval_code =~ s/n/\$n/g;
+	my $n = $max_func_operand + rnd->in_range(2, 4);
+	for (my $i = 0; $i < $max_func_operand; $i++) {
+		$func_results[$i] = rnd->in_range(0, 4);
+	}
+	$self->{text} = "<p>Алгоритм вычисления значения функции F(n), где ".
+					"где n - натуральное число, задан следующими ".
+					"соотношениями:</p><div style=\"margin-left:30px\">";
+	map $self->{text}.="F($_) = $func_results[$_]<br /> ", 0..$max_func_operand-1;
+	$self->{text}.="F(n) = ".$func_text_code.", при n >= $max_func_operand".
+					"</div><p>Чему равно значение функции F($n)? В ответе запишите только ".
+					"натуральное число.</p>";
+	
+	$self->{correct} = F($n);
+	
+	$self->accept_number;	
+}
+
 1;
 
 __END__
