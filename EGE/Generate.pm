@@ -98,7 +98,7 @@ sub all {[
     gg('B06', qw(solve plane_divide hanoi fib)),
     gg('B07', qw(who_is_right)),
     gg('B08', qw(identify_letter find_calc_system)),
-    gg('B10', qw(trans_rate)),
+    gg('B10', qw(trans_rate trans_latency trans_time)),
     gg('B11', qw(ip_mask)),
     gg('B12', qw(search_query)),
     gg('B13', qw(plus_minus)),
