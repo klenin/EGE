@@ -195,6 +195,7 @@ binmode STDOUT, ':utf8';
 #g('B03', 'last_digit');
 #g('B03', 'count_digits');
 #g('B04', 'impl_border');
+#g('B04', 'morse');
 #g('B05', 'calculator');
 #g('B06', 'solve');
 #g('B06', 'plane_divide');
