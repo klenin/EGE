@@ -172,6 +172,8 @@ binmode STDOUT, ':utf8';
 #g('A7', 'spreadsheet_shift');
 #g('A8', 'equiv_3');
 #g('A8', 'equiv_4');
+#g('A8', 'audio_size');
+#g('A8', 'audio_time');
 #g('A9', 'truth_table_fragment');
 #g('A9', 'find_var_len_code');
 #g('A9', 'error_correction_code');
