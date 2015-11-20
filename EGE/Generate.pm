@@ -95,7 +95,7 @@ sub all {[
     gg('B03', qw(q1234 last_digit count_digits)),
     gg('B04', qw(impl_border lex_order)),
     gg('B05', qw(calculator complete_spreadsheet)),
-    gg('B06', qw(solve)),
+    gg('B06', qw(solve fib plane_divide hanoi)),
     gg('B07', qw(who_is_right)),
     gg('B08', qw(identify_letter find_calc_system)),
     gg('B10', qw(trans_rate trans_time trans_latency)),
