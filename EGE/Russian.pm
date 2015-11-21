@@ -9,12 +9,14 @@ use utf8;
 
 use EGE::Random;
 
+our @alphabet = split '', 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ';
+
 sub join_comma_and { join(', ', @_[0 .. $#_ - 1]) . ' и ' . $_[-1] }
 
 sub different {
     my ($cache, $items, $count) = @_;
     unless ($$cache) {
-        $$cache = { map { $_, [] } 'А' .. 'Я' };
+        $$cache = {};
         push @{$$cache->{substr($_, 0, 1)}}, $_ for @$items;
     }
     map rnd->pick(@{$$cache->{$_}}), rnd->pick_n($count, keys %$$cache);

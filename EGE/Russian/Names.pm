@@ -294,7 +294,7 @@ sub different_females { EGE::Russian::different(\$hf, \@female, $_[0]) }
 sub different_names {
     my ($count) = @_;
     unless ($h) {
-        $h = { map { $_, [] } 'А' .. 'Я' };
+        $h = {};
         for (@male) {
             push @{$h->{substr($_, 0, 1)}}, { name => $_, gender => 0 };
         }
