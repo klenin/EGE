@@ -48,42 +48,30 @@ sub equiv_3 { $_[0]->equiv_common(qw(A B C)) }
 
 sub equiv_4 { $_[0]->equiv_common(qw(A B C D)) }
 
-sub _audio_data{
+sub _audio_data {
     my %data = (
         freq  => rnd->pick(8, 11, 16, 22, 32, 44, 48, 50, 96, 176, 192),
         resol => 8 * rnd->in_range(2, 10),
-        time => rnd->in_range(1, 10),
+        time_ => rnd->in_range(1, 10),
         channels_n => rnd->in_range(0, 2),
     );
+
     my @w = ('одноканальная (моно)', 'двухканальная (стерео)', 'четырехканальная (квадро)');
     $data{channels_word} = $w[$data{channels_n}];
 
-    $data{time_word} = num_text($data{time}, [qw(минуту минуты минут)]);
-    $data{size} = 2**$data{channels_n} * $data{freq} * 1000 * $data{resol} * $data{time} * 60.0 / 8;
+    $data{time_word} = num_text($data{time_}, [qw(минуту минуты минут)]);
+    $data{size} = 2 ** $data{channels_n} * $data{freq} * 1000 * $data{resol} * $data{time_} * 60.0 / 8;
     %data;
 }
 
-sub _audio_bad_ans{
-    my $ans = shift;
-    
-    my $t1 = sprintf "%0.0f", $ans / 10;
-    my $t2 = sprintf "%0.0f", $ans * 10;
-    my @bad_ans =  rnd->shuffle( grep { $_ > 0 } $ans-1, $ans+1, $t1, $t1-1, $t1+1, $t2, $t2-1, $t2+2 );
-    @bad_ans[0 .. 2];
+sub _audio_bad_ans {
+    rnd->pick_n(3, grep $_ >= 1, map $_[0] * $_, 0.1, 0.2, 0.25, 0.5, 2, 3, 4, 5, 10);
 }
 
-sub _audio_translate{
-    my ($data, $size, @units) = @_;
-    while (int($data / $size) > 0) {$data /= $size; shift @units }
-    ($data, @units);
-}
-
-sub _audio_out{
-    my($data, $size, @units) = @_; 
-    ($data, @units) = _audio_translate($data, $size, @units);
-    
-    my $t  = sprintf "%0.0f", $data;
-    (map { $_ . ' ' . $units[0] } $t, _audio_bad_ans($data));
+sub _audio_out {
+    my ($data, $size, @units) = @_; 
+    while ($data > $size) { $data /= $size; shift @units }
+    map { sprintf "%0.0f $units[0]", $_ } $data, _audio_bad_ans($data);
 }
 
 sub audio_size {
@@ -92,12 +80,13 @@ sub audio_size {
 
     $self->{text} = 
         "Производится $data{channels_word} звукозапись с частотой дискретизации " .
-        "$data{freq} кГц и $data{resol}-битным разрешением. Запись длится $data{time}, ее результаты записываются" .
-        " в файл, сжатие данных не производится. Какая из приведенных ниже величин" .
-        " наиболее близка к размеру полученного файла?";
+        "$data{freq} кГц и $data{resol}-битным разрешением. " .
+        "Запись длится $data{time_word}, ее результаты записываются " .
+        'в файл, сжатие данных не производится. ' .
+        'Какая из приведенных ниже величин наиболее близка к размеру полученного файла?';
 
     my @units = qw(Байт Кбайт Мбайт Гбайт);
-    $self->variants( _audio_out($data{size}, 1024, @units));
+    $self->variants(_audio_out($data{size}, 1024, @units));
 }
 
 sub audio_time {
@@ -107,13 +96,12 @@ sub audio_time {
     $self->{text} = sprintf
         'Производится %s звукозапись с частотой дискретизации ' . 
         '%s кГц и %s-битным разрешением. Результаты записи записываются в файл, ' .
-        'размер полученного файла - %s Мбайт; сжатие данных не производилось.' .
+        'размер полученного файла — %s байт; сжатие данных не производилось. ' .
         'Какая из приведенных ниже величин наиболее близка к времени, в течение которого происходила запись?',
-           $data{channels_word}, $data{freq}, $data{resol}, $data{size};
+        $data{channels_word}, $data{freq}, $data{resol}, $data{size};
 
     my @units = qw(сек мин ч);
-    $self->variants(_audio_out($data{time}, 60, @units));
+    $self->variants(_audio_out($data{time_}, 60, @units));
 }
 
 1;
-
