@@ -7,6 +7,7 @@ use strict;
 use warnings;
 use utf8;
 
+use Carp;
 use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT = qw(rnd);
@@ -41,13 +42,13 @@ sub in_range_except {
 
 sub pick {
     my ($self, @array) = @_;
-    @array or die 'pick from empty array';
+    @array or croak 'pick from empty array';
     @array[rand @array];
 }
 
 sub pick_n {
     my ($self, $n, @array) = @_;
-    die "pick_n: $n of " . scalar @array if $n > @array;
+    croak "pick_n: $n of " . scalar @array if $n > @array;
     --$n;
     for (0 .. $n) {
         my $pos = $self->in_range($_, $#array);
