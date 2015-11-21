@@ -228,4 +228,9 @@ sub indexes {
     grep $self->get_bit($_), 0..$self->get_size;
 }
 
+sub count_ones {
+    my ($self) = @_;
+    scalar grep $self->get_bit($_), 0..$self->get_size;
+}
+
 1;

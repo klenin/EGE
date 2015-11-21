@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 55;
+use Test::More tests => 58;
 
 use lib '..';
 use EGE::Bits;
@@ -135,5 +135,11 @@ use EGE::Bits;
 {
     my $b = EGE::Bits->new->set_bin('101010');
     is_deeply [ $b->indexes ], [ 1, 3, 5 ], 'indexes';
+}
+
+{
+    is (EGE::Bits->new->set_bin('00000')->count_ones, 0, 'count_one(all zero)');
+	is (EGE::Bits->new->set_bin('11111')->count_ones, 5, 'count_one(all one)');
+	is (EGE::Bits->new->set_bin('101010')->count_ones, 3, 'count_one(3)');
 }
 
