@@ -340,7 +340,7 @@ sub _fib {
 sub fib {
     my ($self) = @_;
     # в NumText нет порядковых числительных
-    my $n = rnd->in_range(5 .. 10);
+    my $n = rnd->in_range(5, 10);
     my %word = (
         5 => "пятое",
         6 => "шестое",

@@ -281,7 +281,7 @@ sub _gen_params {
              _ceil_eq($c->{ceil}, $c->{to_ceil}));
 
     $c->{suffix} = rnd->pick(' + ', ' - ', ' * ', ' / ') .
-                   rnd->in_range(1 .. 9);
+                   rnd->in_range(1, 9);
 }
 
 sub _gen_task {

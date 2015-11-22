@@ -54,10 +54,10 @@ sub _trans_text{
 
 sub _trans_data{
     my %data = (
-        size => 10 * rnd->in_range(5 .. 50),
-        speed1 => rnd->in_range(18 .. 23),
-        speed2 => rnd->in_range(18 .. 23),
-        latency => rnd->in_range(13 .. 35),
+        size => 10 * rnd->in_range(5, 50),
+        speed1 => rnd->in_range(18, 23),
+        speed2 => rnd->in_range(18, 23),
+        latency => rnd->in_range(13, 35),
     );
     $data{time} =
         2**(23 - $data{speed1}) * $data{size} + 
