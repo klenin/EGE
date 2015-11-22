@@ -193,7 +193,7 @@ sub _get_answer{
     map { $_->logic_op('xor', $first_num) } @{$template_of_find_code_answer[int(rand($#template_of_find_code_answer))]};
 }
 
-sub find_code {
+sub hamming_code {
     my ($self) = @_;
     my @ans = _get_answer(int(rand(31)));
     $self->variants( $ans[0]->get_bin, _get_wrong_answer(@ans));
