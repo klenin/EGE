@@ -51,7 +51,8 @@ sub fixed_length {
     my @letters = sort keys %code;
     my $symt = join ', ', @letters;
 
-    my @msg = map rnd->pick(@letters), 1..4;
+    # Гарантировать хотя бы две разные буквы.
+    my @msg = rnd->shuffle(rnd->pick_n(2, @letters), map rnd->pick(@letters), 1..2);
     my $msgt = join '', @msg;
 
     my $good = fixed_hex map $code{$_}, @msg;
