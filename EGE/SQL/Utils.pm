@@ -23,13 +23,13 @@ sub create_table {
 
 sub check_cond {
     my ($products, $expr) = @_;
-    my ($ans, $cond);
-    my $count = $products->count();
-    do {
-        $cond = $expr->($products, @{$products->{fields}});
-        $ans = $products->select([], $cond)->count();
-    } until (1 < $ans && $ans < $count - 1);
-    $cond;
+    my $count = $products->count;
+    my $iter = 0;
+    while (1) {
+        my $cond = $expr->($products, @{$products->{fields}});
+        my $ans = $products->select([], $cond)->count;
+        return $cond if 1 < $ans && $ans < $count - 1 || ++$iter > 30;
+    }
 }
 
 sub expr_1 {
