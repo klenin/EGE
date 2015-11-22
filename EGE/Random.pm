@@ -25,6 +25,7 @@ sub new {
 }
 
 sub in_range {
+    croak 'in_range: bad number of arguments' if @_ != 3;
     my ($self, $lo, $hi) = @_;
     int rand($hi - $lo + 1) + $lo;
 }
