@@ -16,8 +16,8 @@ sub new {
 sub get_size { scalar @{$_[0]->{v}}; }
 
 sub set_size {
-    my ($self, $new_size) = @_;
-    $self->{v} = [ (0) x $new_size ];
+    my ($self, $new_size, $val) = @_;
+    $self->{v} = [ ($val // 0) x $new_size ];
     $self;
 }
 
