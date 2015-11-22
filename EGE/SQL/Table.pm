@@ -101,7 +101,7 @@ sub print {
     print_row $_ for $self->{fields}, @{$self->{data}};
 }
 
-sub count { @{$_[0]->{data}} }
+sub count { scalar @{$_[0]->{data}} }
 
 sub _row_hash {
     my ($self, $row, $env) = @_;
