@@ -13,6 +13,8 @@ use utf8;
 use EGE::Random;
 use EGE::Russian::Names;
 use EGE::Russian::Jobs;
+use EGE::Prog;
+
 use Data::Dumper;
 
 use Storable qw(dclone);
@@ -288,4 +290,48 @@ sub solve {
     $self->{correct} = join '',  map { substr($names[$_], 0, 1) } @ans;
 }
 
+sub rec_func_calculation {
+    my ($f_v, $s_v, $f_n, $s_n, $n) = @_;
+    my $func;
+    for(my $i = 2; $i <= $n; $i++){
+      $func = $s_v * $f_n + $f_v * $s_n;
+      $f_v = $s_v;
+      $s_v = $func
+    }
+    return $func;
+} 
+
+sub recursive_function {
+    my ($self) = @_;
+    my $first_num = rnd->in_range(2, 6);
+    my $second_num = rnd->in_range(2, 6);
+    my $first_val = rnd->in_range(0, 5);
+    my $second_val = rnd->in_range(1, 5);
+    my $n = rnd->in_range(4, 7);
+
+    my @expr = ([ '==', [ '()', 'F', '0' ], $first_val ],
+    [ '==', [ '()', 'F', '1' ], $second_val ],
+    [ '==', [ '()', 'F', 'n' ], 
+        [ '+', ['*', [ '()', 'F', ['-', 'n', '1'] ], $first_num ],
+        ['*', [ '()', 'F', ['-', 'n', '2'] ], $second_num ] ]
+    ],
+    ['()', 'F', 'n'],
+    ['>', 'n', '5'],
+    );
+
+    my @text_expr;
+    for (my $i = 0; $i < 5; $i++){
+        $text_expr[$i] = EGE::Prog::make_expr($expr[$i])->to_lang_named('Logic', { html => 1 });
+    }
+
+    $self->{text} = <<QUESTION
+Алгоритм вычисления значения функции $text_expr[3], где <i>n</i> - натуральное число,
+задан следующими соотношениями:<br />
+$text_expr[0], $text_expr[1] <br />
+$text_expr[2], при $text_expr[4]<br />
+Чему равно значение функции F($n)? В ответе запишите только натуральное число.
+QUESTION
+;
+    $self->{correct} = rec_func_calculation($first_val, $second_val, $first_num, $second_num, $n);
+}
 1;

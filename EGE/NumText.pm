@@ -9,7 +9,7 @@ use utf8;
 
 use Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT = qw(num_text num_bits num_bytes bits_and_bytes num_by_words);
+our @EXPORT = qw(num_text num_bits num_bytes bits_and_bytes num_by_words num_one num_zero);
 
 my $words = {
     # именительный
@@ -129,6 +129,8 @@ sub num_by_words_text {
 
 sub num_bits { num_text($_[0], [ 'бит', 'бита', 'бит' ]) }
 sub num_bytes { num_text($_[0], [ 'байт', 'байта', 'байтов' ]) }
+sub num_zero { num_text($_[0], [ 'значащий нуль', 'значащих нуля', 'значащих нулей' ]) }
+sub num_one { num_text($_[0], [ 'еденица', 'единицы', 'единиц' ]) }
 
 sub bits_and_bytes { num_bytes($_[0]), num_bits($_[0] * 8) }
 
