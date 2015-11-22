@@ -155,7 +155,7 @@ binmode STDOUT, ':utf8';
 #g('A3', 'convert');
 #g('A3', 'range');
 #g('A4', 'sum');
-#g('A4', 'some_num');
+#g('A4', 'count_zero_one');
 #g('A5', 'arith');
 #g('A5', 'div_mod_10');
 #g('A5', 'div_mod_rotate');
