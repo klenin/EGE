@@ -162,52 +162,50 @@ sub error_correction_code {
         '</tt>. Декодируйте это сообщение — выберите правильный вариант.</p>';
 }
 
-my @template_of_find_code_answer = ();
+sub _hamming_random_bits { EGE::Bits->new->set_size(5)->set_dec(rnd->in_range(0, 31)) }
+sub _count_diff_bits { $_[0]->dup->logic_op('xor', $_[1])->count_ones }
 
-sub _get_wrong_answer{
-    my %result = ();
-    while (keys %result < 3){
-        my $number = EGE::Bits->new->set_size(5)->set_dec(int(rand(31)));
-        map { $result{$number->get_bin} = 1 if abs(EGE::Bits->new->copy($number)->logic_op('xor', oct("0b" . $_->get_bin))->count_ones - 1.5) == 0.5 } @_;
+sub _hamming_make_random_code {
+    my ($codes, $max) = @_;
+    return 1 if @$codes >= $max;
+    for my $bin (rnd->shuffle(0..31)) {
+        my $code = EGE::Bits->new->set_size(5)->set_dec($bin);
+        map { next if _count_diff_bits($_, $code) < 3 } @$codes;
+        push @$codes, $code;
+        return 1 if _hamming_make_random_code($codes, $max);
+        pop @$codes;
     }
-    keys %result;
-}
-
-sub _check{
-    for my $i(0..2){
-        map { return if EGE::Bits->new->copy($_[$i])->logic_op('xor', oct("0b" . $_->get_bin))->count_ones < 3 } @_[$i + 1..3];
-    }
-    push @template_of_find_code_answer, [@_];
-}
-
-sub _get_template{
-    for my $i(0..31){
-        for my $j(0..31){
-            for my $k(0..31){
-                _check(map { EGE::Bits->new->set_size(5)->set_dec($_) } 31, $i, $j, $k); }}}
-}
-
-sub _get_answer{
-    @template_of_find_code_answer or _get_template;
-    my $first_num = EGE::Bits->new->set_size(5)->set_dec(int(rand(31)))->get_bin;
-    map { $_->logic_op('xor', $first_num) } @{$template_of_find_code_answer[int(rand($#template_of_find_code_answer))]};
+    0;
 }
 
 sub hamming_code {
     my ($self) = @_;
-    my @ans = _get_answer(int(rand(31)));
-    $self->variants( $ans[0]->get_bin, _get_wrong_answer(@ans));
+
+    my @codes = ( _hamming_random_bits );
+    _hamming_make_random_code(\@codes, 4) or die join ' ', map $_->get_bin, @codes;
+
+    my %bad;
+    while (keys %bad < 3) {
+        my $code = _hamming_random_bits;
+        for (@codes) {
+            my $cnt = _count_diff_bits($code, $_);
+            $bad{$code->get_bin} = 1 if $cnt == 1 || $cnt == 2;
+        }
+    }
+
+    $self->variants($codes[0]->get_bin, keys %bad);
 
     $self->{text} .= sprintf
-        '<p>По каналу связи передаются сообщения, содержащие только 4 буквы А, И, С, Т.' .
+        '<p>По каналу связи передаются сообщения, содержащие только 4 буквы А, И, С, Т. ' .
         'Для кодирования букв А, И, С используются 5-битовые кодовые слова:</p>' .
-        '<p>А - <tt>%s</tt>, И - <tt>%s</tt> , С - <tt>%s</tt></p>'. 
+        '<p>А - <tt>%s</tt>, И - <tt>%s</tt> , С - <tt>%s</tt></p> '. 
         '<p>Для этих кодовых слов выполнено такое свойство: кодовые ' .
         'слова для разных букв отличаются не менее, чем в трех позициях. Это свойство ' .
         'важно для расшифровки сообщений при наличии помех. ' .
         'Для буквы Т нужно выбрать кодовое слово так, чтобы оно тоже отличалось от кодовых ' .
         'слов для букв А, И, С не менее, чем в трех позициях.</p>' . 
-        '<p>Какое из перечисленных ниже кодовых слов можно использовать для буквы Т?</p>', map {$_->get_bin} @ans[1..3];
+        '<p>Какое из перечисленных ниже кодовых слов можно использовать для буквы Т?</p>',
+        map { $_->get_bin } @codes[1..3];
 }
 
 1;
