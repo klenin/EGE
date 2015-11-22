@@ -138,8 +138,8 @@ use EGE::Bits;
 }
 
 {
-    is (EGE::Bits->new->set_bin('00000')->count_ones, 0, 'count_one(all zero)');
-	is (EGE::Bits->new->set_bin('11111')->count_ones, 5, 'count_one(all one)');
-	is (EGE::Bits->new->set_bin('101010')->count_ones, 3, 'count_one(3)');
+    is (EGE::Bits->new->set_bin('00000')->count_ones, 0, 'count_one (all zero)');
+    is (EGE::Bits->new->set_bin('11111')->count_ones, 5, 'count_one (all one)');
+    is (EGE::Bits->new->set_bin('101010')->count_ones, 3, 'count_one (3)');
 }
 
