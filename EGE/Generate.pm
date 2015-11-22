@@ -80,7 +80,7 @@ sub all {[
     gg('A6', qw(count_by_sign find_min_max count_odd_even alg_min_max alg_avg bus_station)),
     gg('A7', qw(names animals random_sequences restore_password spreadsheet_shift)),
     gg('A8', qw(equiv_3 equiv_4 audio_size audio_time)),
-    gg('A9', qw(truth_table_fragment find_var_len_code error_correction_code)),
+    gg('A9', qw(truth_table_fragment find_var_len_code error_correction_code find_code)),
     gg('A10', qw(graph_by_matrix)),
     gg('A11', qw(variable_length fixed_length password_length)),
     gg('A12', qw(beads array_flip)),
