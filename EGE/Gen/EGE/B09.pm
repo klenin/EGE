@@ -11,59 +11,65 @@ use warnings;
 use utf8;
 
 use EGE::Random;
-sub join_comma { join(', ', @_[0 .. $#_ - 1]) . ', ' . $_[-1] }
+use EGE::Html;
+use List::Util qw(min max);
 
-my @roads = map [], 1..11;
-my @city_path_count = map 0, 1..11;
-my @city_id_to_char = ('А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ё', 'Ж', 'З', 'И', 'К');
+my @roads;
+my @city_path_count;
+my @city_id_to_char = ('А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ж', 'З', 'И', 'К', 'Л', 'М', 'Н', 'О', 'П', 'Р', 'С', 'Т');
+
+my $last_city_id;
+my $look_back_size = 6;
+my $max_inner_road_count = 4;
+my $min_last_city_id = 8;
+my $max_last_city_id = 15;
 
 sub dfs {
-	my $city = shift;
-	return 1 if $city == 10;
-	return $_ if ($_ = $city_path_count[$city]);
-	for (@{$roads[$city]}) {
-		$city_path_count[$city] += dfs($_);
-	}
-	return $city_path_count[$city];
+    my $city_id = shift;
+    return 1 if $city_id == $last_city_id;
+    return $city_path_count[$city_id] if ($city_path_count[$city_id]);
+    for (@{$roads[$city_id]}) {
+		$_ > $city_id or die "LOOP";
+		$city_path_count[$city_id] += dfs($_);
+    }
+    return $city_path_count[$city_id];
 }
 
 sub city_roads {
-	@roads[0] = [1..3];
-	for (7..9) {@roads[$_] = [10]};
-
-	for my $i(1, 4) {
-		my @next_cities = $i+3..$i+5;
-		my @required_cities = rnd->shuffle(@next_cities);
-		for my $j(0..2) {
-			my $curr_city = $i+$j;
-			my $next_city =  pop @required_cities;  
-			push @{$roads[$curr_city]}, $next_city;
-			for (@next_cities) {
-				push @{$roads[$curr_city]}, $_ if rnd->coin() && $_ != $next_city;
-			}
-		}
-	}
-
 	my ($self) = @_;
-	$self->{text} = "<p>В таблице представлена схема дорог соединяющих города ".
-					join_comma(@city_id_to_char).". Двигаться по дорогам можно только ".
-					"из города указанном в верхней строке, в город указанный в нижней строке. ".
-					"Сколько существует различных дорог из города А в город К?</p><table>";
-	my $top_row = my $middle_row = my $bottom_row = "<tr>";
-	for (my $curr_city_id = 0; $curr_city_id < scalar @roads; $curr_city_id++) {
-		for my $next_city_id(@{$roads[$curr_city_id]}) {
-			$top_row.="<td>".$city_id_to_char[$curr_city_id]."</td>";
-			$middle_row.="<td>↓</td>";
-			$bottom_row.="<td>".$city_id_to_char[$next_city_id]."</td>";
+	$last_city_id = rnd->in_range($min_last_city_id, $max_last_city_id);
+    @roads = map [], 0..$last_city_id;
+    @city_path_count = map 0, 0..$last_city_id;
+
+    for my $i(1..$last_city_id) {
+        for (rnd->pick_n(min (rnd->in_range(1, $max_inner_road_count), $i), max (0, $i-$look_back_size)..$i-1)) {
+			push @{$roads[$_]}, $i;
 		}
-	}
-	
-	map $_.="</tr>", ($top_row, $middle_row, $bottom_row);
-	$self->{text}.=$top_row.$middle_row.$bottom_row."</table>";
-	
-	$self->{correct} = dfs(0);
-	
-	$self->accept_number;	
+    }
+
+    my @top_row;
+    my @middle_row;
+    my @bottom_row;
+    for my $curr_city_id(0..$last_city_id) {
+        for my $next_city_id(@{$roads[$curr_city_id]}) {
+            push @top_row, $city_id_to_char[$curr_city_id];
+            push @middle_row, "↓";
+            push @bottom_row, $city_id_to_char[$next_city_id];
+        }
+    }
+
+    my $table = join '', map html->row("td", @{$_}), (\@top_row, \@middle_row, \@bottom_row); 
+
+    $self->{text} = 
+    html->p("В таблице представлена схема дорог соединяющих города ".
+    (join ', ', @city_id_to_char[0..$last_city_id]).". Двигаться по дорогам можно только 
+    из города указанном в верхней строке, в город указанный в нижней строке. 
+    Сколько существует различных дорог из города А в город $city_id_to_char[$last_city_id]?").
+    html->table($table, {html->style("margin-left" => "30px", "border-collapse" => "collapse"), border => "1px"});
+
+    $self->{correct} = dfs(0);
+
+    $self->accept_number;   
 }
 
 1;

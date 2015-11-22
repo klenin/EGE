@@ -11,113 +11,82 @@ use warnings;
 use utf8;
 
 use EGE::Random;
+use EGE::Html;
 
-my @comms = (
-	{str => 'прибавить', operator => '+'},
-	{str => 'умножить на', operator => '*'}
+my %operator_to_str = (
+    '+' => 'прибавить',
+    '*' => 'умножить на'
 );
 
 my @nums = ('две', 'три');
 
-my $min;
-my $max;
+my $start_num;
+my $end_num;
 my @curr_comms;
 
-my @mul_ops = (2, 3);
-my @add_ops = (1, 2, 3);
+my @orig_mul_ops = (2, 3);
+my @orig_add_ops = (1, 2, 3);
 
-my @din = map 0, 1..50;
+my @din;
 
 sub solve {
-	my $n = shift;
-	return 1 if $n == $min;
-	if ($n < $min) {
-		return 0;
-	}
-	if ($din[$n]) {
-		return $din[$n];
-	}
-	for (my $i = 0; $i < scalar @curr_comms; $i++) {
-		my $op = $curr_comms[$i]{operand};
-		if ($curr_comms[$i]{comm}{operator} eq '*') {
-			if ($n % $op == 0) {
-				$din[$n] += solve($n / $op);
-			}
-		} else {
-			$din[$n] += solve($n - $op);
-		}
-	}
-	return $din[$n];
+    my $n = shift;
+
+    return 1 if $n == $start_num;
+    return 0 if $n < $start_num;
+    return $din[$n] if $din[$n];
+
+    for (my $i = 0; $i < scalar @curr_comms; $i++) {
+        my $op = $curr_comms[$i]{operand};
+        if ($curr_comms[$i]{operator} eq '*') {
+            $din[$n] += solve($n / $op) if ($n % $op == 0);
+        } else {
+            $din[$n] += solve($n - $op);
+        }
+    }
+    return $din[$n];
 }
 
 sub gen_comm {
-	if (scalar @_ == 2) {
-		(my $comm, my $op) = @_;
-		if ($comm) {
-			@mul_ops = grep $_!= $op, @mul_ops;
-		} else {
-			@add_ops = grep $_!= $op, @add_ops;
-		}
-		return {comm => $comms[$comm], operand => $op};
-	}
-	if (scalar @_ == 1) {
-		my $comm = shift;
-		my $op;
-		if ($comm) {
-			$op = pop @mul_ops;
-		} else {
-			$op = pop @add_ops;
-		}
-		return {comm => $comms[$comm], operand => $op};
-	}
-	my $mul = rnd->coin();
-	if ($mul) {
-		if (scalar @mul_ops) {
-			my $op = pop @mul_ops;
-			if ($min * $op > $max) {
-				return gen_comm();
-			} else {
-				return {comm => $comms[1], operand => $op};
-			}
-		}
-	}
-	return {comm => $comms[0], operand => pop @add_ops}
+    return { operator => $_[0], operand => $_[1], str => $operator_to_str{$_[0]} };
 }
 
 sub gen_comms {
-	my $n = shift;
-	my @res;
-	if (!($min % 2) and !($max % 2)) {
-		@res = (gen_comm(0, 2));
-	} else {
-		@res = (gen_comm(0, 1));
-	}
-	
-	@add_ops = rnd->shuffle(@add_ops);
-	@mul_ops = rnd->shuffle(@mul_ops);
-	
-	push @res, gen_comm(1);
-	if ($n == 3) {
-		push @res, gen_comm();
-	}
-	return @res;
+    my $n = shift;
+    my @res;
+
+    my @add_ops = rnd->shuffle(@orig_add_ops);
+    my @mul_ops = rnd->shuffle(@orig_mul_ops);
+
+    my $operand = ($start_num % 2 or $end_num % 2) ? 1 : 2;
+    @res = (gen_comm('+', $operand));
+    @add_ops = grep $_!= $operand, @add_ops;
+
+    push @res, gen_comm('*', pop @mul_ops);
+
+    if ($n == 3) {
+        my $operator = rnd->pick('+', '*');
+        $operand = $operator eq '+' ? pop @add_ops : pop @mul_ops;
+        push @res, gen_comm($operator, $operand);
+    }
+    return @res;
 }
 
 sub calculator_find_prgm_count {
-	my ($self) = @_;
-	$min = rnd->in_range(1, 5);
-	$max = rnd->in_range(14, 30 - 5 + $min);
-	my $comm_count = rnd->in_range(2, scalar @nums + 1);
-	@curr_comms = gen_comms($comm_count);
-	
-	$self->{text} = "<p>У исполнителя Калькулятор ".$nums[$comm_count-2]." команды, ".
-					"которым присвоены номера: </p><ol>";
-	for (my $i = 0; $i < $comm_count; $i++) {
-		$self->{text}.="<li>".$curr_comms[$i]{comm}{str}.' '.$curr_comms[$i]{operand}."</li>";
-	}
-	$self->{text}.="</ol> Сколько есть программ, которые число $min преобразуют в число $max?";
-	$self->{correct} = solve($max);
-	$self->accept_number;	
+    my ($self) = @_;
+    $start_num = rnd->in_range(1, 5);
+    $end_num = rnd->in_range(14, 30 - 5 + $start_num);
+    @din = map 0, $start_num..$end_num;
+    my $comm_count = rnd->in_range(2, scalar @nums + 1);
+    @curr_comms = gen_comms($comm_count);
+
+    $self->{text} = 
+    "У исполнителя Калькулятор $nums[$comm_count-2] команды, которым присвоены номера:".
+    html->ol(join '', map html->li($_->{str}.' '.$_->{operand}), @curr_comms).
+    "Сколько есть программ, которые число $start_num преобразуют в число $end_num?";
+
+    $self->{correct} = solve($end_num);
+    $self->accept_number;   
 }
 
 1;

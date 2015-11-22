@@ -197,12 +197,15 @@ binmode STDOUT, ':utf8';
 #g('B06', 'solve');
 #g('B07', 'who_is_right');
 #g('B08', 'identify_letter');
+map g('B09', 'city_roads'), 1..10;
 #g('B10', 'trans_rate');
 #g('B11', 'ip_mask');
+map g('B11', 'recursive_function'), 1..10;
 #g('B12', 'search_query');
 #g('B13', 'plus_minus');
 #g('B14', 'find_func_min');
 #g('B15', 'logic_var_set');
+map g('B22', 'calculator_find_prgm_count'), 1..10;
 #g1('Arch01', 'reg_value_add');
 #g1('Arch01', 'reg_value_logic');
 #g1('Arch01', 'reg_value_shift');
@@ -260,10 +263,6 @@ binmode STDOUT, ':utf8';
 #$questions = EGE::AsmGenerate::all;
 #$questions = EGE::DatabaseGenerate::all;
 #$questions = EGE::AlgGenerate::all;
-
-g('B22', 'calculator_find_prgm_count');
-g('B11', 'recursive_function');
-g('B09', 'city_roads');
 
 #push @$questions, EGE::Gen::Math::Summer::g($_) for qw(p1 p2 p3 p4 p5 p6 p7);
 
