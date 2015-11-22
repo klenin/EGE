@@ -35,7 +35,7 @@ sub direct {
     my $sig_text = num_by_words($sig_n, 0, 'genitive');
     my $sec_n = rnd->in_range(2, 5);
     my $sec_text = EGE::NumText::num_by_words_text(
-        $sec_n, 1, 'nomivative', [ qw(секунду секунды секунд) ]);
+        $sec_n, 1, 'nominative', [ qw(секунду секунды секунд) ]);
     $self->{text} =
         'Некоторое сигнальное устройство за одну секунду передает один из ' .
         "$sig_text сигналов. Сколько различных сообщений длиной в $sec_text " .
