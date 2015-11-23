@@ -106,8 +106,8 @@ sub all {[
     gg('B13', qw(plus_minus)),
     gg('B14', qw(find_func_min)),
     gg('B15', qw(logic_var_set)),
-    gg('Z15', qw(city_roads),
-    gg('Z22', qw(calculator_find_prgm_count))
+    gg('Z15', qw(city_roads)),
+    gg('Z22', qw(calculator_find_prgm_count)),
 ]}
 
 package EGE::AsmGenerate;
