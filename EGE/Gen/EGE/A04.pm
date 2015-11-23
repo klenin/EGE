@@ -24,6 +24,9 @@ sub sum {
     $self->variants(map bin_hex_or_oct($_, rnd->in_range(0, 2)), $r, @errors);
 }
 
+sub num_zero { num_text($_[0], [ 'значащий нуль', 'значащих нуля', 'значащих нулей' ]) }
+sub num_one { num_text($_[0], [ 'единица', 'единицы', 'единиц' ]) }
+
 sub generate_bin {
     my($val, $size, $cur_count) = @_;
     my $bin = EGE::Bits->new->set_size($size, $val);
