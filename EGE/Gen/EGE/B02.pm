@@ -69,6 +69,7 @@ sub simple_while {
         'Для вашего удобства алгоритм представлен на четырех языках. ' .
         EGE::LangTable::table($block, [ [ 'Basic', 'Alg' ], [ 'Pascal', 'C' ] ]);
     $self->{correct} = $block->run_val('s');
+    $self->accept_number;
 }
 
 1;

@@ -336,6 +336,7 @@ sub recursive_function {
         " Чему равно значение функции $texts[5]? В ответе запишите только натуральное число.";
 
     $self->{correct} = _rec_calculate($first_val, $second_val, $first_num, $second_num, $n);
+    $self->accept_number;
 }
 
 1;
