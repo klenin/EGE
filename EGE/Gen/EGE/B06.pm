@@ -10,6 +10,7 @@ use strict;
 use warnings;
 use utf8;
 
+use EGE::Html;
 use EGE::Random;
 use EGE::Russian::Names;
 use EGE::Russian::Jobs;
@@ -290,48 +291,51 @@ sub solve {
     $self->{correct} = join '',  map { substr($names[$_], 0, 1) } @ans;
 }
 
-sub rec_func_calculation {
+sub _rec_calculate {
     my ($f_v, $s_v, $f_n, $s_n, $n) = @_;
     my $func;
-    for(my $i = 2; $i <= $n; $i++){
+    for (my $i = 2; $i <= $n; $i++) {
       $func = $s_v * $f_n + $f_v * $s_n;
       $f_v = $s_v;
       $s_v = $func
     }
-    return $func;
-} 
+    $func;
+}
 
 sub recursive_function {
     my ($self) = @_;
     my $first_num = rnd->in_range(2, 6);
-    my $second_num = rnd->in_range(2, 6);
+    my $second_num = rnd->in_range_except(2, 6, $first_num);
     my $first_val = rnd->in_range(0, 5);
     my $second_val = rnd->in_range(1, 5);
     my $n = rnd->in_range(4, 7);
 
-    my @expr = ([ '==', [ '()', 'F', '0' ], $first_val ],
-    [ '==', [ '()', 'F', '1' ], $second_val ],
-    [ '==', [ '()', 'F', 'n' ], 
-        [ '+', ['*', [ '()', 'F', ['-', 'n', '1'] ], $first_num ],
-        ['*', [ '()', 'F', ['-', 'n', '2'] ], $second_num ] ]
-    ],
-    ['()', 'F', 'n'],
-    ['>', 'n', '5'],
+    my @exprs = (
+        [ '==', [ '()', 'F', 0 ], $first_val ],
+        [ '==', [ '()', 'F', 1 ], $second_val ],
+        [ '==',
+            [ '()', 'F', 'n' ],
+                [ '+',
+                    [ '*', [ '()', 'F', [ '-', 'n', 1 ] ], $first_num ],
+                    [ '*', [ '()', 'F', [ '-', 'n', 2 ] ], $second_num ] ]
+        ],
+        [ '()', 'F', 'n' ],
+        [ '>=', 'n', 2 ],
+        [ '()', 'F', 'n' ],
     );
 
-    my @text_expr;
-    for (my $i = 0; $i < 5; $i++){
-        $text_expr[$i] = EGE::Prog::make_expr($expr[$i])->to_lang_named('Logic', { html => 1 });
-    }
+    my @texts = map EGE::Prog::make_expr($_)->to_lang_named('Logic', { html => 1 }), @exprs;
 
-    $self->{text} = <<QUESTION
-Алгоритм вычисления значения функции $text_expr[3], где <i>n</i> - натуральное число,
-задан следующими соотношениями:<br />
-$text_expr[0], $text_expr[1] <br />
-$text_expr[2], при $text_expr[4]<br />
-Чему равно значение функции F($n)? В ответе запишите только натуральное число.
-QUESTION
-;
-    $self->{correct} = rec_func_calculation($first_val, $second_val, $first_num, $second_num, $n);
+    $self->{text} =
+        "Алгоритм вычисления значения функции $texts[3], где <i>n</i> — натуральное число, " .
+        'задан следующими соотношениями:' .
+        html->ul(
+            html->li("$texts[0], $texts[1]") .
+            html->li("$texts[2], при $texts[4]"),
+            { style => 'list-style-type: none;' }) .
+        " Чему равно значение функции $texts[5]? В ответе запишите только натуральное число.";
+
+    $self->{correct} = _rec_calculate($first_val, $second_val, $first_num, $second_num, $n);
 }
+
 1;
