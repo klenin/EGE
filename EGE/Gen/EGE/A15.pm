@@ -47,7 +47,7 @@ bgcolor="#XXXXXX", где в кавычках задаются шестнадц�
     $self->variants(map color_name($pure, invert $_, @rgb), -1 .. 2);
 }
 
-sub image_size {
+sub imagesize {
     my($self) = @_;
     my $x = 2 ** rnd->in_range(4, 10);
     my $y = 2 ** rnd->in_range(4, 10);
