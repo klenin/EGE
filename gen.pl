@@ -73,7 +73,7 @@ $q->{text}
             print "</ol>\n<ol>";
             for my $i (0..$#correct) {
                 print
-                    '<li class="correct">', $q->{type} eq 'mt' ? 
+                    '<li class="correct">', $q->{type} eq 'mt' ?
                         "$v[$i] - $q->{variants}->[1]->[$correct[$i]]</li>\n" :
                         "$v[$correct[$i]]</li>\n";
                 }
@@ -151,6 +151,7 @@ binmode STDOUT, ':utf8';
 #g('A2', 'units');
 #g('A2', 'min_routes');
 #g('A3', 'ones');
+#g('A3', 'bincounter');
 #g('A3', 'zeroes');
 #g('A3', 'convert');
 #g('A3', 'range');
@@ -188,6 +189,7 @@ binmode STDOUT, ':utf8';
 #g('A13', 'file_mask2');
 #g('A14', 'database');
 #g('A15', 'rgb');
+#g('A15', 'imagesize');
 #g('A16', 'spreadsheet');
 #g('A17', 'diagram');
 #g('A18', 'robot_loop');

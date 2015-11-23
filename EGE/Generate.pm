@@ -74,7 +74,7 @@ sub gg {
 sub all {[
     gg('A1', qw(recode simple)),
     gg('A2', qw(sport car_numbers database units min_routes)),
-    gg('A3', qw(ones zeroes convert range)),
+    gg('A3', qw(ones zeroes convert range bincounter)),
     gg('A4', qw(sum)),
 	gg('A4', qw(count_zero_one)),
     gg('A5', qw(arith div_mod_10 div_mod_rotate digit_by_digit crc)),
@@ -87,7 +87,7 @@ sub all {[
     gg('A12', qw(beads array_flip)),
     gg('A13', qw(file_mask file_mask2 file_mask3)),
     gg('A14', qw(database)),
-    gg('A15', qw(rgb)),
+    gg('A15', qw(rgb imagesize)),
     gg('A16', qw(spreadsheet)),
     gg('A17', qw(diagram)),
     gg('A18', qw(robot_loop)),
