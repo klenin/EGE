@@ -73,7 +73,7 @@ sub div_xy {
 sub nbsp { ' ' }
 
 BEGIN {
-    for my $tag (qw(td th table div ol ul li)) {
+    for my $tag (qw(p td th tr table div ol ul li br)) {
         no strict 'refs';
         *$tag = sub {
             my $self = shift;
