@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 132;
+use Test::More tests => 134;
 use Test::Exception;
 
 use lib '..';
@@ -359,6 +359,12 @@ sub check_sub {
 }
 
 {
+    my $b = make_expr([ '()', 'f', [ '()', 'g', 1 ] ]);
+    is $b->to_lang_named('Logic'), 'f(g(1))', 'Logic func text';
+    is $b->to_lang_named('Logic', { html => 1 }), '<i>f</i>(<i>g</i>(1))', 'Logic func html';
+}
+
+{
     my $b = make_block([
         'func', [ qw(f x y z) ], [],
         'func', [ qw(f a b) ], [],
@@ -452,7 +458,7 @@ sub check_sub {
 
 {
     throws_ok sub { make_block([
-    	'return', 1,
+        'return', 1,
         'func', [ qw(f x y z) ], []
     ]) }, qr/return outside a function/, 'return outside a func';
 }
