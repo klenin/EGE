@@ -11,6 +11,8 @@ use utf8;
 use EGE::Random;
 use EGE::Prog;
 use EGE::Prog::Flowchart;
+use EGE::LangTable;
+use EGE::Bits;
 
 sub flowchart {
     my ($self) = @_;
@@ -47,4 +49,43 @@ sub flowchart {
     $self->{accept} = qr/^\-?\d+/;
 }
 
+sub simple_while{
+    my ($self) = @_;
+    my $s_v = rnd->in_range(0, 25);
+    my $k_v = rnd->in_range(4, 8);
+    my $i = rnd->in_range(0, 12);
+    my $dg = rnd->in_range(4, 6);
+    my $oprtn;
+    my $cmprt;
+    if ($k_v >= $i){
+        $oprtn = '-';
+        $cmprt = rnd->pick('>', '>=');  #
+        my $sbt = $k_v - $i;
+        $i = $sbt < 4 ? $k_v - $dg - rnd->in_range(0, $i) : $i;
+    }   
+    else{   
+        $oprtn = '+';
+        $cmprt = rnd->pick('<', '<='); #                                
+        my $sbt = $i - $k_v;
+        $i = $sbt < 4 ? $k_v + $dg + rnd->in_range(0, $i) : $i;
+    }
+    my $block = EGE::Prog::make_block([
+        '=', 's', \$s_v,
+        '=', 'k', \$k_v,
+        'while', [ $cmprt, 'k', $i ], [
+            '=', 's', [ '+', 's', 'k' ],
+            '=', 'k', [ $oprtn, 'k', 1 ],
+        ],
+    ]);
+    my $lt = EGE::LangTable::table($block, [ [ 'Basic', 'Alg' ], [ 'Pascal', 'C' ] ]);
+    $self->{text} = <<QUESTION
+Напишите чему равно значение переменной s после выполнения следующего блока программы.
+Для вашего удобства алгоритм представлен на четырех языках.
+$lt
+QUESTION
+;
+
+    $self->{correct} = $block->run_val('s');
+    
+}
 1;
