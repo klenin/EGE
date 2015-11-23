@@ -72,24 +72,23 @@ EOL
 
 sub subnet_mask{
     my ($self) = @_;
-    my ($d) = rnd->in_range(1, 6);
-    my @network_adress;
-    my @ip_adress;
-    local $" = '.';
+    my @subnet_network = (rnd->in_range(200, 255), rnd->in_range(30, 255), 0, 0);
+    my @ip_address;
 
-    $ip_adress[0] = $network_adress[0] = rnd->in_range(200, 255); 
-    $ip_adress[1] = $network_adress[1] = rnd->in_range(30, 255);
-    $ip_adress[3] = rnd->pick(0, rnd->in_range(100, 255)); 
-    $network_adress[3] = 0;
+    $ip_address[0] = $subnet_network[0];
+    $ip_address[1] = $subnet_network[1];
+    $ip_address[3] = rnd->pick(0, rnd->in_range(100, 255)); 
 
-    my $mask = [map(1, 1..$d), map(0, $d + 1..8)];          
+    my $d = rnd->in_range(1, 6);
+    my $mask = [map($_ <= $d ? 1 : 0, 1..8)];
     my $mask_third = EGE::Bits->new->set_bin($mask, 1)->get_dec;
    
     my $ip = [1, map(rnd->coin, 1..6), 0];
-    $ip_adress[2] = EGE::Bits->new->set_bin($ip, 1)->get_dec; 
+    $ip_address[2] = EGE::Bits->new->set_bin($ip, 1)->get_dec; 
 
-    $network_adress[2] = $mask_third & $ip_adress[2];
+    $subnet_network[2] = $mask_third & $ip_address[2];
 
+    local $" = '.';
     $self->{text} = <<QUESTION
 В терминологии сетей TCP/IP маской сети называется 32-разрядная двоичная последовательность, определяющая, какая часть IP-адреса узла сети 
 относится к адресу сети, а какая – к адресу самого узла в этой сети. При этом в маске сначала (в старших разрядах) стоят единицы, а затем 
@@ -97,7 +96,7 @@ sub subnet_mask{
 Адрес сети получается в результате применения поразрядной конъюнкции к заданному IP-адресу узла и маске. Обыч­но маска записывается по 
 тем же правилам, что и IP-адрес – в виде четырёх байтов, причём каждый байт записывается в виде десятичного числа. <br />
 При­мер. Пусть IP-адрес узла равен 231.32.255.131, а маска равна 255.255.240.0. Тогда адрес сети равен 231.32.240.0. <br />
-Для узла с IP-адресом @ip_adress адрес сети равен @network_adress.
+Для узла с IP-адресом @ip_address адрес сети равен @subnet_network.
 Чему равно наибольшее возможное значение третьего слева байта маски? Ответ запишите в виде десятичного числа.
 QUESTION
 ;
