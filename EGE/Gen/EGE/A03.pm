@@ -39,7 +39,7 @@ sub convert {
     my $n = 32 + rnd->in_range(0, 15) * 2 + 1;
     my $v = EGE::Bits->new->set_size(7)->set_dec($n);
     my $bin = substr($v->get_bin, 1);
-    
+
     my $rn = int($v->dup->reverse_->shift_(-1)->get_dec);
     my $fn = int($v->dup->flip(rnd->in_range(0, 5))->get_dec);
 
@@ -48,6 +48,23 @@ sub convert {
         $n * 2, int($n / 2), $n + 1, $n - 1, $rn, $rn + 1, $rn - 1, $fn;
     $self->{text} = "Переведите число $bin<sub>2</sub> в десятичную систему.",
     $self->variants($n, rnd->pick_n(3, @errors));
+}
+
+sub  bincounter {
+    my ($self) = @_;
+    my @v = rnd->shuffle(4..31);
+    my $chr = rnd->coin;
+    my %numbers = ();
+    @v = sort { $a <=> $b } @v[0..3];
+
+    map { $numbers{$_} = ()=to_bin($_)=~/$chr/g } @v;
+    my $cnt = $numbers{$v[rnd->in_range(0, 3)]};
+    map { $self->{correct} = $_ if $numbers{$v[$_]} == $cnt } 0..3;
+
+    my $str = $cnt == 0 ? "не содержится" : "содержится ровно $cnt раз";
+    $self->{text} = "Для каждого из приведенных снизу чисел составили двоичную запись, укажите то число,
+    у которого цифра $chr в записи $str. Если таких чисел несколько, укажите наибольшее из них";
+    $self->variants(@v);
 }
 
 sub range {
