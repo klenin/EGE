@@ -13,6 +13,9 @@ use POSIX qw(ceil);
 
 use EGE::Random;
 use EGE::NumText;
+use EGE::Prog::Flowchart;
+use EGE::LangTable;
+use EGE::Bits;
 
 sub identify_letter {
     my ($self) = @_;
@@ -79,6 +82,79 @@ sub find_calc_system {
         'Чему равно основание этой системы счисления <em>N</em>?';
     $self->{correct} = $base;
     $self->accept_number;
+}
+
+sub two_bit {
+    my ($number) = @_;
+    my @n;
+    for (my $i = 1; $i <= 9; $i++) {
+        for (my $j = 0; $j <= 9; $j++) {
+            if ($i + $j == $number){ 
+                return @n = ($i, $j);
+            }
+        }
+    }
+}
+
+sub three_bit {
+    my ($number) = @_;
+    my @n = ();
+    for (my $i = 1; $i <= 9; $i++) {
+        for (my $j = 0; $j <= 9; $j++) {
+            for (my $k = 0; $k <= 9; $k++) {
+                if ($i + $j + $k == $number){
+                        return @n = ($i, $j, $k);
+                    }
+                }
+            }
+        }
+    }
+
+sub simple_amount {
+    my ($self) = @_;
+    my $a = rnd->pick(2, 3);
+    my $b;
+    my $x = 0;
+    my $condition = rnd->pick('наибольшее', 'наименьшее');
+    my @answer;
+
+    ($a == 2) ? ($b = rnd->in_range(1, 18)) : ($b = rnd->in_range(1, 27));
+
+    ($a == 2) ? (@answer = two_bit($b)) : (@answer = three_bit($b));
+
+    if ($condition eq 'наибольшее') {
+        if ($b < 10){
+            ($a == 2) ? ($x = $b * 10) : ($x = $b * 100);         
+        } else {
+            @answer = reverse @answer;
+            $x = join("", @answer);
+        }
+    } elsif (($b == 1) && ($a == 3)){
+        $x = 100;
+    } else {
+        $x = join("", @answer);
+    }
+
+    my $block = EGE::Prog::make_block([
+       '=', 'a', \$a,
+       '=', 'b', '0',
+      'while', [ '>', 'x', '0' ], [
+           '=', 'a', [ '+', 'a', '1' ],
+            '=', 'b', ['()', 'b + ', ['%', 'x', '10'] ],
+            '=', 'x', [ '//', 'x', '10' ],
+        ],
+    ]);
+    my $lt = EGE::LangTable::table($block, [ [ 'Basic', 'Alg' ], [ 'Pascal', 'C' ] ]);
+
+    $self->{text} = <<QUESTION
+Ниже на 4-х языках записан алгоритм. Получив на вход число x, этот алгоритм печатает 
+два числа a и b.  Укажите $condition из таких чисел x, при вводе которых алгоритм 
+печатает сначала $a, а потом $b.
+$lt <bi />
+QUESTION
+;
+
+    $self->{correct} = $x;
 }
 
 1;
