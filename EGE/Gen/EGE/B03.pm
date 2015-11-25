@@ -51,4 +51,16 @@ sub count_digits {
     $self->accept_number;
 }
 
+sub simple_equation {
+    my ($self) = @_;
+    my @dec_nums = map rnd->pick(20..200), 1..2;
+    $dec_nums[2] = $dec_nums[0] + $dec_nums[1];
+    my @bases = map rnd->pick(2..8), 1..3;
+    my @nums = map dec_to_base($bases[$_], $dec_nums[$_]), 0..2;
+    $self->{text} = 
+        "Решите уравнение $nums[0]<sub>$bases[0]</sub> + <i>x</i> = $nums[2]<sub>$bases[2]</sub> " .
+        "Ответ запишите в системе счисления с основанием $bases[1]";
+    $self->{correct} = $nums[1];
+    $self->accept_number;
+}
 1;
