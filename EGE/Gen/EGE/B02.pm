@@ -11,6 +11,8 @@ use utf8;
 use EGE::Random;
 use EGE::Prog;
 use EGE::Prog::Flowchart;
+use EGE::LangTable;
+use EGE::Bits;
 
 sub flowchart {
     my ($self) = @_;
@@ -45,6 +47,29 @@ sub flowchart {
     $b->run($vars);
     $self->{correct} = $vars->{$vb};
     $self->{accept} = qr/^\-?\d+/;
+}
+
+sub simple_while {
+    my ($self) = @_;
+    my $lo = rnd->in_range(0, 5);
+    my $hi = $lo + rnd->in_range(3, 5);
+    my $p = rnd->coin ?
+        { op => '+', start => $lo, end => $hi, comp => [ '<', '<=' ] } :
+        { op => '-', start => $hi, end => $lo, comp => [ '>', '>=' ] };
+    my $block = EGE::Prog::make_block([
+        '=', 's', rnd->in_range(1, 10),
+        '=', 'k', $p->{start},
+        'while', [ rnd->pick(@{$p->{comp}}), 'k', $p->{end} ], [
+            '=', 's', [ '+', 's', 'k' ],
+            '=', 'k', [ $p->{op}, 'k', 1 ],
+        ],
+    ]);
+    $self->{text} =
+        'Напишите, чему равно значение переменной <tt>s</tt> после выполнения следующего блока программы. ' .
+        'Для вашего удобства алгоритм представлен на четырех языках. ' .
+        EGE::LangTable::table($block, [ [ 'Basic', 'Alg' ], [ 'Pascal', 'C' ] ]);
+    $self->{correct} = $block->run_val('s');
+    $self->accept_number;
 }
 
 1;
