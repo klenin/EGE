@@ -16,8 +16,8 @@ sub new {
 sub get_size { scalar @{$_[0]->{v}}; }
 
 sub set_size {
-    my ($self, $new_size) = @_;
-    $self->{v} = [ (0) x $new_size ];
+    my ($self, $new_size, $val) = @_;
+    $self->{v} = [ ($val // 0) x $new_size ];
     $self;
 }
 
@@ -147,6 +147,15 @@ sub inc {
     for (my $i = $#$v; $i >= 0; --$i) {
         last if $v->[$i] ^= 1;
     }
+    my $size =$self->get_size;
+    my $max_number = 0;
+    for (my $i = 0; $i< $size; $i++){
+        $max_number = 1 if $v->[$i] == 1;
+    }
+    if ($max_number == 0){
+    $self->set_size($size+1);
+    $self->set_dec(2**$size);
+    }  
     $self;
 }
 
