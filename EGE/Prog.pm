@@ -194,6 +194,12 @@ sub run {
 package EGE::Prog::Op;
 use base 'EGE::Prog::SynElement';
 
+sub new {
+    my $self = shift->SUPER::new(@_);
+    die "Bad op: $self->{op}" if defined $self->{op} && ref $self->{op} || !$self->{op};
+    $self;
+}
+
 sub _children {}
 
 sub run {
@@ -204,7 +210,7 @@ sub run {
     $r || 0;
 }
 
-sub prio { $_[1]->{prio}->{$_[0]->{op}} or die $_[0]->{op} }
+sub prio { $_[1]->{prio}->{$_[0]->{op}} or die "prio: $_[0]->{op}" }
 
 sub operand {
     my ($self, $lang, $operand) = @_;
@@ -707,7 +713,7 @@ sub make_expr {
         if (@$src == 0) {
             return undef;
         }
-        die @$src;
+        die "make_expr: @$src";
     }
     if (ref $src eq 'SCALAR') {
         return EGE::Prog::RefConst->new(ref => $src);
@@ -774,12 +780,12 @@ sub make_block {
 }
 
 sub lang_names() {{
-  'Basic' => 'Бейсик',
-  'Pascal' => 'Паскаль',
-  'C' => 'Си',
-  'Alg' => 'Алгоритмический',
-  'SQL' => 'Структурированный язык запросов',
-  'Perl' => 'Перл',
+    'Basic' => 'Бейсик',
+    'Pascal' => 'Паскаль',
+    'C' => 'Си',
+    'Alg' => 'Алгоритмический',
+    'SQL' => 'Структурированный язык запросов',
+    'Perl' => 'Перл',
 }}
 
 1;

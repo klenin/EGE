@@ -55,6 +55,7 @@ sub _trans_init_common {
         "Данные объемом $size Мбайт передаются из пункта А в пункт Б по каналу связи, обеспечивающему скорость " .
         "передачи данных 2<sup>$speed1</sup> бит в секунду, а затем из пункта Б в пункт В по каналу связи, " .
         "обеспечивающему скорость передачи данных 2<sup>$speed2</sup> бит в секунду. ";
+    $self->accept_number;
 }
 
 sub trans_time {
@@ -73,7 +74,7 @@ sub trans_time {
     $self->{correct} = $self->{time_sec} + $latency;
 }
 
-sub trans_latency{
+sub trans_latency {
     my ($self) = @_;
 
     $self->_trans_init_common;

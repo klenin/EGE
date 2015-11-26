@@ -297,7 +297,10 @@ sub translate_op {{
     '==' => '=', '!=' => '≠', '>=' => '≥', '<=' => '≤',
     '&&' => '∧', '||' => '∨', '^' => '⊕', '=>' => '→', 'eq' => '≡',
 }}
+
 sub var_fmt { { inner => '%s', tag => 'i' } }
+
+sub call_func_fmt { { inner => '%s', tag => 'i', right => '(%s)' } }
 
 sub translate_un_op { { '!' => '¬' } }
 

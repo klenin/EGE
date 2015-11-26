@@ -12,81 +12,57 @@ use utf8;
 
 use EGE::Random;
 use EGE::Html;
-
-my %operator_to_str = (
-    '+' => 'прибавить',
-    '*' => 'умножить на'
-);
-
-my @nums = ('две', 'три');
+use EGE::NumText;
 
 my $start_num;
 my $end_num;
 my @curr_comms;
-
-my @orig_mul_ops = (2, 3);
-my @orig_add_ops = (1, 2, 3);
-
 my @din;
 
 sub solve {
     my $n = shift;
-
-    return 1 if $n == $start_num;
     return 0 if $n < $start_num;
-    return $din[$n] if $din[$n];
 
-    for (my $i = 0; $i < scalar @curr_comms; $i++) {
-        my $op = $curr_comms[$i]{operand};
-        if ($curr_comms[$i]{operator} eq '*') {
-            $din[$n] += solve($n / $op) if ($n % $op == 0);
-        } else {
-            $din[$n] += solve($n - $op);
-        }
+    my $v = \$din[$n - $start_num];
+    if (!$$v) {
+        $$v += solve($_->{rev}->($n)) for @curr_comms;
     }
-    return $din[$n];
+    $$v;
 }
 
-sub gen_comm {
-    return { operator => $_[0], operand => $_[1], str => $operator_to_str{$_[0]} };
+sub make_plus {
+    my ($arg) = @_;
+    { text => "прибавить $arg", rev => sub { $_[0] - $arg } }
 }
 
-sub gen_comms {
-    my $n = shift;
-    my @res;
-
-    my @add_ops = rnd->shuffle(@orig_add_ops);
-    my @mul_ops = rnd->shuffle(@orig_mul_ops);
-
-    my $operand = ($start_num % 2 or $end_num % 2) ? 1 : 2;
-    @res = (gen_comm('+', $operand));
-    @add_ops = grep $_!= $operand, @add_ops;
-
-    push @res, gen_comm('*', pop @mul_ops);
-
-    if ($n == 3) {
-        my $operator = rnd->pick('+', '*');
-        $operand = $operator eq '+' ? pop @add_ops : pop @mul_ops;
-        push @res, gen_comm($operator, $operand);
-    }
-    return @res;
+sub make_mult {
+    my ($arg) = @_;
+    { text => "умножить на $arg", rev => sub { $_[0] % $arg ? 0 : int($_[0] / $arg) } }
 }
 
 sub calculator_find_prgm_count {
     my ($self) = @_;
-    $start_num = rnd->in_range(1, 5);
-    $end_num = rnd->in_range(14, 30 - 5 + $start_num);
-    @din = map 0, $start_num..$end_num;
-    my $comm_count = rnd->in_range(2, scalar @nums + 1);
-    @curr_comms = gen_comms($comm_count);
 
-    $self->{text} = 
-    "У исполнителя Калькулятор $nums[$comm_count-2] команды, которым присвоены номера:".
-    html->ol(join '', map html->li($_->{str}.' '.$_->{operand}), @curr_comms).
-    "Сколько есть программ, которые число $start_num преобразуют в число $end_num?";
+    my ($answer, $iter);
+    do {
+        $start_num = rnd->in_range(1, 5);
+        $end_num = rnd->in_range(14, 25 + $start_num);
+        @din = (1, (0) x ($end_num - $start_num + 1));
+        @curr_comms = (
+            make_plus($start_num % 2 == $end_num % 2 ? 2 : 1),
+            map make_mult($_), rnd->pick_n(rnd->coin + 1..5));
+        $answer = solve($end_num);
+    } until (10 < $answer && $answer < 100 || ++$iter > 20);
 
-    $self->{correct} = solve($end_num);
-    $self->accept_number;   
+    $self->{text} = sprintf
+        'У исполнителя Калькулятор %s команды, которым присвоены номера: %s ' .
+        'Сколько есть программ, которые число %d преобразуют в число %d?',
+        num_by_words(scalar @curr_comms, 1),
+        html->ol(join '', map html->li($_->{text}), @curr_comms),
+        $start_num, $end_num;
+
+    $self->{correct} = $answer;
+    $self->accept_number;
 }
 
 1;

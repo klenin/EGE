@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 130;
+use Test::More tests => 134;
 use Test::Exception;
 
 use lib '..';
@@ -29,6 +29,11 @@ use EGE::Prog qw(make_block make_expr);
     my $env = { a => 2, b => 3 };
     is make_expr('b')->run($env), 3, 'basic env 1';
     is make_expr([ '*', 'a', [ '+', 'b', 7 ] ])->run($env), 20, 'basic env 2';
+}
+
+{
+    throws_ok { make_expr([ 1, 2, 3, 4, 5, 6 ]) } qr/make_expr/, 'bad make_expr';
+    throws_ok { make_expr([ [], 'a', 1 ]) } qr/bad op/i, 'bad op';
 }
 
 {
@@ -297,7 +302,7 @@ sub check_sub {
     };
     check_sub($_, $b, $c->{$_}, "function calling, definition in $_") for keys %$c;
     is $b->run_val('a'), 1, 'run call function';
-    is eval($b->to_lang_named('Perl')), 3 - 2, 'eval perl funtion';
+    is eval($b->to_lang_named('Perl')), 3 - 2, 'eval perl function';
 }
 
 {
@@ -350,7 +355,13 @@ sub check_sub {
     check_sub($_, $b, $c->{$_}, "c style function calling, definition in $_") for keys %$c;
     is $b->run_val('a'), 1, 'run call c style function';
     undef &g;
-    is eval($b->to_lang_named('Perl')), 3 - 2, 'eval perl c style funtion';
+    is eval($b->to_lang_named('Perl')), 3 - 2, 'eval perl c style function';
+}
+
+{
+    my $b = make_expr([ '()', 'f', [ '()', 'g', 1 ] ]);
+    is $b->to_lang_named('Logic'), 'f(g(1))', 'Logic func text';
+    is $b->to_lang_named('Logic', { html => 1 }), '<i>f</i>(<i>g</i>(1))', 'Logic func html';
 }
 
 {
@@ -447,7 +458,7 @@ sub check_sub {
 
 {
     throws_ok sub { make_block([
-    	'return', 1,
+        'return', 1,
         'func', [ qw(f x y z) ], []
     ]) }, qr/return outside a function/, 'return outside a func';
 }
