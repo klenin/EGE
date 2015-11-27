@@ -112,6 +112,7 @@ sub three_bit {
 
 sub simple_amount {
     my ($self) = @_;
+    die 'Not ready';
     my $a = rnd->pick(2, 3);
     my $b;
     my $x = 0;
