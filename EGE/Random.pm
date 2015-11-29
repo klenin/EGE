@@ -84,10 +84,24 @@ sub russian_letter {
     chr([ord('а') .. ord('я')]->[rnd->in_range(0, 31)]);
 }
 
+sub russian_consonant_letter {
+    my ($self) = @_;
+    $self->get_letter_from_string('бвгджзклмнпрстфх');
+}
+
+sub russian_vowel_letter {
+    my ($self) = @_;
+    $self->get_letter_from_string('аеиоуыэюя');
+}
+
 sub pretty_russian_letter {
     my ($self) = @_;
-    my $pretty = 'абвгдежзиклмнопрстуфхэя';
-    substr($pretty, rnd->in_range(0, length($pretty) - 1), 1);
+    $self->get_letter_from_string('абвгдежзиклмнопрстуфхэя');
+}
+
+sub get_letter_from_string {
+    my ($self, $string) = @_;
+    substr($string, rnd->in_range(0, length($string) - 1), 1);
 }
 
 sub split_number {
