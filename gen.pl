@@ -216,6 +216,8 @@ binmode STDOUT, ':utf8';
 #g('B15', 'logic_var_set');
 g('Z06', 'get_n');
 g('Z09', 'get_memory_size');
+g('Z13', 'tumblers');
+g('Z13', 'tumblers_min');
 #g('Z15', 'city_roads');
 #g('Z22', 'calculator_find_prgm_count');
 #g1('Arch01', 'reg_value_add');
