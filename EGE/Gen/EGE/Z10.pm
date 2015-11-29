@@ -13,19 +13,27 @@ use EGE::Random;
 sub words_count
 {
     my ($self) = @_;
-    my $n = rnd->in_range(3,10);
+    my $n = rnd->in_range(3,6);
     my $first_symb;
-    my $ans = 3**$n;
+    my $consonants = '';
+    my $vowels = '';
+    for my $i (1..rnd->in_range(1,3)){ $consonants = $consonants . rnd->russian_consonant_letter}; 
+    for my $i (1..rnd->in_range(1,3)){ $vowels = $vowels . rnd->russian_vowel_letter };
+    
+    foreach(($vowels,$consonants)) { $_=~ s/(.) (?: \1*)/$1/gx};
+    my @all_letters =split(//, $consonants . $vowels);
+    my $ans = @all_letters**$n;
+    
     if (rnd->coin){
         $first_symb = 'гласной';
-        $ans -=3**($n-1);
+        $ans -= (length $consonants) * @all_letters**($n-1);
     } else{
         $first_symb = 'согласной';
-        $ans -= 2*3**($n-1);
+        $ans -= (length $vowels) * @all_letters**($n-1);
     }
-    $self->{text} ="Сколь­ко слов длины $n, на­чи­на­ю­щих­ся с глас­ной буквы, можно со­ста­вить из букв Е, Г, Э?
-    Каж­дая буква может вхо­дить в слово не­сколь­ко раз. 
-    Слова не обя­за­тель­но долж­ны быть осмыс­лен­ны­ми сло­ва­ми рус­ско­го языка."; 
+    $self->{text} ="Сколь­ко слов длины $n, на­чи­на­ю­щих­ся с глас­ной буквы, можно со­ста­вить из букв: ". join(", ", @all_letters) .
+        ". Каж­дая буква может вхо­дить в слово не­сколь­ко раз. 
+        Слова не обя­за­тель­но долж­ны быть осмыс­лен­ны­ми сло­ва­ми рус­ско­го языка."; 
     $self->{correct} = $ans;
 }
 1;
