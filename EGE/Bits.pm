@@ -141,6 +141,21 @@ sub set_dec {
     $self;
 }
 
+sub inc_w_resize{
+    my ($self) = @_;
+    my $v = $self->{v};
+    my $i;
+    my $size = $self->get_size();
+    for ($i = $#$v; $i >= 0; --$i) {
+        last if $v->[$i] ^= 1;
+    }
+    if ($i < 0){
+        $self->set_size($size+1);
+        $self->set_dec(2**($size));
+    }
+    $self;
+}
+
 sub inc {
     my ($self) = @_;
     my $v = $self->{v};
