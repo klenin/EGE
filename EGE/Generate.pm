@@ -118,6 +118,7 @@ sub all {[
     gg('Z10', qw(words_count)),
     gg('Z13', qw(tumblers)),
     gg('Z13', qw(tumblers_min)),
+    gg('Z17', qw(highest-result)),
     gg('Z22', qw(calculator_find_prgm_count)),
     gg('Z15', qw(city_roads)),
     gg('Z22', qw(calculator_find_prgm_count)),
