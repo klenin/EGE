@@ -59,6 +59,7 @@ use EGE::Gen::EGE::B14;
 use EGE::Gen::EGE::B15;
 use EGE::Gen::EGE::Z06;
 use EGE::Gen::EGE::Z09;
+use EGE::Gen::EGE::Z10;
 use EGE::Gen::EGE::Z13;
 use EGE::Gen::EGE::Z15;
 use EGE::Gen::EGE::Z22;
@@ -115,6 +116,7 @@ sub all {[
     gg('B15', qw(logic_var_set)),
     gg('Z06', qw(get_n)),
     gg('Z09', qw(get_memory_size)),
+    gg('Z10', qw(words_count)),
     gg('Z13', qw(tumblers)),
     gg('Z13', qw(tumblers_min)),
     gg('Z15', qw(city_roads)),
