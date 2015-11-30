@@ -214,7 +214,7 @@ binmode STDOUT, ':utf8';
 #g('B13', 'plus_minus');
 #g('B14', 'find_func_min');
 #g('B15', 'logic_var_set');
-# g('Z06', 'get_n');
+g('Z06', 'find_number');
 # g('Z09', 'get_memory_size');
 # g('Z10', 'words_count');
 # g('Z13', 'tumblers');

@@ -11,22 +11,20 @@ use utf8;
 use EGE::Random;
 use EGE::Bits;
 
-sub get_n {
+sub find_number {
     my ($self) = @_;
-    my $ask = rnd->in_range(8,4096);
-    my $N = EGE::Bits->new();
-    $N->set_size(int(log($ask+1) / log(2))+1);
-    $N->set_dec($ask+1);
+    my $minimal_number = rnd->in_range(8,4096);
+    my $N = EGE::Bits->new;
+    $N->set_size(int(log($minimal_number + 1) / log(2)) + 1);
+    $N->set_dec($minimal_number + 1);
 
-    if ($N->get_bit(0) == 1){ $N->inc_w_resize() };
-    while (1){
-        my $size = $N ->get_size();
-        my $unit_count=0;  
-        for (my $i = 2; $i < $size; $i++){
-            if ($N->get_bit($i)){ $unit_count++ };
-        };
-        if ($N->get_bit(1) == ($unit_count % 2)){ last };
-            for my $i (1..2){ $N->inc_w_resize() };
+    $N->inc_w_resize if $N->get_bit(0) == 1;
+    while (1) {
+        my $size = $N->get_size;
+        my $unit_count = 0;  
+        for my $i (2..($size - 1)) { $unit_count++ if $N->get_bit($i) }
+        last if $N->get_bit(1) == ($unit_count % 2);
+        for my $i (1..2) { $N->inc_w_resize }
     }
     $N->shift_(2);
     $self->{text} = 
@@ -37,7 +35,7 @@ sub get_n {
         "На­при­мер, за­пись 11100 пре­об­ра­зу­ет­ся в за­пись 111001; <br />".
         "б) над этой за­пи­сью про­из­во­дят­ся те же дей­ствия – спра­ва до­пи­сы­ва­ет­ся оста­ток от де­ле­ния суммы цифр на 2. <br />".
         "По­лу­чен­ная таким об­ра­зом за­пись (в ней на два раз­ря­да боль­ше, чем в за­пи­си ис­ход­но­го числа N) яв­ля­ет­ся дво­ич­ной за­пи­сью ис­ко­мо­го числа R.<br />".
-        "Ука­жи­те такое наи­мень­шее число N, для ко­то­ро­го ре­зуль­тат ра­бо­ты ал­го­рит­ма боль­ше $ask. В от­ве­те это число за­пи­ши­те в де­ся­тич­ной си­сте­ме счис­ле­ния.";
+        "Ука­жи­те такое наи­мень­шее число N, для ко­то­ро­го ре­зуль­тат ра­бо­ты ал­го­рит­ма боль­ше $minimal_number. В от­ве­те это число за­пи­ши­те в де­ся­тич­ной си­сте­ме счис­ле­ния.";
     $self->{correct} = $N->get_dec;
 
 }       
