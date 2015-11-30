@@ -29,12 +29,13 @@ sub tumblers {
 
 sub tumblers_min {
     my ($self) = @_;
-    my $tumbler_state = rnd->in_range(4, 8);
-    my $n = rnd->in_range($tumbler_state, 500);
+    my $tumbler_state = rnd->pick(2, 3, 4, 5, 8);
+    my $tumbler_count = rnd->in_range(3, 5);
+    my $n = rnd->in_range($tumbler_state ** ($tumbler_count - 1) + 1, $tumbler_state ** $tumbler_count);
     $self->{text} ="Выбор ре­жи­ма ра­бо­ты в не­ко­то­ром устрой­стве осу­ществ­ля­ет­ся уста­нов­кой ручек тум­бле­ров, ".
         "каж­дая из ко­то­рых может на­хо­дить­ся в од­ном из $tumbler_state по­ло­же­ний. ".
         "Ка­ко­во ми­ни­маль­ное ко­ли­че­ство не­об­хо­ди­мых тум­бле­ров для обес­пе­че­ния ра­бо­ты устрой­ства на $n ре­жи­мах."; 
-    $self->{correct} = int(log($n) / log($tumbler_state) + 0.9999);
+    $self->{correct} = $tumbler_count;
 }
 
 1;
