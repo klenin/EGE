@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 16;
+use Test::More tests => 17;
 use List::Util qw(sum);
 
 use lib '..';
@@ -54,6 +54,11 @@ like $@, qr/^pick_n/, 'pick_n too many';
 {
     my @v = rnd->split_number(20, 3);
     ok @v == 3 && 3 == grep($_ > 0, @v) && sum(@v) == 20, 'split_number';
+}
+
+{
+    my $v = rnd->get_letter_from_string('qw');
+    ok $v eq 'q' || $v eq 'w' , 'get_letter_from_string';
 }
 
 1;

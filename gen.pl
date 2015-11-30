@@ -214,6 +214,11 @@ binmode STDOUT, ':utf8';
 #g('B13', 'plus_minus');
 #g('B14', 'find_func_min');
 #g('B15', 'logic_var_set');
+# g('Z06', 'find_number');
+# g('Z09', 'get_memory_size');
+# g('Z10', 'words_count');
+# g('Z13', 'tumblers');
+# g('Z13', 'tumblers_min');
 #g('Z15', 'city_roads');
 #g('Z22', 'calculator_find_prgm_count');
 #g1('Arch01', 'reg_value_add');
@@ -269,10 +274,10 @@ binmode STDOUT, ':utf8';
 #g3('Graph', 'graph_seq');
 #g3('List', 'construct_command');
 #g3('Sorting', 'sort_line');
-#$questions = EGE::Generate::all;
-#$questions = EGE::AsmGenerate::all;
-#$questions = EGE::DatabaseGenerate::all;
-#$questions = EGE::AlgGenerate::all;
+# $questions = EGE::Generate::all;
+# $questions = EGE::AsmGenerate::all;
+# $questions = EGE::DatabaseGenerate::all;
+# $questions = EGE::AlgGenerate::all;
 
 #push @$questions, EGE::Gen::Math::Summer::g($_) for qw(p1 p2 p3 p4 p5 p6 p7);
 
