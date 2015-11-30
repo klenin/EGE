@@ -117,8 +117,7 @@ sub all {[
     gg('Z06', qw(find_number)),
     gg('Z09', qw(get_memory_size)),
     gg('Z10', qw(words_count)),
-    gg('Z13', qw(tumblers)),
-    gg('Z13', qw(tumblers_min)),
+    gg('Z13', qw(tumblers tumblers_min)),
     gg('Z15', qw(city_roads)),
     gg('Z22', qw(calculator_find_prgm_count)),
 ]}
