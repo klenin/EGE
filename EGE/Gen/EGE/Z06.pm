@@ -18,13 +18,13 @@ sub find_number {
     $N->set_size(int(log($minimal_number + 1) / log(2)) + 1);
     $N->set_dec($minimal_number + 1);
 
-    $N->inc_w_resize if $N->get_bit(0) == 1;
+    $N->inc_autosize if $N->get_bit(0) == 1;
     while (1) {
         my $size = $N->get_size;
         my $unit_count = 0;  
         for my $i (2..($size - 1)) { $unit_count++ if $N->get_bit($i) }
         last if $N->get_bit(1) == $unit_count % 2;
-        for my $i (1..2) { $N->inc_w_resize }
+        for my $i (1..2) { $N->inc_autosize }
     }
     $N->shift_(2);
     $self->{text} = 

@@ -156,8 +156,8 @@ use EGE::Bits;
     my $b = EGE::Bits->new;
     $b->set_size(5);
     $b->set_dec(30);
-    $b->inc_w_resize;
-    is $b->get_dec, 31, 'inc with resize 30';
-    $b->inc_w_resize;
-    is $b->get_dec, 32, 'inc with resize 31';
+    $b->inc_autosize;
+    is $b->get_dec, 31, 'inc_autosize 30';
+    $b->inc_autosize;
+    is $b->get_dec, 32, 'inc_autosize 31';
 }
