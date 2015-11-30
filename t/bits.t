@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 67;
+use Test::More tests => 69;
 
 use lib '..';
 use EGE::Bits;
@@ -152,3 +152,12 @@ use EGE::Bits;
     is (EGE::Bits->new->set_bin('101010')->count_ones, 3, 'count_one (3)');
 }
 
+{
+    my $b = EGE::Bits->new;
+    $b->set_size(5);
+    $b->set_dec(30);
+    $b->inc_w_resize;
+    is $b->get_dec, 31, 'inc with resize 30';
+    $b->inc_w_resize;
+    is $b->get_dec, 32, 'inc with resize 31';
+}
