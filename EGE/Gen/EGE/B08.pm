@@ -124,19 +124,19 @@ sub simple_amount {
 
     if ($condition eq 'наибольшее') {
         if ($b < 10){
-            ($a == 2) ? ($x = $b * 10) : ($x = $b * 100);         
+            ($a == 2) ? ($x = $b * 10) : ($x = $b * 100)        
         } else {
             @answer = reverse @answer;
             $x = join("", @answer);
         }
-    } elsif (($b == 1) && ($a == 3)){
-        $x = 100;
+    } elsif (($b == 1) && ($a == 3)) {
+        $x = 100
     } else {
-        $x = join("", @answer);
+        $x = join("", @answer)
     }
 
     my $block = EGE::Prog::make_block([
-       '=', 'a', \$a,
+       '=', 'a', '0',
        '=', 'b', '0',
       'while', [ '>', 'x', '0' ], [
            '=', 'a', [ '+', 'a', '1' ],
@@ -146,14 +146,11 @@ sub simple_amount {
     ]);
     my $lt = EGE::LangTable::table($block, [ [ 'Basic', 'Alg' ], [ 'Pascal', 'C' ] ]);
 
-    $self->{text} = <<QUESTION
-Ниже на 4-х языках записан алгоритм. Получив на вход число x, этот алгоритм печатает 
-два числа a и b.  Укажите $condition из таких чисел x, при вводе которых алгоритм 
-печатает сначала $a, а потом $b.
-$lt <bi />
-QUESTION
-;
-
+    $self->{text} = 
+        "Ниже на 4-х языках записан алгоритм. Получив на вход число x, этот алгоритм печатает" .
+        "два числа a и b.  Укажите $condition из таких чисел x, при вводе которых алгоритм" .
+        "печатает сначала $a, а потом $b." .
+        "$lt <bi />",
     $self->{correct} = $x;
 }
 

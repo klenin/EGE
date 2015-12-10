@@ -197,7 +197,7 @@ binmode STDOUT, ':utf8';
 #g('B03', 'q1234');
 #g('B03', 'last_digit');
 #g('B03', 'count_digits');
-g('B03', 'quantity_one');
+#g('B03', 'quantity_one');
 #g('B04', 'impl_border');
 #g('B04', 'morse');
 #g('B04', 'bulbs');
@@ -206,6 +206,7 @@ g('B03', 'quantity_one');
 #g('B06', 'recursive_function');
 #g('B07', 'who_is_right');
 #g('B08', 'identify_letter');
+#g('B08', 'simple_amount')
 #g('B10', 'trans_rate');
 #g('B10', 'trans_time');
 #g('B10', 'trans_latency');
