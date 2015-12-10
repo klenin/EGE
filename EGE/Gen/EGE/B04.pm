@@ -113,11 +113,10 @@ sub lex_order {
         " которое стоит на <strong>$pos-м месте</strong> от начала списка."
 }
 
-sub morse{ 
-    my($self) = @_; 
-    my $first = rnd->in_range(2, 6); 
-    my $second = rnd->in_range($first + 1, 10); 
-    my $answer = 0;
+sub morse {
+    my($self) = @_;
+    my $first = rnd->in_range(2, 6);
+    my $second = rnd->in_range($first + 1, 10);
 
     $self->{text} = <<QUESTION
 Азбука Морзе позволяет кодировать символы для сообщений по радиосвязи, задавая комбинацию точек и тире.
@@ -125,11 +124,21 @@ sub morse{
 используя код азбуки Морзе длиной не менее $first и не более $second сигналов (точек и тире)?
 QUESTION
 ;
-    for (my $i = $first; $i <= $second; $i++) {
-        $answer += 2 ** $i
-    }
-    
+    my $answer = 0;
+    $answer += 2 ** $_ for $first..$second;
     $self->{correct} = $answer; 
+}
+
+sub bulbs{
+    my($self) = @_;
+    my $quantity = rnd->in_range(3, 100); 
+
+    $self->{text} =
+        "Световое табло состоит из лампочек. Каждая лампочка может находиться в одном из трех состояний 
+        («включено», «выключено» или «мигает»). Какое наименьшее количество лампочек должно находиться 
+        на табло, чтобы с его помощью можно было передать $quantity различных сигналов?",
+
+    $self->{correct} = ceil(log_base(3, $quantity));
 }
 
 1;
