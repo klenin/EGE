@@ -208,6 +208,7 @@ binmode STDOUT, ':utf8';
 #g('B06', 'recursive_function');
 #g('B07', 'who_is_right');
 #g('B08', 'identify_letter');
+#g('B08', 'simple_amount');
 #g('B10', 'trans_rate');
 #g('B10', 'trans_time');
 #g('B10', 'trans_latency');
