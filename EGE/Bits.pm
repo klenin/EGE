@@ -136,7 +136,7 @@ sub set_dec {
     my $v = $self->{v};
     for (my $i = $#$v; $i >= 0; --$i) {
         $v->[$i] = $new_dec % 2;
-        $new_dec >>= 1;
+        $new_dec = int($new_dec / 2);
     }
     $self;
 }

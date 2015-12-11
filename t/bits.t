@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 69;
+use Test::More tests => 70;
 
 use lib '..';
 use EGE::Bits;
@@ -74,6 +74,11 @@ use EGE::Bits;
     my $b = EGE::Bits->new->set_size(7)->set_dec(100);
     is $b->get_hex, '64', 'set_dec hex';
     is $b->get_dec, 100, 'set_dec dec';
+}
+
+{
+    my $b = EGE::Bits->new->set_size(40)->set_dec(2**33 + 2**15);
+    is $b->get_bin, '0000001000000000000000001000000000000000', 'set_dec 2^33';
 }
 
 {
