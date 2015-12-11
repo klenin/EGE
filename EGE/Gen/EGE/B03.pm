@@ -67,7 +67,7 @@ sub simple_equation {
     $self->accept_number;
 }
 
-sub quantity_one {
+sub count_ones {
     my ($self) = @_;
     my @large_power = map rnd->in_range(2013, 2025), 0..1;
     my @base_power = map rnd->in_range(1, 4), 0..2;
