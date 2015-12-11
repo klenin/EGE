@@ -8,6 +8,9 @@ use strict;
 use warnings;
 use utf8;
 
+use List::Util qw(min);
+
+use EGE::Bits;
 use EGE::Random;
 use EGE::NotationBase qw(dec_to_base base_to_dec);
 
@@ -64,26 +67,17 @@ sub simple_equation {
     $self->accept_number;
 }
 
-sub exponentiation {
-    my ($base, $degree) = @_;
-    my $result = 1;
-    for (my $i = 0; $i < $degree; $i++){
-        $result *= 2;
-    }
-    $result;
-}
-
 sub quantity_one {
     my ($self) = @_;
-    my @degree_two = map rnd->in_range(2013, 2025), 0..1;
-    my @degree = map rnd->in_range(1, 4), 0..2;
-    my @base = map exponentiation(2, $degree[$_]), 0..2;
-    my @answ = map $degree_two[$_] * $degree[$_], 0..1;
+    my @large_power = map rnd->in_range(2013, 2025), 0..1;
+    my @base_power = map rnd->in_range(1, 4), 0..2;
+    my @base = map 2 ** $_, @base_power;
+    my @answ = map $large_power[$_] * $base_power[$_], 0..1;
 
     $self->{text} = 
-        "Cколько единиц в двоичной записи числа ".
-        "$base[0]<sup>$degree_two[0]</sup> + $base[1]<sup>$degree_two[1]</sup> - $base[2]?";
-    $self->{correct} = $answ[1] - $degree[2] + 1;
+        'Cколько единиц в двоичной записи числа ' .
+        "$base[0]<sup>$large_power[0]</sup> + $base[1]<sup>$large_power[1]</sup> - $base[2]?";
+    $self->{correct} = min(@answ) - $base_power[2] + 1;
     $self->accept_number;
 }
 
