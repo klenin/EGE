@@ -9,6 +9,7 @@ use warnings;
 use utf8;
 
 use List::Util qw(sum first);
+use POSIX qw(ceil);
 
 use EGE::Random;
 use EGE::Prog;
