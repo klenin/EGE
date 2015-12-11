@@ -213,6 +213,7 @@ binmode STDOUT, ':utf8';
 #g('B10', 'trans_time');
 #g('B10', 'trans_latency');
 #g('B11', 'ip_mask');
+#g('B11', 'subnet_mask');
 #g('B12', 'search_query');
 #g('B13', 'plus_minus');
 #g('B14', 'find_func_min');
