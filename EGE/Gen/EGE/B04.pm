@@ -129,6 +129,23 @@ QUESTION
     $self->{correct} = $answer;
 }
 
+sub log_base {
+    my ($base,  $value) = @_;
+    return log($value)/log($base);
+}
+
+sub bulbs{
+    my($self) = @_;
+    my $quantity = rnd->in_range(3, 100); 
+
+    $self->{text} =
+        "Световое табло состоит из лампочек. Каждая лампочка может находиться в одном из трех состояний 
+        («включено», «выключено» или «мигает»). Какое наименьшее количество лампочек должно находиться 
+        на табло, чтобы с его помощью можно было передать $quantity различных сигналов?",
+
+    $self->{correct} = ceil(log_base(3, $quantity));
+}
+
 1;
 
 __END__
