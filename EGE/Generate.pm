@@ -102,7 +102,7 @@ sub all {[
     gg('B02', qw(simple_while)),
     gg('B03', qw(q1234 last_digit count_digits)),
     gg('B03', qw(simple_equation)),
-    gg('B04', qw(impl_border lex_order morse)),
+    gg('B04', qw(impl_border lex_order morse bulbs)),
     gg('B05', qw(calculator complete_spreadsheet)),
     gg('B06', qw(solve)),
     gg('B06', qw(recursive_function)),

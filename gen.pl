@@ -201,6 +201,7 @@ binmode STDOUT, ':utf8';
 #g('B04', 'impl_border');
 #g('B04', 'lex_order');
 #g('B04', 'morse');
+#g('B04', 'bulbs');
 #g('B05', 'calculator');
 #g('B06', 'solve');
 #g('B06', 'recursive_function');
