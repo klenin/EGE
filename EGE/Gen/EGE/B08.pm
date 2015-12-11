@@ -84,7 +84,7 @@ sub find_calc_system {
     $self->accept_number;
 }
 
-sub simple_amount {
+sub first_sum_digits {
     my ($self) = @_;
 
     my $a = rnd->pick(2, 4);
