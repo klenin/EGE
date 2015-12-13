@@ -45,7 +45,7 @@ BEGIN {
             html->tag($tag, undef, \%params) . "\n";
         };
     }
-    for my $tag (qw(text tspan g pattern marker defs)) {
+    for my $tag (qw(text tspan g pattern)) {
         *$tag = sub {
             my ($self, $text, %params) = @_;
             $text = join '', @$text if ref $text eq 'ARRAY';
