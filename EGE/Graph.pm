@@ -9,7 +9,6 @@ use warnings;
 use List::Util qw(min max);
 use EGE::Html;
 use EGE::Svg;
-use Math::Trig ':pi';
 
 sub new {
     my ($class, %init) = @_;
@@ -45,8 +44,6 @@ sub update_min_max {
     $$min = $value if !defined($$min) || $value < $$min;
     $$max = $value if !defined($$max) || $value > $$max;
 }
-
-sub tagn { html->tag(@_) . "\n" }
 
 sub xy {
     my ($pt, $x, $y) = @_;
@@ -98,10 +95,10 @@ sub as_svg {
             $at->[1] == $dest_at->[1] ?
                 $c->[1] -= int($font_size / 2) :
                 $c->[0] += 5;
-            next if $at == $dest_at; 
+            next if $at == $dest_at;
             my $vx = $dest_at->[0] - $at->[0];
             my $vy = $dest_at->[1] - $at->[1];
-            my $len = sqrt($vx**2 + $vy**2);
+            my $len = sqrt($vx ** 2 + $vy ** 2);
             my $k = $radius / $len;
             my $dx = $vx * $k;
             my $dy = $vy * $k;
@@ -109,32 +106,30 @@ sub as_svg {
             my $y1 = $at->[1] + $dy;
             my $x2 = $dest_at->[0] - $dx;
             my $y2 = $dest_at->[1] - $dy;
-            my @line_args = (
-                x1 => $x1, 
-                y1 => $y1, 
-                x2 => $x2, 
-                y2 => $y2, 
-                stroke => 'black', 
-                'stroke-width' => '1'
+            $lines .= svg->line(
+                x1 => $x1,
+                y1 => $y1,
+                x2 => $x2,
+                y2 => $y2,
+                stroke => 'black',
+                'stroke-width' => 1,
+                (exists $self->{edges}->{$e}->{$src} ? () : ('marker-end' => 'url(#arrow)')),
             );
-            push @line_args, ('marker-end' => 'url(#arrow)') if not exists $self->{edges}->{$e}->{$src};
-            $lines .= svg->line(@line_args);
-            my $w = $edges->{$e} or next;
-            push @texts, [ $w, xy($c, qw(x y)) ];
+            push @texts, [ $edges->{$e}, xy($c, qw(x y)) ];
         }
     }
     svg->start([ $xmin, $ymin, $xmax - $xmin, $ymax - $ymin ]) .
     svg->defs(svg->marker(
-        svg->path(d => "M0,0 L4,6 L0,12 L18,6 z", fill => 'black'), 
-        id => "arrow", markerWidth=>"10", 
-        markerHeight=>"10", refX=>"18", 
-        refY=>"6", 
-        orient=>"auto", 
-        markerUnits=>"userSpaceOnUse", 
-        viewBox=>"0 0 20 20")
-    ) .
+        svg->path(d => 'M0,0 L4,6 L0,12 L18,6 z', fill => 'black'),
+        id => 'arrow',
+        markerWidth => 10, markerHeight => 10,
+        refX => 18, refY => 6,
+        orient => 'auto',
+        markerUnits => 'userSpaceOnUse',
+        viewBox => '0 0 20 20',
+    )) .
     svg->g(
-        [ map svg->circle(cx => $_->[0], cy => $_->[1], r => $radius), @at ],
+        [ map svg->circle(xy($_, qw(cx cy)), r => $radius), @at ],
         fill => 'black', stroke => 'black',
     ) .
     svg->g($lines) .
