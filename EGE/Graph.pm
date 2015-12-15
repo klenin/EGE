@@ -6,7 +6,6 @@ package EGE::Graph;
 use strict;
 use warnings;
 
-use List::Util qw(min max);
 use EGE::Html;
 use EGE::Svg;
 
@@ -57,6 +56,21 @@ sub update_min_max {
     $$max = $value if !defined($$max) || $value > $$max;
 }
 
+sub bounding_box {
+    my ($self, $radius) = @_;
+    my ($xmin, $ymin, $xmax, $ymax);
+
+    for (values %{$self->{vertices}}) {
+        my $at = $_->{at} or die;
+        update_min_max $at->[0], \$xmin, \$xmax;
+        update_min_max $at->[1], \$ymin, \$ymax;
+    }
+    [ $xmin, $ymin, $xmax, $ymax ];
+}
+
+sub add { [ map $_[0]->[$_] + $_[1]->[$_], 0..$#{$_[0]} ] }
+sub size { [ $_[0]->[0], $_[0]->[1], $_[0]->[2] - $_[0]->[0], $_[0]->[3] - $_[0]->[1] ] }
+
 sub xy {
     my ($pt, $x, $y) = @_;
     ($x => $pt->[0], $y => $pt->[1]);
@@ -81,21 +95,11 @@ sub as_svg {
     my ($self, %p) = @_;
 
     my $oriented = $p{oriented} // $self->is_oriented;
-
-    my $radius = 5;
+    my $radius = $p{radius} // 5;
     my $font_size = 3 * $radius;
 
-    my @vnames = $self->vertex_names;
-    my @at = map $self->{vertices}{$_}{at}, @vnames;
-    my $xmin = min map $_->[0] - $radius, @at;
-    my $xmax = max map $_->[0] + $radius + $font_size, @at;
-    my $ymin = min map $_->[1] - $radius - $font_size, @at;
-    my $ymax = max map $_->[1] + $radius, @at;
-    my ($xsize, $ysize) = ();
-
-    my @texts;
-    my $lines = '';
-    for my $src (@vnames) {
+    my (@texts, @lines);
+    for my $src ($self->vertex_names) {
         my $at = $self->{vertices}{$src}{at};
         push @texts, [ $src, x => $at->[0] + $radius, y => $at->[1] - 3 ];
 
@@ -117,19 +121,12 @@ sub as_svg {
             my $y1 = $at->[1] + $dy;
             my $x2 = $dest_at->[0] - $dx;
             my $y2 = $dest_at->[1] - $dy;
-            $lines .= svg->line(
-                x1 => $x1,
-                y1 => $y1,
-                x2 => $x2,
-                y2 => $y2,
-                stroke => 'black',
-                'stroke-width' => 1,
-                ($oriented ? ('marker-end' => 'url(#arrow)') : ()),
-            );
+            push @lines, { x1 => $x1, y1 => $y1, x2 => $x2, y2 => $y2 };
             push @texts, [ $edges->{$e}, xy($c, qw(x y)) ];
         }
     }
-    svg->start([ $xmin, $ymin, $xmax - $xmin, $ymax - $ymin ]) .
+    svg->start(size add
+        $self->bounding_box, [ -$radius - 1, -$radius - $font_size, $radius + $font_size, $radius + 1 ]) .
     ($oriented ? svg->defs(svg->marker(
         svg->path(d => 'M0,0 L4,6 L0,12 L18,6 z', fill => 'black'),
         id => 'arrow',
@@ -140,10 +137,14 @@ sub as_svg {
         viewBox => '0 0 20 20',
     )) : '').
     svg->g(
-        [ map svg->circle(xy($_, qw(cx cy)), r => $radius), @at ],
+        [ map svg->circle(xy($_->{at}, qw(cx cy)), r => $radius), values %{$self->{vertices}} ],
         fill => 'black', stroke => 'black',
     ) .
-    svg->g($lines) .
+    svg->g(
+        [ map svg->line(%$_), @lines ],
+        stroke => 'black', 'stroke-width' => 1,
+        ($oriented ? ('marker-end' => 'url(#arrow)') : ()),
+    ) .
     svg->g([ map svg->text(@$_), @texts ], 'font-size' => $font_size) .
     svg->end;
 }
