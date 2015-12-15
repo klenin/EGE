@@ -15,22 +15,24 @@ use EGE::Random;
 sub graph_by_matrix {
     my ($self) = @_;
     my %vertices = (
-        'A' => { at => [  50,  0 ] },
-        'B' => { at => [  25, 50 ] },
-        'C' => { at => [  75, 50 ] },
-        'D' => { at => [   0,  0 ] },
-        'E' => { at => [ 100,  0 ] },
+        A => { at => [  50,  0 ] },
+        B => { at => [  25, 50 ] },
+        C => { at => [  75, 50 ] },
+        D => { at => [   0,  0 ] },
+        E => { at => [ 100,  0 ] },
     );
     my @edges = (
          [ qw(A B) ], [ qw(A C) ], [ qw(A D) ], [ qw(A E) ], 
          [ qw(B C) ], [ qw(B D) ],
          [ qw(C E) ],
     );
-    # TODO: генерировать связные графы, генерировать незначительные отклонения
+    # TODO: генерировать незначительные отклонения
     my $make_random_graph = sub {
-        my $g = EGE::Graph->new(vertices => \%vertices);
-        $g->edge2(@$_, rnd->in_range(2, 5)) for rnd->pick_n(5, @edges);
-        $g;
+        while (1) {
+            my $g = EGE::Graph->new(vertices => \%vertices);
+            $g->edge2(@$_, rnd->in_range(2, 5)) for rnd->pick_n(5, @edges);
+            return $g if $g->is_connected;
+        }
     };
 
     my $g = $make_random_graph->();

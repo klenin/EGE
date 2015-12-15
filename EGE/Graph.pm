@@ -39,6 +39,19 @@ sub is_oriented {
     0;
 }
 
+sub is_connected {
+    my ($self) = @_;
+    my @vnames = $self->vertex_names or return 1;
+    my ($visit, %visited);
+    $visit = sub {
+        return if exists $visited{$_[0]};
+        $visited{$_[0]} = 1;
+        $visit->($_) for keys %{$self->{edges}->{$_[0]}};
+    };
+    $visit->($vnames[0]);
+    @vnames == keys %visited;
+}
+
 sub html_matrix {
     my ($self) = @_;
     my @vnames = sort $self->vertex_names;
