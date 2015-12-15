@@ -8,13 +8,9 @@ use strict;
 use warnings;
 use utf8;
 
-use EGE::Random;
 use EGE::Graph;
-
-sub svg_in_box {
-    my $svg = $_[0]->as_svg;
-    qq~<div style="width: 120px; height: 80px; margin: 5px;">\n$svg\n</div>~;
-}
+use EGE::Html;
+use EGE::Random;
 
 sub graph_by_matrix {
     my ($self) = @_;
@@ -49,7 +45,7 @@ sub graph_by_matrix {
         'В таблице приведена стоимость перевозки между ' .
         'соседними железнодорожными станциями. ' .
         'Укажите схему, соответствующую таблице: ' . $g->html_matrix;
-    $self->variants(map svg_in_box($_), $g, @bad);
+    $self->variants(map html->div_xy($_->as_svg, 120, 80, { margin => '5px' }), $g, @bad);
 }
 
 1;

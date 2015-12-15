@@ -66,8 +66,8 @@ sub style {
 }
 
 sub div_xy {
-    my ($self, $text, $x, $y) = @_;
-    $self->div($text, { $self->style(width => "${x}px", height => "${y}px") });
+    my ($self, $text, $x, $y, $p) = @_;
+    $self->div($text, { $self->style(width => "${x}px", height => "${y}px", %$p) });
 }
 
 sub nbsp { ' ' }

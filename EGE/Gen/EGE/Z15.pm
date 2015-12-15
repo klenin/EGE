@@ -114,7 +114,7 @@ sub city_roads {
         'Сколько существует различных дорог из города %s в город %s?</p> %s',
         EGE::Russian::join_comma_and(sort $g->vertex_names),
         $grid->{first_city}, $grid->{last_city},
-        html->div($g->as_svg, { html->style(width => $w . 'px', height => $h . 'px', margin => '0 auto') });
+        html->div_xy($g->as_svg, $w, $h, { margin => '0 auto' });
     $self->{correct} = $answer;
     $self->accept_number;
 }

@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 7;
+use Test::More tests => 8;
 
 use lib '..';
 
@@ -16,4 +16,6 @@ is html->tag('div', 'body', { width => '1%', height => '2%' }),
 is html->tag('hr', undef, { width => '1px' }), '<hr width="1px"/>', 'empty tag attr';
 is html->row('td', 1, 2, 3), '<tr><td>1</td><td>2</td><td>3</td></tr>', 'row';
 is html->style(font => 'Arial', color => 'black'), 'color: black; font: Arial;', 'style';
-
+is
+    html->div_xy('text', 7, 8, { margin => 0 }),
+    '<div style="height: 8px; margin: 0; width: 7px;">text</div>', 'div_xy';
