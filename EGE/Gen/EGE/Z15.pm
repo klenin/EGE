@@ -106,6 +106,7 @@ sub city_roads {
         $answer = dfs($grid->{first_city}, $grid->{last_city}, $g);
     } until (($answer >= 7 && $answer <= 20) || $iter++ > 20);
 
+    my ($w, $h) = map int($_ * 1.2), @{EGE::Graph::size $g->bounding_box}[2..3];
     $self->{text} = sprintf
         '<p>В таблице представлена схема дорог, соединяющих города %s. ' .
         'Двигаться по дорогам можно только из города, указанного в верхней строке, ' .
@@ -113,7 +114,7 @@ sub city_roads {
         'Сколько существует различных дорог из города %s в город %s?</p> %s',
         EGE::Russian::join_comma_and(sort $g->vertex_names),
         $grid->{first_city}, $grid->{last_city},
-        html->div($g->as_svg, { html->style(width => '500px', height => '500px', margin => '0 auto') });
+        html->div($g->as_svg, { html->style(width => $w . 'px', height => $h . 'px', margin => '0 auto') });
     $self->{correct} = $answer;
     $self->accept_number;
 }
