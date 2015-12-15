@@ -19,18 +19,30 @@ sub new {
 
 sub edge1 {
     my ($self, $v1, $v2, $w) = @_;
+    $self->{vertices}->{$_} or die "Unknown vertex $_" for $v1, $v2;
     $self->{edges}->{$v1}->{$v2} = $w;
 }
 
 sub edge2 {
     my ($self, $v1, $v2, $w) = @_;
-    $self->{edges}->{$v1}->{$v2} = $w;
+    $self->edge1($v1, $v2, $w);
     $self->{edges}->{$v2}->{$v1} = $w;
+}
+
+sub vertex_names { keys %{$_[0]->{vertices}} }
+
+sub is_oriented {
+    my ($self) = @_;
+    my $e = $self->{edges};
+    for my $src ($self->vertex_names) {
+        exists $e->{$_}->{$src} or return 1 for keys %{$e->{$src}};
+    }
+    0;
 }
 
 sub html_matrix {
     my ($self) = @_;
-    my @vnames = sort keys %{$self->{vertices}};
+    my @vnames = sort $self->vertex_names;
     my $r = html->row_n('td', '', @vnames);
     for (@vnames) {
         my $e = $self->{edges}->{$_};
@@ -50,8 +62,6 @@ sub xy {
     ($x => $pt->[0], $y => $pt->[1]);
 }
 
-sub vertex_names { keys %{$_[0]->{vertices}} }
-
 sub edges_string {
     my ($self) = @_;
     my $r = '';
@@ -68,7 +78,9 @@ sub edges_string {
 }
 
 sub as_svg {
-    my ($self) = @_;
+    my ($self, %p) = @_;
+
+    my $oriented = $p{oriented} // $self->is_oriented;
 
     my $radius = 5;
     my $font_size = 3 * $radius;
@@ -80,7 +92,6 @@ sub as_svg {
     my $ymin = min map $_->[1] - $radius - $font_size, @at;
     my $ymax = max map $_->[1] + $radius, @at;
     my ($xsize, $ysize) = ();
-
 
     my @texts;
     my $lines = '';
@@ -113,13 +124,13 @@ sub as_svg {
                 y2 => $y2,
                 stroke => 'black',
                 'stroke-width' => 1,
-                (exists $self->{edges}->{$e}->{$src} ? () : ('marker-end' => 'url(#arrow)')),
+                ($oriented ? ('marker-end' => 'url(#arrow)') : ()),
             );
             push @texts, [ $edges->{$e}, xy($c, qw(x y)) ];
         }
     }
     svg->start([ $xmin, $ymin, $xmax - $xmin, $ymax - $ymin ]) .
-    svg->defs(svg->marker(
+    ($oriented ? svg->defs(svg->marker(
         svg->path(d => 'M0,0 L4,6 L0,12 L18,6 z', fill => 'black'),
         id => 'arrow',
         markerWidth => 10, markerHeight => 10,
@@ -127,7 +138,7 @@ sub as_svg {
         orient => 'auto',
         markerUnits => 'userSpaceOnUse',
         viewBox => '0 0 20 20',
-    )) .
+    )) : '').
     svg->g(
         [ map svg->circle(xy($_, qw(cx cy)), r => $radius), @at ],
         fill => 'black', stroke => 'black',
