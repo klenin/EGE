@@ -10,6 +10,8 @@ package EGE::GenerateBase;
 
 use EGE::Random;
 
+our $test = sub {};
+
 sub one {
     my ($package, $method) = @_;
     no strict 'refs';
@@ -17,6 +19,8 @@ sub one {
     my $g = "EGE::Gen::$package"->new;
     $g->$method;
     $g->post_process;
+    $g->{method} = $method;
+    $test->($g);
     $g;
 }
 
