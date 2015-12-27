@@ -10,7 +10,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Clone qw(clone);
+use Storable qw(dclone);
 use List::Util qw(min max);
 
 use EGE::Random;
@@ -76,7 +76,7 @@ sub forward_dfs {
 }
 
 sub generate_graph {
-    my $grid = clone(shift);
+    my $grid = dclone(shift);
     my $vertices = $grid->{vertices};
     my $g = EGE::Graph->new(vertices => $vertices);
     my $fc = $grid->{first_city};
