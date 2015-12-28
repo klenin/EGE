@@ -58,15 +58,24 @@ sub set_commands {
     $self->{code} = [ @_ ];
 }
 
+sub is_integer { $_[0] =~ m/^-?(\d+)$/ }
+
+sub ensure_numeric { $_[0] =~ m/^[\-0-9]/ ? $_[0] : "0$_[0]" }
+
 sub format_command {
     my ($self, $command, $num_format) = @_;
     my ($cmd, @args) = @$command;
-    "$cmd " . join ', ', map { m/^-?(\d+)$/ ? sprintf $num_format, $_ : $_ } grep { @_ ne '' } @args;
+    "$cmd " . join ', ', map { is_integer($_) ? ensure_numeric(sprintf $num_format, $_) : $_ } @args;
+}
+
+sub format_commands {
+    my ($self, $num_format) = @_;
+    map $self->format_command($_, $num_format), @{$self->{code}};
 }
 
 sub get_code_txt {
     my ($self, $num_format) = @_;
-    my $cmd_list = join('<br></br>', map $self->format_command($_, $num_format), @{$self->{code}});
+    my $cmd_list = join '<br></br>', $self->format_commands($num_format);
     qq~<div id="code"><code>$cmd_list</code></div>~;
 }
 
