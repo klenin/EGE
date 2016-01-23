@@ -142,6 +142,7 @@ use EGE::Gen::Arch::Arch08;
 use EGE::Gen::Arch::Arch09;
 use EGE::Gen::Arch::Arch10;
 use EGE::Gen::Arch::Arch12;
+use EGE::Gen::Arch::Arch13;
 
 sub g {
     my $unit = shift;
@@ -166,6 +167,7 @@ sub all {[
     gg('Arch09', qw(reg_value_before_loopnz zero_fill stack)),
     gg('Arch10', qw(jcc_check_flags cmovcc)),
     gg('Arch12', qw(cond_max_min divisible_by_mask)),
+	gg('Arch13', qw(expression_calc)),
 ]}
 
 package EGE::DatabaseGenerate;
