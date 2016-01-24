@@ -1,7 +1,8 @@
 use strict;
 use warnings;
 
-use Test::More tests => 181;
+use Test::More tests => 190;
+use Test::Exception;
 
 use lib '..';
 use EGE::Asm::Processor;
@@ -14,6 +15,14 @@ sub check_stack {
         $res = '' if ($stack[$i] !=  proc->{stack}->[$i])
     }
     $res;
+}
+
+{
+    for my $r (@EGE::Asm::Processor::registers) {
+        proc->run_code([ ['mov', $r, 9999999] ]);
+        is proc->get_val($r), 9999999, "mov $r";
+    }
+    throws_ok { proc->get_register('zzz'); } qr/zzz/, 'unknown register';
 }
 
 {

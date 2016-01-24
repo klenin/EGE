@@ -27,7 +27,7 @@ my %reg_indexes = (
     (map { $_ . 'l' => [ 24, 32 ] } 'a'..'d'),
     (map { $_ . 'h' => [ 16, 24 ] } 'a'..'d'),
     (map { $_ . 'x' => [ 16, 32 ] } 'a'..'d'),
-    (map { $_ => [ 0, 32 ] } 'ebp', 'esp', map "e${_}x", 'a'..'d'),
+    (map { $_ => [ 0, 32 ] } qw(esi edi ebp esp), map "e${_}x", 'a'..'d'),
 );
 
 sub set_indexes {
