@@ -163,23 +163,22 @@ sub gen_variants {
         my $mutate_arg = rnd->pick(@mutate_args);
         my $curr_variant;
         my $iter = 0;
-        my $max_iters = 50;
         do {
             $curr_variant = gen_expression_text($node, @$mutate_arg);
-        } until (!check_for_repeats($res[0], $curr_variant) || $iter++ > $max_iters);
-        die if $iter > $max_iters;
+            die if $iter++ > 50;
+        } while check_for_repeats($res[0], $curr_variant);
         push @res, $curr_variant;
     }
-    map convert_eval_to_html_format($_), @res;
+    @res;
 }
 
-sub print_hint {
-    my $r = html->row('th', qw(Приоритет Оператор Описание));
+sub priority_table_text {
+    my $r = html->row('th', qw(Приоритет Операция Описание));
     for my $priority (0 .. @operators - 1) {
         $r .= join '', map html->row('td', ($priority + 1, $_->{html_math}, $_->{hint})),
             @{$operators[$priority]->{operators}};
     }
-    html->table($r);
+    html->table($r, { border => 1 });
 }
 
 sub init_operators {
@@ -206,11 +205,11 @@ sub expression_calc {
 
     $self->{text} = sprintf
         'Укажите формулу, которую будет вычислять следующий код: ' .
-        '%s %s', 
-        html->div((join '<br />', map cgen->format_command($_, '%d'), @asm_list), { html->style('margin-left' => '30px') }), 
-        print_hint();
-    
-    $self->variants(gen_variants(4, $node));
+        '<table><tr><td style="padding: 0 40px 0 40px;">%s</td><td>%s</td></tr></table>',
+        cgen->get_code_txt('%d'), priority_table_text;
+
+    my @v = gen_variants(4, $node);
+    $self->variants(map convert_eval_to_html_format($_), @v);
 }
 
 1;
