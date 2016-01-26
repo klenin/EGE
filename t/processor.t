@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 190;
+use Test::More tests => 193;
 use Test::Exception;
 
 use lib '..';
@@ -51,6 +51,11 @@ sub check_stack {
     proc->run_code([ ['mov', 'al', 15], ['add', 'al', 7] ]);
     is proc->get_val('eax'), 22, 'add positive number';
     is proc->{eflags}->flags_text, '', 'add set flags';
+
+    proc->run_code([ ['mov', 'ah', 15], ['add', 'ah', 7] ]);
+    is proc->get_val('eax'), 22 * 256, 'add to ah';
+    is proc->{eflags}->flags_text, 'PF', 'add to ah set flags';
+
     proc->run_code([ ['mov', 'al', 15], ['add', 'al', -7] ]);
     is proc->get_val('eax'), 8, 'add negative less number';
     is proc->{eflags}->flags_text, 'CF', 'add negative less number set flags';
@@ -176,11 +181,16 @@ sub check_stack {
 
 {
     proc->run_code([ ['mov', 'al', 209], ['mov', 'bh', 10], ['add', 'al', 'bh'] ]);
-    is proc->get_val('eax'), 219, 'add regisrer';
+    is proc->get_val('eax'), 219, 'add register';
     proc->run_code([ ['mov', 'al', 55], ['add', 'al', 15], ['sub', 'al', 4] ]);
     is proc->get_val('eax'), 66, 'add sub';
     proc->run_code([ ['mov', 'al', 178], ['sub', 'al', 21], ['mov', 'dh', 5], ['add', 'al', 'dh'] ]);
     is proc->get_val('eax'), 162, 'sub add register';
+}
+
+{
+    proc->run_code([ ['mov', 'ax', 10], ['imul', 'ax', 15] ]);
+    is proc->get_val('eax'), 150, 'imul';
 }
 
 {

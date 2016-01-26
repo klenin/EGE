@@ -43,7 +43,7 @@ sub get_value {
     my $tmp = EGE::Bits->new->
         set_bin_array([ @{$self->{bits}->{v}}[$self->{id_from} .. $self->{id_to} - 1] ], 1);
     $tmp->{v}[rnd->in_range(0, $len - 1)] ^= 1 if $flip;
-    $tmp->get_dec();
+    $tmp->get_dec;
 }
 
 sub set_ZSPF {
@@ -144,6 +144,13 @@ sub neg {
 	$self->mov($eflags, '', 0);
 	$self->sub($eflags, '', $val);
 	$self;
+}
+
+# TODO: Это заглушка только для использования в Arch13.
+sub imul {
+    my ($self, $eflags, $reg, $val) = @_;
+    $self->set_indexes($reg);
+    $self->mov_value($self->get_value * $val)->set_ZSPF($eflags);
 }
 
 sub and {
