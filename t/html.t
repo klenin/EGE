@@ -17,8 +17,8 @@ is html->tag('div', 'body', { width => '1%', height => '2%' }),
 is html->tag('hr', undef, { width => '1px' }), '<hr width="1px"/>', 'empty tag attr';
 is html->row('td', 1, 2, 3), '<tr><td>1</td><td>2</td><td>3</td></tr>', 'row';
 
-is html->style(font => 'Arial', color => 'black'), 'color: black; font: Arial;', 'style';
-is html->style(list_style => 'none'), 'list-style: none;', 'style _';
+is_deeply [ html->style(font => 'Arial', color => 'black') ], [ style => 'color: black; font: Arial;' ], 'style';
+is_deeply [ html->style(list_style => 'none') ], [ style => 'list-style: none;' ], 'style _';
 
 is
     html->div_xy('text', 7, 8, { margin => 0 }),
