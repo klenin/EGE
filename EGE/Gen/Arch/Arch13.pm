@@ -9,207 +9,122 @@ use strict;
 use warnings;
 use utf8;
 
-use EGE::Random;
-use EGE::Asm::Processor;
+use Storable qw(dclone);
+
 use EGE::Asm::AsmCodeGenerate;
+use EGE::Asm::Processor;
 use EGE::Html;
+use EGE::Prog qw(make_expr);
+use EGE::Random;
 
-my $used_registers = 0;
-
-sub get_free_register {
-    die $used_registers if $used_registers >= @EGE::Asm::Processor::registers;
-    $EGE::Asm::Processor::registers[$used_registers++];
+sub is_negative {
+    my ($op, $left, $right) = @_;
+    $op eq '-' && $left->run < $right->run;
 }
 
-sub free_last_register { $used_registers-- if $used_registers > 0 }
+sub make_random_expr {
+    my ($n) = @_;
+    $n or return make_expr rnd->in_range(1, 10);
+    my $split = rnd->in_range(0, $n - 1);
+    my ($left, $right) = map make_random_expr($_), $split, $n - $split - 1;
+    my $op = rnd->pick('+', '-', '*', '|', '&', '^');
+    # Гарантировать, что не возникнут отрицательные числа.
+    make_expr [ $op, is_negative($op, $left, $right) ? ($right, $left) : ($left, $right) ];
+}
 
-my @operators = (
-    {
-        operators => [
-            { asm => 'imul', html_math => '*'    , eval_math => '*', hint => 'Умножение'                 }
-        ],
-        gen => \&gen_add_sub
-    }, {
-        operators => [
-            { asm => 'add' , html_math => '+'    , eval_math => '+', hint => 'Сложение'                  },
-            { asm => 'sub' , html_math => '−'    , eval_math => '-', hint => 'Вычитание'                 }
-        ],
-        gen => \&gen_add_sub
-    }, {
-        operators => [
-            { asm => 'and' , html_math => '&amp;', eval_math => '&', hint => 'Побитовое И'               },
-        ],
-        gen => \&gen_add_sub
-    }, {
-        operators => [
-            { asm => 'xor' , html_math => '^'    , eval_math => '^', hint => 'Побитовое исключающее ИЛИ' },
-            { asm => 'or'  , html_math => '|'    , eval_math => '|', hint => 'Побитовое ИЛИ'             },
-        ],
-        gen => \&gen_add_sub
+sub is_binop { $_[0]->isa('EGE::Prog::BinOp') }
+
+sub mutate_op {
+    my ($expr) = @_;
+    my @ops = ('+', '*', '|', '&', '^', is_negative('-', $expr->children) ? () : ('-'));
+    $expr->{op} = rnd->pick_except($expr->{op}, @ops);
+}
+
+my $perl = EGE::Prog::Lang::Perl->new;
+
+sub mutate_prio {
+    my ($expr) = @_;
+    my $prio = $perl->{prio};
+    my ($left, $right) = $expr->children;
+    # Проверяем левый поворот первым, чтобы слегка сдвинуть вправо
+    # точку расхождения с правильным ответом.
+    if (
+        is_binop($right) && $prio->{$right->{op}} != $prio->{$expr->{op}} &&
+        !is_negative($expr->{op}, $left, $right->{left})
+    ) {
+        $expr->rotate_left;
     }
-);
+    elsif (
+        is_binop($left) && $prio->{$left->{op}} != $prio->{$expr->{op}} &&
+        !is_negative($expr->{op}, $right, $left->{right})
+    ) {
+        $expr->rotate_right;
+    }
+}
 
-my @operators_by_id;
+sub mutate_value {
+    my ($expr) = @_;
+    if ($expr->isa('EGE::Prog::Const')) {
+        $expr->{value} = rnd->in_range_except(1, 10, $expr->{value});
+    }
+    elsif (is_binop($expr)) {
+        mutate_value(rnd->pick($expr->children));
+    }
+}
 
-my %operators_by_eval_math;
-
-sub gen_add_sub {
-    my $node = shift;
-    my @operands = @{$node->{operands}};
-    my @operators = @{$node->{operators}};
-    my $res_reg = 0;
-    my $res_asm_list = [];
-    for my $compl_op_pos (0 .. @operands - 1) {
-        if (!exists $operands[$compl_op_pos]->{constant}) {
-            my $t = $operands[$compl_op_pos]->{gen}->($operands[$compl_op_pos]);
-            $res_reg = $t->{reg};
-            $res_asm_list = $t->{asm_list};
-            if ($compl_op_pos > 0 && $operators[$compl_op_pos - 1]->{eval_math} eq '-') {
-                push @$res_asm_list, [ 'neg', $res_reg ];
-                $operators[$compl_op_pos - 1] = $operators_by_eval_math{'+'};
-            }
-            splice @operands, $compl_op_pos, 1;
-            last;
+sub mutate_expr {
+    my ($orig, $values) = @_;
+    for (my $iter = 0; $iter < 50; ++$iter) {
+        my $copy = dclone($orig);
+        my $op = rnd->pick($copy->gather_if(\&is_binop));
+        mutate_value($op) if $iter > 20;
+        $values->{$copy->run}++ or return $copy;
+        if (rnd->coin) {
+            mutate_op($op);
         }
-    }
-    if (!$res_reg) {
-        $res_reg = get_free_register();
-        my $operand = shift @operands;
-        $res_asm_list = [[ 'mov', $res_reg, $operand->{constant} ]];
-    }
-    for my $op_pos (0 .. @operands - 1) {
-        if (exists $operands[$op_pos]->{constant}) {
-            push @$res_asm_list, [ $operators[$op_pos]->{asm}, $res_reg, $operands[$op_pos]->{constant} ];
-        } else {
-            my $t = $operands[$op_pos]->{gen}->($operands[$op_pos]);
-            push @$res_asm_list, @{$t->{asm_list}};
-            push @$res_asm_list, [ $operators[$op_pos]->{asm}, $res_reg, $t->{reg} ];
-            free_last_register;
+        else {
+            mutate_prio($op);
+            next if is_negative($op->{op}, $op->children);
         }
+        $values->{$copy->run}++ or return $copy;
     }
-    { reg => $res_reg, asm_list => $res_asm_list };
-}
-
-sub append_operand {
-    my ($node, $i, $mutate_brackets, $mutate_operators) = @_;
-    my $operand = $node->{operands}->[$i];
-    my $res_txt = gen_expression_text($operand, $mutate_brackets, $mutate_operators);
-    $node->{priority} < $operand->{priority} && (rnd->coin || !$mutate_brackets) ?
-        "($res_txt)" : $res_txt;
-}
-
-sub gen_expression_text {
-    my ($node, $mutate_brackets, $mutate_operators) = @_;
-    return $node->{constant} if exists $node->{constant};
-    my $res_txt = '';
-    for my $i (0 .. @{$node->{operands}} - 2) {
-        my $curr_op = $node->{operators}->[$i];
-        $res_txt .=
-            append_operand($node, $i, $mutate_brackets, $mutate_operators) . ' ' .
-            (rnd->coin && $mutate_operators ?
-            $operators_by_id[rnd->in_range_except(0, @operators_by_id - 1, $curr_op->{id})]->{eval_math} :
-            $curr_op->{eval_math}) . ' ';
+    # Одиночных исправлений недостаточно -- использовать кумулятивные исправления.
+    my $copy = dclone($orig);
+    for (my $iter = 0; $iter < 50; ++$iter) {
+        mutate_value($copy);
+        $values->{$copy->run}++ or return $copy;
     }
-    $res_txt . append_operand($node, @{$node->{operands}} - 1, $mutate_brackets, $mutate_operators);
-}
-
-sub get_random_operand {
-    { constant => rnd->in_range(1, 10), priority => 0 };
-}
-
-sub make_expression {
-    my ($n, $op_priority) = @_;
-    return get_random_operand() if $n == 1;
-    my $operands = [];
-    my $operators = [];
-    while ($n > 0) {
-        my $inner_n = rnd->in_range(1, $n - 1);
-        push @$operands, make_expression($inner_n, rnd->in_range_except(0, @operators - 1, $op_priority));
-        push @$operators, rnd->pick(@{$operators[$op_priority]->{operators}});
-        $n -= $inner_n;
-    }
-    pop @$operators;
-    {
-        operands => rnd->shuffle($operands),
-        operators => $operators,
-        gen => $operators[$op_priority]->{gen},
-        priority => $op_priority
-    };
-}
-
-sub convert_eval_to_html_format {
-    my $str = shift;
-    for my $op (keys %operators_by_eval_math) {
-        my $m = quotemeta ($op);
-        $str =~ s/$m/$operators_by_eval_math{$op}->{html_math}/g;
-    }
-    $str;
-}
-
-sub check_for_repeats {
-    my ($a, @arr) = @_;
-    my $v = eval $a;
-    for my $i (@arr) {
-        return 1 if $v == eval $i;
-    }
-    0;
-}
-
-sub gen_variants {
-    my ($n, $node) = @_;
-    my @res = gen_expression_text($node, 0, 0);
-    my @mutate_args = ([ 0, 1 ], [ 1, 1 ]);
-    for my $i (1 .. $n - 1) {
-        my $mutate_arg = rnd->pick(@mutate_args);
-        my $curr_variant;
-        my $iter = 0;
-        do {
-            $curr_variant = gen_expression_text($node, @$mutate_arg);
-            die if $iter++ > 50;
-        } while check_for_repeats($res[0], $curr_variant);
-        push @res, $curr_variant;
-    }
-    @res;
+    die join ',', $orig->to_lang_named('Perl'), keys %$values;
 }
 
 sub priority_table_text {
-    my $r = html->row('th', qw(Приоритет Операция Описание));
-    for my $priority (0 .. @operators - 1) {
-        $r .= join '', map html->row('td', ($priority + 1, $_->{html_math}, $_->{hint})),
-            @{$operators[$priority]->{operators}};
-    }
-    html->table($r, { border => 1 });
-}
-
-sub init_operators {
-    my $i = 0;
-    for my $priority (0 .. @operators - 1) {
-        for my $op (@{$operators[$priority]->{operators}}) {
-            push @operators_by_id, $op;
-            $op->{id} = $i++;
-            $operators_by_eval_math{$op->{eval_math}} = $op;
-        }
-    }
+    html->table([
+        html->row('th', qw(Приоритет Операция Описание)),
+        map html->row('td', @$_),
+            [ 1, '*',     'Умножение'                 ],
+            [ 2, '+',     'Сложение'                  ],
+            [ 2, '−',     'Вычитание'                 ],
+            [ 3, '&amp;', 'Побитовое И'               ],
+            [ 4, '^',     'Побитовое исключающее ИЛИ' ],
+            [ 4, '|',     'Побитовое ИЛИ'             ],
+        ], { border => 1 });
 }
 
 sub expression_calc {
-    my $self = shift;
-    $used_registers = 0;
-    init_operators();
-
-    my $node = make_expression(rnd->in_range(6, 12), 1);
-
-    my $t = $node->{gen}->($node);
-    my @asm_list = @{$t->{asm_list}};
-    cgen->set_commands(@asm_list);
-
+    my ($self) = @_;
+    my $expr = make_random_expr(rnd->in_range(8,9));
+    cgen->clear;
+    cgen->compile($expr);
     $self->{text} = sprintf
         'Укажите формулу, которую будет вычислять следующий код: ' .
         '<table><tr><td style="padding: 0 40px 0 40px;">%s</td><td>%s</td></tr></table>',
         cgen->get_code_txt('%d'), priority_table_text;
-
-    my @v = gen_variants(4, $node);
-    $self->variants(map convert_eval_to_html_format($_), @v);
+    my $expr_value = $expr->run;
+    my $values = { $expr_value => 1 };
+    my @bad = map mutate_expr($expr, $values), 1..4;
+    $expr->run == $expr_value or die 1;
+    proc->run_code(cgen->{code})->get_val('eax') == $expr_value or die 2;
+    $self->variants(map html->tag('code', $_->to_lang_named('Perl', { html => 1 })), $expr, @bad);
 }
 
 1;
