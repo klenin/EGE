@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 141;
+use Test::More tests => 142;
 use Test::Exception;
 
 use lib '..';
@@ -93,11 +93,13 @@ use EGE::Prog qw(make_block make_expr);
 
 {
     sub plus2minus { $_[0]->{op} = '+' if ($_[0]->{op} || '') eq '-' }
-    my $e = make_expr([ '-', [ '-', 3, ['-', 2, 1 ] ] ]);
-    is $e->run(), -2, 'visit_dfs before';
-    is $e->visit_dfs(\&plus2minus)->run(), 6, 'visit_dfs after';
+    my $e = make_expr([ '-', [ '-', 3, [ '-', 2, 1 ] ] ]);
+    is $e->run, -2, 'visit_dfs before';
+    is $e->visit_dfs(\&plus2minus)->run, 6, 'visit_dfs after';
     is $e->count_if(sub { 1 }), 6, 'visit_dfs count all';
     is $e->count_if(sub { $_[0]->isa('EGE::Prog::Const') }), 3, 'count_if';
+    is_deeply [ $e->gather_if(sub { $_[0]->isa('EGE::Prog::BinOp') }) ],
+       [ $e->{arg}, $e->{arg}->{right} ], 'gather_if';
 }
 
 {

@@ -60,8 +60,15 @@ sub _visit_children {}
 sub count_if {
     my ($self, $cond) = @_;
     my $count = 0;
-    $_[0]->visit_dfs( sub { ++$count if $cond->($_[0]) } );
+    $_[0]->visit_dfs(sub { ++$count if $cond->($_[0]) });
     $count;
+}
+
+sub gather_if {
+    my ($self, $cond) = @_;
+    my @result;
+    $_[0]->visit_dfs(sub { push @result, $_[0] if $cond->($_[0]) });
+    @result;
 }
 
 sub get_type { (split ':', ref $_[0])[-1] }
