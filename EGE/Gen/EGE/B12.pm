@@ -11,13 +11,13 @@ use utf8;
 
 use EGE::Random;
 use EGE::Html;
+use EGE::Russian::Sports;
 
 use List::Util 'min';
 
 sub search_query {
     my ($self) = @_;
-    my ($item1, $item2) = rnd->pick_n(2, qw(Шахматы Теннис Волейбол Хоккей Футбол
-                                            Плавание Баскетбол Дартс Гольф Биатлон));
+    my ($item1, $item2) = rnd->pick_n(2, @EGE::Russian::Sports::sports);
     my ($item1_cnt, $item2_cnt) = map { 10 * rnd->in_range(200, 999) } 1, 2;
     my $both_cnt = 10 * rnd->in_range(100, int min($item1_cnt, $item2_cnt)/20);
 
