@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 137;
+use Test::More tests => 138;
 use Test::Exception;
 
 use lib '..';
@@ -32,6 +32,11 @@ use EGE::Prog qw(make_block make_expr);
     my $env = { a => 2, b => 3 };
     is make_expr('b')->run($env), 3, 'basic env 1';
     is make_expr([ '*', 'a', [ '+', 'b', 7 ] ])->run($env), 20, 'basic env 2';
+}
+
+{
+    my $op = make_expr [ '+', 3, 5 ];
+    is_deeply [ $op->children ], [ $op->{left}, $op->{right} ], 'children';
 }
 
 {

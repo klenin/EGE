@@ -201,6 +201,7 @@ sub new {
 }
 
 sub _children {}
+sub children { @{$_[0]}{$_[0]->_children} }
 
 sub run {
     my ($self, $env) = @_;
