@@ -66,7 +66,7 @@ sub gen_add_sub {
             $res_asm_list = $t->{asm_list};
             if ($compl_op_pos > 0 && $operators[$compl_op_pos - 1]->{eval_math} eq '-') {
                 push @$res_asm_list, [ 'neg', $res_reg ];
-                $operators[0] = $operators_by_eval_math{'+'};
+                $operators[$compl_op_pos - 1] = $operators_by_eval_math{'+'};
             }
             splice @operands, $compl_op_pos, 1;
             last;
