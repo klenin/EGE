@@ -59,11 +59,17 @@ sub cdata { "<![CDATA[$_[1]]]>" }
 sub pre {
     my ($self, $data, $attr) = @_;
     $self->tag('pre', $self->cdata($data), $attr);
- }
+}
+
+sub _underscores {
+    my ($k) = @_;
+    $k =~ tr/_/-/;
+    $k;
+}
 
 sub style {
     my ($self, %p) = @_;
-    style => join ' ', map "$_: $p{$_};", sort keys %p;
+    style => join ' ', map _underscores($_) . ": $p{$_};", sort keys %p;
 }
 
 sub div_xy {
