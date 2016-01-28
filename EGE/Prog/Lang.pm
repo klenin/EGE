@@ -13,6 +13,7 @@ sub mult { '*', '/', '%', '//' }
 sub add { '+', '-' }
 sub comp { '>', '<', '==', '!=', '>=', '<=' }
 sub logic { '&&', '||', '^', '=>', 'eq' }
+sub bitwise { '&', '|' }
 sub unary { '++%s', '--%s', '%s++', '%s--', '!', '+', '-' }
 sub prio_unary { map "`$_", unary }
 
@@ -85,7 +86,7 @@ sub make_priorities {
 
 sub prio_list {
     [ ops::prio_unary ], [ ops::power ], [ ops::mult ], [ ops::add ],
-    [ ops::comp ], [ '^', '=>' ], [ '&&' ], [ '||' ], [ 'between' ],
+    [ ops::comp ], [ '^', '=>', ops::bitwise ], [ '&&' ], [ '||' ], [ 'between' ],
 }
 
 sub translate_un_op { {} }
