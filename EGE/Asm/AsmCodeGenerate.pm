@@ -6,9 +6,11 @@ package EGE::Asm::AsmCodeGenerate;
 use strict;
 use warnings;
 
+use POSIX qw/ceil/;
+
 use EGE::Random;
 use EGE::Asm::Processor;
-use POSIX qw/ceil/;
+use EGE::Prog;
 
 use Exporter;
 our @ISA = qw(Exporter);
@@ -188,6 +190,52 @@ sub generate_simple_code {
 
 sub cmd { $_[0]->{code}->[$_[1]]->[0] }
 
-sub clear { $_[0]->{code} = [] }
+sub clear { $_[0]->{code} = []; $_[0]->free_all_registers; }
+
+sub allocate_register {
+    my ($self) = @_;
+    my $alloc = $self->{allocated_registers} //= {};
+    for (@EGE::Asm::Processor::registers) {
+        next if $alloc->{$_};
+        $alloc->{$_} = 1;
+        return $_;
+    }
+    die 'Not enought registers';
+}
+
+sub free_register {
+    my ($self, $reg) = @_;
+    my $alloc = $self->{allocated_registers} //= {};
+    $alloc->{$reg} or die "Register $reg is not allocated";
+    delete $alloc->{$reg};
+}
+
+sub free_all_registers { $_[0]->{allocated_registers} = {} }
+
+sub compile {
+    my ($self, $expr) = @_;
+    if ($expr->isa('EGE::Prog::Const')) {
+        my $reg = $self->allocate_register;
+        $self->add_command('mov', $reg, $expr->{value});
+        return $reg;
+    }
+    if ($expr->isa('EGE::Prog::BinOp')) {
+        my $reg_left = $self->compile($expr->{left});
+        my $r = $expr->{right};
+        my $op = {
+            '+' => 'add', '-' => 'sub', '*' => 'imul', '&' => 'and', '|' => 'or', '^' => 'xor'
+        }->{$expr->{op}};
+        if ($r->isa('EGE::Prog::Const')) {
+            $self->add_command($op, $reg_left, $r->{value});
+        }
+        else {
+            my $reg_right = $self->compile($expr->{right});
+            $self->add_command($op, $reg_left, $reg_right);
+            $self->free_register($reg_right);
+        }
+        return $reg_left;
+    }
+    die "Not implemented: $expr";
+}
 
 1;
