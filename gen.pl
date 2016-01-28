@@ -204,6 +204,7 @@ binmode STDOUT, ':utf8';
 #g('B04', 'morse');
 #g('B04', 'bulbs');
 #g('B05', 'calculator');
+#g('B05', 'complete_spreadsheet');
 #g('B06', 'solve');
 #g('B06', 'recursive_function');
 #g('B07', 'who_is_right');
