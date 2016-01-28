@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 140;
+use Test::More tests => 141;
 use Test::Exception;
 
 use lib '..';
@@ -40,6 +40,7 @@ use EGE::Prog qw(make_block make_expr);
 }
 
 {
+    throws_ok { make_expr() } qr/empty/i, 'make_expr empty';
     throws_ok { make_expr([ 1, 2, 3, 4, 5, 6 ]) } qr/make_expr/, 'bad make_expr';
     throws_ok { make_expr([ [], 'a', 1 ]) } qr/bad op/i, 'bad op';
 }
