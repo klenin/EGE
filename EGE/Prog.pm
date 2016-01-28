@@ -259,6 +259,32 @@ sub polinom_degree {
     $self->SUPER::polinom_degree(@_)
 }
 
+sub rotate_left {
+    my ($self) = @_;
+    my $right = $self->{right};
+    $right->isa(__PACKAGE__) or die 'right is not binop';
+
+    ($self->{op}, $right->{op}) = ($right->{op}, $self->{op});
+    $self->{right} = $right->{right};
+    $right->{right} = $right->{left};
+    $right->{left} = $self->{left};
+    $self->{left} = $right;
+    $self;
+}
+
+sub rotate_right {
+    my ($self) = @_;
+    my $left = $self->{left};
+    $left->isa(__PACKAGE__) or die 'left is not binop';
+
+    ($self->{op}, $left->{op}) = ($left->{op}, $self->{op});
+    $self->{left} = $left->{left};
+    $left->{left} = $left->{right};
+    $left->{right} = $self->{right};
+    $self->{right} = $left;
+    $self;
+}
+
 package EGE::Prog::UnOp;
 use base 'EGE::Prog::Op';
 

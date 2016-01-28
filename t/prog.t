@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 138;
+use Test::More tests => 140;
 use Test::Exception;
 
 use lib '..';
@@ -74,6 +74,13 @@ use EGE::Prog qw(make_block make_expr);
 {
     my $e = make_expr([ '+', 'a', 3 ]);
     is_deeply make_expr($e), $e, 'double make_expr';
+}
+
+{
+    my $o = [ '+', 'a', [ '-', 1, 2 ] ];
+    my $e = make_expr $o;
+    is_deeply $e->rotate_left, make_expr([ '-', [ '+', 'a', 1 ], 2 ]), 'rotate left';
+    is_deeply $e->rotate_right, make_expr($o), 'rotate right';
 }
 
 {
