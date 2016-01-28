@@ -58,7 +58,7 @@ sub calculator_find_prgm_count {
         'У исполнителя Калькулятор %s команды, которым присвоены номера: %s ' .
         'Сколько есть программ, которые число %d преобразуют в число %d?',
         num_by_words(scalar @curr_comms, 1),
-        html->ol(join '', map html->li($_->{text}), @curr_comms),
+        html->ol_li([ map $_->{text}, @curr_comms ]),
         $start_num, $end_num;
 
     $self->{correct} = $answer;

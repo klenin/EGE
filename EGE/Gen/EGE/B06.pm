@@ -270,25 +270,21 @@ sub solve {
     @questions = (@questions, create_questions(\%descr));
 
     $self->{text} =
-      "На одной улице стоят в ряд 4 дома, в которых живут 4 человека: " .
-      (join ", ", map "<strong>$_</strong>", @names) .
-      ". Известно, что каждый из них владеет ровно одной из следующих профессий: " .
-      (join ", ", map "<strong>$_</strong>", @prof) .
-      ", но неизвестно, кто какой и неизвестно, кто в каком доме живет. Однако, " .
-      "известно, что:<br/>";
-
-    $self->{text} .= "<ol>";
-    $self->{text} .= "<li>$_</li>" for rnd->shuffle(@questions);
-    $self->{text} .= "</ol>";
+      'На одной улице стоят в ряд 4 дома, в которых живут 4 человека: ' .
+      (join ', ', map html->tag('strong', $_), @names) .
+      '. Известно, что каждый из них владеет ровно одной из следующих профессий: ' .
+      (join ', ', map html->tag('strong', $_), @prof) .
+      ', но неизвестно, кто какой и неизвестно, кто в каком доме живет. Однако, ' .
+      'известно, что: ' . html->ol_li([ rnd->shuffle(@questions) ]);
 
     my @example = rnd->shuffle(@names);
     $self->{text} .=
-      "Выясните, кто какой профессии, и кто где живет, и дайте ответ в виде " .
-      "заглавных букв имени людей, в порядке слева направо. Например, если бы " .
-      "в домах жили (слева направо) " . (join ", ", @example) .
-      ", ответ был бы: " . join '', map substr($_, 0, 1), @example;
+      'Выясните, кто какой профессии, и кто где живет, и дайте ответ в виде ' .
+      'заглавных букв имени людей, в порядке слева направо. Например, если бы ' .
+      'в домах жили (слева направо) ' . (join ', ', @example) .
+      ', ответ был бы: ' . join '', map substr($_, 0, 1), @example;
 
-    $self->{correct} = join '',  map { substr($names[$_], 0, 1) } @ans;
+    $self->{correct} = join '',  map substr($names[$_], 0, 1), @ans;
 }
 
 sub _rec_calculate {
@@ -329,10 +325,9 @@ sub recursive_function {
     $self->{text} =
         "Алгоритм вычисления значения функции $texts[3], где <i>n</i> — натуральное число, " .
         'задан следующими соотношениями:' .
-        html->ul(
-            html->li("$texts[0], $texts[1]") .
-            html->li("$texts[2], при $texts[4]"),
-            { style => 'list-style-type: none;' }) .
+        html->ul_li(
+            [ "$texts[0], $texts[1]", "$texts[2], при $texts[4]" ],
+            { html->style(list_style_type => 'none') }) .
         " Чему равно значение функции $texts[5]? В ответе запишите только натуральное число.";
 
     $self->{correct} = _rec_calculate($first_val, $second_val, $first_num, $second_num, $n);

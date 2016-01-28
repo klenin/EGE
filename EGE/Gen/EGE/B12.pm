@@ -29,9 +29,10 @@ sub search_query {
     my $to_find = splice @variants, rnd->in_range(0, 3), 1;
     $self->{correct} = $to_find->[1];
 
-    $_ = html->row('th', '<b>Запрос</b>', '<b>Найдено страниц (в тысячах)</b>');
-    $_ .= join '', map { html->row('td', @$_) } @variants;
-    my $table = html->table($_, { border => 1, style => 'text-align: center' });
+    my $table = html->table([
+        html->row('th', '<b>Запрос</b>', '<b>Найдено страниц (в тысячах)</b>'),
+        map html->row('td', @$_), @variants
+        ], { border => 1, html->style(text_align => 'center') });
     $self->{text} = <<EOL
 В языке запросов поискового сервера для обозначения логической операции «ИЛИ»
 используется символ «|», а для логической операции «И» – символ «&amp;».

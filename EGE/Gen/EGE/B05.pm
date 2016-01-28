@@ -58,7 +58,6 @@ sub next_prg {
 }
 
 sub code { join '', map $_ + 1, @{$_[0]}; }
-sub li { join '', map "<li>$_</li>", @_; }
 
 sub same_digit { $_[0] =~ /^(\d)\1+$/; }
 
@@ -97,13 +96,13 @@ sub calculator {
 
     $self->{text} =
         'У исполнителя Калькулятор две команды, которым присвоены номера: ' .
-        '<b><ol> ' . li(map ucfirst($_->{t1}), @$cmd) . '</ol></b> ' .
+        '<b>' . html->ol_li([ map ucfirst($_->{t1}), @$cmd ]) . '</b> ' .
         "Выполняя первую из них, Калькулятор $cmd->[0]->{t2}, " .
         "а выполняя вторую, $cmd->[1]->{t3}. " .
         "Запишите порядок команд в программе получения из числа $arg " .
         "числа $result, содержащей не более $num команд, указывая лишь номера команд " .
         "(Например, программа $sample_code — это программма " .
-        '<b><ul> ' . li(@sample_prg_list) . '</ul></b> ' .
+        '<b>' . html->ul_li(\@sample_prg_list) . '</b>' .
         "которая преобразует число 1 в число $sample_result)";
     $self->{correct} = $code;
     $self->accept_number;
@@ -173,7 +172,7 @@ sub complete_spreadsheet {
     $_ .= html->row('td', '<strong>2</strong>',
                     map { _to_formula($_, $perm_alph) } @{$new_table->{2}});
     my $table_text =
-        html->table($_, {border => 1, style => 'text-align: center'});
+        html->table($_, { border => 1, html->style(text_align => 'center') });
     my $colors = [qw(red green blue orange gray yellow brown)];
     my $chart = EGE::Gen::EGE::A17::pie_chart($new_table->{ans},
                                          { size => 100, colors => $colors} );

@@ -117,8 +117,9 @@ sub expression_calc {
     cgen->compile($expr);
     $self->{text} = sprintf
         'Укажите формулу, которую будет вычислять следующий код: ' .
-        '<table><tr><td style="padding: 0 40px 0 40px;">%s</td><td>%s</td></tr></table>',
-        cgen->get_code_txt('%d'), priority_table_text;
+        html->table(html->tr_([
+            html->td(cgen->get_code_txt('%d'), { html->style(padding => '0 40px 0 40px') }),
+            html->td(priority_table_text) ]));
     my $expr_value = $expr->run;
     my $values = { $expr_value => 1 };
     my @bad = map mutate_expr($expr, $values), 1..4;
