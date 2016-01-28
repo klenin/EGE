@@ -25,6 +25,7 @@ sub new {
 
 sub tag {
     my ($self, $tag, $body, $attrs) = @_;
+    $body = join '', @$body if ref $body eq 'ARRAY';
     $self->open_tag($tag, $attrs, defined $body ? ">$body</$tag>" : '/>');
 }
 
