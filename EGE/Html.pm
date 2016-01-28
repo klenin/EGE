@@ -73,6 +73,21 @@ sub div_xy {
 
 sub nbsp { ' ' }
 
+sub tag2 {
+    my ($self, $tag1, $tag2, $body, $attrs1, $attrs2) = @_;
+    $self->tag($tag1, [ map $self->tag($tag2, $_, $attrs2), @$body ], $attrs1);
+}
+
+sub ul_li {
+    my ($self, @rest) = @_;
+    $self->tag2('ul', 'li', @rest);
+}
+
+sub ol_li {
+    my ($self, @rest) = @_;
+    $self->tag2('ol', 'li', @rest);
+}
+
 BEGIN {
     for my $tag (qw(p td th table div ol ul li)) {
         no strict 'refs';

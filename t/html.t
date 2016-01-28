@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 9;
+use Test::More tests => 11;
 
 use lib '..';
 
@@ -20,3 +20,6 @@ is html->style(font => 'Arial', color => 'black'), 'color: black; font: Arial;',
 is
     html->div_xy('text', 7, 8, { margin => 0 }),
     '<div style="height: 8px; margin: 0; width: 7px;">text</div>', 'div_xy';
+
+is html->ol_li([ 'a', 'b' ], { id => 'qq' }), '<ol id="qq"><li>a</li><li>b</li></ol>', 'ol_li';
+is html->ul_li([ 'a', 'b' ], undef, { x => 'y' }), '<ul><li x="y">a</li><li x="y">b</li></ul>', 'ul_li';
