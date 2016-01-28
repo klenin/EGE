@@ -47,6 +47,14 @@ sub pick {
     @array[rand @array];
 }
 
+# Не проверяя, предполагает, что $except явлется элементом @array.
+sub pick_except {
+    my ($self, $except, @array) = @_;
+    @array > 1 or die 'except nothing';
+    my $i = int(rand $#array);
+    $array[$i] eq $except ? $array[-1] : $array[$i];
+}
+
 sub pick_n {
     my ($self, $n, @array) = @_;
     croak "pick_n: $n of " . scalar @array if $n > @array;

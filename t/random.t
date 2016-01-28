@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 17;
+use Test::More tests => 19;
 use Test::Exception;
 
 use List::Util qw(sum);
@@ -41,8 +41,19 @@ ok $v =~ /^[a-z]$/, 'pick';
     ok @v == 26 && join('', sort @v) =~ join('', 'a' .. 'z'), 'shuffle';
 }
 
+subtest pick_except => sub {
+    my @r = 'a'..'d';
+    for (1..3) {
+        my $p = rnd->pick(@r);
+        my $v = rnd->pick_except($p, @r);
+        ok $v =~ /^[a-d]$/, "in $_";
+        isnt $v, $p, "out $_";
+    }
+};
+
 throws_ok { rnd->pick() } qr/empty/, 'pick from empty';
 throws_ok { rnd->pick_n(3, 1, 2) } qr/^pick_n/, 'pick_n too many';
+throws_ok { rnd->pick_except(3) } qr/except/, 'except nothing';
 
 {
     my ($v1, $v2, $v3) = rnd->pick_n_sorted(3, 'a' .. 'z');
