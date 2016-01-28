@@ -212,7 +212,7 @@ sub children { @{$_[0]}{$_[0]->_children} }
 
 sub run {
     my ($self, $env) = @_;
-    my $r = eval sprintf $self->run_fmt(), map $self->{$_}->run($env), $self->_children;
+    my $r = eval sprintf $self->run_fmt(), map $_->run($env), $self->children;
     my $err = $@;
     $err and die $err;
     $r || 0;
@@ -230,7 +230,7 @@ sub to_lang {
     my ($self, $lang) = @_;
     sprintf
         $self->to_lang_fmt($lang, $self->{op}),
-        map $self->operand($lang, $self->{$_}), $self->_children;
+        map $self->operand($lang, $_), $self->children;
 }
 
 sub needs_parens {
@@ -241,8 +241,8 @@ sub needs_parens {
 sub run_fmt { $_[0]->to_lang_fmt(EGE::Prog::Lang::Perl->new) }
 sub to_lang_fmt {}
 
-sub gather_vars { $_[0]->{$_}->gather_vars($_[1]) for $_[0]->_children; }
-sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for $self->_children; }
+sub gather_vars { $_->gather_vars($_[1]) for $_[0]->children; }
+sub _visit_children { my $self = shift; $_->visit_dfs(@_) for $self->children; }
 
 sub polinom_degree { die "Polinom degree is unavaible for expr with operator: '$_[0]->{op}'"; }
 
@@ -260,8 +260,8 @@ sub _children { qw(left right) }
 sub polinom_degree {
     my $self = shift;
     my ($env, $mistakes, $iter) = @_;
-    $self->{op} eq '*' ? List::Util::sum(map $self->{$_}->polinom_degree(@_), $self->_children) :
-    $self->{op} eq '+' ? List::Util::max(map $self->{$_}->polinom_degree(@_), $self->_children) :
+    $self->{op} eq '*' ? List::Util::sum(map $_->polinom_degree(@_), $self->children) :
+    $self->{op} eq '+' ? List::Util::max(map $_->polinom_degree(@_), $self->children) :
     $self->{op} eq '**' ? $self->{left}->polinom_degree(@_) * $self->{right}->run({}) :
     $self->SUPER::polinom_degree(@_)
 }
