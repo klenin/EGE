@@ -2,6 +2,8 @@ use strict;
 use warnings;
 
 use Test::More tests => 17;
+use Test::Exception;
+
 use List::Util qw(sum);
 
 use lib '..';
@@ -12,8 +14,7 @@ my $v;
 $v = rnd->in_range(1, 10);
 ok 1 <= $v && $v <= 10, 'in_range';
 
-eval { rnd->in_range(1..10); };
-like $@, qr/arguments/, 'in_range(1..10)';
+throws_ok { rnd->in_range(1..10); } qr/arguments/, 'in_range(1..10)';
 
 is rnd->in_range(1, 0), 1, 'in_range empty';
 is rnd->in_range_except(1, 2, 1), 2, 'in_range_except';
@@ -40,11 +41,8 @@ ok $v =~ /^[a-z]$/, 'pick';
     ok @v == 26 && join('', sort @v) =~ join('', 'a' .. 'z'), 'shuffle';
 }
 
-eval { rnd->pick() };
-like $@, qr/empty/, 'pick from empty';
-
-eval { rnd->pick_n(3, 1, 2) };
-like $@, qr/^pick_n/, 'pick_n too many';
+throws_ok { rnd->pick() } qr/empty/, 'pick from empty';
+throws_ok { rnd->pick_n(3, 1, 2) } qr/^pick_n/, 'pick_n too many';
 
 {
     my ($v1, $v2, $v3) = rnd->pick_n_sorted(3, 'a' .. 'z');
