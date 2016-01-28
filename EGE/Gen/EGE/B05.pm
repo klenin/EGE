@@ -136,50 +136,53 @@ sub complete_spreadsheet {
     my ($self) = @_;
 
     my $table = rnd->pick(
-        { 1    => [3, 2, 3, 2],
-          2    => ["(%C+%A)/2", "%C-%D", "%A-%D", "%B/2"],
-          ans  => [3, 1, 1, 1],
-          find => 1 },
-        { 1    => [1, 2, 3],
-          2    => ["(%A+%B+%C)/2", "%C", "3*%B-%C"],
-          ans  => [3, 3, 3],
-          find => 0 },
-        { 1    => [2, 3, 0, 3],
-          2    => ["%A", "(%B+%D)/3", "2*%C", "2*(%B-%A)"],
-          ans  => [2, 2, 0, 2],
-          find => 2 }
+        {
+            1    => [ 3, 2, 3, 2 ],
+            2    => [ '(%C+%A)/2', '%C-%D', '%A-%D', '%B/2' ],
+            ans  => [ 3, 1, 1, 1 ],
+            find => 1 },
+        {
+            1    => [ 1, 2, 3 ],
+            2    => [ '(%A+%B+%C)/2', '%C', '3*%B-%C' ],
+            ans  => [ 3, 3, 3 ],
+            find => 0 },
+        {
+            1    => [ 2, 3, 0, 3 ],
+            2    => [ '%A', '(%B+%D)/3', '2*%C', '2*(%B-%A)' ],
+            ans  => [ 2, 2, 0, 2 ],
+            find => 2 }
     );
 
     my $n = @{$table->{1}};
-    my $perm_1 = [rnd->shuffle(0 .. $n -1)];
+    my $perm_1 = [ rnd->shuffle(0 .. $n - 1) ];
     my $perm_1_back = _back_perm($perm_1);
-    my $perm_2 = [rnd->shuffle(0 .. $n -1)];
-    my $perm_alph = _apply_perm(['A' .. 'Z'], $perm_1_back);
+    my $perm_2 = [ rnd->shuffle(0 .. $n - 1) ];
+    my $perm_alph = _apply_perm([ 'A' .. 'Z' ], $perm_1_back);
 
-    my $new_table =
-    {
+    my $new_table = {
        1    => _apply_perm($table->{1}, $perm_1),
        2    => _apply_perm($table->{2}, $perm_2),
        ans  => _apply_perm($table->{ans}, $perm_2),
        find => $perm_1_back->[$table->{find}]
     };
-    $self->{correct} = $new_table->{1}[$new_table->{find}];
-    $new_table->{1}[$new_table->{find}] = '';
-    my $empty_ceil_text = ['A' .. 'Z']->[$new_table->{find}] . 1;
+    $self->{correct} = $new_table->{1}->[$new_table->{find}];
+    $new_table->{1}->[$new_table->{find}] = '';
+    my $empty_cell = [ 'A' .. 'Z' ]->[$new_table->{find}] . 1;
 
-    $_  = html->row('th', html->nbsp, 'A' .. chr(ord('A') + $n - 1));
-    $_ .= html->row('td', '<strong>1</strong>', @{$new_table->{1}});
-    $_ .= html->row('td', '<strong>2</strong>',
-                    map { _to_formula($_, $perm_alph) } @{$new_table->{2}});
-    my $table_text =
-        html->table($_, { border => 1, html->style(text_align => 'center') });
-    my $colors = [qw(red green blue orange gray yellow brown)];
-    my $chart = EGE::Gen::EGE::A17::pie_chart($new_table->{ans},
-                                         { size => 100, colors => $colors} );
-    my $last_letter = ['A' .. 'Z']->[$n - 1];
-    $self->{text} = "Дан фрагмент электронной таблицы: $table_text" .
-        "Какое число  должно быть записано в ячейке $empty_ceil_text, чтобы " .
-        "построенная после выполнения вычислений диаграмма по значениям " .
+    my $last_letter = [ 'A' .. 'Z' ]->[$n - 1];
+    my $table_text = html->table([
+        html->row('th', html->nbsp, 'A' .. $last_letter),
+        html->row('td', '<strong>1</strong>', @{$new_table->{1}}),
+        html->row('td', '<strong>2</strong>',
+            map { _to_formula($_, $perm_alph) } @{$new_table->{2}}),
+        ], { border => 1, html->style(text_align => 'center') });
+    my $colors = [ qw(red green blue orange gray yellow brown) ];
+    my $chart = EGE::Gen::EGE::A17::pie_chart(
+        $new_table->{ans}, { size => 100, colors => $colors });
+    $self->{text} =
+        "Дан фрагмент электронной таблицы: $table_text " .
+        "Какое число  должно быть записано в ячейке $empty_cell, чтобы " .
+        'построенная после выполнения вычислений диаграмма по значениям ' .
         "диапазона ячеек A2:${last_letter}2 соответствовала рисунку? $chart";
 }
 
