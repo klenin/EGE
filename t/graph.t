@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 10;
+use Test::More tests => 12;
 use Test::Exception;
 
 use lib '..';
@@ -19,8 +19,10 @@ use EGE::Graph;
     $g->edge1(2, 1);
     $g->edge1(2, 3);
     is $g->is_oriented, 1, 'oriented';
-    $g->edge1(3, 2);
+    is $g->edges_string, '{1->{2},2->{1,3},3->{}}', 'edges_string';
+    $g->edge1(3, 2, 7);
     is $g->is_oriented, 0, 'not oriented';
+    is $g->edges_string, '{1->{2},2->{1,3},3->{2:7}}', 'edges_string weight';
 }
 
 {

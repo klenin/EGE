@@ -89,19 +89,15 @@ sub xy {
     ($x => $pt->[0], $y => $pt->[1]);
 }
 
+sub _vertex_children_str {
+    my ($self, $src) = @_;
+    my $edges = $self->{edges}->{$src} || {};
+    '{' . join(',', map $_ . (defined $edges->{$_} ? ":$edges->{$_}" : ''), sort keys %$edges) . '}';
+}
+
 sub edges_string {
     my ($self) = @_;
-    my $r = '';
-    for my $src (sort $self->vertex_names) {
-        my $edges = $self->{edges}{$src};
-        my $e = '';
-        for my $dest (sort keys %$edges) {
-            my $w = $edges->{$dest} or next;
-            $e .= "$dest=>$w,";
-        }
-        $r .= "$src=>{$e}," if $e;
-    }
-    $r;
+    '{' . join(',', map "$_->" . _vertex_children_str($self, $_), sort $self->vertex_names) . '}';
 }
 
 sub as_svg {
