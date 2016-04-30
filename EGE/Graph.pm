@@ -53,6 +53,21 @@ sub is_connected {
     @vnames == keys %visited;
 }
 
+sub count_paths {
+    my ($self, $src, $dest, $cache) = @_;
+    $cache //= {};
+    my $dfs;
+    $dfs = sub {
+        my ($v) = @_;
+        return $cache->{$v} = 1 if $v eq $dest;
+        return $cache->{$v} if exists $cache->{$v};
+        my $cnt = 0;
+        $cnt += $dfs->($_) for keys %{$self->{edges}->{$v}};
+        $cache->{$v} = $cnt;
+    };
+    $dfs->($src);
+}
+
 sub html_matrix {
     my ($self) = @_;
     my @vnames = sort $self->vertex_names;

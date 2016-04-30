@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 14;
+use Test::More tests => 18;
 use Test::Exception;
 
 use lib '..';
@@ -41,6 +41,30 @@ use EGE::Graph;
     ok !$g->is_connected, 'not connected';
     $g->edge2(3, 2);
     ok $g->is_connected, 'connected';
+}
+
+{
+    my $g = EGE::Graph->new(vertices => { 1 => {}, 2 => {}, 3 => {}, 4 => {} });
+    $g->edge1(1, 2);
+    $g->edge1(2, 3);
+    $g->edge1(3, 4);
+    my $cache = {};
+    is $g->count_paths(1, 4, $cache), 1, 'count_paths 1';
+    $g->edge1(2, 4);
+    is $g->count_paths(1, 4, $cache), 1, 'count_paths cache';
+    is $g->count_paths(1, 4), 2, 'count_paths 2';
+}
+
+{
+    my $g = EGE::Graph->new(vertices => { map { $_ => {} } 0..30 });
+    for (0..9) {
+      my $v = 3 * $_;
+      $g->edge1($v, $v + 1);
+      $g->edge1($v, $v + 2);
+      $g->edge1($v + 1, $v + 3);
+      $g->edge1($v + 2, $v + 3);
+    }
+    is $g->count_paths(0, 30), 1024, 'count_paths 2^n';
 }
 
 {

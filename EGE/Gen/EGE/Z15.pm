@@ -52,16 +52,6 @@ my @grids = (
     }
 );
 
-sub dfs {
-    my ($city, $l_city, $g) = @_;
-    return 1 if $city eq $l_city;
-    my $v = $g->{vertices}->{$city};
-    return $v->{count} if exists $v->{count};
-    $v->{count} = 0;
-    $v->{count} += dfs($_, $l_city, $g) for keys %{$g->{edges}->{$city}};
-    $v->{count};
-}
-
 sub update_inners {
     my ($city, $inner, $g) = @_;
     my $i = $g->{vertices}->{$city}->{inners} //= {};
@@ -103,7 +93,7 @@ sub city_roads {
     do {
         $grid = rnd->pick(@grids);
         $g = generate_graph($grid);
-        $answer = dfs($grid->{first_city}, $grid->{last_city}, $g);
+        $answer = $g->count_paths($grid->{first_city}, $grid->{last_city});
     } until (($answer >= 7 && $answer <= 20) || $iter++ > 20);
 
     my ($w, $h) = map int($_ * 1.2), @{EGE::Graph::size $g->bounding_box}[2..3];
