@@ -46,6 +46,7 @@ sub is_connected {
     $visit = sub {
         return if exists $visited{$_[0]};
         $visited{$_[0]} = 1;
+        exists $self->{edges}->{$_[0]} or return;
         $visit->($_) for keys %{$self->{edges}->{$_[0]}};
     };
     $visit->($vnames[0]);
@@ -57,8 +58,8 @@ sub html_matrix {
     my @vnames = sort $self->vertex_names;
     my $r = html->row_n('td', '', @vnames);
     for (@vnames) {
-        my $e = $self->{edges}->{$_};
-        $r .= html->row_n('td', $_, map $_ || ' ', @$e{@vnames});
+        my %e = %{$self->{edges}->{$_} || {}}; # Avoid auto-vivification.
+        $r .= html->row_n('td', $_, map $_ || ' ', @e{@vnames});
     }
     html->table($r, { border => 1 });
 }
