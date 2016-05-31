@@ -46,10 +46,26 @@ sub is_connected {
     $visit = sub {
         return if exists $visited{$_[0]};
         $visited{$_[0]} = 1;
+        exists $self->{edges}->{$_[0]} or return;
         $visit->($_) for keys %{$self->{edges}->{$_[0]}};
     };
     $visit->($vnames[0]);
     @vnames == keys %visited;
+}
+
+sub count_paths {
+    my ($self, $src, $dest, $cache) = @_;
+    $cache //= {};
+    my $dfs;
+    $dfs = sub {
+        my ($v) = @_;
+        return $cache->{$v} = 1 if $v eq $dest;
+        return $cache->{$v} if exists $cache->{$v};
+        my $cnt = 0;
+        $cnt += $dfs->($_) for keys %{$self->{edges}->{$v}};
+        $cache->{$v} = $cnt;
+    };
+    $dfs->($src);
 }
 
 sub html_matrix {
@@ -57,8 +73,8 @@ sub html_matrix {
     my @vnames = sort $self->vertex_names;
     my $r = html->row_n('td', '', @vnames);
     for (@vnames) {
-        my $e = $self->{edges}->{$_};
-        $r .= html->row_n('td', $_, map $_ || ' ', @$e{@vnames});
+        my %e = %{$self->{edges}->{$_} || {}}; # Avoid auto-vivification.
+        $r .= html->row_n('td', $_, map $_ || ' ', @e{@vnames});
     }
     html->table($r, { border => 1 });
 }
@@ -89,19 +105,15 @@ sub xy {
     ($x => $pt->[0], $y => $pt->[1]);
 }
 
+sub _vertex_children_str {
+    my ($self, $src) = @_;
+    my $edges = $self->{edges}->{$src} || {};
+    '{' . join(',', map $_ . (defined $edges->{$_} ? ":$edges->{$_}" : ''), sort keys %$edges) . '}';
+}
+
 sub edges_string {
     my ($self) = @_;
-    my $r = '';
-    for my $src (sort $self->vertex_names) {
-        my $edges = $self->{edges}{$src};
-        my $e = '';
-        for my $dest (sort keys %$edges) {
-            my $w = $edges->{$dest} or next;
-            $e .= "$dest=>$w,";
-        }
-        $r .= "$src=>{$e}," if $e;
-    }
-    $r;
+    '{' . join(',', map "$_->" . _vertex_children_str($self, $_), sort $self->vertex_names) . '}';
 }
 
 sub as_svg {
