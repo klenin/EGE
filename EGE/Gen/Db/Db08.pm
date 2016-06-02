@@ -1,6 +1,6 @@
 # Copyright © 2014 Darya D. Gornak
 # Licensed under GPL version 2 or later.
-# http://github.com/dahin/EGE
+# http://github.com/klenin/EGE
 package EGE::Gen::Db::Db08;
 use base 'EGE::GenBase::SingleChoice';
 
@@ -109,7 +109,7 @@ sub parents {
     $self->variants($query->text_html, @requests);
 }
 
-sub grandchildren{
+sub grandchildren {
     my ($self) = @_;
     my ($table_kinship, $table_person, $grandchildren, $child) = create_table();
     my (@requests, $query, $name);

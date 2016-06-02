@@ -1,6 +1,6 @@
 # Copyright © 2014 Darya D. Gornak
 # Licensed under GPL version 2 or later.
-# http://github.com/dahin/EGE
+# http://github.com/klenin/EGE
 package EGE::Gen::Db::Db06;
 use base 'EGE::GenBase::SingleChoice';
 

@@ -1,6 +1,6 @@
 # Copyright © 2014 Darya D. Gornak
 # Licensed under GPL version 2 or later.
-# http://github.com/dahin/EGE
+# http://github.com/klenin/EGE
 
 package EGE::Gen::Db::Db01;
 use base 'EGE::GenBase::SingleChoice';
@@ -28,7 +28,7 @@ sub trivial_select {
        EGE::SQL::Utils::check_cond($products, $gen_expr));
     my $count = $selected->run->count;
     $self->{text} = sprintf
-    "Есть таблица <tt>%s</tt>:\n%s\n" .
+    "Дана таблица <tt>%s</tt>:\n%s\n" .
     'Сколько записей в ней удовлетворяют запросу %s?',
     $products->name, $products->table_html, $selected->text_html;
 
@@ -44,7 +44,7 @@ sub trivial_delete {
         EGE::SQL::Utils::check_cond($products, \&EGE::SQL::Utils::expr_1));
     my $ans = $count - $delete->run()->count();
     $self->{text} = sprintf
-        "Есть таблица <tt>%s</tt> :\n%s\n" .
+        "Дана таблица <tt>%s</tt> :\n%s\n" .
         'Сколько записей удалит из нее запрос %s?',
         $products->name, $text, $delete->text_html;
     $self->variants($ans, rnd->pick_n(3, grep $_ != $ans, 1 .. $count));
