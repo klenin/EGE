@@ -62,7 +62,7 @@ sub get_rows_array { (\@EGE::Russian::City::city) }
 
 package EGE::SQL::People;
 use base 'EGE::SQL::BaseTable';
-sub get_name { 'people' }
+sub get_name { 'persons' }
 sub get_columns { qw(Фамилия Зарплата) }
 sub get_rows_array { (\@EGE::Russian::FamilyNames::list) }
 
