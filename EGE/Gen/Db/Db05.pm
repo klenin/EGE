@@ -23,7 +23,7 @@ sub insert_delete {
         column => rnd->in_range(4, 5), row => rnd->in_range(11, 13));
     my $rt_class = $rt->pick;
     my $products = $rt->make;
-    my $delete_cond = EGE::SQL::Utils::check_cond($products, \&EGE::SQL::Utils::expr_3);
+    my $delete_cond = EGE::SQL::Utils::generate_nontrivial_cond($products, \&EGE::SQL::Utils::expr_3);
 
     my $f = $products->{fields}->[0];
     my $all_names = $products->column_array($f);

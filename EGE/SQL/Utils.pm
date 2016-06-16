@@ -21,14 +21,14 @@ sub create_table {
     $products;
 }
 
-sub check_cond {
-    my ($products, $expr) = @_;
-    my $count = $products->count;
+sub generate_nontrivial_cond {
+    my ($table, $expr_generator) = @_;
+    $table->count >= 3 or die 'must have >=3 rows';
     my $iter = 0;
     while (1) {
-        my $cond = $expr->($products, @{$products->{fields}});
-        my $ans = $products->select([], $cond)->count;
-        return $cond if 1 < $ans && $ans < $count - 1 || ++$iter > 30;
+        my $cond = $expr_generator->($table, @{$table->fields});
+        my $cnt = $table->count_where($cond);
+        return $cond if 1 < $cnt && $cnt < $table->count - 1 || ++$iter > 30;
     }
 }
 

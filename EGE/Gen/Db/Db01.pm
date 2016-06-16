@@ -15,7 +15,7 @@ use EGE::Prog::Lang;
 use EGE::Html;
 use EGE::Russian::Jobs;
 use EGE::SQL::Table;
-use EGE::SQL::Utils qw(create_table check_cond expr_1);
+use EGE::SQL::Utils qw(create_table expr_1);
 use EGE::SQL::RandomTable qw(create_table);
 
 sub trivial_select {
@@ -25,7 +25,7 @@ sub trivial_select {
          EGE::Prog::make_expr([ rnd->pick(ops::comp), $products->{fields}[1], $products->fetch_val($products->{fields}[1]) ])
     };
     my $selected = EGE::SQL::Select->new($products, [],
-       EGE::SQL::Utils::check_cond($products, $gen_expr));
+       EGE::SQL::Utils::generate_nontrivial_cond($products, $gen_expr));
     my $count = $selected->run->count;
     $self->{text} = sprintf
     "Дана таблица <tt>%s</tt>:\n%s\n" .
@@ -41,7 +41,7 @@ sub trivial_delete {
     my $text =  $products->table_html;
     my $count = $products->count();
     my $delete = EGE::SQL::Delete->new($products,
-        EGE::SQL::Utils::check_cond($products, \&EGE::SQL::Utils::expr_1));
+        EGE::SQL::Utils::generate_nontrivial_cond($products, \&EGE::SQL::Utils::expr_1));
     my $ans = $count - $delete->run()->count();
     $self->{text} = sprintf
         "Дана таблица <tt>%s</tt> :\n%s\n" .

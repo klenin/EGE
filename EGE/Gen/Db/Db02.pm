@@ -25,7 +25,7 @@ sub select_where {
     my $name_fld = $products->fields->[0];
     my ($selected, $query);
     do {
-        my $cond = EGE::SQL::Utils::check_cond($products, \&EGE::SQL::Utils::expr_2);
+        my $cond = EGE::SQL::Utils::generate_nontrivial_cond($products, \&EGE::SQL::Utils::expr_2);
         $query = EGE::SQL::Select->new($products, [ $name_fld ], $cond);
         $selected = $query->run;
     } until $selected->count > 1;
