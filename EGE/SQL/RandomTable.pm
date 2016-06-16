@@ -23,7 +23,7 @@ sub ok_table {
 sub pick {
     my ($self) = @_;
     $self->{class} = rnd->pick(grep $self->ok_table($_), map "EGE::SQL::$_",
-        qw(Products Jobs ProductMonth Cities People Subjects));
+        qw(Products Jobs SalesMonth Cities People Subjects Marks ParticipantsMonth));
 }
 
 sub make {
@@ -72,9 +72,11 @@ sub get_columns { ('Профессия', 'Зарплата'); }
 sub get_rows_array { (\@EGE::Russian::Jobs::list) }
 sub get_text_name { { nominative => 'профессии', genitive => 'профессий' } }
 
-package EGE::SQL::ProductMonth;
+package EGE::SQL::SalesMonth;
 use base 'EGE::SQL::Products';
+sub get_name { 'sales' }
 sub get_columns { ('Товар', @EGE::Russian::Time::month) }
+sub get_text_name { { nominative => 'продажи', genitive => 'продаж' } }
 
 package EGE::SQL::Cities;
 use base 'EGE::SQL::BaseTable';
@@ -96,5 +98,19 @@ sub get_name { 'subject' }
 sub get_columns { qw(Предмет ЧасыЛекций ЧасыПрактики ЧасыЛаб) }
 sub get_rows_array { (\@EGE::Russian::Subjects::list) }
 sub get_text_name { { nominative => 'предметы', genitive => 'предметов' } }
+
+package EGE::SQL::Marks;
+use base 'EGE::SQL::BaseTable';
+sub get_name { 'marks' }
+sub get_columns { 'Ученик', map { /^(\w+)/, $1 } @EGE::Russian::Subjects::list }
+sub get_rows_array { (\@EGE::Russian::FamilyNames::list) }
+sub get_text_name { { nominative => 'оценки', genitive => 'оценок' } }
+
+package EGE::SQL::ParticipantsMonth;
+use base 'EGE::SQL::BaseTable';
+sub get_name { 'participants' }
+sub get_columns { 'Спорт', @EGE::Russian::Time::month }
+sub get_rows_array { (\@EGE::Russian::Sports::list) }
+sub get_text_name { { nominative => 'участники', genitive => 'участников' } }
 
 1;
