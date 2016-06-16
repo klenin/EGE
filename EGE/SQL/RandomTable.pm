@@ -9,14 +9,33 @@ use utf8;
 
 use EGE::Random;
 
+sub new {
+    my ($class, %p) = @_;
+    bless { %p }, $class;
+}
+
+sub ok_table {
+    my ($self, $table) = @_;
+    (() = $table->get_columns) >= $self->{column} &&
+    grep scalar @$_ >= $self->{row}, $table->get_rows_array;
+}
+
+sub pick {
+    my ($self) = @_;
+    $self->{class} = rnd->pick(grep $self->ok_table($_), map "EGE::SQL::$_",
+        qw(Products Jobs ProductMonth Cities People Subjects));
+}
+
+sub make {
+    my ($self) = @_;
+    $self->{class}->make_table($self->{column}, $self->{row});
+}
+
 sub create_table {
     my %p = @_;
-    my $ok_table = sub {
-        (() = $_[0]->get_columns) >= $p{column} && grep scalar @$_ >= $p{row}, $_[0]->get_rows_array;
-    };
-    my $class = rnd->pick(grep $ok_table->($_), map "EGE::SQL::$_",
-        qw(Products Jobs ProductMonth Cities People Subjects));
-    $class->make_table($p{column}, $p{row});
+    my $self = __PACKAGE__->new(%p);
+    $self->pick;
+    $self->make;
 }
 
 package EGE::SQL::BaseTable;
