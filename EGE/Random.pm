@@ -106,10 +106,9 @@ sub seed {
 }
 
 sub in_range {
-    use integer;
     croak 'in_range: bad number of arguments' if @_ != 3;
     my ($self, $lo, $hi) = @_;
-    croak 'in_range: hi < li' if $hi < $lo;
+    croak 'in_range: hi < lo' if $hi < $lo;
     $self->{gen}->get($hi - $lo + 1) + $lo;
 }
 

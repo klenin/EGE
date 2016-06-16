@@ -75,7 +75,7 @@ SKIP: {
     my $seed = time;
     $rnd64->seed($seed, 444);
     $rnd32->seed($seed, 444);
-    is scalar(grep $rnd32->in_range(0, 10000) != $rnd64->in_range(0, 10000), map 1..10), 0, 'PCG BigInt';
+    is scalar(grep $rnd32->in_range(0, 10000) != $rnd64->in_range(0, 10000), 1..10), 0, 'PCG BigInt';
 }
 
 sub histogram {
@@ -89,7 +89,7 @@ histogram(rnd, 7, 2);
 histogram(rnd, 6, 3);
 histogram(rnd, 5, 4);
 
-is(EGE::Random->new->seed(999, 888)->in_range(0, 1<<31), 2034720810, 'stable from seed');
+is(EGE::Random->new->seed(999, 888)->in_range(0, 1 << 31), 2034720810, 'stable from seed');
 isnt(EGE::Random->new->in_range(0, 1 << 31), EGE::Random->new->in_range(0, 1 << 31), 'unique');
 
 1;
