@@ -52,7 +52,7 @@ sub inner_join {
     my $where = make_expr([ '==', 'id_buyer', $id ]);
     ${$_->{fields}}[1]->{name_alias} = $_->{name}, for @tables;
     $self->variants(map EGE::SQL::Select->new(
-        $make_joins->($_), [ map (${$_->{fields}}[1], @tables ) ], $where)->text_html, -1..$#tables);
+        $make_joins->($_), [ map (${$_->{fields}}[1], @tables ) ], $where)->text_html_tt, -1..$#tables);
     $self->{text} = sprintf
         "В фрагменте базы данных интернет-магазина представлены сведения о покупках:\n%s\n" .
         'Какой из приведенных ниже запросов покажет названия предметов, приобретенных покупателем с id = %s?',

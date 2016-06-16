@@ -59,7 +59,7 @@ sub trivial_aggregate_func {
         EGE::SQL::Utils::multi_table_html(@{$gen_db->{database}->{tables}}, @tables),
         $aggr_func->{$func},
         $family_name;
-    $self->variants($select->text_html, map $_->text_html, @wrong_ans);
+    $self->variants($select->text_html_tt, map $_->text_html_tt, @wrong_ans);
 }
 
 sub inner_join_count {
@@ -86,12 +86,12 @@ sub inner_join_count {
         { tab => $table_city, field => 'marks' });
     my $select =  EGE::SQL::Select->new($inner, []);
     $self->{text} = sprintf
-        "В таблице %s %s записей, структура таблицы следующая %s где " . html->tag('tt', html->cdata('%s')) . "<br/>".
-        "Так в таблице %s %s записей, структура таблицы следующая %s где " . html->tag('tt', html->cdata('%s')) . "<br/>".
-        'Сколько записей будет в таблице в результате выполнения запроса: %s',
-        $table_person->name, $n, $table_person->table_html, $if2->to_lang_named('SQL'),
-        $table_city->name, $m, $table_city->table_html, $if1->to_lang_named('SQL'),
-        $select->text_html;
+        'В таблице %s %s записей, структура таблицы следующая %s где <tt>%s</tt><br/> ' .
+        'В таблице %s %s записей, структура таблицы следующая %s где <tt>%s</tt><br/> '.
+        'Сколько записей будет содержать результат выполнения запроса: %s',
+        $table_person->name, $n, $table_person->table_html, $if2->to_lang_named('SQL', { html => 1 }),
+        $table_city->name, $m, $table_city->table_html, $if1->to_lang_named('SQL', { html => 1 }),
+        $select->text_html_tt;
     $self->variants(@variants, $n, $m);
 }
 

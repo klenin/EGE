@@ -31,7 +31,7 @@ sub select_between {
     $self->{text} = sprintf
         "В таблице <tt>%s</tt> представлен список товаров: \n%s\n" .
         "Сколько записей в ней удовлетворяют запросу %s?",
-        $products->name, $products->table_html, $select->text_html;
+        $products->name, $products->table_html, $select->text_html_tt;
     $self->variants($count, rnd->pick_n(3, grep $_ != $count, 1 .. $products->count()));
 }
 
@@ -79,7 +79,7 @@ sub select_expression {
     $self->{text} = sprintf
         "В таблице <tt>%s</tt> представлен список товаров: \n%s\n" .
         'Каким будет результат выполнения запроса %s?',
-        $products->name, $products->table_html, $query->text_html;
+        $products->name, $products->table_html, $query->text_html_tt;
     $self->variants($text_ans, @table_false);
 }
 

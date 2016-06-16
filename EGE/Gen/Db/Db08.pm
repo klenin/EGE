@@ -81,13 +81,13 @@ sub parents {
         if ($count) {
             $gen = $sex ? q~сыновья~ : q~дочери~;
             $sex = $sex ? q~'м'~ : q~'ж'~;
-            push @requests, EGE::SQL::Select->new($inner1, $query_fields, $where)->text_html;
+            push @requests, EGE::SQL::Select->new($inner1, $query_fields, $where)->text_html_tt;
             my $inner3 = EGE::SQL::InnerJoin->new(
                 { tab => $table_person, field => 'id_child' },
                 { tab => $table_kinship, field => 'id' });
-            push @requests, EGE::SQL::Select->new($inner3, $query_fields, $where)->text_html;
+            push @requests, EGE::SQL::Select->new($inner3, $query_fields, $where)->text_html_tt;
             push @requests, EGE::SQL::Select->new($inner2, $query_fields,
-                EGE::Prog::make_expr( ['||',[ '==', 'id_parent', $f1 ],[ '==', 'Пол', \$sex ] ]))->text_html;
+                EGE::Prog::make_expr( ['||',[ '==', 'id_parent', $f1 ],[ '==', 'Пол', \$sex ] ]))->text_html_tt;
             my $par = ${$table_person->select(['Фамилия', 'Имя', 'Пол'],
                 EGE::Prog::make_expr(['==', 'id', $f1]))->{data}}[0];
             $name = @$par[0];
@@ -106,7 +106,7 @@ sub parents {
         "В фрагменте базы данных представлены сведения о родственных отношениях:\n%s\n" .
         'Результатом какого запроса будут %s %s?',
         EGE::SQL::Utils::multi_table_html($table_person, $table_kinship), $gen, $name;
-    $self->variants($query->text_html, @requests);
+    $self->variants($query->text_html_tt, @requests);
 }
 
 sub grandchildren {
@@ -132,19 +132,19 @@ sub grandchildren {
         $name .=  q~а~;
     }
     $name .= " " . substr(@$par[1], 0, 1) . ".";
-    push @requests, EGE::SQL::Select->new($inner1, $query_fields, $where)->text_html;
+    push @requests, EGE::SQL::Select->new($inner1, $query_fields, $where)->text_html_tt;
     my $inner3 = EGE::SQL::InnerJoin->new(
         { tab => $table_person, field => 'id_child' },
         { tab => $table_kinship, field => 'id' });
-    push @requests, EGE::SQL::Select->new($inner3, $query_fields, $where)->text_html;
+    push @requests, EGE::SQL::Select->new($inner3, $query_fields, $where)->text_html_tt;
     push @requests, EGE::SQL::Select->new($inner2, $query_fields,
-        EGE::Prog::make_expr([ '==', 'id_parent', $parents ]))->text_html;
+        EGE::Prog::make_expr([ '==', 'id_parent', $parents ]))->text_html_tt;
     $table_person->update(EGE::Prog::make_block [ '=', 'Пол', sub { $_[0]->{'Пол'} ? 'м' : 'ж' } ]);
     $self->{text} = sprintf
         "В фрагменте базы данных представлены сведения о родственных отношениях:\n%s\n" .
         'Результатом какого запроса будут внуки %s?',
         EGE::SQL::Utils::multi_table_html($table_person, $table_kinship), $name;
-    $self->variants($query->text_html, @requests);
+    $self->variants($query->text_html_tt, @requests);
 }
 
 sub nuncle {
@@ -179,16 +179,16 @@ sub nuncle {
         $name .=  q~а~;
     }
     $name .= " " . substr(@$par[1], 0, 1) . ".";
-    push @requests, EGE::SQL::Select->new($inner2, $query_fields, $where)->text_html;
-    push @requests, EGE::SQL::Select->new($inner4, $query_fields, $where)->text_html;
+    push @requests, EGE::SQL::Select->new($inner2, $query_fields, $where)->text_html_tt;
+    push @requests, EGE::SQL::Select->new($inner4, $query_fields, $where)->text_html_tt;
     push @requests, EGE::SQL::Select->new($table_person, $query_fields,
-        EGE::Prog::make_expr([ '==', 'id_parent', $parents ]))->text_html;
+        EGE::Prog::make_expr([ '==', 'id_parent', $parents ]))->text_html_tt;
     $table_person->update(EGE::Prog::make_block [ '=', 'Пол', sub { $_[0]->{'Пол'} ? 'м' : 'ж' } ]);
     $self->{text} = sprintf
         "В фрагменте базы данных представлены сведения о родственных отношениях:\n%s\n" .
         'Результатом какого запроса будут родители %s, их сестры и братья?',
         EGE::SQL::Utils::multi_table_html($table_person, $table_kinship), $name;
-    $self->variants($query2->text_html, @requests);
+    $self->variants($query2->text_html_tt, @requests);
 }
 
 1;

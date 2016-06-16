@@ -32,7 +32,7 @@ sub select_where {
     $self->{text} = sprintf
         "Имеется таблица <tt>%s</tt>:\n%s\n" .
         'Какие товары в этой таблице удовлетворяют запросу %s?',
-        $products->name, $products->table_html, $query->text_html;
+        $products->name, $products->table_html, $query->text_html_tt;
     $self->variants(my @v = @{$products->column_array($name_fld)});
     $self->{correct} = [ map $ans{$_} ? 1 : 0, @v ];
 }

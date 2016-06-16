@@ -30,7 +30,7 @@ sub trivial_select {
     $self->{text} = sprintf
     "Дана таблица <tt>%s</tt>:\n%s\n" .
     'Сколько записей в ней удовлетворяют запросу %s?',
-    $products->name, $products->table_html, $selected->text_html;
+    $products->name, $products->table_html, $selected->text_html_tt;
 
     $self->variants($count, rnd->pick_n(3, grep $_ != $count, 1 .. $products->count()));
 }
@@ -46,7 +46,7 @@ sub trivial_delete {
     $self->{text} = sprintf
         "Дана таблица <tt>%s</tt> :\n%s\n" .
         'Сколько записей удалит из нее запрос %s?',
-        $products->name, $text, $delete->text_html;
+        $products->name, $text, $delete->text_html_tt;
     $self->variants($ans, rnd->pick_n(3, grep $_ != $ans, 1 .. $count));
 }
 

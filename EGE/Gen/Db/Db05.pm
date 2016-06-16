@@ -30,11 +30,11 @@ sub insert_delete {
     $products->insert_row(@$candy[$ind], @val);
     my $insert = EGE::SQL::Insert->new($products, [ @$candy[$ind] , @val ]);
     my $new_candy = $products->column_array($products->{fields}[0]);
-    push @query, $insert->text_html();
+    push @query, $insert->text_html_tt();
     my $cond = EGE::SQL::Utils::check_cond($products, \&EGE::SQL::Utils::expr_3);
     my $delete = EGE::SQL::Delete->new($products, $cond);
     $delete->run();
-    push @query, $delete->text_html();
+    push @query, $delete->text_html_tt();
     my $selected = $products->select([ $products->{fields}[0] ]);
     $ans{$_->[0]} = 1 for @{$selected->{data}};
     $self->{text} = sprintf

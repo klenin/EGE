@@ -9,7 +9,7 @@ use warnings;
 use utf8;
 
 use EGE::Random;
-use EGE::Prog;
+use EGE::Prog qw(make_expr);
 use EGE::Prog::Lang;
 use EGE::Html;
 use EGE::Russian::City;
@@ -17,6 +17,8 @@ use EGE::SQL::Table;
 use EGE::SQL::Queries;
 use EGE::SQL::Utils;
 use EGE::SQL::RandomTable;
+
+sub sql_html { make_expr($_[0])->to_lang_named('SQL', { html => 1 }) }
 
 sub create_nested_query {
     my ($self) = @_;
@@ -32,25 +34,25 @@ sub create_nested_query {
     do {
         $col_m = rnd->in_range(@{$text->{col_range}});
         $col = rnd->pick(1..3);
-    } until( $col_m != $col );
-    my @variants;
-    push @variants, $_ for EGE::SQL::Select->new($tab2, [])->text_html, 
-        EGE::SQL::Select->new($tab, [EGE::Prog::make_expr(['()', 'count', @{$tab->{fields}}[1]])])->text_html;   
+    } until ($col_m != $col);
+    my @variants = (
+        EGE::SQL::Select->new($tab2, [])->text_html_tt,
+        EGE::SQL::Select->new($tab, [ make_expr([ '()', 'count', $tab->{fields}->[1] ]) ])->text_html_tt);
     $_->assign_field_alias($_->{name}) for ($tab, $tab2);
-    push @variants, sprintf html->tag('tt', html->cdata('%s')), $_ , for ('WHERE', '(',
-        EGE::Prog::make_expr(['&&', EGE::Prog::make_expr(['==', @{$tab2->{fields}}[0], $arr_tab[0] ]), 
-            EGE::Prog::make_expr(['>', @{$tab->{fields}}[@{$tab->{fields}} - 1], $col_m ]) ])->to_lang_named('SQL'),
-        ')', '>', $col, $col_m, 'GROUP BY', 'HAVING',
-        EGE::Prog::make_expr(['||', EGE::Prog::make_expr(['==', @{$tab2->{fields}}[0], $arr_tab[0] ]), 
-            EGE::Prog::make_expr(['>', @{$tab->{fields}}[@{$tab->{fields}} - 1], $col_m]) ])->to_lang_named('SQL'),
-        EGE::Prog::make_expr(['&&', EGE::Prog::make_expr(['==', @{$tab2->{fields}}[0], $arr_tab[0] ]), 
-            EGE::Prog::make_expr(['>', @{$tab->{fields}}[@{$tab->{fields}} - 1], $col]) ])->to_lang_named('SQL'));
-    my @ans_tab = ($tab2, $tab);
+    push @variants, map html->tag('tt', $_),
+        'WHERE', '(',
+        sql_html(
+            [ '&&', [ '==', $tab2->{fields}->[0], $arr_tab[0] ], [ '>', $tab->{fields}->[-1], $col_m ] ]),
+        ')', '&gt;', $col, $col_m, 'GROUP BY', 'HAVING',
+        sql_html(
+            [ '||', [ '==', $tab2->{fields}->[0], $arr_tab[0] ], [ '>', $tab->{fields}->[-1], $col_m ] ]),
+        sql_html(
+            [ '&&', [ '==', $tab2->{fields}->[0], $arr_tab[0] ], [ '>', $tab->{fields}->[-1], $col ] ]);
     my @correct = (0, 2, 3, 1, 2, 4, 5, 6, 7);
     my $qtext = sprintf $text->{text}, $col_m, $col;
     $self->{text} = sprintf "Дан фрагмент базы данных:\n%s\n
-        Составьте запрос, отвечающий на вопрос: <br/> $qtext?",
-        EGE::SQL::Utils::multi_table_html(@ans_tab);
+        Составьте запрос, выполняющий задачу: <br/> $qtext.",
+        EGE::SQL::Utils::multi_table_html($tab2, $tab);
     $self->{variants} = [ @variants ];
     $self->{correct} = [ @correct ];
 }

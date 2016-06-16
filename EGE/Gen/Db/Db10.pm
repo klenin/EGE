@@ -43,7 +43,7 @@ sub many_inner_join {
         push @answer, _create_inner_join($tab[1], $f2->{ref_field}->{table}, $f2, $f2->{ref_field});
         $name_table = $f[0]->{ref_field}->{table};
         $question = $f2->{ref_field}->{table};
-        $select = EGE::SQL::Select->new($f[0]->{ref_field}->{table}, [])->text_html;
+        $select = EGE::SQL::Select->new($f[0]->{ref_field}->{table}, [])->text_html_tt;
         push @$tabs, @tab;
     } else {
         my @arr = grep $_ ne $field, @{$tab[0]->{fields}};
@@ -53,7 +53,7 @@ sub many_inner_join {
             'id_' . rnd->pick(@$tabs[0]->{name}, @$tabs[1]->{name}, @$tabs[2]->{name}), 'id');
         $question = $field->{ref_field}->{table};
         $name_table = $arr[0]->{ref_field}->{table};
-        $select = EGE::SQL::Select->new($arr[0]->{ref_field}->{table}, [])->text_html;
+        $select = EGE::SQL::Select->new($arr[0]->{ref_field}->{table}, [])->text_html_tt;
         push @$tabs, $tab[0];
     }
     push @wrong_ans, _create_inner_join(
@@ -75,7 +75,7 @@ sub many_inner_join {
         $select,
         EGE::SQL::Query::where_sql({ where =>
             EGE::Prog::make_expr([ '==', $question->{fields}[0], @$name[0]]) });
-    $self->variants(map $_->text_html, @answer, @wrong_ans);
+    $self->variants(map $_->text_html_tt, @answer, @wrong_ans);
     $self->{correct} = [ map $_ <= @answer ? 1 : 0 , 1.. @answer + @wrong_ans];
 }
 

@@ -44,7 +44,7 @@ sub func {
             }
         }
         my $update = EGE::SQL::Update->new($table, make_block([ '=', $f4, $f2 ]), $cond);
-        push @ans, $update->text_html;
+        push @ans, $update->text_html_tt;
     }
     @ans;
 }
@@ -70,7 +70,7 @@ sub choose_update {
         "после выполнения запроса: \n%s\n" .
         'Какой запрос надо выполнить, чтобы из первой таблицы получить вторую?',
         $products->name, $old_table_text, $products->table_html;
-    $self->variants($update->text_html, @requests);
+    $self->variants($update->text_html_tt, @requests);
 }
 
 1;
