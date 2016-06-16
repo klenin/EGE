@@ -8,6 +8,7 @@ use strict;
 use warnings;
 use utf8;
 
+use EGE::Html;
 use EGE::Random;
 use EGE::Asm::Processor;
 use EGE::Asm::AsmCodeGenerate;
@@ -57,7 +58,7 @@ sub try_choose_commands {
         'Выделите команды, которые следует оставить в программе, ' .
         "чтобы после выполнения полученного кода в регистре $reg1 " .
         "содержалось значение $res_good[$idx]";
-    $self->formated_variants('<code>%s</code>', map cgen->format_command($_, '%d'), @$commands);
+    $self->variants(map html->code(cgen->format_command($_, '%d')), @$commands);
     $self->{correct} = $good[$idx];
 }
 

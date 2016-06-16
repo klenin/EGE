@@ -125,7 +125,7 @@ sub expression_calc {
     my @bad = map mutate_expr($expr, $values), 1..4;
     $expr->run == $expr_value or die 1;
     proc->run_code(cgen->{code})->get_val('eax') == $expr_value or die 2;
-    $self->variants(map html->tag('code', $_->to_lang_named('Perl', { html => 1 })), $expr, @bad);
+    $self->variants(map html->code($_->to_lang_named('Perl', { html => 1 })), $expr, @bad);
 }
 
 1;
