@@ -8,7 +8,6 @@ use warnings;
 use utf8;
 
 use EGE::Random;
-use EGE::SQL::Utils;
 
 sub create_table {
     my %p = @_;
@@ -21,7 +20,9 @@ sub create_table {
 }
 
 package EGE::SQL::BaseTable;
+
 use EGE::Random;
+use EGE::SQL::Utils;
 
 sub make_table {
     my ($self, $column_count, $row_count, $name) = @_;

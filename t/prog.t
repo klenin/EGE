@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 142;
+use Test::More tests => 144;
 use Test::Exception;
 
 use lib '..';
@@ -588,14 +588,24 @@ sub check_sub {
 }
 
 {
-    sub check_sql { is make_expr($_[0])->to_lang_named('SQL'), $_[1], "SQL $_[2]" }
-    check_sql(
+    my $html = 0;
+    my $check_sql = sub {
+        is make_expr($_[0])->to_lang_named('SQL', { html => $html }), $_[1], "SQL $_[2]"
+    };
+    $check_sql->(
         [ '&&', [ '<=', 1, 'a' ], [ '<=', 'a', 'n' ] ],
         '1 <= a AND a <= n', 'AND');
-    check_sql(
+    $check_sql->(
         [ '||', [ '!=', 1, 'a' ], [ '!', 'a' ] ],
         '1 <> a OR NOT a', 'OR NOT');
-    check_sql(
+    $check_sql->(
         [ '&&', [ '||', 'x', 'y' ], [ '==', 'a', 1 ] ],
         '(x OR y) AND a = 1', 'priorities');
+    $html = 1;
+    $check_sql->(
+        [ '&&', [ '<=', 1, 'a' ], [ '<=', 'a', 'n' ] ],
+        '1 &lt;= a AND a &lt;= n', 'AND html');
+    $check_sql->(
+        [ '||', [ '!=', 1, 'a' ], [ '!', 'a' ] ],
+        '1 &lt;&gt; a OR NOT a', 'OR NOT html');
 }

@@ -85,7 +85,7 @@ sub related {
     $table;
 }
 
-sub table_related{
+sub table_related {
     my ($self, $field, @array) = @_;
     my $table = $field->{table};
     my @ans;
