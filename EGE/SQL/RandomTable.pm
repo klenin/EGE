@@ -63,12 +63,14 @@ sub get_rows_array { (
     \@EGE::Russian::Product::printers,
     \@EGE::Russian::Product::laptops
 ) }
+sub get_text_name { { nominative => 'товары', genitive => 'товаров' } }
 
 package EGE::SQL::Jobs;
 use base 'EGE::SQL::BaseTable';
 sub get_name { 'jobs' }
 sub get_columns { ('Профессия', 'Зарплата'); }
 sub get_rows_array { (\@EGE::Russian::Jobs::list) }
+sub get_text_name { { nominative => 'профессии', genitive => 'профессий' } }
 
 package EGE::SQL::ProductMonth;
 use base 'EGE::SQL::Products';
@@ -77,19 +79,22 @@ sub get_columns { ('Товар', @EGE::Russian::Time::month) }
 package EGE::SQL::Cities;
 use base 'EGE::SQL::BaseTable';
 sub get_name { 'cities' }
-sub get_columns { qw(Город Жители Площадь) }
+sub get_columns { qw(Город Население Население2010 Население2020 Площадь Продажи) }
 sub get_rows_array { (\@EGE::Russian::City::city) }
+sub get_text_name { { nominative => 'города', genitive => 'городов' } }
 
 package EGE::SQL::People;
 use base 'EGE::SQL::BaseTable';
 sub get_name { 'persons' }
-sub get_columns { qw(Фамилия Зарплата) }
+sub get_columns { qw(Фамилия Зарплата Продажи) }
 sub get_rows_array { (\@EGE::Russian::FamilyNames::list) }
+sub get_text_name { { nominative => 'сотрудники', genitive => 'сотрудников' } }
 
 package EGE::SQL::Subjects;
 use base 'EGE::SQL::BaseTable';
 sub get_name { 'subject' }
-sub get_columns { qw(Предмет Часы) }
+sub get_columns { qw(Предмет ЧасыЛекций ЧасыПрактики ЧасыЛаб) }
 sub get_rows_array { (\@EGE::Russian::Subjects::list) }
+sub get_text_name { { nominative => 'предметы', genitive => 'предметов' } }
 
 1;
