@@ -40,6 +40,7 @@ like rnd->pick('a' .. 'z'), qr/^[a-z]$/, 'pick';
 }
 
 subtest pick_except => sub {
+    plan tests => 6;
     my @r = 'a'..'d';
     for (1..3) {
         my $p = rnd->pick(@r);
