@@ -1,8 +1,7 @@
 use strict;
 use warnings;
-use utf8;
 
-use Test::More tests => 12;
+use Test::More tests => 13;
 
 use lib '..';
 
@@ -26,3 +25,5 @@ is
 
 is html->ol_li([ 'a', 'b' ], { id => 'qq' }), '<ol id="qq"><li>a</li><li>b</li></ol>', 'ol_li';
 is html->ul_li([ 'a', 'b' ], undef, { x => 'y' }), '<ul><li x="y">a</li><li x="y">b</li></ul>', 'ul_li';
+
+is html->code('a'), '<code>a</code>', 'code';

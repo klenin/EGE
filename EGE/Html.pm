@@ -95,7 +95,7 @@ sub ol_li {
 }
 
 BEGIN {
-    for my $tag (qw(p td th table div ol ul li)) {
+    for my $tag (qw(p td th table div ol ul li code)) {
         no strict 'refs';
         *$tag = sub {
             my $self = shift;
