@@ -9,14 +9,13 @@ use strict;
 use warnings;
 use utf8;
 
-use EGE::Random;
+use EGE::Html;
 use EGE::Prog qw(make_expr make_block);
 use EGE::Prog::Lang;
-use EGE::Html;
-use EGE::SQL::Table;
-use EGE::Russian::Product;
+use EGE::Random;
 use EGE::SQL::Queries;
-use EGE::SQL::RandomTable qw(create_table);
+use EGE::SQL::RandomTable;
+use EGE::SQL::Table;
 
 
 sub expression {
@@ -50,10 +49,12 @@ sub func {
 
 sub choose_update {
     my ($self) = @_;
-    my $products = EGE::SQL::RandomTable::create_table(column => 6, row => 6);
+    my $rt = EGE::SQL::RandomTable->new(column => rnd->in_range(5, 6), row => rnd->in_range(5, 7));
+    my $rt_class = $rt->pick;
+    my $products = $rt->make;
     my $old_table_text = $products->table_html;
     my (@requests, $update);
-    while(1) {
+    while (1) {
         my ($f1, $f2, $f3, $f4) = rnd->shuffle(@{$products->{fields}}[1 .. $#{$products->{fields}}]);
         my $cond = expression($f1, $f2, $f3, $f4, @{$products->{fields}});
         my $count = $products->select([], $cond)->count();
@@ -65,10 +66,11 @@ sub choose_update {
         }
     }
     $self->{text} = sprintf
-        "В таблице <tt>%s</tt> представлен список товаров<br/>до выполнения запроса: \n%s\n" .
+        "В таблице <tt>%s</tt> представлен список %s<br/>до выполнения запроса: \n%s\n" .
         "после выполнения запроса: \n%s\n" .
         'Какой запрос надо выполнить, чтобы из первой таблицы получить вторую?',
-        $products->name, $old_table_text, $products->table_html;
+        $products->name, $rt_class->get_text_name->{genitive},
+        $old_table_text, $products->table_html;
     $self->variants($update->text_html_tt, @requests);
 }
 
