@@ -29,7 +29,7 @@ sub last_digit {
     my $base = rnd->in_range(5, 9);
     my $last = rnd->in_range(0, $base - 1);
     my @corr = map $last + $base * $_, 0 .. 3;
-    my $limit = $corr[-1] + rnd->in_range(0, $last - 1);
+    my $limit = $corr[-1] + rnd->in_range(0, $base - 1);
 
     $self->{text} =
         'Укажите в порядке возрастания через запятую без пробелов ' .
