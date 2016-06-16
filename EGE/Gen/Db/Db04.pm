@@ -2,7 +2,6 @@
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
 
-
 package EGE::Gen::Db::Db04;
 use base 'EGE::GenBase::SingleChoice';
 

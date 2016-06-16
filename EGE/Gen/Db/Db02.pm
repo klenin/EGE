@@ -19,8 +19,10 @@ use EGE::SQL::Queries;
 
 sub select_where {
     my ($self) = @_;
-    my $products = EGE::SQL::RandomTable::create_table(column => 4, row => 8);
-    my $name_fld = $products->{fields}[0];
+    my $rt = EGE::SQL::RandomTable->new(column => 4, row => 8);
+    my $rt_class = $rt->pick;
+    my $products = $rt->make;
+    my $name_fld = $products->fields->[0];
     my ($selected, $query);
     do {
         my $cond = EGE::SQL::Utils::check_cond($products, \&EGE::SQL::Utils::expr_2);
@@ -31,8 +33,9 @@ sub select_where {
     $ans{$_->[0]} = 1 for @{$selected->{data}};
     $self->{text} = sprintf
         "Имеется таблица <tt>%s</tt>:\n%s\n" .
-        'Какие товары в этой таблице удовлетворяют запросу %s?',
-        $products->name, $products->table_html, $query->text_html_tt;
+        'Какие %s в этой таблице удовлетворяют запросу %s?',
+        $products->name, $products->table_html,
+        $rt_class->get_text_name->{nominative}, $query->text_html_tt;
     $self->variants(my @v = @{$products->column_array($name_fld)});
     $self->{correct} = [ map $ans{$_} ? 1 : 0, @v ];
 }
