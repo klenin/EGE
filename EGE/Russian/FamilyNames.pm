@@ -1,4 +1,4 @@
-﻿package EGE::Russian::FamilyNames;
+package EGE::Russian::FamilyNames;
 
 use strict;
 use warnings;
