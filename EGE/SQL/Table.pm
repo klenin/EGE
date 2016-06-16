@@ -171,6 +171,12 @@ sub where {
     $table;
 }
 
+sub count_where {
+    my ($self, $where) = @_;
+    $where or return $self->count;
+    scalar grep $where->run($self->_row_hash($_)), @{$self->{data}};
+}
+
 sub update {
     my ($self, $assigns, $where) = @_;
     my @data = $where ? @{$self->where($where, 1)->{data}} : @{$self->{data}};

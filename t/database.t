@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 116;
+use Test::More tests => 118;
 
 use Test::Exception;
 
@@ -71,10 +71,12 @@ sub pack_table_sorted {
     $tab->insert_rows([ 1, 'aaa', 3 ], [ 2, 'bbb', 2 ],[ 3, 'aac', 1 ], [ 4, 'bbn', 2 ]);
     my $e = make_expr([ '==', 'city', 2 ]);
     is pack_table($tab->where($e)), 'id name city|2 bbb 2|4 bbn 2', 'where city == 2';
+    is $tab->count_where($e), 2, 'count_where city == 2';
     is pack_table($tab->select([ 'id', 'name' ], $e)), 'id name|2 bbb|4 bbn', 'select id, name where city == 2';
     is pack_table($tab->select([], $e)), '||', 'select where sity == 2';
-    is $tab->count(), 4, 'count';
-    is $tab->where(make_expr(0))->count(), 0, 'where false';
+    is $tab->count, 4, 'count';
+    is $tab->where(make_expr(0))->count, 0, 'where false';
+    is $tab->count_where(make_expr(0)), 0, 'count_where false';
 }
 
 {
