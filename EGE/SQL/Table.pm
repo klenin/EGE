@@ -238,14 +238,25 @@ sub fetch_val {
 
 sub random_row { rnd->pick(@{$_[0]->{data}}) }
 
+sub _field_index {
+    my ($self, $field) = @_;
+    ($field !~ /^\d$/ ? $self->{field_index}->{$field} :
+    1 <= $field && $field <= @{$self->{fields}} ? $field - 1 :
+    undef) // die "Unknown field $field";
+}
+
 sub column_array {
     my ($self, $field) = @_;
-    my $column =
-        $field !~ /^\d$/ ? $self->{field_index}->{$field} :
-        1 <= $field && $field <= @{$self->{fields}} ? $field - 1 :
-        undef;
-    defined $column or die "Unknown field $field";
-    [ map $_->[$column], @{$self->{data}} ];
+    my $column_idx = $self->_field_index($field);
+    [ map $_->[$column_idx], @{$self->{data}} ];
+}
+
+sub column_hash {
+    my ($self, $field) = @_;
+    my $column_idx = $self->_field_index($field);
+    my $r = {};
+    ++$r->{$_->[$column_idx]} for @{$self->{data}};
+    $r;
 }
 
 package EGE::SQL::Table::Aggregate::count;
