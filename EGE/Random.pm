@@ -47,7 +47,7 @@ sub get {
 
 package EGE::Random::PCG_XSH_RR_64_32_BigInt;
 
-use Math::BigInt lib => 'GMP';
+use Math::BigInt try => 'GMP';
 
 sub new {
     bless { state => Math::BigInt->bzero, inc => Math::BigInt->bone }, $_[0];
