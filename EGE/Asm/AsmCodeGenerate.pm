@@ -77,8 +77,8 @@ sub format_commands {
 
 sub get_code_txt {
     my ($self, $num_format) = @_;
-    my $cmd_list = join '<br></br>', $self->format_commands($num_format);
-    qq~<div id="code"><code>$cmd_list</code></div>~;
+    my $cmd_list = join '<br/>', $self->format_commands($num_format);
+    qq~<div class="code"><code>$cmd_list</code></div>~;
 }
 
 sub make_reg {
