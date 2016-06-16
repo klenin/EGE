@@ -94,15 +94,16 @@ sub calculator {
     my @sample_prg_list = map $cmd->[$_]->{t1}, @$sample_prg;
     $sample_prg_list[-1] .= ',';
 
+    my $bold = { html->style(font_weight => 'bold') };
     $self->{text} =
         'У исполнителя Калькулятор две команды, которым присвоены номера: ' .
-        '<b>' . html->ol_li([ map ucfirst($_->{t1}), @$cmd ]) . '</b> ' .
+        html->ol_li([ map ucfirst($_->{t1}), @$cmd ], $bold) .
         "Выполняя первую из них, Калькулятор $cmd->[0]->{t2}, " .
         "а выполняя вторую, $cmd->[1]->{t3}. " .
         "Запишите порядок команд в программе получения из числа $arg " .
         "числа $result, содержащей не более $num команд, указывая лишь номера команд " .
         "(Например, программа $sample_code — это программма " .
-        '<b>' . html->ul_li(\@sample_prg_list) . '</b>' .
+        html->ul_li(\@sample_prg_list, $bold) .
         "которая преобразует число 1 в число $sample_result)";
     $self->{correct} = $code;
     $self->accept_number;
