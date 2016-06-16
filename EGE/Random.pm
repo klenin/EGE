@@ -62,8 +62,8 @@ sub seed {
     $self->get(1);
 }
 
-my $mask_32_ = Math::BigInt->from_hex('ffffffff');
-my $mask_64_ = Math::BigInt->from_hex('ffffffffffffffff');
+my $mask_32_ = Math::BigInt->bone->blsft(32)->bdec;
+my $mask_64_ = Math::BigInt->bone->blsft(64)->bdec;
 my $multiplier = Math::BigInt->new('6364136223846793005');
 
 sub get {
