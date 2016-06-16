@@ -41,6 +41,8 @@ sub print_html {
   <style type="text/css">
     li.correct { color: #F02020; }
     div.q { border-bottom: 1px solid black; }
+    div.code { margin: 3px 0 2px 15px; }
+    div.code code { display: inline-block; padding: 4px; border: 1px dotted #6060F0; }
     tt { background-color: #F0FFF0; padding: 1px; }
   </style>
 </head>
