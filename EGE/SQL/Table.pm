@@ -234,7 +234,11 @@ sub random_row { rnd->pick(@{$_[0]->{data}}) }
 
 sub column_array {
     my ($self, $field) = @_;
-    my $column = $self->{field_index}->{$field} // die $field;
+    my $column =
+        $field !~ /^\d$/ ? $self->{field_index}->{$field} :
+        1 <= $field && $field <= @{$self->{fields}} ? $field - 1 :
+        undef;
+    defined $column or die "Unknown field $field";
     [ map $_->[$column], @{$self->{data}} ];
 }
 

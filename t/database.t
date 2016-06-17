@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 113;
+use Test::More tests => 116;
 
 use Test::Exception;
 
@@ -36,7 +36,12 @@ sub pack_table_sorted {
     is pack_table($tab->select([ 'id', 'name' ])), 'id name|1 aaa|2 bbb', 'all fields';
     $tab->insert_row(3, 'ccc');
     is pack_table($tab->select([ 'id' ])), 'id|1|2|3', 'field 1';
+
     is_deeply $tab->column_array('id'), [1, 2, 3], 'column_array';
+    is_deeply $tab->column_array(1), [1, 2, 3], 'column_array by number';
+    throws_ok { $tab->column_array('zzz') } qr/zzz/, 'column_array none';
+    throws_ok { $tab->column_array(77) } qr/77/, 'column_array by number none';
+
     is pack_table($tab->select([ 'name' ])), 'name|aaa|bbb|ccc', 'field 2';
     is pack_table($tab->select([ 'id', 'id' ])), 'id id|1 1|2 2|3 3', 'dup field';
     eval { $tab->select([ 'zzz' ]) };
