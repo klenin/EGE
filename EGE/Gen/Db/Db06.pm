@@ -18,7 +18,9 @@ use EGE::SQL::Queries;
 
 sub select_between {
     my ($self) = @_;
-    my $products = EGE::SQL::RandomTable::create_table(column => 5, row => 9);
+    my $rt = EGE::SQL::RandomTable->new(column => 5, row => 9);
+    my $rt_class = $rt->pick;
+    my $products = $rt->make;
     my @month = @{$products->{fields}}[1 .. @{$products->{fields}} - 1];
     my ($cond, $count,$l, $r, $m1);
     do {
@@ -29,9 +31,10 @@ sub select_between {
     } until (1 < $count && $count < $products->count());
     my $select = EGE::SQL::Select->new($products, [], $cond);
     $self->{text} = sprintf
-        "В таблице <tt>%s</tt> представлен список товаров: \n%s\n" .
+        "В таблице <tt>%s</tt> представлен список %s: \n%s\n" .
         "Сколько записей в ней удовлетворяют запросу %s?",
-        $products->name, $products->table_html, $select->text_html_tt;
+        $products->name, $rt_class->get_text_name->{genitive},
+        $products->table_html, $select->text_html_tt;
     $self->variants($count, rnd->pick_n(3, grep $_ != $count, 1 .. $products->count()));
 }
 
@@ -53,7 +56,9 @@ sub expression {
 
 sub select_expression {
     my ($self) = @_;
-    my $products = EGE::SQL::RandomTable::create_table(column => 5, row => 3);
+    my $rt = EGE::SQL::RandomTable->new(column => 5, row => 3);
+    my $rt_class = $rt->pick;
+    my $products = $rt->make;
     my @month = @{$products->{fields}}[1 .. @{$products->{fields}} - 1];
     my ($count, $ans, $l, @table_false);
     my ($m1, $m2, $m3, $m4) = rnd->shuffle(@month[0 .. $#month]);
@@ -77,9 +82,10 @@ sub select_expression {
     }
 
     $self->{text} = sprintf
-        "В таблице <tt>%s</tt> представлен список товаров: \n%s\n" .
+        "В таблице <tt>%s</tt> представлен список %s: \n%s\n" .
         'Каким будет результат выполнения запроса %s?',
-        $products->name, $products->table_html, $query->text_html_tt;
+        $products->name, $rt_class->get_text_name->{genitive},
+        $products->table_html, $query->text_html_tt;
     $self->variants($text_ans, @table_false);
 }
 
