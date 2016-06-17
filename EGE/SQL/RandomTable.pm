@@ -16,8 +16,8 @@ sub new {
 
 sub ok_table {
     my ($self, $table) = @_;
-    (() = $table->get_columns) >= $self->{column} &&
-    grep scalar @$_ >= $self->{row}, $table->get_rows_array;
+    my @cols = $table->get_columns;
+    @cols >= $self->{column} && grep @$_ >= $self->{row}, $table->get_rows_array;
 }
 
 sub pick {
