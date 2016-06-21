@@ -8,7 +8,7 @@ use strict;
 use warnings;
 
 use base 'Exporter';
-our @EXPORT_OK = qw(transpose last_key aggregate_function);
+our @EXPORT_OK = qw(transpose last_key aggregate_function tail);
 
 sub aggregate_function {
     my ($name) = @_;
@@ -28,5 +28,7 @@ sub last_key {
     $key = $hash_ref->{$key} while defined $hash_ref->{$hash_ref->{$key}};
     $key;
 }
+
+sub tail { @_[1..$#_] }
 
 1;
