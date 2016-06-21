@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 144;
+use Test::More tests => 146;
 use Test::Exception;
 
 use lib '..';
@@ -43,6 +43,7 @@ use EGE::Prog qw(make_block make_expr);
     throws_ok { make_expr() } qr/empty/i, 'make_expr empty';
     throws_ok { make_expr([ 1, 2, 3, 4, 5, 6 ]) } qr/make_expr/, 'bad make_expr';
     throws_ok { make_expr([ [], 'a', 1 ]) } qr/bad op/i, 'bad op';
+    throws_ok { make_expr [ undef ] } qr/bad op/i, 'bad op';
 }
 
 {
@@ -70,6 +71,11 @@ use EGE::Prog qw(make_block make_expr);
     is $e->to_lang_named('C', { html => 1 }), '1 &lt;= a &amp;&amp; a &lt;= 2 + 5', 'between html C';
     is $e->to_lang_named('Pascal'), 'InRange(a, 1, 2 + 5)', 'between Pascal';
     is $e->to_lang_named('SQL'), 'a BETWEEN 1 AND 2 + 5', 'between SQL';
+}
+
+{
+    my $e = make_expr([ '[]', 'a', 2 ]);
+    is $e->run({ a => [1..3] }), 3, 'run []';
 }
 
 {

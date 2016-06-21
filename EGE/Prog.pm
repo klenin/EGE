@@ -691,8 +691,10 @@ sub run {
 }
 
 package EGE::Prog;
-use base 'Exporter';
 
+use EGE::Utils qw(tail);
+
+use base 'Exporter';
 our @EXPORT_OK = qw(make_expr make_block lang_names);
 
 sub make_expr {
@@ -700,53 +702,49 @@ sub make_expr {
     defined $src or die 'empty argument';
     ref($src) =~ /^EGE::Prog::/ and return $src;
     if (ref $src eq 'ARRAY') {
-        if (@$src == 2 && $src->[0] eq '#') {
+        @$src or return undef;
+        my $op = $src->[0] // '';
+        $op ne '' or die 'bad op';
+        if (@$src == 2 && $op eq '#') {
             return EGE::Prog::PlainText->new(text => $src->[1]);
         }
-        if (@$src >= 2 && $src->[0] eq '[]') {
-            my @p = @$src;
-            shift @p;
+        if (@$src >= 2 && $op eq '[]') {
+            my @p = tail @$src;
             $_ = make_expr($_) for @p;
             my $array = shift @p;
             return EGE::Prog::Index->new(array => $array, indices => \@p);
         }
-        if (@$src >= 2 && $src->[0] eq '()') {
-            my @p = @$src;
-            shift @p;
-            my $func = shift @p;
+        if (@$src >= 2 && $op eq '()') {
+            my (undef, $func, @p) = @$src;
             $_ = make_expr($_) for @p;
-            my $name = EGE::Utils::aggregate_function($func)? 'EGE::Prog::CallFuncAggregate': 'EGE::Prog::CallFunc';
+            my $name = EGE::Utils::aggregate_function($func) ?
+                'EGE::Prog::CallFuncAggregate': 'EGE::Prog::CallFunc';
             return $name->new(func => $func, args => \@p);
         }
-        if (@$src >= 1 && $src->[0] eq 'print') {
-            my @p = @$src;
-            shift @p;
+        if (@$src >= 1 && $op eq 'print') {
+            my @p = tail @$src;
             $_ = make_expr($_) for @p;
             return EGE::Prog::Print->new(args => \@p);
         }
-        if (@$src == 2 && $src->[0] =~ /\+\+|--/) {
-            return EGE::Prog::Inc->new(
-                op => $src->[0], arg => make_expr($src->[1]));
+        if (@$src == 2 && $op =~ /\+\+|--/) {
+            return EGE::Prog::Inc->new(op => $op, arg => make_expr($src->[1]));
         }
         if (@$src == 2) {
             return EGE::Prog::UnOp->new(
-                op => $src->[0], arg => make_expr($src->[1]));
+                op => $op, arg => make_expr($src->[1]));
         }
         if (@$src == 3) {
             return EGE::Prog::BinOp->new(
-                op => $src->[0],
+                op => $op,
                 left => make_expr($src->[1]),
                 right => make_expr($src->[2])
             );
         }
         if (@$src == 4) {
             return EGE::Prog::TernaryOp->new(
-                op => $src->[0],
+                op => $op,
                 map { +"arg$_" => make_expr($src->[$_]) } 1..3
             );
-        }
-        if (@$src == 0) {
-            return undef;
         }
         die "make_expr: @$src";
     }
