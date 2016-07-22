@@ -1,6 +1,7 @@
 #EGE: Elementary Generator Engine
 [![Travis Build Status](https://travis-ci.org/klenin/EGE.svg)](https://travis-ci.org/klenin/EGE)
 [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/klenin/ege?svg=true)](https://ci.appveyor.com/project/klenin/EGE)
+[![Coverage Status](https://coveralls.io/repos/github/klenin/EGE/badge.svg)](https://coveralls.io/github/klenin/EGE)
 
 Система генерации тестовых заданий по различным предметам,
 связанным информатикой и математикой.
