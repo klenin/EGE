@@ -143,14 +143,6 @@ sub get_hex_args_shift {
 	($arg, rnd->pick(4, 8, 12));
 }
 
-sub swap_commands {
-	my ($self, $id1, $id2) = @_;
-	my $c = $self->{code}->[$id1];
-	$self->{code}->[$id1] = $self->{code}->[$id2];
-	$self->{code}->[$id2] = $c;
-	$self;
-}
-
 sub move_command {
     my ($self, $from, $to) = @_;
     my $code = $self->{code};
