@@ -152,14 +152,13 @@ sub swap_commands {
 }
 
 sub move_command {
-	my ($self, $from, $to) = @_;
-	my $c = $self->{code}->[$from];
-	my $i = $from;
-	while ($i != $to) {
-		($self->{code}->[$i], $i) = $from < $to ? ($self->{code}->[$i+1], $i+1) : ($self->{code}->[$i-1], $i-1);
-	}
-	$self->{code}->[$to] = $c;
-	$self;
+    my ($self, $from, $to) = @_;
+    my $code = $self->{code};
+    0 <= $from && $from < @$code or die "Bad from: $from";
+    0 <= $to && $to <= @$code or die "Bad to: $to";
+    my $c = splice @$code, $from, 1;
+    splice @$code, ($from < $to ? $to - 1 : $to), 0, $c;
+    $self;
 }
 
 sub remove_command {

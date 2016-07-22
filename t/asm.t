@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 16;
+use Test::More tests => 21;
 use Test::Exception;
 
 use lib '..';
@@ -57,6 +57,39 @@ use EGE::Prog qw(make_expr);
         [ 'add', 'ebx', 13 ],
         [ 'add', 'eax', 'ebx' ],
     ], 'compile free reg 2';
+}
+
+{
+    cgen->clear;
+    throws_ok { cgen->move_command(0, 0) } qr/from/, 'bad from';
+    cgen->add_commands(
+        [ 'mov', 'eax', 1 ],
+        [ 'add', 'eax', 2 ],
+        [ 'mov', 'ebx', 3 ],
+        [ 'add', 'ebx', 4 ],
+    );
+    throws_ok { cgen->move_command(3, 5) } qr/to/, 'bad to';
+    cgen->move_command(3, 0);
+    is_deeply cgen->{code}, [
+        [ 'add', 'ebx', 4 ],
+        [ 'mov', 'eax', 1 ],
+        [ 'add', 'eax', 2 ],
+        [ 'mov', 'ebx', 3 ],
+    ], 'move_command 3->0';
+    cgen->move_command(2, 1);
+    is_deeply cgen->{code}, [
+        [ 'add', 'ebx', 4 ],
+        [ 'add', 'eax', 2 ],
+        [ 'mov', 'eax', 1 ],
+        [ 'mov', 'ebx', 3 ],
+    ], 'move_command 2->1';
+    cgen->move_command(0, 4);
+    is_deeply cgen->{code}, [
+        [ 'add', 'eax', 2 ],
+        [ 'mov', 'eax', 1 ],
+        [ 'mov', 'ebx', 3 ],
+        [ 'add', 'ebx', 4 ],
+    ], 'move_command 0->4';
 }
 
 {
