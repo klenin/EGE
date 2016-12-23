@@ -224,27 +224,27 @@ sub sal {
 }
 
 sub shr {
-	my ($self, $eflags, $reg, $val) = @_;
-	$self->set_indexes($reg) if ($reg);
-	my $v = $self->{bits}->{v};
-	$eflags->{CF} = $v->[$self->{id_to}-$val];
-	my $j = $self->{id_to};
-    my $i = $self->{id_to} - $val;
-    $v->[--$j] = $i > $self->{id_from} ? $v->[--$i] : 0 while $j > $self->{id_from};
-	$self->set_ZSPF($eflags) if ($reg);
-	$eflags->{OF} = 0 if ($reg);
-	$self;
+    my ($self, $eflags, $reg, $val) = @_;
+    $val > 0 or die "Bad shift count: $val";
+    $self->set_indexes($reg) if $reg;
+    my $last = $self->{id_to} - $val;
+    $eflags->{CF} = $last < $self->{id_from} ? 0 : $self->{bits}->{v}->[$last];
+    $eflags->{OF} = $self->{bits}->{v}->[$self->{id_from}] if $val == 1;
+    $self->{bits}->shift_($val, $self->{id_from}, $self->{id_to});
+    $self->set_ZSPF($eflags);
 }
 
 sub sar {
-	my ($self, $eflags, $reg, $val) = @_;
-	$self->set_indexes($reg);
-	my $sgn = $self->{bits}->{v}[$self->{id_from}];
-	$self->shr($eflags, '', $val);
-	$self->{bits}->{v}[$self->{id_from}+$_] = $sgn for (0..$val-1);
-	$self->set_ZSPF($eflags);
-	$eflags->{OF} = 0;
-	$self;
+    my ($self, $eflags, $reg, $val) = @_;
+    $reg or die;
+    $val > 0 or die "Bad shift count: $val";
+    $self->set_indexes($reg);
+    my $sgn = $self->{bits}->{v}[$self->{id_from}];
+    my $last = $self->{id_to} - $val;
+    $eflags->{CF} = $last < $self->{id_from} ? 0 : $self->{bits}->{v}->[$last];
+    $eflags->{OF} = 0 if $val == 1;
+    $self->{bits}->shift_($val, $self->{id_from}, $self->{id_to}, $sgn);
+    $self->set_ZSPF($eflags);
 }
 
 sub rol {
