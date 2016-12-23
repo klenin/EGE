@@ -50,7 +50,7 @@ sub set_ZSPF {
     my ($self, $eflags) = @_;
     $eflags->{ZF} = $self->get_value() ? 0 : 1;
     $eflags->{SF} = $self->{bits}->{v}[$self->{id_from}];
-    $eflags->{PF} = 1 - scalar(grep $self->{bits}->{v}[$_], 24 .. 31) % 2;
+    $eflags->{PF} = 1 - scalar(grep $self->{bits}->{v}[$_], $self->{id_to} - 8 .. $self->{id_to} - 1) % 2;
     $self;
 }
 

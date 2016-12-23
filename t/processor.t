@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 193;
+use Test::More tests => 195;
 use Test::Exception;
 
 use lib '..';
@@ -54,7 +54,11 @@ sub check_stack {
 
     proc->run_code([ ['mov', 'ah', 15], ['add', 'ah', 7] ]);
     is proc->get_val('eax'), 22 * 256, 'add to ah';
-    is proc->{eflags}->flags_text, 'PF', 'add to ah set flags';
+    is proc->{eflags}->flags_text, '', 'add to ah set flags';
+
+    proc->run_code([ ['mov', 'ah', 16], ['add', 'ah', 7] ]);
+    is proc->get_val('eax'), 23 * 256, 'add to ah (2)';
+    is proc->{eflags}->flags_text, 'PF', 'add to ah set flags (2)';
 
     proc->run_code([ ['mov', 'al', 15], ['add', 'al', -7] ]);
     is proc->get_val('eax'), 8, 'add negative less number';
