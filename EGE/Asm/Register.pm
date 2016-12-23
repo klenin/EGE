@@ -225,7 +225,8 @@ sub sal {
 
 sub shr {
     my ($self, $eflags, $reg, $val) = @_;
-    $val > 0 or die "Bad shift count: $val";
+    $val >= 0 or die "Bad shift count: $val";
+    $val %= 32 or return $self;
     $self->set_indexes($reg) if $reg;
     my $last = $self->{id_to} - $val;
     $eflags->{CF} = $last < $self->{id_from} ? 0 : $self->{bits}->{v}->[$last];
@@ -237,7 +238,8 @@ sub shr {
 sub sar {
     my ($self, $eflags, $reg, $val) = @_;
     $reg or die;
-    $val > 0 or die "Bad shift count: $val";
+    $val >= 0 or die "Bad shift count: $val";
+    $val %= 32 or return $self;
     $self->set_indexes($reg);
     my $sgn = $self->{bits}->{v}[$self->{id_from}];
     my $last = $self->{id_to} - $val;
