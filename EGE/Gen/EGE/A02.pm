@@ -16,8 +16,6 @@ use POSIX q(ceil);
 use Storable q(dclone);
 use List::Util q(reduce);
 
-sub _assert { die ($_[1] // '')  unless $_[0] }
-
 sub sport {
     my ($self) = @_;
     my $flavour = rnd->pick(
@@ -302,11 +300,11 @@ sub _dijkstra {
 
             $st[$v] = 'finished';
             for my $i (0 .. $c->{n} - 1) {
-                $_ = $c->{routes}[$v][$i];
-                if (defined $_ &&
-                    (!defined $st[$i] || $st[$i] ne 'finished' && $d[$i] > $d[$v] + $_))
+                my $x = $c->{routes}[$v][$i];
+                if (defined $x &&
+                    (!defined $st[$i] || $st[$i] ne 'finished' && $d[$i] > $d[$v] + $x))
                 {
-                    $d[$i] = $d[$v] + $_;
+                    $d[$i] = $d[$v] + $x;
                     $st[$i] = 'visited';
                 }
             }
@@ -317,11 +315,11 @@ sub _dijkstra {
 
 sub _validate {
     my ($c) = @_;
-    $_ = _dijkstra($c, $c->{ans_from}, $c->{ans_to}, 0);
-    _assert(defined $_ && $_ == $c->{ans}[0]);
-    _assert(@{$c->{ans}} >= 3);
+    my $d = _dijkstra($c, $c->{ans_from}, $c->{ans_to}, 0);
+    defined $d && $d == $c->{ans}[0] or die "$d != $c->{ans}[0]";
+    @{$c->{ans}} >= 3 or die @{$c->{ans}};
     my %seen;
-    _assert(!$seen{$_}++) for @{$c->{ans}};
+    $seen{$_}++ and die $_ for @{$c->{ans}};
 }
 
 sub min_routes {
