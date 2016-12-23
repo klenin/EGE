@@ -74,11 +74,17 @@ sub mutate_value {
 
 sub mutate_expr {
     my ($orig, $values) = @_;
+
+    my $is_new_good_value = sub {
+        my $v = $_[0]->run;
+        0 <= $v && $v <= 100000 && !$values->{$v}++;
+    };
+
     for (my $iter = 0; $iter < 50; ++$iter) {
         my $copy = dclone($orig);
         my $op = rnd->pick($copy->gather_if(\&is_binop));
         mutate_value($op) if $iter > 20;
-        $values->{$copy->run}++ or return $copy;
+        return $copy if $is_new_good_value->($copy);
         if (rnd->coin) {
             mutate_op($op);
         }
@@ -86,16 +92,16 @@ sub mutate_expr {
             mutate_prio($op);
             next if is_negative($op->{op}, $op->children);
         }
-        $values->{$copy->run}++ or return $copy;
+        return $copy if $is_new_good_value->($copy);
     }
     # Вероятно, результат обнуляют мультипликативные операции. Удаляем их.
     my $copy = dclone($orig);
-    $copy->visit_dfs(sub { is_binop($_[0]) ? $_[0]->{op} =~ tr/&*/|+/ : undef });
-    $values->{$copy->run}++ or return $copy;
+    $copy->visit_dfs(sub { is_binop($_[0]) ? $_[0]->{op} =~ tr/&*-/|+^/ : undef });
+    return $copy if $is_new_good_value->($copy);
     # Одиночных исправлений недостаточно -- использовать кумулятивные исправления.
     for (my $iter = 0; $iter < 50; ++$iter) {
-        $values->{$copy->run}++ or return $copy;
         mutate_value($copy);
+        return $copy if $is_new_good_value->($copy);
     }
     die join ',', $orig->to_lang_named('Perl'), keys %$values;
 }
