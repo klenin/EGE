@@ -88,11 +88,14 @@ sub mutate_expr {
         }
         $values->{$copy->run}++ or return $copy;
     }
-    # Одиночных исправлений недостаточно -- использовать кумулятивные исправления.
+    # Вероятно, результат обнуляют мультипликативные операции. Удаляем их.
     my $copy = dclone($orig);
+    $copy->visit_dfs(sub { is_binop($_[0]) ? $_[0]->{op} =~ tr/&*/|+/ : undef });
+    $values->{$copy->run}++ or return $copy;
+    # Одиночных исправлений недостаточно -- использовать кумулятивные исправления.
     for (my $iter = 0; $iter < 50; ++$iter) {
-        mutate_value($copy);
         $values->{$copy->run}++ or return $copy;
+        mutate_value($copy);
     }
     die join ',', $orig->to_lang_named('Perl'), keys %$values;
 }
