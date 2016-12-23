@@ -230,7 +230,7 @@ sub shr {
 	$eflags->{CF} = $v->[$self->{id_to}-$val];
 	my $j = $self->{id_to};
     my $i = $self->{id_to} - $val;
-    $v->[--$j] = $i ? $v->[--$i] : 0 while $j > $self->{id_from};
+    $v->[--$j] = $i > $self->{id_from} ? $v->[--$i] : 0 while $j > $self->{id_from};
 	$self->set_ZSPF($eflags) if ($reg);
 	$eflags->{OF} = 0 if ($reg);
 	$self;
