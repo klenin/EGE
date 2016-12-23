@@ -187,17 +187,20 @@ sub reverse_ {
 }
 
 sub shift_ {
-    my ($self, $d) = @_;
+    my ($self, $d, $idx_from, $idx_to, $fill_value) = @_;
     my $v = $self->{v};
+    $idx_from //= 0;
+    $idx_to //= @$v;
+    $fill_value //= 0;
     if ($d > 0) { # вправо
-        my $j = @$v;
-        my $i = @$v - $d;
-        $v->[--$j] = $i ? $v->[--$i] : 0 while $j;
+        my $j = $idx_to;
+        my $i = $idx_to - $d;
+        $v->[--$j] = $i > $idx_from ? $v->[--$i] : $fill_value while $j > $idx_from;
     }
     elsif ($d < 0) { # влево
-        my $j = 0;
-        my $i = -$d;
-        $v->[$j++] = $i < @$v ? $v->[$i++] : 0 while $j < @$v;
+        my $j = $idx_from;
+        my $i = $idx_from - $d;
+        $v->[$j++] = $i < $idx_to ? $v->[$i++] : $fill_value while $j < $idx_to;
     }
     $self;
 }

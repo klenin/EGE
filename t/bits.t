@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 70;
+use Test::More tests => 76;
 
 use lib '..';
 use EGE::Bits;
@@ -107,8 +107,16 @@ use EGE::Bits;
 
 {
     my $b = EGE::Bits->new->set_bin('01110101');
-    is $b->dup->shift_(-1)->get_bin, '11101010', 'shift left';
-    is $b->dup->shift_(1)->get_bin, '00111010', 'shift right';
+    is $b->dup->shift_(-1)->get_bin, '11101010', 'shift left 1';
+    is $b->dup->shift_(-7)->get_bin, '10000000', 'shift left 7';
+    is $b->dup->shift_(1)->get_bin, '00111010', 'shift right 1';
+    is $b->dup->shift_(6)->get_bin, '00000001', 'shift right 6';
+
+    is $b->dup->shift_(-1, 2, 6)->get_bin, '01101001', 'shift left part';
+    is $b->dup->shift_(1, 0, 4)->get_bin, '00110101', 'shift right part';
+
+    is $b->dup->shift_(-6, 0, 8, 1)->get_bin, '01111111', 'shift left fill';
+    is $b->dup->shift_(6, 0, 8, 1)->get_bin, '11111101', 'shift right fill';
 }
 
 {
