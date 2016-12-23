@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 203;
+use Test::More tests => 207;
 use Test::Exception;
 
 use lib '..';
@@ -222,6 +222,10 @@ sub check_stack {
     proc->run_code([ ['mov', 'al', 209], ['shl', 'al', 2] ]);
     is proc->get_val('eax'), 68, 'shl';
     is proc->{eflags}->flags_text, 'CF PF', 'shl flags';
+    proc->run_code([ ['mov', 'cx', 0xDFB0], ['shl', 'ch', 4] ]);
+    is proc->get_val('ecx'), 0xF0B0, 'shl cx';
+    is proc->{eflags}->flags_text, 'CF PF SF', 'shl cx flags';
+
     proc->run_code([ ['mov', 'al', 209], ['shr', 'al', 2] ]);
     is proc->get_val('eax'), 52, 'shr';
     is proc->{eflags}->flags_text, '', 'shr flags';
@@ -236,7 +240,11 @@ sub check_stack {
 
     proc->run_code([ ['mov', 'al', 209], ['sal', 'al', 2] ]);
     is proc->get_val('eax'), 68, 'sal';
-    is proc->{eflags}->flags_text, 'CF OF PF', 'sal flags';
+    is proc->{eflags}->flags_text, 'CF PF', 'sal flags';
+    proc->run_code([ ['mov', 'cx', 0xDFB0], ['sal', 'ch', 4] ]);
+    is proc->get_val('ecx'), 0xF0B0, 'sal cx';
+    is proc->{eflags}->flags_text, 'CF PF SF', 'sal cx flags';
+
     proc->run_code([ ['mov', 'al', 209], ['sar', 'al', 2] ]);
     is proc->get_val('eax'), 244, 'sar';
     is proc->{eflags}->flags_text, 'SF', 'sar flags';
