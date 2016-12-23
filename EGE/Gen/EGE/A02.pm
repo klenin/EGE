@@ -235,6 +235,7 @@ sub _choose_from_to {
     my ($first, $mi, $mj) = (1, 0, 0);
     for my $i (0 .. $c->{n} - 1) {
         for my $j (0 .. $c->{n} - 1) {
+            next if $i == $j;
             if (($first  && defined $c->{routes}[$i][$j]) ||
                 (!$first && @{$c->{alt_routes}[$i][$j]} > @{$c->{alt_routes}[$mi][$mj]}))
             {
@@ -315,6 +316,7 @@ sub _dijkstra {
 
 sub _validate {
     my ($c) = @_;
+    $c->{ans_from} != $c->{ans_to} or die "$c->{ans_from} == $c->{ans_to}";
     my $d = _dijkstra($c, $c->{ans_from}, $c->{ans_to}, 0);
     defined $d && $d == $c->{ans}[0] or die "$d != $c->{ans}[0]";
     @{$c->{ans}} >= 3 or die @{$c->{ans}};
