@@ -695,7 +695,7 @@ package EGE::Prog;
 use EGE::Utils qw(tail);
 
 use base 'Exporter';
-our @EXPORT_OK = qw(make_expr make_block lang_names);
+our @EXPORT_OK = qw(make_expr make_block lang_names add_statement move_statement);
 
 sub make_expr {
     my ($src) = @_;
@@ -802,14 +802,34 @@ sub make_statement {
     "EGE::Prog::$d->{type}"->new(%args, func => $cur_func);
 }
 
+sub add_statement {
+    my ($block, $src, $i) = @_;
+    ref $block eq 'EGE::Prog::Block' or die;
+    ref $src eq 'ARRAY' or die;
+    defined $i or ${$i} = 0;
+    my $cur_func = $block->{func};
+    push @{$block->{statements}}, make_statement(sub { $src->[${$i}++] }, $cur_func);
+}
+
+sub move_statement {
+    my ($block, $from, $to) = @_;
+    ref $block eq 'EGE::Prog::Block' or die;
+    my $statements = $block->{statements};
+    0 <= $from && $from < @$statements or die "Bad from: $from";
+    0 <= $to && $to <= @$statements or die "Bad to: $to";
+    my $s = splice @$statements, $from, 1;
+    splice @$statements, ($from < $to ? $to - 1 : $to), 0, $s;
+    $block;
+}
+
 sub make_block {
     my ($src, $cur_func) = @_;
     ref $src eq 'ARRAY' or die;
-    my @s;
+    my $b = EGE::Prog::Block->new(func => $cur_func);
     for (my $i = 0; $i < @$src; ) {
-        push @s, make_statement(sub { $src->[$i++] }, $cur_func);
+        add_statement($b, $src, \$i);
     }
-    EGE::Prog::Block->new(statements => \@s, func => $cur_func);
+    $b;
 }
 
 sub lang_names() {{

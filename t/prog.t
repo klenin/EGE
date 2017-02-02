@@ -2,11 +2,11 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 146;
+use Test::More tests => 158;
 use Test::Exception;
 
 use lib '..';
-use EGE::Prog qw(make_block make_expr);
+use EGE::Prog qw(make_block make_expr add_statement move_statement);
 
 {
     my @t = (
@@ -614,4 +614,68 @@ sub check_sub {
     $check_sql->(
         [ '||', [ '!=', 1, 'a' ], [ '!', 'a' ] ],
         '1 &lt;&gt; a OR NOT a', 'OR NOT html');
+}
+
+
+{
+    my $b = make_block([
+        '=', 'M', '3'
+    ]);
+    add_statement($b, [ '=', 'M', '4' ]);
+    my $c = {
+        Basic => [
+           'M = 3',
+           'M = 4',
+        ],
+        Alg => [
+            'M := 3',
+            'M := 4',
+        ],
+        Pascal => [
+            'M := 3;',
+            'M := 4;',
+        ],
+        C => [
+            'M = 3;',
+            'M = 4;',
+        ],
+        Perl => [
+            '$M = 3;',
+            '$M = 4;',
+        ],
+    };
+    check_sub($_, $b, $c->{$_}, "add_statement") for keys %$c;
+    is $b->run_val('M'), 4;
+}
+
+{
+    my $b = make_block([
+        '=', 'M', '3',
+        '=', 'M', '4'
+    ]);
+    move_statement($b, 1, 0);
+    my $c = {
+        Basic => [
+           'M = 4',
+           'M = 3',
+        ],
+        Alg => [
+            'M := 4',
+            'M := 3',
+        ],
+        Pascal => [
+            'M := 4;',
+            'M := 3;',
+        ],
+        C => [
+            'M = 4;',
+            'M = 3;',
+        ],
+        Perl => [
+            '$M = 4;',
+            '$M = 3;',
+        ],
+    };
+    check_sub($_, $b, $c->{$_}, "move_statement") for keys %$c;
+    is $b->run_val('M'), 3;
 }
