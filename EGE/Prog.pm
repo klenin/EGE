@@ -187,9 +187,16 @@ sub run {
 package EGE::Prog::Print;
 use base 'EGE::Prog::SynElement';
 
+sub new {
+    my $self = shift->SUPER::new(@_);
+    my $fmt_types = { num => 'print_fmt', str => 'print_str_fmt' };
+    $self->{fmt} = $fmt_types->{$self->{type}} or die "Bad print type $self->{type}";
+    $self;
+}
+
 sub to_lang {
     my ($self, $lang) = @_;
-    sprintf $lang->get_fmt('print_fmt'),
+    sprintf $lang->get_fmt($self->{fmt}),
         join $lang->get_fmt('args_separator'), map $_->to_lang($lang), @{$self->{args}};
 }
 
@@ -721,10 +728,12 @@ sub make_expr {
                 'EGE::Prog::CallFuncAggregate': 'EGE::Prog::CallFunc';
             return $name->new(func => $func, args => \@p);
         }
-        if (@$src >= 1 && $op eq 'print') {
-            my @p = tail @$src;
+        if (@$src >= 2 && $op eq 'print') {
+            my (undef, $type, @p) = @$src;
+            my $pat = join('|', qw(\\\\ \\n ' " %));
+            $_ =~ /($pat)/ and die "Print argument $_ contains bad symbol" for @p;
             $_ = make_expr($_) for @p;
-            return EGE::Prog::Print->new(args => \@p);
+            return EGE::Prog::Print->new(type => $type, args => \@p);
         }
         if (@$src == 2 && $op =~ /\+\+|--/) {
             return EGE::Prog::Inc->new(op => $op, arg => make_expr($src->[1]));
