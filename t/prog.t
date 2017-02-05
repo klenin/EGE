@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 158;
+use Test::More tests => 165;
 use Test::Exception;
 
 use lib '..';
@@ -414,7 +414,7 @@ sub check_sub {
 {
     my $b = make_block([
         'for', 'i', 0, 9, [
-            'expr', [ 'print', 'i', 0 ]
+            'expr', [ 'print', 'num', 'i', 0 ]
         ]
     ]);
     my $c = {
@@ -678,4 +678,27 @@ sub check_sub {
     };
     check_sub($_, $b, $c->{$_}, "move_statement") for keys %$c;
     is $b->run_val('M'), 3;
+}
+
+{
+    my $b = make_block([ 'expr', [ 'print', 'str', '*'] ]);
+    my $c = {
+        Basic =>  [ q(PRINT "*") ],
+        Alg =>    [ q(вывод "*") ],
+        Pascal => [ q(write('*');) ],
+        C =>      [ q(print("*");) ],
+        Perl =>   [ q(print('*');) ],
+    };
+    check_sub($_, $b, $c->{$_}, "print str in $_") for keys %$c;
+}
+
+{
+    throws_ok sub { make_block([
+        'expr', [ 'print', 'str', '"']
+    ]) } , qr/Print argument.*contains bad symbol/, 'print restricted symbol "';
+
+    throws_ok sub { make_block([
+        'expr', [ 'print', 'str', q(') ]
+    ]) } , qr/Print argument.*contains bad symbol/, q(print restricted symbol ');
+
 }
