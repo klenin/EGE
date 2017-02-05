@@ -23,7 +23,7 @@ sub monomial { # ax^y
     $a eq '1' ? $p : [ '*', $a, $p ];
 }
 
-sub final_expr { 'expr', [ 'print', @_ ] }
+sub final_expr { 'expr', [ 'print', 'num', @_ ] }
 
 sub new_var {
     my $var = rnd->index_var;
