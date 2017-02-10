@@ -64,6 +64,7 @@ use EGE::Gen::EGE::B15;
 use EGE::Gen::EGE::Z06;
 use EGE::Gen::EGE::Z09;
 use EGE::Gen::EGE::Z10;
+use EGE::Gen::EGE::Z11;
 use EGE::Gen::EGE::Z13;
 use EGE::Gen::EGE::Z15;
 use EGE::Gen::EGE::Z22;
@@ -121,6 +122,7 @@ sub all {[
     gg('Z06', qw(find_number)),
     gg('Z09', qw(get_memory_size)),
     gg('Z10', qw(words_count)),
+    gg('Z11', qw(recursive_alg)),
     gg('Z13', qw(tumblers tumblers_min)),
     gg('Z15', qw(city_roads)),
     gg('Z22', qw(calculator_find_prgm_count)),

@@ -229,6 +229,7 @@ binmode STDOUT, ':utf8';
 #g('Z06', 'find_number');
 #g('Z09', 'get_memory_size');
 #g('Z10', 'words_count');
+#g('Z11', 'recursive_alg');
 #g('Z13', 'tumblers');
 #g('Z13', 'tumblers_min');
 #g('Z15', 'city_roads');

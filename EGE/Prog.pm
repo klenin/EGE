@@ -187,9 +187,16 @@ sub run {
 package EGE::Prog::Print;
 use base 'EGE::Prog::SynElement';
 
+sub new {
+    my $self = shift->SUPER::new(@_);
+    my $fmt_types = { num => 'print_fmt', str => 'print_str_fmt' };
+    $self->{fmt} = $fmt_types->{$self->{type}} or die "Bad print type $self->{type}";
+    $self;
+}
+
 sub to_lang {
     my ($self, $lang) = @_;
-    sprintf $lang->get_fmt('print_fmt'),
+    sprintf $lang->get_fmt($self->{fmt}),
         join $lang->get_fmt('args_separator'), map $_->to_lang($lang), @{$self->{args}};
 }
 
@@ -695,7 +702,7 @@ package EGE::Prog;
 use EGE::Utils qw(tail);
 
 use base 'Exporter';
-our @EXPORT_OK = qw(make_expr make_block lang_names);
+our @EXPORT_OK = qw(make_expr make_block lang_names add_statement move_statement);
 
 sub make_expr {
     my ($src) = @_;
@@ -721,10 +728,12 @@ sub make_expr {
                 'EGE::Prog::CallFuncAggregate': 'EGE::Prog::CallFunc';
             return $name->new(func => $func, args => \@p);
         }
-        if (@$src >= 1 && $op eq 'print') {
-            my @p = tail @$src;
+        if (@$src >= 2 && $op eq 'print') {
+            my (undef, $type, @p) = @$src;
+            my $pat = join('|', qw(\\\\ \\n ' " %));
+            $_ =~ /($pat)/ and die "Print argument $_ contains bad symbol" for @p;
             $_ = make_expr($_) for @p;
-            return EGE::Prog::Print->new(args => \@p);
+            return EGE::Prog::Print->new(type => $type, args => \@p);
         }
         if (@$src == 2 && $op =~ /\+\+|--/) {
             return EGE::Prog::Inc->new(op => $op, arg => make_expr($src->[1]));
@@ -802,14 +811,34 @@ sub make_statement {
     "EGE::Prog::$d->{type}"->new(%args, func => $cur_func);
 }
 
+sub add_statement {
+    my ($block, $src, $i) = @_;
+    ref $block eq 'EGE::Prog::Block' or die;
+    ref $src eq 'ARRAY' or die;
+    defined $i or ${$i} = 0;
+    my $cur_func = $block->{func};
+    push @{$block->{statements}}, make_statement(sub { $src->[${$i}++] }, $cur_func);
+}
+
+sub move_statement {
+    my ($block, $from, $to) = @_;
+    ref $block eq 'EGE::Prog::Block' or die;
+    my $statements = $block->{statements};
+    0 <= $from && $from < @$statements or die "Bad from: $from";
+    0 <= $to && $to <= @$statements or die "Bad to: $to";
+    my $s = splice @$statements, $from, 1;
+    splice @$statements, ($from < $to ? $to - 1 : $to), 0, $s;
+    $block;
+}
+
 sub make_block {
     my ($src, $cur_func) = @_;
     ref $src eq 'ARRAY' or die;
-    my @s;
+    my $b = EGE::Prog::Block->new(func => $cur_func);
     for (my $i = 0; $i < @$src; ) {
-        push @s, make_statement(sub { $src->[$i++] }, $cur_func);
+        add_statement($b, $src, \$i);
     }
-    EGE::Prog::Block->new(statements => \@s, func => $cur_func);
+    $b;
 }
 
 sub lang_names() {{

@@ -2,11 +2,11 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 146;
+use Test::More tests => 165;
 use Test::Exception;
 
 use lib '..';
-use EGE::Prog qw(make_block make_expr);
+use EGE::Prog qw(make_block make_expr add_statement move_statement);
 
 {
     my @t = (
@@ -414,7 +414,7 @@ sub check_sub {
 {
     my $b = make_block([
         'for', 'i', 0, 9, [
-            'expr', [ 'print', 'i', 0 ]
+            'expr', [ 'print', 'num', 'i', 0 ]
         ]
     ]);
     my $c = {
@@ -614,4 +614,91 @@ sub check_sub {
     $check_sql->(
         [ '||', [ '!=', 1, 'a' ], [ '!', 'a' ] ],
         '1 &lt;&gt; a OR NOT a', 'OR NOT html');
+}
+
+
+{
+    my $b = make_block([
+        '=', 'M', '3'
+    ]);
+    add_statement($b, [ '=', 'M', '4' ]);
+    my $c = {
+        Basic => [
+           'M = 3',
+           'M = 4',
+        ],
+        Alg => [
+            'M := 3',
+            'M := 4',
+        ],
+        Pascal => [
+            'M := 3;',
+            'M := 4;',
+        ],
+        C => [
+            'M = 3;',
+            'M = 4;',
+        ],
+        Perl => [
+            '$M = 3;',
+            '$M = 4;',
+        ],
+    };
+    check_sub($_, $b, $c->{$_}, "add_statement") for keys %$c;
+    is $b->run_val('M'), 4;
+}
+
+{
+    my $b = make_block([
+        '=', 'M', '3',
+        '=', 'M', '4'
+    ]);
+    move_statement($b, 1, 0);
+    my $c = {
+        Basic => [
+           'M = 4',
+           'M = 3',
+        ],
+        Alg => [
+            'M := 4',
+            'M := 3',
+        ],
+        Pascal => [
+            'M := 4;',
+            'M := 3;',
+        ],
+        C => [
+            'M = 4;',
+            'M = 3;',
+        ],
+        Perl => [
+            '$M = 4;',
+            '$M = 3;',
+        ],
+    };
+    check_sub($_, $b, $c->{$_}, "move_statement") for keys %$c;
+    is $b->run_val('M'), 3;
+}
+
+{
+    my $b = make_block([ 'expr', [ 'print', 'str', '*'] ]);
+    my $c = {
+        Basic =>  [ q(PRINT "*") ],
+        Alg =>    [ q(вывод "*") ],
+        Pascal => [ q(write('*');) ],
+        C =>      [ q(print("*");) ],
+        Perl =>   [ q(print('*');) ],
+    };
+    check_sub($_, $b, $c->{$_}, "print str in $_") for keys %$c;
+}
+
+{
+    throws_ok sub { make_block([
+        'expr', [ 'print', 'str', '"']
+    ]) } , qr/Print argument.*contains bad symbol/, 'print restricted symbol "';
+
+    throws_ok sub { make_block([
+        'expr', [ 'print', 'str', q(') ]
+    ]) } , qr/Print argument.*contains bad symbol/, q(print restricted symbol ');
+
 }
