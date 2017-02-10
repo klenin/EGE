@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 165;
+use Test::More tests => 166;
 use Test::Exception;
 
 use lib '..';
@@ -644,8 +644,8 @@ sub check_sub {
             '$M = 4;',
         ],
     };
-    check_sub($_, $b, $c->{$_}, "add_statement") for keys %$c;
-    is $b->run_val('M'), 4;
+    check_sub($_, $b, $c->{$_}, 'add_statement') for keys %$c;
+    is $b->run_val('M'), 4, 'add_statement run';
 }
 
 {
@@ -676,12 +676,13 @@ sub check_sub {
             '$M = 3;',
         ],
     };
-    check_sub($_, $b, $c->{$_}, "move_statement") for keys %$c;
-    is $b->run_val('M'), 3;
+    check_sub($_, $b, $c->{$_}, 'move_statement') for keys %$c;
+    is $b->run_val('M'), 3, 'move_statement run';
+    throws_ok { move_statement($b, 2, 0); } qr /bad from/i, 'move_statement bad from';
 }
 
 {
-    my $b = make_block([ 'expr', [ 'print', 'str', '*'] ]);
+    my $b = make_block([ 'expr', [ 'print', 'str', '*' ] ]);
     my $c = {
         Basic =>  [ q(PRINT "*") ],
         Alg =>    [ q(вывод "*") ],
@@ -693,12 +694,12 @@ sub check_sub {
 }
 
 {
-    throws_ok sub { make_block([
+    throws_ok { make_block([
         'expr', [ 'print', 'str', '"']
-    ]) } , qr/Print argument.*contains bad symbol/, 'print restricted symbol "';
+    ]) } qr/Print argument.*contains bad symbol/, 'print restricted symbol "';
 
-    throws_ok sub { make_block([
+    throws_ok { make_block([
         'expr', [ 'print', 'str', q(') ]
-    ]) } , qr/Print argument.*contains bad symbol/, q(print restricted symbol ');
+    ]) } qr/Print argument.*contains bad symbol/, q(print restricted symbol ');
 
 }
