@@ -811,18 +811,24 @@ sub make_statement {
     "EGE::Prog::$d->{type}"->new(%args, func => $cur_func);
 }
 
+sub add_statement_helper {
+    my ($block, $next) = @_;
+    $block->isa('EGE::Prog::Block') or die;
+    push @{$block->{statements}}, make_statement($next, $block->{func});
+}
+
 sub add_statement {
-    my ($block, $src, $i) = @_;
-    ref $block eq 'EGE::Prog::Block' or die;
+    my ($block, $src) = @_;
     ref $src eq 'ARRAY' or die;
-    defined $i or ${$i} = 0;
-    my $cur_func = $block->{func};
-    push @{$block->{statements}}, make_statement(sub { $src->[${$i}++] }, $cur_func);
+    my $i = 0;
+    add_statement_helper($block, sub { $src->[$i++] });
+    $i == @$src or die 'Not a single statement';
+    $block;
 }
 
 sub move_statement {
     my ($block, $from, $to) = @_;
-    ref $block eq 'EGE::Prog::Block' or die;
+    $block->isa('EGE::Prog::Block') or die;
     my $statements = $block->{statements};
     0 <= $from && $from < @$statements or die "Bad from: $from";
     0 <= $to && $to <= @$statements or die "Bad to: $to";
@@ -836,7 +842,7 @@ sub make_block {
     ref $src eq 'ARRAY' or die;
     my $b = EGE::Prog::Block->new(func => $cur_func);
     for (my $i = 0; $i < @$src; ) {
-        add_statement($b, $src, \$i);
+        add_statement_helper($b, sub { $src->[$i++] });
     }
     $b;
 }

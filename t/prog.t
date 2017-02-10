@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 166;
+use Test::More tests => 167;
 use Test::Exception;
 
 use lib '..';
@@ -619,9 +619,9 @@ sub check_sub {
 
 {
     my $b = make_block([
-        '=', 'M', '3'
+        '=', 'M', 3
     ]);
-    add_statement($b, [ '=', 'M', '4' ]);
+    add_statement($b, [ '=', 'M', 4 ]);
     my $c = {
         Basic => [
            'M = 3',
@@ -646,12 +646,13 @@ sub check_sub {
     };
     check_sub($_, $b, $c->{$_}, 'add_statement') for keys %$c;
     is $b->run_val('M'), 4, 'add_statement run';
+    throws_ok { add_statement($b, [ '=', 'M', 5, '=' ]) } qr/single/, 'add_statemen extra';
 }
 
 {
     my $b = make_block([
-        '=', 'M', '3',
-        '=', 'M', '4'
+        '=', 'M', 3,
+        '=', 'M', 4,
     ]);
     move_statement($b, 1, 0);
     my $c = {
