@@ -2,11 +2,11 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 12;
+use Test::More tests => 43;
 
 use lib '..';
-use EGE::Russian::Names qw(different);
-use EGE::Russian::SimpleNames qw(genitive);
+use EGE::Russian::Names;
+use EGE::Russian::SimpleNames;
 
 {
     my %h; undef @h{@EGE::Russian::alphabet};
@@ -23,4 +23,57 @@ for (1..5) {
     isnt substr($n1->{name}, 0, 1), substr($n2->{name}, 0, 1), "different_names $_";
 }
 
-is genitive('Вий'), 'Вия', 'SimpleNames::genitive';
+is EGE::Russian::SimpleNames::genitive('Вий'), 'Вия', 'SimpleNames::genitive';
+
+{
+    my $n = [
+        [ 'Валерий', 'Валерия' ],
+        [ 'Игорь', 'Игоря' ],
+        [ 'Альфреа', 'Альфреи' ],
+        [ 'Ядвига', 'Ядвиги' ],
+        [ 'Лука', 'Луки' ],
+        [ 'Анжелика', 'Анжелики' ],
+        [ 'Кузьма', 'Кузьмы' ],
+        [ 'Глория', 'Глории' ],
+        [ 'Лев', 'Льва' ],
+    ];
+
+    is EGE::Russian::Names::genitive($n->[$_][0]), $n->[$_][1], 'Names::genitive ' . ($_ + 1) for 0..$#$n;
+}
+
+{
+    my $n = [
+        [ 'Валерий', 'Валерием' ],
+        [ 'Игорь', 'Игорем' ],
+        [ 'Альфреа', 'Альфреей' ],
+        [ 'Ядвига', 'Ядвигой' ],
+        [ 'Лука', 'Лукой' ],
+        [ 'Анжелика', 'Анжеликой' ],
+        [ 'Кузьма', 'Кузьмой' ],
+        [ 'Глория', 'Глорией' ],
+        [ 'Лев', 'Львом' ],
+        [ 'Илья', 'Ильёй' ],
+        [ 'Наталья', 'Натальей' ],
+    ];
+
+    is EGE::Russian::Names::ablative($n->[$_][0]), $n->[$_][1], 'Names::ablative ' . ($_ + 1) for 0..$#$n;
+}
+
+{
+    my $n = [
+        [ 'Валерий', 'Валерию' ],
+        [ 'Игорь', 'Игорю' ],
+        [ 'Альфреа', 'Альфрее' ],
+        [ 'Ядвига', 'Ядвиге' ],
+        [ 'Анжелика', 'Анжелике' ],
+        [ 'Кузьма', 'Кузьме' ],
+        [ 'Глория', 'Глории' ],
+        [ 'Лев', 'Льву' ],
+        [ 'Илья', 'Илье' ],
+        [ 'София', 'Софии' ],
+        [ 'Архип', 'Архипу' ],
+    ];
+
+    is EGE::Russian::Names::dative($n->[$_][0]), $n->[$_][1], 'Names::dative ' . ($_ + 1) for 0..$#$n;
+}
+
