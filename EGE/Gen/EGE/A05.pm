@@ -8,6 +8,7 @@ use strict;
 use warnings;
 use utf8;
 
+use List::Util qw(max);
 use Storable qw(dclone);
 
 use EGE::Random;
@@ -59,6 +60,7 @@ sub arith {
     my $correct = $get_c->($b);
     my %seen = ($correct => 1);
     @errors = grep !$seen{$_}++, @errors;
+    push @errors, max(@errors) + rnd->in_range(1, 3) while @errors < 3;
 
     $self->variants($correct, rnd->pick_n(3, @errors));
 }
