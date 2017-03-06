@@ -102,33 +102,33 @@ sub min_period_of_time {
     my $full_data = 2 ** rnd->in_range($high_speed - 13, 10);
 
     my $male_or_female  = rnd->coin;
-    my $female_name = $EGE::Russian::Names::female[rnd->in_range(0, 100)];
-    my $male_name = $EGE::Russian::Names::male[rnd->in_range(0, 100)];
+    my $female_name = rnd->pick(@EGE::Russian::Names::female);
+    my $male_name = rnd->pick(@EGE::Russian::Names::male);
     my $name_first = $male_or_female ? $female_name : $male_name;
     my $name_second = $male_or_female ? $male_name : $female_name;
-    my $word1 = $male_or_female ? 'договорился' : 'договорилась';
-    my $word2 = $male_or_female ? 'она' : 'он';
+    my $argeed = $male_or_female ? 'договорился' : 'договорилась';
+    my $she_he = $male_or_female ? 'она' : 'он';
 
-    my %data = (
-        genitive_first  => EGE::Russian::Names::genitive($name_first),
-        ablative_first  => EGE::Russian::Names::ablative($name_first),
-        dative_first    => EGE::Russian::Names::dative($name_first),
-        genitive_second => EGE::Russian::Names::genitive($name_second),
-        ablative_second => EGE::Russian::Names::ablative($name_second),
-        dative_second   => EGE::Russian::Names::dative($name_second),
-    );
+    my $genitive_first  = EGE::Russian::Names::genitive($name_first);
+    my $ablative_first  = EGE::Russian::Names::ablative($name_first);
+    my $genitive_second = EGE::Russian::Names::genitive($name_second);
+    my $ablative_second = EGE::Russian::Names::ablative($name_second);
+    my $dative_second   = EGE::Russian::Names::dative($name_second);
 
     $self->{text} =
-        "У $data{genitive_first} есть доступ к сети Интернет по высокоскоростному одностороннему радиоканалу,
-        обеспечивающему скорость получения информации 2<sup>$high_speed</sup> бит в секунду.
-        У $data{genitive_second} нет скоростного доступа в Интернет, но есть возможность получать информацию
-        от $data{genitive_first} по телефонному каналу со средней скоростью 2<sup>$slow_speed</sup> бит в секунду.
-        $name_second $word1 с $data{ablative_first}, что $word2 скачает для него данные объемом $required_data
-         Мбайт по высокоскоростному каналу и ретранслирует их $data{dative_second} по низкоскоростному каналу.<br/>
-        <br/>Компьютер $data{genitive_first} может начать ретрансляцию данных не раньше, чем им будут получены
-        первые $full_data Кбайт этих данных. Каков минимально возможный промежуток времени
-        (в секундах) с момента начала скачивания $data{ablative_first} данных до полного их получения
-        $data{ablative_second}?<br/><br/>В ответе укажите только число, слово «секунд» или букву «с» добавлять не нужно.";
+        "<p>У $genitive_first есть доступ к сети Интернет по высокоскоростному одностороннему радиоканалу, " .
+        "обеспечивающему скорость получения информации 2<sup>$high_speed</sup> бит в секунду. " .
+        "У $genitive_second нет скоростного доступа в Интернет, но есть возможность получать информацию " .
+        "от $genitive_first по телефонному каналу со средней скоростью 2<sup>$slow_speed</sup> бит в секунду. " .
+        "$name_second $argeed с $ablative_first, что $she_he скачает для него данные объемом $required_data " .
+        "Мбайт по высокоскоростному каналу и ретранслирует их $dative_second по низкоскоростному каналу.</p> " .
+
+        "<p>Компьютер $genitive_first может начать ретрансляцию данных не раньше, чем им будут получены " .
+        "первые $full_data Кбайт этих данных. Каков минимально возможный промежуток времени " .
+        "(в секундах) с момента начала скачивания $ablative_first данных до полного их получения " .
+        "$ablative_second?</p> " .
+
+        '<p>В ответе укажите только число, слово «секунд» или букву «с» добавлять не нужно.</p>';
 
     $self->{correct} = 2 ** (23 - $slow_speed) * $required_data  + $full_data * 2 ** (13 - $high_speed);
     $self->accept_number;
