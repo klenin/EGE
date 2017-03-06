@@ -93,44 +93,6 @@ sub trans_latency {
     $self->{correct} = $latency;
 }
 
-
-sub genitive { # родительный падеж
-    my $name = shift;
-    if ($name =~/й$/) { $name =~ s/й$/я/ }
-    elsif ($name =~ /ь$/) { $name =~ s/ь$/я/ }
-    elsif ($name =~ /ка$/) { $name =~ s/а$/и/ }
-    elsif ($name =~ /га$/) { $name =~ s/га$/ги/ }
-    elsif ($name =~ /eа$/) { $name =~ s/eа$/eи/ }
-    elsif ($name =~ /а$/) { $name =~ s/а$/ы/ }
-    elsif ($name =~ /я$/) { $name =~ s/я$/и/ }
-    elsif ($name =~ /eв$/) { $name =~ s/ев$/ьва/ }
-    else { $name .= 'а' };
-    $name;
-}
-
-sub ablative { # творительный падеж
-    my $name = shift;
-    if ($name =~ /й$/) { $name =~ s/й$/ем/ }
-    elsif ($name =~ /ь$/) { $name =~ s/ь$/ем/ }
-    elsif ($name =~ /eа$/) { $name =~ s/eа$/eй/ }
-    elsif ($name =~ /а$/) { $name =~ s/а$/ой/ }
-    elsif ($name =~ /я$/) { $name =~ s/я$/ей/ }
-    elsif ($name =~ /eв$/) { $name =~ s/ев$/ьвом/ }
-    else { $name .= 'ом' };
-    $name;
-}
-
-sub dative { # дательный падеж
-    my $name = shift;
-    if ($name =~ /й$/) { $name =~ s/й$/ю/ }
-    elsif ($name =~ /ь$/) { $name =~ s/ь$/ю/ }
-    elsif ($name =~ /а$/) { $name =~ s/а$/е/ }
-    elsif ($name =~ /я$/) { $name =~ s/я$/и/ }
-    elsif ($name =~ /eв$/) { $name =~ s/ев$/ьву/ }
-    else { $name .= 'у' };
-    $name;
-}
-
 sub min_period_of_time {
     my ($self) = @_;
 
@@ -148,12 +110,12 @@ sub min_period_of_time {
     my $word2 = $male_or_female ? 'она' : 'он';
 
     my %data = (
-        genitive_first  => genitive($name_first),
-        ablative_first  => ablative($name_first),
-        dative_first    => dative($name_first),
-        genitive_second => genitive($name_second),
-        ablative_second => ablative($name_second),
-        dative_second   => dative($name_second),
+        genitive_first  => EGE::Russian::Names::genitive($name_first),
+        ablative_first  => EGE::Russian::Names::ablative($name_first),
+        dative_first    => EGE::Russian::Names::dative($name_first),
+        genitive_second => EGE::Russian::Names::genitive($name_second),
+        ablative_second => EGE::Russian::Names::ablative($name_second),
+        dative_second   => EGE::Russian::Names::dative($name_second),
     );
 
     $self->{text} =
