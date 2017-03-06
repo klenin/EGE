@@ -309,4 +309,91 @@ sub bus_station {
     $self->variants(map stime($_), @ans);
 }
 
+my $answer = '';
+my $text1 = '';
+my $wrong1 = '';
+my $wrong2 = '';
+my $wrong3 = '';
+my $copy = '';
+
+sub CheckMatch{
+   if($answer eq $copy or $text1 eq $copy or $wrong1 eq $copy or $wrong2 eq $copy){
+       return 1;
+   }
+   return 0;
+}
+
+sub WrAns{
+    foreach(0..2){
+        $copy = $answer;
+        if(substr($copy, int($_*8), 7) ne '0000000'){
+            substr($copy, int($_*8), 7) = '0000000';
+            if (!CheckMatch()){
+                return $copy;
+            }
+        }
+    }
+    while(CheckMatch()){
+        my $i = int(rand(23));
+        if(substr($copy, $i, 1) ne  ' '){
+           substr($copy, $i, 1) eq '0' ? substr($copy, $i, 1) = '1' : substr($copy, $i, 1) = '0'; 
+        }
+    }
+    return $copy;
+}
+
+sub BadMessage{
+    my ($self) = @_;
+    $text1 = '';
+    my $parity = 0;
+    foreach my $i (0..2){
+        my $tmp = '';
+        $parity = 0;
+        foreach my $j (0..5){
+            my $r = int(rand(2));
+            $tmp .= $r;
+            $parity += $r;
+        }
+        $text1 .= $tmp . ($parity % 2) . ' ';
+    }
+    my $text2 = $text1;
+    foreach (0..23){
+        my $mistake = int(rand(2));
+        if(substr($text2, $_, 1) ne  ' ' and $mistake){
+            substr($text2, $_, 1) eq '0' ? substr($text2, $_, 1) = '1' : substr($text2, $_, 1) = '0'; 
+        }
+    }
+    my $ParCheck = 0;
+    $answer = $text2 . ' '; 
+    foreach(0..23){
+        if(substr($answer, $_, 1) eq ' '){
+            if ($ParCheck % 2 != 0){
+                substr($answer, int($_ / 8) * 8, 7) = '0000000';
+            }
+            $ParCheck = 0;
+        }
+        else{
+            $ParCheck += substr($answer, $_, 1);
+        }
+    }
+    $self->{text} = <<QUESTION
+В некоторой информационной системе информация кодируется двоичными шестиразрядными словами. 
+При передаче данных возможны их искажения, поэтому в конец каждого слова добавляется седьмой 
+(контрольный) разряд таким образом, чтобы сумма разрядов нового слова, считая контрольный, 
+была чётной. Например, к слову 110011 справа будет добавлен 0, а к слову 101100 – 1.
+После приёма слова производится его обработка. При этом проверяется сумма его разрядов,
+включая контрольный. Если она нечётна, это означает, что при передаче этого слова произошёл сбой, 
+и оно автоматически заменяется на зарезервированное слово 0000000. Если она чётна, это означает,
+что сбоя не было или сбоев было больше одного. В этом случае принятое слово не изменяется.
+Исходное сообщение : <b>$text1</b> было принято в виде : <b>$text2</b>.
+Как будет выглядеть принятое сообщение после обработки?
+QUESTION
+;
+    $wrong1 = WrAns();
+    $wrong2 = WrAns();
+    $wrong3 = WrAns();
+    $self->variants($wrong1, $answer, $wrong3, $wrong2);
+    $self->{correct} = 1;
+}
+
 1;

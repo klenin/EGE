@@ -80,7 +80,7 @@ $q->{text}
             print "</ol>\n<ol>";
             for my $i (0..$#correct) {
                 print
-                    '<li class="correct">', $q->{type} eq 'mt' ?
+                    '<li class="correct">', $q->{type} eq 'mt' ? 
                         "$v[$i] - $q->{variants}->[1]->[$correct[$i]]</li>\n" :
                         "$v[$correct[$i]]</li>\n";
                 }
@@ -149,7 +149,9 @@ EOT
 }
 
 binmode STDOUT, ':utf8';
-
+g('A13', 'MemCount');
+g('A06', 'BadMessage');
+#g('M03', 'simple');
 #g('A1', 'recode');
 #g('A1', 'simple');
 #g('A2', 'sport');
@@ -206,9 +208,6 @@ binmode STDOUT, ':utf8';
 #g('B03', 'count_digits');
 #g('B03', 'simple_equation');
 #g('B03', 'count_ones');
-#g('B03', 'music_time_to_time');
-#g('B03', 'music_size_to_size');
-#g('B03', 'music_format_time_to_time');
 #g('B04', 'impl_border');
 #g('B04', 'lex_order');
 #g('B04', 'morse');
