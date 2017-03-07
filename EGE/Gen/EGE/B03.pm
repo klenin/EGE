@@ -229,7 +229,7 @@ sub move_number {
     my $num = rnd->in_range(12, 500);
     my $converted_num = dec_to_base($base, $num);
     $self->{text} =
-        "Запишите десятичное число $num в системе счисления с онованием $base. " .
+        "Запишите десятичное число $num в системе счисления с ос­но­ва­ни­ем $base. " .
         'Основание системы счисления (нижний индекс после числа) писать не нужно.';
     $self->{correct} = $converted_num;
     $self->accept_number;
