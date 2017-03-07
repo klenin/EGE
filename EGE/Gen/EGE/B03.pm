@@ -211,4 +211,28 @@ sub music_format_time_to_time {
     $self->accept_number;
 }
 
+sub select_base {
+    my ($self) = @_;
+    my $base = rnd->in_range(3, 9);
+    my $num = rnd->in_range(12, 500);
+    my $converted_num = dec_to_base($base, $num);
+    $self->{text} =
+        'В си­сте­ме счис­ле­ния с не­ко­то­рым ос­но­ва­ни­ем де­ся­тич­ное число ' .
+        "$num за­пи­сы­ва­ет­ся в виде $converted_num. Ука­жи­те это ос­но­ва­ние.";
+    $self->{correct} = $base;
+    $self->accept_number;
+}
+
+sub move_number {
+    my ($self) = @_;
+    my $base = rnd->in_range(3, 9);
+    my $num = rnd->in_range(12, 500);
+    my $converted_num = dec_to_base($base, $num);
+    $self->{text} =
+        "Запишите десятичное число $num в системе счисления с онованием $base. " .
+        'Основание системы счисления (нижний индекс после числа) писать не нужно.';
+    $self->{correct} = $converted_num;
+    $self->accept_number;
+}
+
 1;
