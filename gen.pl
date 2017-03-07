@@ -149,8 +149,8 @@ EOT
 }
 
 binmode STDOUT, ':utf8';
-g('A13', 'MemCount');
-g('A06', 'BadMessage');
+g('A13', 'memory_count');
+g('A06', 'bad_message');
 #g('M03', 'simple');
 #g('A1', 'recode');
 #g('A1', 'simple');

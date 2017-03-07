@@ -190,14 +190,14 @@ sub file_mask3 {
     $self->{text} .= "</ul>";
 }
 
-sub MemCount {
+sub memory_count{
     my ($self) = @_;
     my $QtAlph = int(rand(11)) + 10;
     my $AlphSize = int(rand(10)) + 3;
     my $QtLogin = int(rand(21)) + 10;
     my $BperSymb = 0;
     my $pow = 1;
-    while($AlphSize > $pow){
+    while ($AlphSize > $pow){
         $pow *= 2;
         $BperSymb += 1;
     }

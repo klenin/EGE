@@ -316,33 +316,30 @@ my $wrong2 = '';
 my $wrong3 = '';
 my $copy = '';
 
-sub CheckMatch{
-   if($answer eq $copy or $text1 eq $copy or $wrong1 eq $copy or $wrong2 eq $copy){
-       return 1;
-   }
-   return 0;
+sub check_match{
+   return $answer eq $copy || $text1 eq $copy || $wrong1 eq $copy || $wrong2 eq $copy;
 }
 
-sub WrAns{
-    foreach(0..2){
+sub wr_ans{
+    foreach (0..2){
         $copy = $answer;
-        if(substr($copy, int($_*8), 7) ne '0000000'){
+        if (substr($copy, int($_*8), 7) ne '0000000'){
             substr($copy, int($_*8), 7) = '0000000';
-            if (!CheckMatch()){
+            if (!check_match()){
                 return $copy;
             }
         }
     }
-    while(CheckMatch()){
+    while (check_match()){
         my $i = int(rand(23));
-        if(substr($copy, $i, 1) ne  ' '){
+        if (substr($copy, $i, 1) ne  ' '){
            substr($copy, $i, 1) eq '0' ? substr($copy, $i, 1) = '1' : substr($copy, $i, 1) = '0'; 
         }
     }
     return $copy;
 }
 
-sub BadMessage{
+sub bad_message{
     my ($self) = @_;
     $text1 = '';
     my $parity = 0;
@@ -359,20 +356,20 @@ sub BadMessage{
     my $text2 = $text1;
     foreach (0..23){
         my $mistake = int(rand(2));
-        if(substr($text2, $_, 1) ne  ' ' and $mistake){
+        if (substr($text2, $_, 1) ne  ' ' and $mistake){
             substr($text2, $_, 1) eq '0' ? substr($text2, $_, 1) = '1' : substr($text2, $_, 1) = '0'; 
         }
     }
     my $ParCheck = 0;
     $answer = $text2 . ' '; 
-    foreach(0..23){
-        if(substr($answer, $_, 1) eq ' '){
+    foreach (0..23){
+        if (substr($answer, $_, 1) eq ' '){
             if ($ParCheck % 2 != 0){
                 substr($answer, int($_ / 8) * 8, 7) = '0000000';
             }
             $ParCheck = 0;
         }
-        else{
+        else {
             $ParCheck += substr($answer, $_, 1);
         }
     }
@@ -389,9 +386,9 @@ sub BadMessage{
 Как будет выглядеть принятое сообщение после обработки?
 QUESTION
 ;
-    $wrong1 = WrAns();
-    $wrong2 = WrAns();
-    $wrong3 = WrAns();
+    $wrong1 = wr_ans();
+    $wrong2 = wr_ans();
+    $wrong3 = wr_ans();
     $self->variants($wrong1, $answer, $wrong3, $wrong2);
     $self->{correct} = 1;
 }
