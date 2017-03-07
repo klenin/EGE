@@ -309,68 +309,74 @@ sub bus_station {
     $self->variants(map stime($_), @ans);
 }
 
-my $answer = '';
-my $text1 = '';
-my $wrong1 = '';
-my $wrong2 = '';
-my $wrong3 = '';
-my $copy = '';
-
 sub check_match{
-   return $answer eq $copy || $text1 eq $copy || $wrong1 eq $copy || $wrong2 eq $copy;
+   my @check_el = @_;
+   return ($check_el[1] eq $check_el[0]) || ($check_el[2] eq $check_el[0]) || ($check_el[3] eq $check_el[0]);
 }
 
 sub wr_ans{
+    my @used = @_;
+    my @wrong_ans;
+    my $n_null = 0;
+    my @str = split(/ /, $used[0], -1);
+    my @copy;
     foreach (0..2){
-        $copy = $answer;
-        if (substr($copy, int($_*8), 7) ne '0000000'){
-            substr($copy, int($_*8), 7) = '0000000';
-            if (!check_match()){
-                return $copy;
+        my $get = 0;
+        while ($n_null < 3){
+            $n_null += 1;
+            if ($str[$n_null - 1] ne '0000000'){
+                @copy = @str;
+                $copy[$n_null - 1] = '0000000';
+                if (check_match("@copy", $used[0], $used[1], $used[2])){
+                    next;
+                }
+                $wrong_ans[$_] = "@copy";
+                $get = 1;
+                last;
             }
         }
+        if ($get){ next; }
+        @copy = @str;
+        do {
+            substr($copy[int(rand(3))], int(rand(7)), 1) = int(rand(2));
+        } while (check_match("@copy", $used[0], $used[1], $used[2]));
+        $wrong_ans[$_] = "@copy";
     }
-    while (check_match()){
-        my $i = int(rand(23));
-        if (substr($copy, $i, 1) ne  ' '){
-           substr($copy, $i, 1) eq '0' ? substr($copy, $i, 1) = '1' : substr($copy, $i, 1) = '0'; 
-        }
-    }
-    return $copy;
+    return $wrong_ans[0], $wrong_ans[1], $wrong_ans[2];
 }
 
-sub bad_message{
+sub par_check{
+    my $str = "@_";
+    my $n = 0;
+    foreach (0..((length $str) - 1)){
+        $n += int(substr($str, $_, 1));
+    }
+    return $n % 2;
+} 
+
+sub bad_message {
     my ($self) = @_;
-    $text1 = '';
-    my $parity = 0;
+    my @text1; 
     foreach my $i (0..2){
-        my $tmp = '';
-        $parity = 0;
+        $text1[$i] = '';
         foreach my $j (0..5){
-            my $r = int(rand(2));
-            $tmp .= $r;
-            $parity += $r;
+            $text1[$i] .= int(rand(2));
         }
-        $text1 .= $tmp . ($parity % 2) . ' ';
+        $text1[$i] .=  par_check($text1[$i]);
+        
     }
-    my $text2 = $text1;
-    foreach (0..23){
-        my $mistake = int(rand(2));
-        if (substr($text2, $_, 1) ne  ' ' and $mistake){
-            substr($text2, $_, 1) eq '0' ? substr($text2, $_, 1) = '1' : substr($text2, $_, 1) = '0'; 
-        }
-    }
-    my $ParCheck = 0;
-    $answer = $text2 . ' '; 
-    foreach (0..23){
-        if (substr($answer, $_, 1) eq ' '){
-            if ($ParCheck % 2 != 0){
-                substr($answer, int($_ / 8) * 8, 7) = '0000000';
+    my @text2 = @text1;
+    foreach my $i (0..2){
+        foreach my $j (0..6){
+            if (int(rand(2))){
+                substr($text2[$i], $j, 1) = (substr($text2[$i], $j, 1) + 1) % 2;
             }
-            $ParCheck = 0;
         }
-        else {
-            $ParCheck += substr($answer, $_, 1);
+    }
+    my @answer = @text2; 
+    foreach (0..2){
+        if (par_check($answer[$_])){
+            $answer[$_] = '0000000';
         }
     }
     $self->{text} = <<QUESTION
@@ -382,15 +388,13 @@ sub bad_message{
 включая контрольный. Если она нечётна, это означает, что при передаче этого слова произошёл сбой, 
 и оно автоматически заменяется на зарезервированное слово 0000000. Если она чётна, это означает,
 что сбоя не было или сбоев было больше одного. В этом случае принятое слово не изменяется.
-Исходное сообщение : <b>$text1</b> было принято в виде : <b>$text2</b>.
+Исходное сообщение : <b>@text1</b> было принято в виде : <b>@text2</b>.
 Как будет выглядеть принятое сообщение после обработки?
 QUESTION
 ;
-    $wrong1 = wr_ans();
-    $wrong2 = wr_ans();
-    $wrong3 = wr_ans();
-    $self->variants($wrong1, $answer, $wrong3, $wrong2);
-    $self->{correct} = 1;
+    
+    my @m = ("@answer", "@text2", "@text1");
+    $self->variants("@answer", wr_ans(@m));
 }
 
 1;

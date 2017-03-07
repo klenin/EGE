@@ -80,7 +80,7 @@ $q->{text}
             print "</ol>\n<ol>";
             for my $i (0..$#correct) {
                 print
-                    '<li class="correct">', $q->{type} eq 'mt' ? 
+                    '<li class="correct">', $q->{type} eq 'mt' ?
                         "$v[$i] - $q->{variants}->[1]->[$correct[$i]]</li>\n" :
                         "$v[$correct[$i]]</li>\n";
                 }
@@ -149,8 +149,7 @@ EOT
 }
 
 binmode STDOUT, ':utf8';
-g('A13', 'memory_count');
-g('A06', 'bad_message');
+
 #g('M03', 'simple');
 #g('A1', 'recode');
 #g('A1', 'simple');
@@ -175,6 +174,7 @@ g('A06', 'bad_message');
 #g('A6', 'count_odd_even');
 #g('A6', 'alg_min_max');
 #g('A6', 'alg_avg');
+#g('A06', 'bad_message');
 #g('A7', 'names');
 #g('A7', 'animals');
 #g('A7', 'random_sequences');
@@ -195,6 +195,7 @@ g('A06', 'bad_message');
 #g('A12', 'beads');
 #g('A13', 'file_mask');
 #g('A13', 'file_mask2');
+#g('A13', 'additional_inf_length');
 #g('A14', 'database');
 #g('A15', 'rgb');
 #g('A16', 'spreadsheet');
@@ -208,6 +209,9 @@ g('A06', 'bad_message');
 #g('B03', 'count_digits');
 #g('B03', 'simple_equation');
 #g('B03', 'count_ones');
+#g('B03', 'music_time_to_time');
+#g('B03', 'music_size_to_size');
+#g('B03', 'music_format_time_to_time');
 #g('B04', 'impl_border');
 #g('B04', 'lex_order');
 #g('B04', 'morse');
