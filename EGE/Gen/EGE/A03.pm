@@ -39,7 +39,7 @@ sub convert {
     my $n = 32 + rnd->in_range(0, 15) * 2 + 1;
     my $v = EGE::Bits->new->set_size(7)->set_dec($n);
     my $bin = substr($v->get_bin, 1);
-    
+
     my $rn = int($v->dup->reverse_->shift_(-1)->get_dec);
     my $fn = int($v->dup->flip(rnd->in_range(0, 5))->get_dec);
 
