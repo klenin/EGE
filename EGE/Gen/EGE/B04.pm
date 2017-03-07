@@ -15,6 +15,7 @@ use EGE::Random;
 use EGE::Prog;
 use EGE::Prog::Lang;
 use EGE::Html;
+use EGE::NumText;
 
 sub make_xx {[
     '*', map rnd->pick('X', [ '+', 'X', 1 ], [ '-', 'X', 1 ]), 1 .. 2
@@ -141,6 +142,19 @@ sub bulbs {
         "на табло, чтобы с его помощью можно было передать $count различных сигналов?";
 
     $self->{correct} = ceil(log($count) / log(3));
+    $self->accept_number;
+}
+
+sub plus_minus {
+    my($self) = @_;
+    my $num = rnd->in_range(5, 10);
+    my $text_num = num_by_words($num);
+
+    $self->{text} =
+        'Сколь­ко су­ще­ству­ет раз­лич­ных по­сле­до­ва­тель­но­стей из сим­во­лов «плюс» и «минус», ' .
+        "дли­ной ровно в $text_num сим­во­лов? ";
+
+    $self->{correct} = 2 ** $num;
     $self->accept_number;
 }
 

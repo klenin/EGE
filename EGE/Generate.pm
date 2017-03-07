@@ -107,7 +107,7 @@ sub all {[
     gg('B02', qw(simple_while)),
     gg('B03', qw(q1234 last_digit count_digits count_ones music_time_to_time music_size_to_size music_format_time_to_time select_base move_number)),
     gg('B03', qw(simple_equation)),
-    gg('B04', qw(impl_border lex_order morse bulbs)),
+    gg('B04', qw(impl_border lex_order morse bulbs plus_minus)),
     gg('B05', qw(calculator complete_spreadsheet)),
     gg('B06', qw(solve)),
     gg('B06', qw(recursive_function)),
