@@ -219,6 +219,7 @@ binmode STDOUT, ':utf8';
 #g('B04', 'plus_minus');
 #g('B05', 'calculator');
 #g('B05', 'complete_spreadsheet');
+#g('B05', 'adsl_speed');
 #g('B06', 'solve');
 #g('B06', 'recursive_function');
 #g('B07', 'who_is_right');
