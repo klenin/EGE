@@ -150,6 +150,7 @@ EOT
 
 binmode STDOUT, ':utf8';
 
+#g('M03', 'simple');
 #g('A1', 'recode');
 #g('A1', 'simple');
 #g('A2', 'sport');
@@ -173,6 +174,7 @@ binmode STDOUT, ':utf8';
 #g('A6', 'count_odd_even');
 #g('A6', 'alg_min_max');
 #g('A6', 'alg_avg');
+#g('A06', 'bad_message');
 #g('A7', 'names');
 #g('A7', 'animals');
 #g('A7', 'random_sequences');
@@ -193,6 +195,7 @@ binmode STDOUT, ':utf8';
 #g('A12', 'beads');
 #g('A13', 'file_mask');
 #g('A13', 'file_mask2');
+#g('A13', 'additional_inf_length');
 #g('A14', 'database');
 #g('A15', 'rgb');
 #g('A16', 'spreadsheet');

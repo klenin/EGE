@@ -309,4 +309,92 @@ sub bus_station {
     $self->variants(map stime($_), @ans);
 }
 
+sub check_match{
+   my @check_el = @_;
+   return ($check_el[1] eq $check_el[0]) || ($check_el[2] eq $check_el[0]) || ($check_el[3] eq $check_el[0]);
+}
+
+sub wr_ans{
+    my @used = @_;
+    my @wrong_ans;
+    my $n_null = 0;
+    my @str = split(/ /, $used[0], -1);
+    my @copy;
+    foreach (0..2){
+        my $get = 0;
+        while ($n_null < 3){
+            $n_null += 1;
+            if ($str[$n_null - 1] ne '0000000'){
+                @copy = @str;
+                $copy[$n_null - 1] = '0000000';
+                if (check_match("@copy", $used[0], $used[1], $used[2])){
+                    next;
+                }
+                $wrong_ans[$_] = "@copy";
+                $get = 1;
+                last;
+            }
+        }
+        if ($get){ next; }
+        @copy = @str;
+        do {
+            substr($copy[int(rand(3))], int(rand(7)), 1) = int(rand(2));
+        } while (check_match("@copy", $used[0], $used[1], $used[2]));
+        $wrong_ans[$_] = "@copy";
+    }
+    return $wrong_ans[0], $wrong_ans[1], $wrong_ans[2];
+}
+
+sub par_check{
+    my $str = "@_";
+    my $n = 0;
+    foreach (0..((length $str) - 1)){
+        $n += int(substr($str, $_, 1));
+    }
+    return $n % 2;
+} 
+
+sub bad_message {
+    my ($self) = @_;
+    my @text1; 
+    foreach my $i (0..2){
+        $text1[$i] = '';
+        foreach my $j (0..5){
+            $text1[$i] .= int(rand(2));
+        }
+        $text1[$i] .=  par_check($text1[$i]);
+        
+    }
+    my @text2 = @text1;
+    foreach my $i (0..2){
+        foreach my $j (0..6){
+            if (int(rand(2))){
+                substr($text2[$i], $j, 1) = (substr($text2[$i], $j, 1) + 1) % 2;
+            }
+        }
+    }
+    my @answer = @text2; 
+    foreach (0..2){
+        if (par_check($answer[$_])){
+            $answer[$_] = '0000000';
+        }
+    }
+    $self->{text} = <<QUESTION
+В некоторой информационной системе информация кодируется двоичными шестиразрядными словами. 
+При передаче данных возможны их искажения, поэтому в конец каждого слова добавляется седьмой 
+(контрольный) разряд таким образом, чтобы сумма разрядов нового слова, считая контрольный, 
+была чётной. Например, к слову 110011 справа будет добавлен 0, а к слову 101100 – 1.
+После приёма слова производится его обработка. При этом проверяется сумма его разрядов,
+включая контрольный. Если она нечётна, это означает, что при передаче этого слова произошёл сбой, 
+и оно автоматически заменяется на зарезервированное слово 0000000. Если она чётна, это означает,
+что сбоя не было или сбоев было больше одного. В этом случае принятое слово не изменяется.
+Исходное сообщение : <b>@text1</b> было принято в виде : <b>@text2</b>.
+Как будет выглядеть принятое сообщение после обработки?
+QUESTION
+;
+    
+    my @m = ("@answer", "@text2", "@text1");
+    $self->variants("@answer", wr_ans(@m));
+}
+
 1;
