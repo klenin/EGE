@@ -25,7 +25,7 @@ sub gen_file {
     my $fn = '';
     for my $i (0 .. length($mask) - 1) {
         my $c = substr($mask, $i, 1);
-        $fn .= 
+        $fn .=
             $c eq '?' ? random_str(--$bad_q ? 1 : rnd->pick(0, 2, 3)) :
             $c eq '*' ? random_str(rnd->in_range(0, 3)) :
             $c;
@@ -59,7 +59,7 @@ sub exact_gen_file {
     my $fn = '';
     for my $i (0 .. length($mask) - 1) {
         my $c = substr($mask, $i, 1);
-        $fn .= 
+        $fn .=
             $c eq '?' ? random_str($ok ? 1 : rnd->pick(0, 2, 3)) :
             $c eq '*' ? random_str(rnd->in_range(0, 3)) :
             $c;

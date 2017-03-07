@@ -11,7 +11,6 @@ use utf8;
 use EGE::NumText;
 use EGE::Random;
 use EGE::Russian;
-use EGE::Russian;
 
 sub trans_rate {
     my ($self) = @_;
