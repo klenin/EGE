@@ -158,6 +158,27 @@ sub plus_minus {
     $self->accept_number;
 }
 
+sub letter_combinatorics {
+    my ($self) = @_;
+
+    my $wordLength = rnd->in_range(5, 7);
+    my $vowelsCount = rnd->in_range(1, 3);
+    my $consonantsCount = $wordLength - $vowelsCount;
+    my @vowels = rnd->pick_n($vowelsCount, @EGE::Russian::vowels);
+    my @consonants = rnd->pick_n($consonantsCount, @EGE::Russian::consonants);
+
+    my @letters = rnd->shuffle(@vowels, @consonants);
+
+    $self->{text} =
+        "Вася составляет $wordLength-буквенные слова, в которых встречаются только буквы ${\join(', ', @letters)} " .
+        'причём в каждом слове есть ровно одна гласная буква. Каждая из допустимых согласных букв может встречаться ' .
+        'в кодовом слове любое количество раз или не встречаться совсем. Словом считается любая допустимая ' .
+        'последовательность букв, не обязательно осмысленная. Сколько существует таких слов, которые может написать Вася?';
+
+    $self->{correct} = $wordLength * $vowelsCount * $consonantsCount ** ($wordLength - 1);
+    $self->accept_number;
+}
+
 1;
 
 __END__
