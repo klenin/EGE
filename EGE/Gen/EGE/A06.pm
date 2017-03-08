@@ -397,4 +397,35 @@ QUESTION
     $self->variants("@answer", wr_ans(@m));
 }
 
+sub swap{
+    my @sw = @_;
+    my $tmp = $sw[0];
+    $sw[0] = $sw[2];
+    $sw[0] = $tmp;
+    return @sw;
+}
+
+sub automate{
+    my ($self) = @_;
+    my $num = int(rand(889)) + 111;
+    my $answer = $num;
+    my @digit = split(//, $num);
+    my $getmin = 0;
+    if ($digit[0] < $digit[2]){
+        @digit = swap(@digit);
+        $getmin = 1;
+    }
+    my $res_number = ($digit[0] + $digit[1]) . ($digit[1] + $digit[2]);
+    $self->{text} = <<QUESTION
+Автомат получает на вход трёхзначное число. По этому числу строится новое число по следующим правилам.<br />
+1. Складываются первая и вторая, а также вторая и третья цифры исходного числа.<br />
+2. Полученные два числа записываются друг за другом в порядке возрастания (без разделителей).<br />
+
+Пример. Исходное число: 348. Суммы: 3+4 = 7; 4+8 = 12. Результат: 712.<br />
+Укажите наименьшее число, в результате обработки которого автомат выдаст число $res_number.
+QUESTION
+;
+    $self->variants($answer, $getmin ? $num : $num + 1, $digit[0] . (($digit[1] + 2) % 10) . $digit[2], $digit[0] . (($digit[1] + 1) % 10) . $digit[2]);
+}
+
 1;
