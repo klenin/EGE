@@ -189,6 +189,7 @@ binmode STDOUT, ':utf8';
 #g('A9', 'error_correction_code');
 #g('A9', 'hamming_code');
 #g('A10', 'graph_by_matrix');
+#g('A10', 'light_panel');
 #g('A11', 'variable_length');
 #g('A11', 'fixed_length');
 #g('A11', 'password_length');
