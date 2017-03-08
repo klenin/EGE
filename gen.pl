@@ -176,6 +176,7 @@ binmode STDOUT, ':utf8';
 #g('A6', 'bad_message');
 #g('A6', 'automate');
 #g('A6', 'inf_size');
+#g('A6', 'bin_number');
 #g('A7', 'names');
 #g('A7', 'animals');
 #g('A7', 'random_sequences');
