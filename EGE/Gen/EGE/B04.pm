@@ -161,24 +161,24 @@ sub plus_minus {
 sub letter_combinatorics {
     my ($self) = @_;
 
-    my $wordLength = rnd->in_range(5, 7);
-    my $vowelsCount = rnd->in_range(1, 3);
-    my $consonantsCount = $wordLength - $vowelsCount;
-    my @vowels = rnd->pick_n($vowelsCount, @EGE::Russian::vowels);
-    my @consonants = rnd->pick_n($consonantsCount, @EGE::Russian::consonants);
+    my $word_length = rnd->in_range(5, 7);
+    my $vowels_count = rnd->in_range(1, 3);
+    my $consonants_count = $word_length - $vowels_count;
+    my @vowels = rnd->pick_n($vowels_count, @EGE::Russian::vowels);
+    my @consonants = rnd->pick_n($consonants_count, @EGE::Russian::consonants);
 
     my @letters = rnd->shuffle(@vowels, @consonants);
 
+    my $letters = join(', ', @letters);
     $self->{text} =
-        "Вася составляет $wordLength-буквенные слова, в которых встречаются только буквы ${\join(', ', @letters)} " .
+        "Вася составляет $word_length-буквенные слова, в которых встречаются только буквы $letters, " .
         'причём в каждом слове есть ровно одна гласная буква. Каждая из допустимых согласных букв может встречаться ' .
         'в кодовом слове любое количество раз или не встречаться совсем. Словом считается любая допустимая ' .
-        'последовательность букв, не обязательно осмысленная. Сколько существует таких слов, которые может написать Вася?';
+        'последовательность букв, не обязательно осмысленная. ' .
+        'Сколько существует таких слов, которые может написать Вася?';
 
-    $self->{correct} = $wordLength * $vowelsCount * $consonantsCount ** ($wordLength - 1);
+    $self->{correct} = $word_length * $vowels_count * $consonants_count ** ($word_length - 1);
     $self->accept_number;
 }
 
 1;
-
-__END__
