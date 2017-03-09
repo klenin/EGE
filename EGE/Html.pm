@@ -94,6 +94,14 @@ sub ol_li {
     $self->tag2('ol', 'li', @rest);
 }
 
+sub escape {
+    (my $self, $_) = @_;
+    s/&/&amp;/g;
+    s/</&lt;/g;
+    s/>/&gt;/g;
+    $_;
+}
+
 BEGIN {
     for my $tag (qw(p td th table div ol ul li code)) {
         no strict 'refs';

@@ -224,6 +224,7 @@ binmode STDOUT, ':utf8';
 #g('B05', 'adsl_speed');
 #g('B06', 'solve');
 #g('B06', 'recursive_function');
+#g('B06', 'password_meta');
 #g('B07', 'who_is_right');
 #g('B08', 'identify_letter');
 #g('B08', 'first_sum_digits');
