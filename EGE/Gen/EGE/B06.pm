@@ -317,7 +317,7 @@ sub recursive_function {
         ],
         [ '()', 'F', 'n' ],
         [ '>=', 'n', 2 ],
-        [ '()', 'F', 'n' ],
+        [ '()', 'F', $n ],
     );
 
     my @texts = map EGE::Prog::make_expr($_)->to_lang_named('Logic', { html => 1 }), @exprs;
