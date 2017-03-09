@@ -187,6 +187,27 @@ sub complete_spreadsheet {
         "диапазона ячеек A2:${last_letter}2 соответствовала рисунку? $chart";
 }
 
+sub adsl_speed {
+    my ($self) = @_;
+
+    my $speed = (1 << rnd->in_range(5, 9)) * 1000;
+    my $timeUnitMultiplier = rnd->pick(1, 60, 3600);
+    my $timeInUnits = rnd->in_range(1, 30);
+
+    my %wordForms = (
+        '1' => [qw(секунду секунды секунд)],
+        '60' => [qw(минуту минуты минут)],
+        '3600' => [qw(час часа часов)],
+        );
+
+    my $textUnitNum = EGE::NumText::num_text($timeInUnits, $wordForms{$timeUnitMultiplier});
+    $self->{text} = 
+        "Скорость передачи данных через ADSL-соединение равна $speed бит/c. " .
+        "Передача файла через данное соединение заняла $textUnitNum. " .
+        "Определите размер файла в килобайтах.";
+    $self->{correct} = $timeInUnits * $timeUnitMultiplier * $speed / 8 / 1024;
+}
+
 1;
 
 __END__
@@ -200,6 +221,8 @@ __END__
 =item calculator
 
 =item min_routes
+
+=item adsl_speed
 
 =back
 
