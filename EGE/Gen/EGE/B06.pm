@@ -207,37 +207,21 @@ sub create_questions {
     @cond;
 }
 
-sub genitive { # родительный падеж
-    my $name = shift;
-    if ($name =~/й$/) { $name =~ s/й$/я/ }
-    elsif ($name =~ /ь$/) { $name =~ s/ь$/я/ }
-    else { $name .= 'а' };
-    $name;
-}
-
-sub ablative { # творительный падеж
-    my $name = shift;
-    if ($name =~ /й$/) { $name =~ s/й$/ем/ }
-    elsif ($name =~ /ь$/) { $name =~ s/ь$/ем/ }
-    else { $name .= 'ом' };
-    $name;
-}
-
 sub on_right {
     rnd->pick(
-        sub { "$_[1] живет левее " . genitive($_[0]) },
-        sub { "$_[0] живёт правее " . genitive($_[1]) },
+        sub { "$_[1] живет левее " . EGE::Russian::Names::genitive($_[0]) },
+        sub { "$_[0] живёт правее " . EGE::Russian::Names::genitive($_[1]) },
         sub { "$_[1] живет левее, чем $_[0]" },
         sub { "$_[0] живёт правее, чем $_[1]" },
     )->(@_);
 }
 
 sub together {
-    "$_[0] живёт рядом c " . ablative($_[1]);
+    "$_[0] живёт рядом c " . EGE::Russian::Names::ablative($_[1]);
 }
 
 sub not_together {
-    "$_[0] живёт не рядом c " . ablative($_[1]);
+    "$_[0] живёт не рядом c " . EGE::Russian::Names::ablative($_[1]);
 }
 
 sub solve {
@@ -263,9 +247,9 @@ sub solve {
         PosLeft => sub { on_right($prof[$prof_order[$_[1]]], $names[$_[0]]) },
         PosRight => sub { on_right($names[$_[0]], $prof[$prof_order[$_[1]]]) },
         Pos => sub { "$names[$_[0]] работает " .
-                     ablative($prof[$prof_order[$_[1]]]) },
+                     EGE::Russian::Names::ablative($prof[$prof_order[$_[1]]]) },
         NotPos => sub { "$names[$_[0]] не работает " .
-                        ablative($prof[$prof_order[$_[1]]]) }
+                        EGE::Russian::Names::ablative($prof[$prof_order[$_[1]]]) }
     );
     @questions = (@questions, create_questions(\%descr));
 
