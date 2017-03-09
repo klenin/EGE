@@ -13,7 +13,7 @@ our @alphabet = split '', 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШ�
 our @consonants = split '', 'БВГДЖЗЙКЛМНПРСТФХЦЧШЩ';
 our @vowels = split '', 'АЕЁИОУЫЭЮЯ';
 
-sub join_comma_and { join(', ', @_[0 .. $#_ - 1]) . ' и ' . $_[-1] }
+sub join_comma_and { join(', ', @_[0 .. $#_ - 1]) . (@_ > 1 ? ' и ' : '') . $_[-1] }
 
 sub different {
     my ($cache, $items, $count) = @_;
