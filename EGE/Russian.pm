@@ -10,6 +10,8 @@ use utf8;
 use EGE::Random;
 
 our @alphabet = split '', 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ';
+our @consonants = split '', 'БВГДЖЗЙКЛМНПРСТФХЦЧШЩ';
+our @vowels = split '', 'АЕЁИОУЫЭЮЯ';
 
 sub join_comma_and { join(', ', @_[0 .. $#_ - 1]) . ' и ' . $_[-1] }
 
