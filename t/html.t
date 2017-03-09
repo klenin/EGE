@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 13;
+use Test::More tests => 16;
 
 use lib '..';
 
@@ -27,3 +27,7 @@ is html->ol_li([ 'a', 'b' ], { id => 'qq' }), '<ol id="qq"><li>a</li><li>b</li><
 is html->ul_li([ 'a', 'b' ], undef, { x => 'y' }), '<ul><li x="y">a</li><li x="y">b</li></ul>', 'ul_li';
 
 is html->code('a'), '<code>a</code>', 'code';
+
+is html->escape('abc def'), 'abc def', 'string with nothing to escape';
+is html->escape('<&tag&>'), '&lt;&amp;tag&amp;&gt;', 'normal html escapes';
+is html->escape(''), '', 'escape empty string';
