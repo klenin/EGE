@@ -191,21 +191,24 @@ sub adsl_speed {
     my ($self) = @_;
 
     my $speed = (1 << rnd->in_range(5, 9)) * 1000;
-    my $time_in_units = rnd->in_range(1, 30);
-
     my %word_forms = (
         1 => [ qw(секунду секунды секунд) ],
         60 => [ qw(минуту минуты минут) ],
         3600 => [ qw(час часа часов) ],
     );
     my $time_unit_multiplier = rnd->pick(keys %word_forms);
+    my $time_in_units = rnd->in_range(1, 7);
+    while (1) {
+        my $c = $self->{correct} = $time_in_units * $time_unit_multiplier * $speed / 8 / 1024 ;
+        last if $c == int($c);
+        $time_in_units *= 2;
+    }
 
     $self->{text} = sprintf
         'Скорость передачи данных через ADSL-соединение равна %d бит/c. ' .
         'Передача файла через данное соединение заняла %s. ' .
         'Определите размер файла в килобайтах.',
         $speed, EGE::NumText::num_text($time_in_units, $word_forms{$time_unit_multiplier});
-    $self->{correct} = $time_in_units * $time_unit_multiplier * $speed / 8 / 1024;
 }
 
 1;
