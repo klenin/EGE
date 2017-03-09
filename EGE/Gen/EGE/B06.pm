@@ -324,8 +324,6 @@ sub password_meta {
     my $password_length = rnd->in_range(8, 20);
     my @special_characters = rnd->pick_n(rnd->in_range(5, 16), split('', '!@#$%^&*_-=+;:{}\|/,.<>?~`()'));
     my $character_case = rnd->pick('lower', 'upper', 'both');
-    # my $use_numbers = rnd->coin;
-    # my $use_special_characters = rnd->coin;
     my $character_variants_count = 26 * ($character_case eq 'both' ? 2 : 1);
     my %case_message = (
         lower => 'латинские буквы только нижнего регистра (строчные)',
