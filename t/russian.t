@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 43;
+use Test::More tests => 46;
 
 use lib '..';
 use EGE::Russian::Names;
@@ -12,6 +12,10 @@ use EGE::Russian::SimpleNames;
     my %h; undef @h{@EGE::Russian::alphabet};
     is scalar keys %h, 33, 'alphabet';
 }
+
+is 'a', EGE::Russian::join_comma_and('a'), 'join a';
+is 'a и b', EGE::Russian::join_comma_and('a', 'b'), 'join a b';
+is 'a, b и c', EGE::Russian::join_comma_and('a', 'b', 'c'), 'join a b c';
 
 for (1..5) {
     my ($n1, $n2) = EGE::Russian::Names::different_males(2);
