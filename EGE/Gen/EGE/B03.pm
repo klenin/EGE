@@ -41,6 +41,21 @@ sub last_digit {
     $self->{accept} = qr/^(?:\d+,)+(\d+)$/;
 }
 
+sub last_digit_base {
+    my ($self) = @_;
+    my ($number, $rem, @bases);
+    do {
+        $number = rnd->in_range(10, 60);
+        $rem = rnd->in_range(1, 9);
+        @bases = grep { $number % $_ == $rem } 2..$number;
+    } while (@bases < 2);
+    $self->{text} = 
+        'Укажите в порядке возрастания через запятую без пробелов все основания систем счисления, ' .
+        "в которых запись числа $number оканчивается на $rem.";
+    $self->{correct} = join ',', @bases;
+    $self->{accept} = qr/^(?:\d+,)+(\d+)$/;
+}
+
 sub count_digits {
     my ($self) = @_;
     my ($num, $base);

@@ -204,6 +204,7 @@ binmode STDOUT, ':utf8';
 #g('B02', 'simple_while');
 #g('B03', 'q1234');
 #g('B03', 'last_digit');
+#g('B03', 'last_digit_base');
 #g('B03', 'count_digits');
 #g('B03', 'simple_equation');
 #g('B03', 'count_ones');
