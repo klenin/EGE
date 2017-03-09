@@ -320,29 +320,30 @@ sub recursive_function {
 
 sub password_meta {
     my ($self) = @_;
-    my $users_count = rnd->in_range(10,20) * 10;
+    my $users_count = rnd->in_range(10, 20) * 10;
     my $password_length = rnd->in_range(8, 20);
-    my @special_characters = rnd->pick_n(rnd->in_range(5, 16), split('', '!@#$%^&*_-=+;:{}\|/,.<>?~`()'));
-    my $character_case = rnd->pick('lower', 'upper', 'both');
-    # my $use_numbers = rnd->coin;
-    # my $use_special_characters = rnd->coin;
-    my $character_variants_count = 26 * ($character_case eq 'both' ? 2 : 1);
+
     my %case_message = (
         lower => 'латинские буквы только нижнего регистра (строчные)',
         upper => 'латинские буквы только верхнего регистра (прописные)',
         both => 'как прописные, так и строчные латинские буквы');
-    my @conditions = ();
+    my $character_case = rnd->pick(keys %case_message);
+    my $character_variants_count = 26 * ($character_case eq 'both' ? 2 : 1);
+
+    my @conditions = $case_message{$character_case};
     if (rnd->coin) {
         $character_variants_count += 10;
-        push @conditions, 'хотя бы одну десятичную цифру';        
+        push @conditions, 'хотя бы одну десятичную цифру';
     }
-    push @conditions, $case_message{$character_case};
     if (rnd->coin) {
-        $character_variants_count += @special_characters;
-        push @conditions, "не менее одного символа из ${\scalar @special_characters}-символьного набора: " .
-            join(', ', (map {html->escape("«$_»")} @special_characters));
+        my $cnt = rnd->in_range(5, 11);
+        my @special_characters = rnd->pick_n($cnt, split '', '!@#$%^&*_-=+;:{}\|/,.<>?~`()\'');
+        $character_variants_count += $cnt;
+        push @conditions, "не менее одного символа из $cnt-символьного набора: " .
+            join ', ', map html->escape("«$_»"), @special_characters;
     }
-    my $conditions_text = EGE::Russian::join_comma_and(@conditions);
+
+    my $conditions_text = EGE::Russian::join_comma_and(rnd->shuffle(@conditions));
     my $bits_per_character = ceil(log($character_variants_count) / log(2));
     my $bytes_per_password = ceil($bits_per_character * $password_length / 8);
 
@@ -350,14 +351,17 @@ sub password_meta {
     my $total_db_size = ($bytes_per_password + $meta_payload) * $users_count;
 
     $self->{text} =
-        "При регистрации в компьютерной системе каждому пользователю выдаётся пароль, состоящий из $password_length символов. " .
+        'При регистрации в компьютерной системе каждому пользователю выдаётся пароль, ' .
+        "состоящий из $password_length символов. " .
         "Из соображений информационной безопасности каждый пароль должен содержать $conditions_text. " .
         'В базе данных для хранения сведений о каждом пользователе отведено одинаковое ' .
-        'и минимально возможное целое число байт. При этом используют посимвольное кодирование паролей, все символы ' .
-        'кодируют одинаковым и минимально возможным количеством бит. Кроме собственно пароля, для каждого пользователя ' .
-        'в системе хранятся дополнительные сведения, для чего выделено целое число байт; это число одно и то же для всех ' .
-        "пользователей. Для хранения сведений о $users_count пользователях потребовалось $total_db_size байт. Сколько байт выделено для хранения " .
-        'дополнительных сведений об одном пользователе? В ответе запишите только целое число – количество байт. ' .
+        'и минимально возможное целое число байт. При этом используют посимвольное кодирование паролей, ' .
+        'все символы кодируют одинаковым и минимально возможным количеством бит. ' .
+        'Кроме собственно пароля, для каждого пользователя в системе хранятся дополнительные сведения, ' .
+        'для чего выделено целое число байт; это число одно и то же для всех пользователей. ' .
+        "Для хранения сведений о $users_count пользователях потребовалось $total_db_size байт. " .
+        'Сколько байт выделено для хранения дополнительных сведений об одном пользователе? ' .
+        'В ответе запишите только целое число – количество байт. ' .
         '<br/><i>Примечание: В латинском алфавите 26 букв.</i>' ; 
     $self->{correct} = $meta_payload;
     $self->accept_number;
