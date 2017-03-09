@@ -217,6 +217,8 @@ binmode STDOUT, ':utf8';
 #g('B04', 'morse');
 #g('B04', 'bulbs');
 #g('B04', 'plus_minus');
+#g('B04', 'how_many_sequences1');
+#g('B04', 'how_many_sequences2');
 #g('B05', 'calculator');
 #g('B05', 'complete_spreadsheet');
 #g('B06', 'solve');

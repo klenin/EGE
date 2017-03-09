@@ -158,6 +158,39 @@ sub plus_minus {
     $self->accept_number;
 }
 
+sub how_many_sequences1 {
+    my($self) = @_;
+
+    my $first_num = rnd->in_range(1, 3);
+    my $second_num = rnd->in_range($first_num + 1, 5);
+    my $num_of_letters = rnd->in_range(2, 5);
+    my @alphabet = @EGE::Russian::alphabet[0..$num_of_letters - 1];
+
+    $self->{text} =
+        'Сколь­ко есть раз­лич­ных сим­воль­ных по­сле­до­ва­тель­но­стей длины от '
+        . num_by_words($first_num, 0, 'genitive') . ' до ' . num_by_words($second_num, 0, 'genitive') .
+        ' в ' . num_by_words($num_of_letters, 0, 'prepositional') . 'бук­вен­ном ал­фа­ви­те {' . (join ', ', @alphabet) . '}?';
+
+    $self->{correct} += $num_of_letters ** $_ for ($first_num..$second_num);;
+    $self->accept_number;
+}
+
+sub how_many_sequences2 {
+    my($self) = @_;
+
+    my $word = uc $EGE::Russian::Animals::list[rnd->in_range(0, $#EGE::Russian::Animals::list)];
+    my $num = rnd->in_range(4, 6);
+    my $len = length $word;
+
+    $self->{text} =
+        "Рас­смат­ри­ва­ют­ся сим­воль­ные по­сле­до­ва­тель­но­сти длины " . $num . ' в '. num_by_words($len, 0, 'prepositional') .
+        'бук­вен­ном ' . 'ал­фа­ви­те {' . (join ', ', split //, $word) . '}. Сколь­ко су­ще­ству­ет таких по­сле­до­ва­тель­но­стей, ' .
+        'ко­то­рые на­чи­на­ют­ся с буквы ' . substr($word, 0, 1) . ' и за­кан­чи­ва­ют­ся бук­вой ' . substr($word, $len - 1, 1) . '?';
+
+    $self->{correct} = $len ** ($num - 2);
+    $self->accept_number;
+}
+
 1;
 
 __END__
