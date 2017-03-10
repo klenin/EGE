@@ -339,6 +339,23 @@ sub min_routes {
     $self->variants( @{$context->{ans}}[0 .. 3] );
 }
 
+sub sport_athlete {
+    my ($self) = @_;
+    my $athletes = rnd->pick(9..255);
+    my $bits = ceil(log($athletes)/log(2));
+    $self->{text} =
+        "В соревновании участвуют $athletes атлетов. " .
+        'Какое минимальное количество бит необходимо, чтобы кодировать номер каждого атлета?';
+    $self->variants(
+        num_bits($bits),
+        rnd->pick_n(3,
+            num_bits(int($bits * 1.5)),
+            num_bits($bits + 1),
+            num_bits($bits - 1)
+        )
+     );
+}
+
 1;
 
 __END__
