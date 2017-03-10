@@ -52,16 +52,20 @@ sub graph_by_matrix {
 
 sub light_panel {
     my ($self) = @_;
-    my $n = rnd->in_range(10, 20);
-    my $first = $n  - rnd->in_range(4, 16);
-    my $last = $n - $first;
+    my $first = rnd->in_range(5, 10);
+    my $last = rnd->in_range(4, 9);
+    my $n = $first + $last;
     $self->{text} = <<QUESTION
 На световой панели в ряд расположены $n лампочек. Каждая из первых $first лампочек может гореть красным, жёлтым или зелёным цветом. 
-Каждая из остальных $last лампочек может гореть одним из двух цветов - красным или белым.
+Каждая из остальных $last лампочек может гореть одним из двух цветов — красным или белым.
 Сколько различных сигналов можно передать с помощью панели (все лампочки должны гореть, порядок цветов имеет значение)?
 QUESTION
 ;
-    $self->variants((3**$first) * (2**$last), (3**$first) + (2**$last), ($first**3) * ($last**2), ($first**3) + ($last**2));
+    $self->variants(
+        (3**$first) * (2**$last),
+        (3**$first) + (2**$last),
+        ($first**3) * ($last**2),
+        ($first**3) + ($last**2));
 }
 
 1;
