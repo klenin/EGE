@@ -85,15 +85,22 @@ sub simple_equation {
 
 sub count_ones {
     my ($self) = @_;
+    my $base = rnd->in_range(2, 10);
+
     my @large_power = map rnd->in_range(2013, 2025), 0..1;
     my @base_power = map rnd->in_range(1, 4), 0..2;
-    my @base = map 2 ** $_, @base_power;
+    my @summands_base = map $base ** $_, @base_power;
     my @answ = map $large_power[$_] * $base_power[$_], 0..1;
+    my @nums_text = ('', qw(единиц двоек троек четверок пятерок шестерок семерок восьмерок девяток));
+    my @bases_text = ('', '', qw(двоичной троичной четверичной пятиричной шестеричной семеричной восьмеричной девятиричной
+        десятичной));
 
     $self->{text} =
-        'Cколько единиц в двоичной записи числа ' .
-        "$base[0]<sup>$large_power[0]</sup> + $base[1]<sup>$large_power[1]</sup> - $base[2]?";
-    $self->{correct} = min(@answ) - $base_power[2] + 1;
+        "Cколько $nums_text[$base - 1] в $bases_text[$base] записи числа " .
+        "$summands_base[0]<sup>$large_power[0]</sup> + $summands_base[1]<sup>$large_power[1]</sup> - $summands_base[2]?";
+    my $answer = min(@answ) - $base_power[2];
+    $answer += 1 if $base == 2;
+    $self->{correct} = $answer;
     $self->accept_number;
 }
 
