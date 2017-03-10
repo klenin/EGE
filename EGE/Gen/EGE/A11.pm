@@ -13,6 +13,8 @@ use EGE::Bits;
 use EGE::NumText;
 use EGE::Russian;
 
+use POSIX qw(ceil floor);
+
 use EGE::Gen::EGE::A02;
 
 sub variable_length {
@@ -99,6 +101,36 @@ QUESTION
         $context->{alph_text},
         num_text($context->{items_cnt}, [ 'пароля', ('паролей') x 2 ]);
     $self->{variants} = $context->{result};
+}
+
+sub _gen_inf_vol_data {
+    my $stat = @_;
+    my %data = ();
+    $data{N} = rnd->in_range(5,30);
+    $data{lenght} = 2 ** rnd->in_range(5, 10);
+    $data{count_of_bit} = rnd->in_range(1, 4);
+    $data{size} = $data{lenght} * ceil(log($data{N})/log(2));
+    $data{count_of_sym} = floor($data{N} / 2 ** $data{count_of_bit});
+    return \%data;
+}
+
+sub information_volume_first {
+    my ($self) = @_;
+    my %data = %{_gen_inf_vol_data()};
+    $self->{text} =
+        "Для кодирования секретного сообщения используются $data{N} специальных значков-символов. ".
+        'При этом символы кодируются одним и тем же минимально возможным количеством бит. '.
+        "Чему равен информационный объем сообщения длиной в $data{lenght} символов?";
+    $self->variants("$data{size} бит");
+}
+
+sub information_volume_second {
+    my ($self) = @_;
+    my %data = %{_gen_inf_vol_data()};
+    $self->{text} =
+        "За четверть Василий Пупкин получил $data{N} оценок. Сообщение о том, что он вчера получил четверку, ".
+        "несет $data{count_of_bit} бита информации. Сколько четверок получил Василий за четверть?";
+    $self->variants("$data{count_of_sym}");
 }
 
 1;
