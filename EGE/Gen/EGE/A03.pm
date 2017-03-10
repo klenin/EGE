@@ -11,6 +11,9 @@ use utf8;
 use EGE::Random;
 use EGE::Bin;
 use EGE::Bits;
+use EGE::NotationBase qw(dec_to_base base_to_dec);
+
+use POSIX q(ceil);
 
 sub ones {
     my ($self) = @_;
@@ -70,6 +73,15 @@ sub range {
         map($bv + $_, grep !($_ & $bv), @bits),
     );
     $self->variants(map to_bin($_), $x, rnd->pick_n(3, @errors));
+}
+
+sub binary_num_system {
+    my ($self) = @_;
+    my $num = rnd->in_range(256, 511);
+    my $bin = EGE::Bits->new->set_size(9)->set_dec($num);
+    $self->{text} = 
+        "Как представлено число $num в двоичной системе счисления?";
+    $self->variants($bin->get_bin, $bin->dup->flip(0..2)->get_bin, $bin->dup->flip(3..5)->get_bin, $bin->dup->flip(5..7)->get_bin);
 }
 
 1;
