@@ -360,7 +360,7 @@ sub bad_message {
     foreach my $i (0..2){
         $text1[$i] = '';
         foreach my $j (0..5){
-            $text1[$i] .= int(rand(2));
+            $text1[$i] .= rnd->in_range(0, 1);
         }
         $text1[$i] .=  par_check($text1[$i]);
         
@@ -368,7 +368,7 @@ sub bad_message {
     my @text2 = @text1;
     foreach my $i (0..2){
         foreach my $j (0..6){
-            if (int(rand(2))){
+            if (rnd->in_range(0, 1)){
                 substr($text2[$i], $j, 1) = (substr($text2[$i], $j, 1) + 1) % 2;
             }
         }
@@ -399,7 +399,7 @@ QUESTION
 
 sub convert_number {
     my ($self) = @_;
-    my $num = int(rand(889)) + 111;
+    my $num = rnd->in_range(111, 998);
     my $answer = $num;
     my @digit = split(//, $num);
     my $getmin = 0;
@@ -423,9 +423,9 @@ QUESTION
 
 sub inf_size {
     my ($self) = @_;
-    my $pow = int(rand(12)) + 4;
+    my $pow = rnd->in_range(4, 15);
     my $v = 2**$pow;
-    my $time = (int(rand(15)) + 4);
+    my $time = rnd->in_range(4, 19);
     $self->{text} = <<QUESTION
 Известно, что длительность непрерывного подключения к сети Интернет с помощью модема для некоторых АТС не превышает $time минут.
 Определите максимальный размер файла (в Килобайтах), который может быть передан за время такого подключения,
@@ -448,7 +448,7 @@ sub get_bin {
     
 sub bin_number {
     my ($self) = @_;
-    my $n = int(rand(200)) + 50;
+    my $n = rnd->in_range(50, 249);
     $self->{text} = <<QUESTION
 На вход алгоритма подаётся натуральное число N. Алгоритм строит по нему новое число R следующим образом.<br />
 1. Строится двоичная запись числа N.<br />

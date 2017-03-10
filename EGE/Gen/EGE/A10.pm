@@ -52,8 +52,8 @@ sub graph_by_matrix {
 
 sub light_panel {
     my ($self) = @_;
-    my $n = int(rand(10)) + 6;
-    my $first = $n  - int(rand($n - 3)) - 3;
+    my $n = rnd->in_range(10, 20);
+    my $first = $n  - rnd->in_range(4, 16);
     my $last = $n - $first;
     $self->{text} = <<QUESTION
 На световой панели в ряд расположены $n лампочек. Каждая из первых $first лампочек может гореть красным, жёлтым или зелёным цветом. 

@@ -192,9 +192,9 @@ sub file_mask3 {
 
 sub additional_inf_length {
     my ($self) = @_;
-    my $password_length = int(rand(11)) + 10;
-    my $alph_size = int(rand(10)) + 3;
-    my $n_logins = int(rand(21)) + 10;
+    my $password_length = rnd->in_range(10, 20);
+    my $alph_size = rnd->in_range(3, 12);
+    my $n_logins = rnd->in_range(10, 20);
     my $b_per_symb = 1;
     my $pow = 2;
     while($alph_size > $pow**$b_per_symb){
@@ -203,7 +203,7 @@ sub additional_inf_length {
     my $bit_size = $b_per_symb * $password_length;
     my $byte_size = $bit_size % 8 == 0 ? $bit_size / 8 : int($bit_size / 8) + 1;
     my $mem_size = $n_logins * $byte_size;
-    my $n_byte = $mem_size + $n_logins*(int(rand(40)) + 1);
+    my $n_byte = $mem_size + $n_logins*rnd->in_range(2, 30);
     $self->{text} = <<QUESTION
 При регистрации в компьютерной системе каждому пользователю выдаётся пароль, состоящий из $password_length символов.
 Размер алфавита $alph_size символов. В базе данных для хранения сведений о каждом пользователе
