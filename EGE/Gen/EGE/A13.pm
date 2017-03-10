@@ -190,6 +190,34 @@ sub file_mask3 {
     $self->{text} .= "</ul>";
 }
 
+sub additional_inf_length {
+    my ($self) = @_;
+    my $password_length = rnd->in_range(10, 20);
+    my $alph_size = rnd->in_range(3, 12);
+    my $n_logins = rnd->in_range(10, 20);
+    my $b_per_symb = 1;
+    my $pow = 2;
+    while($alph_size > $pow**$b_per_symb){
+        $b_per_symb += 1;
+    }
+    my $bit_size = $b_per_symb * $password_length;
+    my $byte_size = $bit_size % 8 == 0 ? $bit_size / 8 : int($bit_size / 8) + 1;
+    my $mem_size = $n_logins * $byte_size;
+    my $n_byte = $mem_size + $n_logins*rnd->in_range(2, 30);
+    $self->{text} = <<QUESTION
+При регистрации в компьютерной системе каждому пользователю выдаётся пароль, состоящий из $password_length символов.
+Размер алфавита $alph_size символов. В базе данных для хранения сведений о каждом пользователе
+отведено одинаковое и минимально возможное целое число байт. При этом используют посимвольное кодирование
+паролей, все символы кодируют одинаковым и минимально возможным количеством бит. Кроме собственно пароля,
+для каждого пользователя в системе хранятся дополнительные сведения, для чего выделено целое число байт;
+это число одно и то же для всех пользователей. Для хранения сведений о $n_logins пользователях потребовалось
+$n_byte байт. Сколько байт выделено для хранения дополнительных сведений об одном пользователе?
+QUESTION
+;
+    my $answer = ($n_byte - $mem_size)/$n_logins;
+    $self->variants($answer, $mem_size, $answer * $n_logins, $answer %2 == 0 ? $answer / 2 : $answer * 2);
+}
+ 
 1;
 
 __DATA__
