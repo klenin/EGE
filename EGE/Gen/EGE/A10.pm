@@ -50,7 +50,7 @@ sub graph_by_matrix {
     $self->variants(map html->div_xy($_->as_svg, 120, 80, { margin => '5px' }), $g, @bad);
 }
 
-sub light_panel{
+sub light_panel {
     my ($self) = @_;
     my $n = int(rand(10)) + 6;
     my $first = $n  - int(rand($n - 3)) - 3;

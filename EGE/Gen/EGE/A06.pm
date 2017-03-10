@@ -309,12 +309,12 @@ sub bus_station {
     $self->variants(map stime($_), @ans);
 }
 
-sub check_match{
+sub check_match {
    my @check_el = @_;
    return ($check_el[1] eq $check_el[0]) || ($check_el[2] eq $check_el[0]) || ($check_el[3] eq $check_el[0]);
 }
 
-sub wr_ans{
+sub wr_ans {
     my @used = @_;
     my @wrong_ans;
     my $n_null = 0;
@@ -345,7 +345,7 @@ sub wr_ans{
     return $wrong_ans[0], $wrong_ans[1], $wrong_ans[2];
 }
 
-sub par_check{
+sub par_check {
     my $str = "@_";
     my $n = 0;
     foreach (0..((length $str) - 1)){
@@ -397,23 +397,16 @@ QUESTION
     $self->variants("@answer", wr_ans(@m));
 }
 
-sub swap{
-    my @sw = @_;
-    my $tmp = $sw[0];
-    $sw[0] = $sw[2];
-    $sw[0] = $tmp;
-    return @sw;
-}
-
-sub automate{
+sub convert_number {
     my ($self) = @_;
     my $num = int(rand(889)) + 111;
     my $answer = $num;
     my @digit = split(//, $num);
     my $getmin = 0;
-    if ($digit[0] < $digit[2]){
-        @digit = swap(@digit);
+    if ($digit[0] > $digit[2]){   
+        ($digit[0], $digit[2]) = ($digit[2], $digit[0]);
         $getmin = 1;
+        
     }
     my $res_number = ($digit[0] + $digit[1]) . ($digit[1] + $digit[2]);
     $self->{text} = <<QUESTION
@@ -425,10 +418,10 @@ sub automate{
 Укажите наименьшее число, в результате обработки которого автомат выдаст число $res_number.
 QUESTION
 ;
-    $self->variants($answer, $getmin ? $num : $num + 1, $digit[0] . (($digit[1] + 2) % 10) . $digit[2], $digit[0] . (($digit[1] + 1) % 10) . $digit[2]);
+    $self->variants($digit[0] . $digit[1] . $digit[2], $getmin ? $num : ($num + 1), $digit[0] . (($digit[1] + 2) % 10) . $digit[2], $digit[0] . (($digit[1] + 1) % 10) . $digit[2]);
 }
 
-sub inf_size{
+sub inf_size {
     my ($self) = @_;
     my $pow = int(rand(12)) + 4;
     my $v = 2**$pow;
@@ -443,7 +436,7 @@ QUESTION
     $self->variants((2**($pow - 3)) * $time, (2**$pow) * $time, ((2**($pow - 3)) * $time)/60, (2**($pow + 7)) * $time);
 }
 
-sub get_bin{
+sub get_bin {
     my $num = $_[0];
     my $bin = '';
     while ($num){
@@ -453,7 +446,7 @@ sub get_bin{
     return $bin;
 }
     
-sub bin_number{
+sub bin_number {
     my ($self) = @_;
     my $n = int(rand(200)) + 50;
     $self->{text} = <<QUESTION
@@ -469,12 +462,12 @@ QUESTION
 ;   
     my $par = 0;
     my @bin_n;
-    while(){
+    while(1) {
         $n += 1;
         @bin_n = split(//, get_bin($n));
         $par = 0;
-        foreach (0..(@bin_n - 3)){ 
-            $par += $bin_n[$_];
+        for (my $i = 0; $i < @bin_n - 2; $i++){
+            $par += $bin_n[$i];
         }
         if (($par % 2) == $bin_n[@bin_n - 2] && $bin_n[@bin_n - 1] == 0){
             last;
