@@ -211,6 +211,7 @@ binmode STDOUT, ':utf8';
 #g('B03', 'music_time_to_time');
 #g('B03', 'music_size_to_size');
 #g('B03', 'music_format_time_to_time');
+#g('B03', 'min_required_base');
 #g('B04', 'impl_border');
 #g('B04', 'lex_order');
 #g('B04', 'morse');
