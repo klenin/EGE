@@ -172,6 +172,7 @@ binmode STDOUT, ':utf8';
 #g('A6', 'find_min_max');
 #g('A6', 'count_odd_even');
 #g('A6', 'alg_min_max');
+#g('A6', 'bad_message');
 #g('A6', 'alg_avg');
 #g('A7', 'names');
 #g('A7', 'animals');
