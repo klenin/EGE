@@ -162,6 +162,7 @@ binmode STDOUT, ':utf8';
 #g('A3', 'zeroes');
 #g('A3', 'convert');
 #g('A3', 'range');
+#g('A3', 'binary_num_system');
 #g('A4', 'sum');
 #g('A4', 'count_zero_one');
 #g('A5', 'arith');
