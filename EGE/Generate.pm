@@ -93,7 +93,7 @@ sub all {[
     gg('A7', qw(names animals random_sequences restore_password spreadsheet_shift)),
     gg('A8', qw(equiv_3 equiv_4 audio_size audio_time)),
     gg('A9', qw(truth_table_fragment find_var_len_code error_correction_code hamming_code)),
-    gg('A10', qw(graph_by_matrix)),
+    gg('A10', qw(graph_by_matrix light_panel)),
     gg('A11', qw(variable_length fixed_length password_length)),
     gg('A12', qw(beads array_flip)),
     gg('A13', qw(file_mask file_mask2 file_mask3)),
