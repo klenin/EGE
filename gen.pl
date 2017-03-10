@@ -239,6 +239,7 @@ binmode STDOUT, ':utf8';
 #g('B14', 'find_func_min');
 #g('B15', 'logic_var_set');
 #g('Z06', 'find_number');
+#g('Z06', 'convert_number');
 #g('Z09', 'get_memory_size');
 #g('Z10', 'words_count');
 #g('Z11', 'recursive_alg');
