@@ -8,7 +8,7 @@ use strict;
 use warnings;
 use utf8;
 
-use List::Util qw(sum first product min max);
+use List::Util qw(sum first min max);
 use POSIX qw(ceil);
 
 use EGE::Random;
@@ -16,6 +16,7 @@ use EGE::Prog;
 use EGE::Prog::Lang;
 use EGE::Html;
 use EGE::NumText;
+use EGE::Utils qw(product);
 
 sub make_xx {[
     '*', map rnd->pick('X', [ '+', 'X', 1 ], [ '-', 'X', 1 ]), 1 .. 2

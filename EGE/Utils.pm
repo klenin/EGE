@@ -8,7 +8,7 @@ use strict;
 use warnings;
 
 use base 'Exporter';
-our @EXPORT_OK = qw(transpose last_key aggregate_function tail);
+our @EXPORT_OK = qw(transpose last_key aggregate_function tail product);
 
 sub aggregate_function {
     my ($name) = @_;
@@ -30,5 +30,11 @@ sub last_key {
 }
 
 sub tail { @_[1..$#_] }
+
+sub product {
+    my $r = 1;
+    $r *= $_ for @_;
+    $r;
+}
 
 1;
