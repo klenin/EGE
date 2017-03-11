@@ -125,7 +125,7 @@ sub all {[
     gg('Z11', qw(recursive_alg)),
     gg('Z13', qw(tumblers tumblers_min)),
     gg('Z15', qw(city_roads)),
-    gg('Z16', qw(find_dec)),
+    gg('Z16', qw(base_gcd)),
     gg('Z22', qw(calculator_find_prgm_count)),
 ]}
 
