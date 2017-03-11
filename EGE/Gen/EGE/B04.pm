@@ -189,20 +189,20 @@ sub signal_rockets {
         $repeats_allowed = rnd->coin;
         $sequence_length = rnd->in_range(4, 6);
         $colors_count = rnd->in_range(4, 6);
-        $colors_count = max $colors_count, $sequence_length unless $repeats_allowed;
         if ($repeats_allowed) {
             $answer = $colors_count ** $sequence_length;
         } else {
-            $answer = product(($colors_count - $sequence_length + 1)..$colors_count);
+            $colors_count = max $colors_count, $sequence_length;
+            $answer = product(($colors_count - $sequence_length + 1) .. $colors_count);
         }
     } else {
-        # very unlikely that students know formula for combinations with repeats, forbid it
+        # Формула сочетаний с повторениями неизвестна школьникам.
         $repeats_allowed = 0;
         $sequence_length = rnd->in_range(2, 4);
         $colors_count = rnd->in_range($sequence_length + 1, 6);
         my $s = max $sequence_length, ($colors_count - $sequence_length);
         my $t = min $sequence_length, ($colors_count - $sequence_length);
-        $answer = product(($s + 1)..$colors_count) / product(1..$t);
+        $answer = product(($s + 1) .. $colors_count) / product(1..$t);
     }
     my $order_condition_text = $order_matters ? 'существенно' : 'не существенно';
     my $repeats_condition_text = $repeats_allowed ? 'может повторяться' : 'не может повторяться';
