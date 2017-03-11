@@ -1,10 +1,10 @@
 use strict;
 use warnings;
 
-use Test::More tests => 8;
+use Test::More tests => 12;
 
 use lib '..';
-use EGE::Utils qw(transpose tail product);
+use EGE::Utils qw(transpose tail product gcd);
 
 is_deeply transpose([]), [], 'transpose empty';
 is_deeply transpose([ 1 ]), [ [ 1 ] ], 'transpose 1x1';
@@ -17,3 +17,8 @@ is_deeply [ tail(1, 2, 3, 4) ], [ 2, 3, 4 ], 'tail';
 
 is product(1, 0, 5), 0, 'product 0';
 is product(2, 3, 4), 24, 'product 1';
+
+is gcd(0, 2), 2, 'gcd 0 2';
+is gcd(3, 0), 3, 'gcd 3 0';
+is gcd(9, 6), 3, 'gcd 3';
+is gcd(3, 7), 1, 'gcd 1';

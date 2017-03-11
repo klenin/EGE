@@ -8,7 +8,7 @@ use strict;
 use warnings;
 
 use base 'Exporter';
-our @EXPORT_OK = qw(transpose last_key aggregate_function tail product);
+our @EXPORT_OK = qw(transpose last_key aggregate_function tail product gcd);
 
 sub aggregate_function {
     my ($name) = @_;
@@ -35,6 +35,18 @@ sub product {
     my $r = 1;
     $r *= $_ for @_;
     $r;
+}
+
+sub gcd {
+    my ($n, $m) = @_;
+    ($n, $m) = ($m, $n % $m) while $m;
+    $n;
+}
+
+sub median {
+    @_ or die 'empty';
+    my $sorted = [ sort @_ ];
+    @_ % 2 ? $sorted->[@_ / 2] : ($sorted->[@_ / 2] + $sorted->[@_ / 2 + 1]) / 2;
 }
 
 1;
