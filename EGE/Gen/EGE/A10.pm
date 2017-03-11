@@ -82,9 +82,9 @@ sub min_alphabet {
         EGE::NumText::num_by_words($word_length, 1, 'genitive'), $min_distinct_messages;
 
     my $answer = ceil($min_distinct_messages ** (1 / $word_length));
-    my $minVariant = max(2, $answer - rnd->in_range(1, 3));
-    my $maxVariant = $answer - $answer + $minVariant + 3;
-    $self->variants($answer, $minVariant .. ($answer - 1), ($answer + 1) .. $maxVariant);
+    my $min_variant = max(2, $answer - rnd->in_range(1, 3));
+    $self->variants($min_variant .. $min_variant + 3);
+    $self->{correct} = $answer - $min_variant;
 }
 
 1;
