@@ -12,6 +12,9 @@ use EGE::Graph;
 use EGE::Html;
 use EGE::Random;
 
+use POSIX qw(ceil);
+use List::Util qw(max);
+
 sub graph_by_matrix {
     my ($self) = @_;
     my %vertices = (
@@ -66,6 +69,22 @@ QUESTION
         (3**$first) + (2**$last),
         ($first**3) * ($last**2),
         ($first**3) + ($last**2));
+}
+
+sub min_alphabet {
+    my ($self) = @_;
+    my $word_length = rnd->in_range(3, 5);
+    my $min_distinct_messages = rnd->in_range(5, 100);
+    $self->{text} = sprintf
+        'Какое наименьшее число символов должно быть в алфавите, чтобы при помощи всевозможных ' .
+        '%sбуквенных слов, состоящих из символов данного алфавита, можно было передать не менее ' .
+        '%d различных сообщений?',
+        EGE::NumText::num_by_words($word_length, 1, 'genitive'), $min_distinct_messages;
+
+    my $answer = ceil($min_distinct_messages ** (1 / $word_length));
+    my $minVariant = max(2, $answer - rnd->in_range(1, 3));
+    my $maxVariant = $answer - $answer + $minVariant + 3;
+    $self->variants($answer, $minVariant .. ($answer - 1), ($answer + 1) .. $maxVariant);
 }
 
 1;
