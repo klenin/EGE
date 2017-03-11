@@ -223,6 +223,7 @@ binmode STDOUT, ':utf8';
 #g('B04', 'bulbs');
 #g('B04', 'plus_minus');
 #g('B04', 'letter_combinatorics');
+#g('B04', 'signal_rockets');
 #g('B05', 'calculator');
 #g('B05', 'complete_spreadsheet');
 #g('B05', 'adsl_speed');
