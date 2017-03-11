@@ -15,6 +15,8 @@ use EGE::Russian;
 
 use EGE::Gen::EGE::A02;
 
+use POSIX qw(ceil);
+
 sub variable_length {
     my ($self) = @_;
     my %code = ( 'А' => '00', 'Б' => '11', 'В' => '010', 'Г' => '011' );
@@ -100,6 +102,27 @@ QUESTION
         num_text($context->{items_cnt}, [ 'пароля', ('паролей') x 2 ]);
     $self->{variants} = $context->{result};
 }
+
+sub information_volume {
+    my ($self) = @_;
+    my $N = rnd->in_range(5, 30);
+    my $P = 2 ** rnd->in_range(5, 10);
+    $self->{text} =
+        "Для кодирования секретного сообщения используются $N специальных значков-символов. " .
+        'При этом символы кодируются одним и тем же минимально возможным количеством бит. ' .
+        "Чему равен информационный объем сообщения длиной в $P символов?";
+    my $ans = $P * ceil(log($N) / log(2)) . ' бит';
+    my @bad = (
+        $P * $N . ' бит',
+        $P * (ceil(log($N) / log(2)) - 1) . ' бит',
+        $N * ceil(log($P) / log(2)) . ' бит',
+    );
+    my %values;
+    $values{$_}++ foreach @bad, $ans;
+    for my $key (keys %values) { die if $values{$key} > 1; }
+    $self->variants($ans, @bad);
+}
+
 
 1;
 
