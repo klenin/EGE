@@ -26,8 +26,8 @@ sub make_person {
         $family_name = $$new_family_name =
             $is_male ? $family_name : rnd->pick(@EGE::Russian::FamilyNames::list);
     }
-    $table_persons->insert_row(
-        $person_id, $family_name . ($is_male ? '' : 'а'), $is_male ? shift @males : shift @females, $is_male);
+    my $given_name = $is_male ? shift @males : shift @females or die;
+    $table_persons->insert_row($person_id, $family_name . ($is_male ? '' : 'а'), $given_name, $is_male);
     $person_id;
 }
 
@@ -43,8 +43,8 @@ sub children {
 sub create_table {
     my $table_persons = EGE::SQL::Table->new([ qw(id Фамилия Имя Пол) ], name => 'persons');
     my $table_kinship = EGE::SQL::Table->new([ qw(id_parent id_child) ], name => 'kinship');
-    @males = EGE::Russian::Names::different_males(10);
-    @females = EGE::Russian::Names::different_females(10);
+    @males = EGE::Russian::Names::different_males(15);
+    @females = EGE::Russian::Names::different_females(15);
     my (@grandchildren, @children);
     my $family_name = rnd->pick(@EGE::Russian::FamilyNames::list);
     my $id = make_person($family_name, $table_persons);
