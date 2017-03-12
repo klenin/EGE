@@ -256,4 +256,20 @@ sub move_number {
     $self->accept_number;
 }
 
+sub range_count {
+    my ($self) = @_;
+    my @bounds;
+    my $numbers_count = rnd->in_range(0, 1000);
+    $bounds[0] = rnd->in_range(20, 1000);
+    $bounds[1] = $bounds[0] + $numbers_count + 1;
+    my @bases = rnd->pick_n(2, 2 .. 16);
+    $self->{text} = sprintf
+        'Сколько существует натуральных чисел x, для которых выполнено неравенство: ' .
+        '%s &lt; x &lt; %s?<br/>' .
+        'В ответе укажите только количество чисел, сами числа писать не нужно.',
+        map dec_to_base($bases[$_], $bounds[$_]) . "<sub>$bases[$_]</sub>", 0 .. 1;
+    $self->{correct} = $numbers_count;
+    $self->accept_number;
+}
+
 1;
