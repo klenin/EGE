@@ -26,8 +26,8 @@ sub make_person {
         $family_name = $$new_family_name =
             $is_male ? $family_name : rnd->pick(@EGE::Russian::FamilyNames::list);
     }
-    $table_persons->insert_row(
-        $person_id, $family_name . ($is_male ? '' : 'а'), $is_male ? shift @males : shift @females, $is_male);
+    my $given_name = $is_male ? shift @males : shift @females or die;
+    $table_persons->insert_row($person_id, $family_name . ($is_male ? '' : 'а'), $given_name, $is_male);
     $person_id;
 }
 
@@ -43,8 +43,8 @@ sub children {
 sub create_table {
     my $table_persons = EGE::SQL::Table->new([ qw(id Фамилия Имя Пол) ], name => 'persons');
     my $table_kinship = EGE::SQL::Table->new([ qw(id_parent id_child) ], name => 'kinship');
-    @males = EGE::Russian::Names::different_males(10);
-    @females = EGE::Russian::Names::different_females(10);
+    @males = EGE::Russian::Names::different_males(15);
+    @females = EGE::Russian::Names::different_females(15);
     my (@grandchildren, @children);
     my $family_name = rnd->pick(@EGE::Russian::FamilyNames::list);
     my $id = make_person($family_name, $table_persons);
@@ -155,7 +155,7 @@ sub nuncle {
     my ($f1) = rnd->shuffle(@grand[1 .. $#grand]);
     my $where = EGE::Prog::make_expr([ '==', 'id_child', $f1 ]);
     $query = EGE::SQL::SubqueryAlias->new(
-        EGE::SQL::Select->new($table_kinship, ['id_parent'], $where), 'person1');
+        EGE::SQL::Select->new($table_kinship, [ 'id_parent' ], $where), 'person1');
     my $tab = $query->run;
     my $inner2 = EGE::SQL::InnerJoin->new(
         { tab => $query, field => 'id_parent' },
@@ -166,19 +166,21 @@ sub nuncle {
     my $inner5 = EGE::SQL::InnerJoin->new(
         { tab => $inner4, field => 'k2.id_child' },
         { tab => $table_person, field => 'id' });
-    my $query_fields = [EGE::Prog::Field->new({name =>'Фамилия'}),
-                EGE::Prog::Field->new({name => 'Имя'})];
+    my $query_fields = [
+        EGE::Prog::Field->new({ name => 'Фамилия' }),
+        EGE::Prog::Field->new({ name => 'Имя' })
+    ];
     my $query2 = EGE::SQL::Select->new($inner5, $query_fields);
-    my $par = ${$table_person->select(['Фамилия', 'Имя', 'Пол'],
-        EGE::Prog::make_expr(['==', 'id', $f1]))->{data}}[0];
-    $name = @$par[0];
-    if (!@$par[2]) {
+    my $par = $table_person->select(
+        [ 'Фамилия', 'Имя', 'Пол' ], EGE::Prog::make_expr([ '==', 'id', $f1 ]))->{data}->[0];
+    $name = $par->[0];
+    if (!$par->[2]) {
         $name = substr($name, 0, -1);
         $name .= q~ой~;
     } else {
         $name .=  q~а~;
     }
-    $name .= " " . substr(@$par[1], 0, 1) . ".";
+    $name .= ' ' . substr($par->[1], 0, 1) . '.';
     push @requests, EGE::SQL::Select->new($inner2, $query_fields, $where)->text_html_tt;
     push @requests, EGE::SQL::Select->new($inner4, $query_fields, $where)->text_html_tt;
     push @requests, EGE::SQL::Select->new($table_person, $query_fields,

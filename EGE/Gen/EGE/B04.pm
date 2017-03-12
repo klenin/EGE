@@ -8,7 +8,7 @@ use strict;
 use warnings;
 use utf8;
 
-use List::Util qw(sum first);
+use List::Util qw(sum first min max);
 use POSIX qw(ceil);
 
 use EGE::Random;
@@ -16,6 +16,7 @@ use EGE::Prog;
 use EGE::Prog::Lang;
 use EGE::Html;
 use EGE::NumText;
+use EGE::Utils qw(product);
 
 sub make_xx {[
     '*', map rnd->pick('X', [ '+', 'X', 1 ], [ '-', 'X', 1 ]), 1 .. 2
@@ -178,6 +179,43 @@ sub letter_combinatorics {
         'Сколько существует таких слов, которые может написать Вася?';
 
     $self->{correct} = $word_length * $vowels_count * $consonants_count ** ($word_length - 1);
+    $self->accept_number;
+}
+
+sub signal_rockets {
+    my ($self) = @_;
+    my ($answer, $sequence_length, $colors_count, $repeats_allowed);
+    my $order_matters = rnd->coin;
+    if ($order_matters) {
+        $repeats_allowed = rnd->coin;
+        $sequence_length = rnd->in_range(4, 6);
+        $colors_count = rnd->in_range(4, 6);
+        if ($repeats_allowed) {
+            $answer = $colors_count ** $sequence_length;
+        } else {
+            $colors_count = max $colors_count, $sequence_length;
+            $answer = product(($colors_count - $sequence_length + 1) .. $colors_count);
+        }
+    } else {
+        # Формула сочетаний с повторениями неизвестна школьникам.
+        $repeats_allowed = 0;
+        $sequence_length = rnd->in_range(2, 4);
+        $colors_count = rnd->in_range($sequence_length + 1, 6);
+        my $s = max $sequence_length, ($colors_count - $sequence_length);
+        my $t = min $sequence_length, ($colors_count - $sequence_length);
+        $answer = product(($s + 1) .. $colors_count) / product(1..$t);
+    }
+    my $order_condition_text = $order_matters ? 'существенно' : 'не существенно';
+    my $repeats_condition_text = $repeats_allowed ? 'может повторяться' : 'не может повторяться';
+    $self->{text} =
+        'Для передачи аварийных сигналов договорились использовать специальные цветные сигнальные ракеты, ' .
+        'запускаемые последовательно. Одна последовательность ракет – один сигнал; в каком порядке идут ' .
+        "цвета – $order_condition_text. Какое количество различных сигналов можно передать при помощи запуска ровно " .
+        "${\EGE::NumText::num_by_words($sequence_length, 1, 'genitive')} таких сигнальных ракет, если в ".
+        "запасе имеются ракеты ${\EGE::NumText::num_by_words($colors_count, 1, 'genitive')} различных цветов " .
+        "(ракет каждого вида неограниченное количество, цвет ракет в последовательности $repeats_condition_text)?";
+
+    $self->{correct} = $answer;
     $self->accept_number;
 }
 
