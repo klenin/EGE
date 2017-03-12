@@ -26,7 +26,7 @@ sub sport {
     );
     my $bits = rnd->in_range(5, 7);
     my $total = 2 ** $bits - rnd->in_range(2, 5);
-    my $passed = rnd->in_range($total / 2 - 5, $total / 2 + 5);
+    my $passed = ceil(rnd->in_range($total / 2 - 5, $total / 2 + 5));
     my $passed_text = num_text($passed, $flavour->{t2});
     my $total_text = num_text($total, [ 'спортсмен', 'спортсмена', 'спортсменов' ]);
     $self->{text} = <<QUESTION
