@@ -67,6 +67,7 @@ use EGE::Gen::EGE::Z10;
 use EGE::Gen::EGE::Z11;
 use EGE::Gen::EGE::Z13;
 use EGE::Gen::EGE::Z15;
+use EGE::Gen::EGE::Z16;
 use EGE::Gen::EGE::Z22;
 
 sub g {
@@ -124,6 +125,7 @@ sub all {[
     gg('Z11', qw(recursive_alg)),
     gg('Z13', qw(tumblers tumblers_min)),
     gg('Z15', qw(city_roads)),
+    gg('Z16', qw(find_dec)),
     gg('Z22', qw(calculator_find_prgm_count)),
 ]}
 
