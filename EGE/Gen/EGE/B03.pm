@@ -85,15 +85,21 @@ sub simple_equation {
 
 sub count_ones {
     my ($self) = @_;
+    my $base = rnd->in_range(2, 10);
+
     my @large_power = map rnd->in_range(2013, 2025), 0..1;
     my @base_power = map rnd->in_range(1, 4), 0..2;
-    my @base = map 2 ** $_, @base_power;
+    my @summands_base = map $base ** $_, @base_power;
     my @answ = map $large_power[$_] * $base_power[$_], 0..1;
+    my @nums_text = qw(единиц двоек троек четверок пятерок шестерок семерок восьмерок девяток);
+    my @bases_text = qw(
+        двоичной троичной четверичной пятиричной шестеричной семеричной восьмеричной девятиричной десятичной);
 
     $self->{text} =
-        'Cколько единиц в двоичной записи числа ' .
-        "$base[0]<sup>$large_power[0]</sup> + $base[1]<sup>$large_power[1]</sup> - $base[2]?";
-    $self->{correct} = min(@answ) - $base_power[2] + 1;
+        "Cколько $nums_text[$base - 2] в $bases_text[$base - 2] записи числа " .
+        "$summands_base[0]<sup>$large_power[0]</sup> + " .
+        "$summands_base[1]<sup>$large_power[1]</sup> - $summands_base[2]?";
+    $self->{correct} = min(@answ) - $base_power[2] + ($base == 2 ? 1 : 0);
     $self->accept_number;
 }
 
@@ -247,6 +253,22 @@ sub move_number {
         "Запишите десятичное число $num в системе счисления с ос­но­ва­ни­ем $base. " .
         'Основание системы счисления (нижний индекс после числа) писать не нужно.';
     $self->{correct} = $converted_num;
+    $self->accept_number;
+}
+
+sub range_count {
+    my ($self) = @_;
+    my @bounds;
+    my $numbers_count = rnd->in_range(0, 1000);
+    $bounds[0] = rnd->in_range(20, 1000);
+    $bounds[1] = $bounds[0] + $numbers_count + 1;
+    my @bases = rnd->pick_n(2, 2 .. 16);
+    $self->{text} = sprintf
+        'Сколько существует натуральных чисел x, для которых выполнено неравенство: ' .
+        '%s &lt; x &lt; %s?<br/>' .
+        'В ответе укажите только количество чисел, сами числа писать не нужно.',
+        map dec_to_base($bases[$_], $bounds[$_]) . "<sub>$bases[$_]</sub>", 0 .. 1;
+    $self->{correct} = $numbers_count;
     $self->accept_number;
 }
 

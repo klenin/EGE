@@ -343,8 +343,10 @@ sub to_lang {
 
 sub run {
     my ($self, $env) = @_;
-    for ($env->{$self->{name}}) {
-        defined $_ or die "Undefined variable $self->{name}";
+    my $n = $self->{name};
+    exists $env->{$n} or die "Unknown variable $n";
+    for ($env->{$n}) {
+        defined $_ or die "Undefined variable $n";
         return $_;
     }
 }
