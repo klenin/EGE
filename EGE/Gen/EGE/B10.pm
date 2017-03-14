@@ -133,4 +133,30 @@ sub min_period_of_time {
     $self->accept_number;
 }
 
+sub trans_text {
+    my ($self) = @_;
+    my $speed = (2 ** rnd->pick(3..9)) * (10 ** rnd->pick(2, 3));
+    my $seconds = rnd->pick(10..40);
+    my $typecon = ($speed < 52000 ? "модемное " : "ADSL-");
+    $self->{text} = sprintf
+        "Скорость передачи данных через $typecon соединение равна $speed бит/с. Передача текстового файла через это соединение заняла %s. " .
+        'Определите, сколько символов содержал переданный текст, если известно, что он был представлен в 16-битной кодировке Unicode.',
+    num_text($seconds, [ qw(секунду секунды секунд) ]);
+    $self->{correct} = ($speed * $seconds) / 16;
+    $self->accept_number;
+}
+
+sub trans_time_size {
+    my ($self) = @_;
+    my $Kspeed = 2 ** rnd->pick(9, 10);
+    my $time1 = 2 * rnd->pick(3..8);
+    my $time2 = $time1 - 2 * rnd->pick(1..int ($time1 / 3));
+    $self->{text} =
+        "По каналу связи непрерывно в течение $time1 часов передаются данные. Скорость передачи данных в течение первых $time2" .
+        " часов составляет $Kspeed Кбит в секунду, а в остальное время — в два раза меньше. Сколько Мбайт данных было передано за " .
+        'время работы канала?';
+    $self->{correct} = (($Kspeed * ($time2 * 3600)) + ((($time1 - $time2) * 3600) * ($Kspeed / 2))) / 8192;
+    $self->accept_number;
+}
+
 1;

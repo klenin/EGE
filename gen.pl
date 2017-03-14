@@ -239,6 +239,8 @@ binmode STDOUT, ':utf8';
 #g('B10', 'trans_time');
 #g('B10', 'trans_latency');
 #g('B10', 'min_period_of_time');
+#g('B10', 'trans_text');
+#g('B10', 'trans_time_size');
 #g('B11', 'ip_mask');
 #g('B11', 'subnet_mask');
 #g('B12', 'search_query');
