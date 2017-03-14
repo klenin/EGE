@@ -219,6 +219,7 @@ binmode STDOUT, ':utf8';
 #g('B03', 'select_base');
 #g('B03', 'move_number');
 #g('B03', 'range_count');
+#g('B03', 'min_required_base');
 #g('B04', 'impl_border');
 #g('B04', 'lex_order');
 #g('B04', 'morse');

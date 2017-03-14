@@ -272,4 +272,19 @@ sub range_count {
     $self->accept_number;
 }
 
+sub min_required_base {
+    my ($self) = @_;
+    my $base = 1;
+    my $num = rnd->in_range(27, 242);
+    my $tempnum = 0;
+    my $length = rnd->pick($num <= 80 ? (3, 4) : (3, 4, 5));
+    $tempnum = dec_to_base(++$base, $num) while (length($tempnum) != $length);
+    $self->{text} =
+        'Укажите наименьшее основание системы счисления, ' . 
+        "в которой запись числа $num " . num_by_words($length, 1, 'genitive') . 'значна.';
+    $self->{correct} = $base;
+    $self->accept_number;
+}
+
+
 1;
