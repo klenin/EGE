@@ -67,6 +67,7 @@ use EGE::Gen::EGE::Z10;
 use EGE::Gen::EGE::Z11;
 use EGE::Gen::EGE::Z13;
 use EGE::Gen::EGE::Z15;
+use EGE::Gen::EGE::Z16;
 use EGE::Gen::EGE::Z22;
 
 sub g {
@@ -84,16 +85,16 @@ sub gg {
 
 sub all {[
     gg('A1', qw(recode simple)),
-    gg('A2', qw(sport car_numbers database units min_routes)),
-    gg('A3', qw(ones zeroes convert range)),
+    gg('A2', qw(sport car_numbers database units min_routes sport_athlete)),
+    gg('A3', qw(ones zeroes convert range binary_num_system)),
     gg('A4', qw(sum)),
     gg('A4', qw(count_zero_one)),
     gg('A5', qw(arith div_mod_10 div_mod_rotate digit_by_digit crc)),
-    gg('A6', qw(count_by_sign find_min_max count_odd_even alg_min_max alg_avg bus_station)),
+    gg('A6', qw(count_by_sign find_min_max count_odd_even alg_min_max alg_avg bus_station inf_size)),
     gg('A7', qw(names animals random_sequences restore_password spreadsheet_shift)),
     gg('A8', qw(equiv_3 equiv_4 audio_size audio_time)),
     gg('A9', qw(truth_table_fragment find_var_len_code error_correction_code hamming_code)),
-    gg('A10', qw(graph_by_matrix)),
+    gg('A10', qw(graph_by_matrix light_panel min_alphabet)),
     gg('A11', qw(variable_length fixed_length password_length)),
     gg('A12', qw(beads array_flip)),
     gg('A13', qw(file_mask file_mask2 file_mask3)),
@@ -105,9 +106,9 @@ sub all {[
     gg('B01', qw(direct recode2)),
     gg('B02', qw(flowchart)),
     gg('B02', qw(simple_while)),
-    gg('B03', qw(q1234 last_digit last_digit_base count_digits count_ones music_time_to_time music_size_to_size music_format_time_to_time select_base move_number)),
+    gg('B03', qw(q1234 last_digit last_digit_base count_digits count_ones music_time_to_time music_size_to_size music_format_time_to_time select_base move_number range_count)),
     gg('B03', qw(simple_equation)),
-    gg('B04', qw(impl_border lex_order morse bulbs plus_minus letter_combinatorics)),
+    gg('B04', qw(impl_border lex_order morse bulbs plus_minus letter_combinatorics signal_rockets)),
     gg('B05', qw(calculator complete_spreadsheet adsl_speed)),
     gg('B06', qw(solve recursive_function password_meta)),
     gg('B07', qw(who_is_right)),
@@ -118,12 +119,13 @@ sub all {[
     gg('B13', qw(plus_minus)),
     gg('B14', qw(find_func_min)),
     gg('B15', qw(logic_var_set)),
-    gg('Z06', qw(find_number grasshopper)),
+    gg('Z06', qw(find_number min_add_digits grasshopper)),
     gg('Z09', qw(get_memory_size)),
     gg('Z10', qw(words_count)),
     gg('Z11', qw(recursive_alg)),
     gg('Z13', qw(tumblers tumblers_min)),
     gg('Z15', qw(city_roads)),
+    gg('Z16', qw(base_gcd)),
     gg('Z22', qw(calculator_find_prgm_count)),
 ]}
 

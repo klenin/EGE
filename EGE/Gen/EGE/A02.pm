@@ -26,7 +26,7 @@ sub sport {
     );
     my $bits = rnd->in_range(5, 7);
     my $total = 2 ** $bits - rnd->in_range(2, 5);
-    my $passed = rnd->in_range($total / 2 - 5, $total / 2 + 5);
+    my $passed = ceil(rnd->in_range($total / 2 - 5, $total / 2 + 5));
     my $passed_text = num_text($passed, $flavour->{t2});
     my $total_text = num_text($total, [ 'спортсмен', 'спортсмена', 'спортсменов' ]);
     $self->{text} = <<QUESTION
@@ -141,6 +141,12 @@ sub database {
 Было передано закодированное сообщение, состоящее из $n символов.
 Определите информационный объём переданного сообщения.~
         },
+        { bits => 5, q => qq~
+Для передачи секретного сообщения используется код, состоящий из прописных букв 
+русского языка (всего используются 32 различные буквы без пробелов). Каждая буква 
+кода записывается при помощи минимально возможного количества бит. Определите 
+информационный объём сообщения длиной в $n символов.~
+        }
     );
     my $bits = $flavour->{bits} * $n;
     $self->{text} = $flavour->{q};
@@ -337,6 +343,23 @@ sub min_routes {
 
     $self->{text} = $context->{text};
     $self->variants( @{$context->{ans}}[0 .. 3] );
+}
+
+sub sport_athlete {
+    my ($self) = @_;
+    my $athletes = rnd->pick(9..255);
+    my $bits = ceil(log($athletes)/log(2));
+    $self->{text} =
+        "В соревновании участвуют $athletes атлетов. " .
+        'Какое минимальное количество бит необходимо, чтобы кодировать номер каждого атлета?';
+    $self->variants(
+        num_bits($bits),
+        rnd->pick_n(3,
+            num_bits(int($bits * 1.5)),
+            num_bits($bits + 1),
+            num_bits($bits - 1)
+        )
+     );
 }
 
 1;

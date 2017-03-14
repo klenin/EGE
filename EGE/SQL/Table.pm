@@ -125,12 +125,12 @@ sub select {
         $group = $p->{group};
         $having = $p->{having};
     }
-    $aggr =  grep ref $_ eq 'EGE::Prog::CallFuncAggregate', @$fields;
+    $aggr = grep ref $_ eq 'EGE::Prog::CallFuncAggregate', @$fields;
     my $k = 0;
 
     my $result = EGE::SQL::Table->new([ map { ref $_ ne 'EGE::Prog::Field' && ref $_ ? 'expr_' . ++$k : $_ } @$fields ]);
 
-    my @values = map { ref $_  ? $_ : make_expr($_) } @$fields;
+    my @values = map { ref $_ ? $_ : make_expr($_) } @$fields;
     my $calc_row = sub { map $_->run($_[0]), @values };
 
     my $tab_where = $self->where($where, $ref);
@@ -138,8 +138,8 @@ sub select {
         $result->{data} = $tab_where->group_by($calc_row, $group, $having);
     } else {
         my @ans;
-        my $evn = $tab_where->_hash;
-        push @ans, [ $calc_row->($tab_where->_row_hash($_, $evn)) ] for @{$tab_where->{data}};
+        my $env = $tab_where->_hash;
+        push @ans, [ $calc_row->($tab_where->_row_hash($_, $env)) ] for @{$tab_where->{data}};
         $result->{data} = $aggr ? [ $ans[0] ] : [ @ans ];
     }
     $result;
