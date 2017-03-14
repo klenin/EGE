@@ -274,14 +274,15 @@ sub range_count {
 
 sub min_required_base {
     my ($self) = @_;
+    my $num = rnd->in_range(27, 500);
+    my $len_base = sub { length(dec_to_base($_[0], $num)) };
+    my $length = rnd->in_range(3, $len_base->(3));
     my $base = 1;
-    my $num = rnd->in_range(27, 242);
-    my $tempnum = 0;
-    my $length = rnd->pick($num <= 80 ? (3, 4) : (3, 4, 5));
-    $tempnum = dec_to_base(++$base, $num) while (length($tempnum) != $length);
+    while ($len_base->(++$base) > $length) {}
+
     $self->{text} =
-        'Укажите наименьшее основание системы счисления, ' . 
-        "в которой запись числа $num " . num_by_words($length, 1, 'genitive') . 'значна.';
+        'Укажите наименьшее основание системы счисления, ' .
+        "в которой запись числа $num " . num_by_words($len_base->($base), 1, 'genitive') . 'значна.';
     $self->{correct} = $base;
     $self->accept_number;
 }
