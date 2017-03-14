@@ -85,7 +85,7 @@ sub gg {
 
 sub all {[
     gg('A1', qw(recode simple)),
-    gg('A2', qw(sport car_numbers database units min_routes sport_athlete)),
+    gg('A2', qw(sport car_numbers database units min_routes sport_athlete alphabet_power text_size)),
     gg('A3', qw(ones zeroes convert range binary_num_system)),
     gg('A4', qw(sum)),
     gg('A4', qw(count_zero_one)),
