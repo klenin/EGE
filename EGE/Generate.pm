@@ -65,6 +65,7 @@ use EGE::Gen::EGE::Z06;
 use EGE::Gen::EGE::Z09;
 use EGE::Gen::EGE::Z10;
 use EGE::Gen::EGE::Z11;
+use EGE::Gen::EGE::Z12;
 use EGE::Gen::EGE::Z13;
 use EGE::Gen::EGE::Z15;
 use EGE::Gen::EGE::Z16;
@@ -123,6 +124,7 @@ sub all {[
     gg('Z09', qw(get_memory_size)),
     gg('Z10', qw(words_count)),
     gg('Z11', qw(recursive_alg)),
+    gg('Z12', qw(computer_number)),
     gg('Z13', qw(tumblers tumblers_min young_spy)),
     gg('Z15', qw(city_roads)),
     gg('Z16', qw(base_gcd)),

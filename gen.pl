@@ -253,6 +253,7 @@ binmode STDOUT, ':utf8';
 #g('Z09', 'get_memory_size');
 #g('Z10', 'words_count');
 #g('Z11', 'recursive_alg');
+#g('Z12', 'computer_number');
 #g('Z13', 'tumblers');
 #g('Z13', 'young_spy');
 #g('Z13', 'tumblers_min');
