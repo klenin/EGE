@@ -257,6 +257,7 @@ binmode STDOUT, ':utf8';
 #g('Z13', 'tumblers_min');
 #g('Z15', 'city_roads');
 #g('Z16', 'base_gcd');
+#g('Z18', 'bitwise_conjunction');
 #g('Z22', 'calculator_find_prgm_count');
 #g1('Arch01', 'reg_value_add');
 #g1('Arch01', 'reg_value_logic');
