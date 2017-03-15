@@ -123,7 +123,7 @@ sub all {[
     gg('Z09', qw(get_memory_size)),
     gg('Z10', qw(words_count)),
     gg('Z11', qw(recursive_alg)),
-    gg('Z13', qw(tumblers tumblers_min dif_message)),
+    gg('Z13', qw(tumblers tumblers_min young_spy)),
     gg('Z15', qw(city_roads)),
     gg('Z16', qw(base_gcd)),
     gg('Z22', qw(calculator_find_prgm_count)),
