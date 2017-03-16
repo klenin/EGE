@@ -69,6 +69,7 @@ use EGE::Gen::EGE::Z12;
 use EGE::Gen::EGE::Z13;
 use EGE::Gen::EGE::Z15;
 use EGE::Gen::EGE::Z16;
+use EGE::Gen::EGE::Z18;
 use EGE::Gen::EGE::Z22;
 
 sub g {
@@ -128,6 +129,7 @@ sub all {[
     gg('Z13', qw(tumblers tumblers_min young_spy)),
     gg('Z15', qw(city_roads)),
     gg('Z16', qw(base_gcd)),
+    gg('Z18', qw(bitwise_conjunction)),
     gg('Z22', qw(calculator_find_prgm_count)),
 ]}
 
