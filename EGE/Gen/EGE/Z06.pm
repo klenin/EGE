@@ -10,6 +10,7 @@ use utf8;
 
 use EGE::Random;
 use EGE::Bits;
+ use List::Util qw(min);
 
 use List::Util qw(min max);
 
@@ -77,6 +78,30 @@ QUESTION
     $self->{correct} = _get_min_origin($result);
     $result == _convert($self->{correct}) or die "$orig => $result, min = $self->{correct}";
     $self->{correct} <= $orig or die "$orig => $result, min = $self->{correct}";
+}
+
+sub grasshopper {
+    my ($self) = @_;
+    my $forward = rnd->in_range(2, 15);
+    my $backward = rnd->in_range_except(2, 9, $forward);
+    my $back_cnt = rnd->in_range(2, 15);
+    my $length = ($backward * $back_cnt) % $forward;
+    my $start_pnt = rnd->in_range(0, 20);
+    my $end_pnt = $start_pnt + $length;
+    my $min = $back_cnt;
+    for (0 .. ($back_cnt - 1)) {
+        if (($length + $backward * $_) % $forward == 0) {
+            $min = min($min, $_);
+            last;
+        }
+    }
+    $self->{text} = 
+        "Исполнитель КУЗНЕЧИК живёт на числовой оси. Начальное положение КУЗНЕЧИКА – точка $start_pnt. Система команд Кузнечика:<br />
+         Вперед $forward – Кузнечик прыгает вперёд на $forward единиц,<br />
+         Назад $backward – Кузнечик прыгает назад на $backward единиц.<br />
+         Какое наименьшее количество раз должна встретиться в программе команда «Назад $backward», чтобы Кузнечик оказался в точке $end_pnt?";
+    $self->{correct} = $min;
+    $self->accept_number;
 }
 
 1;

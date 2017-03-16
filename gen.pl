@@ -249,6 +249,7 @@ binmode STDOUT, ':utf8';
 #g('B14', 'find_func_min');
 #g('B15', 'logic_var_set');
 #g('Z06', 'find_number');
+#g('Z06', 'grasshopper');
 #g('Z06', 'min_add_digits');
 #g('Z09', 'get_memory_size');
 #g('Z10', 'words_count');

@@ -120,7 +120,7 @@ sub all {[
     gg('B13', qw(plus_minus)),
     gg('B14', qw(find_func_min)),
     gg('B15', qw(logic_var_set)),
-    gg('Z06', qw(find_number min_add_digits)),
+    gg('Z06', qw(find_number min_add_digits grasshopper)),
     gg('Z09', qw(get_memory_size)),
     gg('Z10', qw(words_count)),
     gg('Z11', qw(recursive_alg)),
