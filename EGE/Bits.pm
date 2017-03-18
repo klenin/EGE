@@ -273,6 +273,7 @@ sub bswap {
         }
     }
     $self->{v} = $tmp->{v};
+    $self;
 }
 
 1;
