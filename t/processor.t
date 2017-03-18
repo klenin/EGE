@@ -1,10 +1,11 @@
 use strict;
 use warnings;
 
-use Test::More tests => 207;
+use Test::More tests => 233;
 use Test::Exception;
 
 use lib '..';
+use EGE::Bits;
 use EGE::Asm::Processor;
 
 sub check_stack {
@@ -413,4 +414,46 @@ sub check_stack {
     proc->run_code([ ['mov', 'al', 1], ['push', 'al'], ['mov', 'al', 2], ['push', 'al'], ['pop', 'bl'] ]);
     is proc->get_val('ebx'), 2, 'double push pop';
     ok check_stack(1), 'double push pop stack';
+}
+
+{
+    proc->run_code([ ['mov', 'ebx', 0xDE5647C8], ['bsr', 'eax', 'ebx'] ]);
+    is proc->get_val('eax'), 31, 'bsr test 1';
+    is proc->{eflags}->flags_text, 'ZF', 'bsr flags test 1';
+    is (0xDE5647C8, proc->get_val('ebx'), 'bsr ebx unchanged 1');
+    proc->run_code([ ['mov', 'ebx', 0x28E2E288], ['bsr', 'eax', 'ebx'] ]);
+    is proc->get_val('eax'), 29, 'bsr test 2';
+    is proc->{eflags}->flags_text, 'ZF', 'bsr flags test 2';
+    proc->run_code([ ['mov', 'ebx', 0xCA288], ['bsr', 'eax', 'ebx'] ]);
+    is proc->get_val('eax'), 19, 'bsr test 3';
+    is proc->{eflags}->flags_text, 'ZF', 'bsr flags test 3';
+    proc->run_code([ ['mov', 'ebx', 0x00000000], ['bsr', 'eax', 'ebx'] ]);
+    is proc->get_val('eax'), 0, 'bsr test 4';
+    is proc->{eflags}->flags_text, '', 'bsr flags test 4';
+    proc->run_code([ ['mov', 'bx', 0xC280], ['bsr', 'ax', 'bx'] ]);
+    is proc->get_val('ax'), 15, 'bsr test 5';
+    is proc->{eflags}->flags_text, 'ZF', 'bsr flags test 5';
+    proc->run_code([ ['mov', 'bx', 0x0000], ['bsr', 'ax', 'bx'] ]);
+    is proc->get_val('ax'), 0, 'bsr test 6';
+    is proc->{eflags}->flags_text, '', 'bsr flags test 6';
+
+    proc->run_code([ ['mov', 'ebx', 0xDE5647C8], ['bsf', 'ebx', 'ebx'] ]);
+    is proc->get_val('ebx'), 3, 'bsf test 1';
+    is proc->{eflags}->flags_text, 'ZF', 'bsf flags test 1';
+    proc->run_code([ ['mov', 'ebx', 0x28E2E2A0], ['bsf', 'ebx', 'ebx'] ]);
+    is proc->get_val('ebx'), 5, 'bsf test 2';
+    is proc->{eflags}->flags_text, 'ZF', 'bsf flags test 2';
+    proc->run_code([ ['mov', 'ebx', 0xCA280], ['bsf', 'eax', 'ebx'] ]);
+    is proc->get_val('eax'), 7, 'bsf test 3';
+    is proc->{eflags}->flags_text, 'ZF', 'bsf flags test 3';
+    is (0xCA280, proc->get_val('ebx'), 'bsr ebx unchanged 2');
+    proc->run_code([ ['mov', 'ebx', 0x00000000], ['bsf', 'eax', 'ebx'] ]);
+    is proc->get_val('eax'), 0, 'bsf test 4';
+    is proc->{eflags}->flags_text, '', 'bsf flags test 4';
+    proc->run_code([ ['mov', 'bx', 0xC200], ['bsf', 'ax', 'bx'] ]);
+    is proc->get_val('ax'), 9, 'bsf test 5';
+    is proc->{eflags}->flags_text, 'ZF', 'bsf flags test 5';
+    proc->run_code([ ['mov', 'bx', 0x0000], ['bsf', 'ax', 'bx'] ]);
+    is proc->get_val('ax'), 0, 'bsf test 6';
+    is proc->{eflags}->flags_text, '', 'bsf flags test 6';
 }

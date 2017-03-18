@@ -304,4 +304,30 @@ sub pop {
 	$self;
 }
 
+sub bsf {
+    my ($self, $eflags, $reg, $val) = @_;
+    $self->set_indexes($reg) if $reg;
+    my $value = EGE::Bits->new->set_size(32)->set_dec($val)->scan_forward;
+    $eflags->{ZF} = 1;
+    if ($value == -1) {
+        $eflags->{ZF} = 0;
+        $value = 0;
+    }
+    $self->mov_value($value);
+    $self;
+}
+
+sub bsr {
+    my ($self, $eflags, $reg, $val) = @_;
+    $self->set_indexes($reg) if $reg;
+    my $value= EGE::Bits->new->set_size(32)->set_dec($val)->scan_reverse;
+    $eflags->{ZF} = 1;
+    if ($value == -1) {
+        $eflags->{ZF} = 0;
+        $value = 0;
+    }
+    $self->mov_value($value);
+    $self;
+}
+
 1;
