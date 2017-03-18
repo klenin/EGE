@@ -47,10 +47,10 @@ sub reg_value_add {
 
 sub reg_value_bscan {
     my $self =  shift;
-    my ($reg16, $reg32, $format_variants, $format_code) = cgen->generate_bscan_code;
-    my @variants = $self->get_res($reg16, $format_code);
+    my ($reg1, $reg2, $format_variants, $format_code) = cgen->generate_bscan_code;
+    my @variants = $self->get_res($reg1, $format_code);
     push @variants, offs_modulo($variants[0], 2 ** 16, rnd->pick(2, -2), 1, - 1);
-    $self->formated_variants($format_variants, @variants, make_wrongs($reg16, 4, @variants));
+    $self->formated_variants($format_variants, @variants, make_wrongs($reg1, 4, @variants));
 }
 
 sub reg_value_logic {

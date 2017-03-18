@@ -260,7 +260,6 @@ sub frscan {
             if ($scan_type eq 'r') {last};
         }
     }
-    if ($ind == -1) { die "Index is undefined"; }
     $ind;
 }
 
