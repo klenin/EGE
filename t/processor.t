@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 216;
+use Test::More tests => 215;
 use Test::Exception;
 
 use lib '..';
