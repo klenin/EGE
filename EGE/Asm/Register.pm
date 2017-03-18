@@ -24,6 +24,7 @@ sub new {
 }
 
 my %reg_indexes = (
+	(map { $_ => [ 0, 16 ] } qw(si di bp sp)),
     (map { $_ . 'l' => [ 24, 32 ] } 'a'..'d'),
     (map { $_ . 'h' => [ 16, 24 ] } 'a'..'d'),
     (map { $_ . 'x' => [ 16, 32 ] } 'a'..'d'),
@@ -301,6 +302,29 @@ sub push {
 sub pop {
 	my ($self, $eflags, $reg, $stack) = @_;
 	$self->mov($eflags, $reg, shift @{$stack});
+	$self;
+}
+
+sub bsf {
+	my ($self, $eflags, $reg, $val) = @_;
+	$self->set_indexes($reg);
+	my $tmp = EGE::Bits->new->set_size(32)->set_dec($val);
+	$self->{bits} = EGE::Bits->new->set_size(16)->set_dec($tmp->frscan('f'));
+	$self;
+}
+
+sub bsr {
+	my ($self, $eflags, $reg, $val) = @_;
+	$self->set_indexes($reg);
+	my $tmp = EGE::Bits->new->set_size(32)->set_dec($val);
+	$self->{bits} = EGE::Bits->new->set_size(16)->set_dec($tmp->frscan('r'));
+	$self;
+}
+
+sub bswap {
+	my ($self, $eflags, $reg, $val) = @_;
+	$self->set_indexes($reg);
+	$self->{bits}->bswap;
 	$self;
 }
 
