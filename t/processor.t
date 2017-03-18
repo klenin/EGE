@@ -420,16 +420,16 @@ sub check_stack {
     is proc->get_val('si'), 14, 'bsr test-1';
     proc->run_code([ ['mov', 'ebx', 124157], ['bsr', 'sp', 'ebx'] ]);
     is proc->get_val('sp'), 16, 'bsr test-2';
-    proc->run_code([ ['mov', 'edx', 354321], ['bswap', 'edx'], ['bsr', 'si', 'ebx'] ]);
+    proc->run_code([ ['mov', 'edx', 354321], ['bswap', 'edx'], ['bsr', 'si', 'edx'] ]);
     is proc->get_val('si'), 20, 'bsr_bswap test-1';
-    proc->run_code([ ['mov', 'edx', 1200766], ['bswap', 'edx'], ['bsr', 'si', 'ebx'] ]);
+    proc->run_code([ ['mov', 'edx', 1200766], ['bswap', 'edx'], ['bsr', 'si', 'edx'] ]);
     is proc->get_val('sp'), 22, 'bsr_bswap test-2';
     proc->run_code([ ['mov', 'ebx', 52432], ['bsf', 'di', 'ebx'] ]);
     is proc->get_val('di'), 4, 'bsf test-1';
     proc->run_code([ ['mov', 'ebx', 751421], ['bsf', 'bp', 'ebx'] ]);
     is proc->get_val('bp'), 0, 'bsf test-2';
-    proc->run_code([ ['mov', 'edx', 123453], ['bswap', 'edx'], ['bsf', 'di', 'ebx'] ]);
+    proc->run_code([ ['mov', 'edx', 123453], ['bswap', 'edx'], ['bsf', 'di', 'edx'] ]);
     is proc->get_val('di'), 0, 'bsf_bswap test-1';
-    proc->run_code([ ['mov', 'edx', 8432136], ['bswap', 'edx'], ['bsf', 'bp', 'ebx'] ]);
+    proc->run_code([ ['mov', 'edx', 8432136], ['bswap', 'edx'], ['bsf', 'bp', 'edx'] ]);
     is proc->get_val('bp'), 7, 'bsf_bswap test-2';
 }
