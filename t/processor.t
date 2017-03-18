@@ -424,7 +424,7 @@ sub check_stack {
     proc->run_code([ ['mov', 'edx', 354321], ['bswap', 'edx'], ['bsr', 'si', 'edx'] ]);
     is proc->get_val('si'), 28, 'bsr_bswap test-1';
     proc->run_code([ ['mov', 'edx', 1200766], ['bswap', 'edx'], ['bsr', 'si', 'edx'] ]);
-    is proc->get_val('sp'), 0, 'bsr_bswap test-2';
+    is proc->get_val('si'), 0, 'bsr_bswap test-2';
 
     proc->run_code([ ['mov', 'ebx', 52432], ['bsf', 'di', 'ebx'] ]);
     is proc->get_val('di'), 4, 'bsf test-1';
