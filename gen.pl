@@ -227,6 +227,8 @@ binmode STDOUT, ':utf8';
 #g('B04', 'plus_minus');
 #g('B04', 'letter_combinatorics');
 #g('B04', 'signal_rockets');
+#g('B04', 'how_many_sequences1');
+#g('B04', 'how_many_sequences2');
 #g('B05', 'calculator');
 #g('B05', 'complete_spreadsheet');
 #g('B05', 'adsl_speed');
