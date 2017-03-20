@@ -223,16 +223,19 @@ sub how_many_sequences1 {
     my($self) = @_;
 
     my $first_num = rnd->in_range(1, 3);
-    my $second_num = rnd->in_range($first_num + 1, 5);
+    my $second_num = rnd->in_range($first_num + 1, 6);
     my $num_of_letters = rnd->in_range(2, 5);
-    my @alphabet = @EGE::Russian::alphabet[0..$num_of_letters - 1];
+    my @alphabet = @EGE::Russian::alphabet[0 .. $num_of_letters - 1];
 
-    $self->{text} =
-        'Сколь­ко есть раз­лич­ных сим­воль­ных по­сле­до­ва­тель­но­стей длины от '
-        . num_by_words($first_num, 0, 'genitive') . ' до ' . num_by_words($second_num, 0, 'genitive') .
-        ' в ' . num_by_words($num_of_letters, 0, 'prepositional') . 'бук­вен­ном ал­фа­ви­те {' . (join ', ', @alphabet) . '}?';
+    $self->{text} = sprintf
+        'Сколь­ко есть раз­лич­ных сим­воль­ных по­сле­до­ва­тель­но­стей длины от %s до %s ' .
+        'в %sбук­вен­ном ал­фа­ви­те {%s}?',
+        num_by_words($first_num, 0, 'genitive'),
+        num_by_words($second_num, 0, 'genitive'),
+        num_by_words($num_of_letters, 0, 'prepositional'),
+        join ', ', @alphabet;
 
-    $self->{correct} += $num_of_letters ** $_ for ($first_num..$second_num);;
+    $self->{correct} += $num_of_letters ** $_ for $first_num .. $second_num;
     $self->accept_number;
 }
 
