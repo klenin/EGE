@@ -304,30 +304,16 @@ sub pop {
 	$self;
 }
 
-sub bsf {
-    my ($self, $eflags, $reg, $val) = @_;
+sub _bs {
+    my ($self, $eflags, $reg, $val, $reverse) = @_;
     $self->set_indexes($reg) if $reg;
-    my $value = EGE::Bits->new->set_size(32)->set_dec($val)->scan_forward;
-    $eflags->{ZF} = 1;
-    if ($value == -1) {
-        $eflags->{ZF} = 0;
-        $value = 0;
-    }
-    $self->mov_value($value);
-    $self;
+    my $value = EGE::Bits->new->set_size(32)->set_dec($val)->scan($reverse);
+    $eflags->{ZF} = $value == -1 ? 0 : 1;
+    $self->mov_value($eflags->{ZF} ? $value : 0);
 }
 
-sub bsr {
-    my ($self, $eflags, $reg, $val) = @_;
-    $self->set_indexes($reg) if $reg;
-    my $value= EGE::Bits->new->set_size(32)->set_dec($val)->scan_reverse;
-    $eflags->{ZF} = 1;
-    if ($value == -1) {
-        $eflags->{ZF} = 0;
-        $value = 0;
-    }
-    $self->mov_value($value);
-    $self;
-}
+sub bsf { goto &_bs; }
+
+sub bsr { CORE::push @_, 1; goto &_bs; }
 
 1;
