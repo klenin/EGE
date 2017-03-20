@@ -8,6 +8,8 @@ use warnings;
 
 package EGE::GenBase;
 
+use Carp;
+
 sub new {
     my ($class, %init) = @_;
     my $self = { text => undef, correct => undef };
@@ -35,7 +37,15 @@ sub variants {
 
 sub formated_variants {
     my ($self, $format) = (shift, shift);
-    $self->variants(map {sprintf $format, $_} @_);
+    $self->variants(map { sprintf $format, $_ } @_);
+}
+
+sub check_distinct_variants {
+    my ($self)= @_;
+    my $v = $self->{variants} or die;
+    my %h;
+    @h{@$v} = undef;
+    keys %h == @$v or Carp::confess join ', ', @$v;
 }
 
 sub shuffle_variants {
@@ -48,7 +58,10 @@ sub shuffle_variants {
     $self->{variants} = \@v;
 }
 
-sub post_process { $_[0]->shuffle_variants; }
+sub post_process {
+    $_[0]->check_distinct_variants;
+    $_[0]->shuffle_variants;
+}
 
 package EGE::GenBase::DirectInput;
 use base 'EGE::GenBase';
