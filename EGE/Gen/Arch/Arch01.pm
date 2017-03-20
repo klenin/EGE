@@ -49,8 +49,10 @@ sub reg_value_logic {
     my $self = shift;
     my ($reg, $format, $n) = cgen->generate_simple_code('logic');
     my @variants = $self->get_res($reg, $format);
-    push @variants, run_modified 1, sub { $_->[0] = 'and' }, $reg
-        if cgen->cmd(1) eq 'test';
+    if (cgen->cmd(1) eq 'test') {
+        my $w = run_modified 1, sub { $_->[0] = 'and' }, $reg;
+        push @variants, $w if $variants[0] ne $w;
+    }
     $self->formated_variants($format, @variants, make_wrongs($reg, 4, @variants));
 }
 
