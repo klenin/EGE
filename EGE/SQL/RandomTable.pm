@@ -102,7 +102,7 @@ sub get_text_name { { nominative => 'предметы', genitive => 'предм�
 package EGE::SQL::Marks;
 use base 'EGE::SQL::BaseTable';
 sub get_name { 'marks' }
-sub get_columns { 'Ученик', map { /^(\w+)/, $1 } @EGE::Russian::Subjects::list }
+sub get_columns { 'Ученик', map { /^(\w+)/ ? $1 : die } @EGE::Russian::Subjects::list }
 sub get_rows_array { (\@EGE::Russian::FamilyNames::list) }
 sub get_text_name { { nominative => 'оценки', genitive => 'оценок' } }
 
