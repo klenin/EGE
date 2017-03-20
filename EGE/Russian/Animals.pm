@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use utf8;
 
+use EGE::Utils;
+
 our @list =
 qw(
 Трубкозуб
@@ -153,3 +155,7 @@ qw(
 Як
 Зебра
 );
+
+our @distinct_letters = grep length == EGE::Utils::distinct_letters_count($_), @list;
+
+1;
