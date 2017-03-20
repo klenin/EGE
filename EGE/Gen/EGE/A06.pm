@@ -320,14 +320,16 @@ sub crc_message {
         my $bits = EGE::Bits->new->set_bin([ map(rnd->coin, 1 .. $len), 0 ], 1);
         $bits->set_bit(0, $bits->xor_bits);
     } 1 .. $words;
-    my @rec_msg = map $_->dup->flip(rnd->pick_n(rnd->in_range(1, 4), 0 .. $len)), @orig_msg;
+    my @rec_msg = map $_->dup->
+        flip(rnd->pick_n(rnd->in_range(1, 4), 0 .. $len))->
+        set_bit(rnd->in_range(0, $len - 1), 1), @orig_msg;
 
     my $answer_idx = EGE::Bits->new->set_bin([ map $_->xor_bits, @rec_msg ], 1)->get_dec;
     my @bad_idx = rnd->pick_n(3, grep $_ != $answer_idx, 0 .. (2 ** $words - 1));
 
     my ($orig_txt, $rec_txt) = map { join ' ', map $_->get_bin, @$_ } \@orig_msg, \@rec_msg;
     my $idx_to_msg = sub {
-        my @bits = EGE::Bits->new->set_size($words)->set_dec($_)->get_bits;
+        my @bits = EGE::Bits->new->set_size($words)->set_dec($_[0])->get_bits;
         join ' ', map $bits[$_] ? $zeroes : $rec_msg[$_]->get_bin, 0 .. ($words - 1);
     };
 
