@@ -160,7 +160,7 @@ GetOptions(
 
 rnd->seed(@seed) if @seed;
 my @ss = rnd->get_seed;
-print STDERR "seed: @ss";
+print STDERR "seed: @ss\n";
 
 #g('A1', 'recode');
 #g('A1', 'simple');
