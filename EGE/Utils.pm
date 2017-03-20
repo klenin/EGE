@@ -49,4 +49,10 @@ sub median {
     @_ % 2 ? $sorted->[@_ / 2] : ($sorted->[@_ / 2] + $sorted->[@_ / 2 + 1]) / 2;
 }
 
+sub distinct_letters_count {
+    my %h;
+    @h{split '', $_[0]} = undef;
+    scalar keys %h;
+}
+
 1;

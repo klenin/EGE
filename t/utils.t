@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 12;
+use Test::More tests => 15;
 
 use lib '..';
 use EGE::Utils qw(transpose tail product gcd);
@@ -22,3 +22,8 @@ is gcd(0, 2), 2, 'gcd 0 2';
 is gcd(3, 0), 3, 'gcd 3 0';
 is gcd(9, 6), 3, 'gcd 3';
 is gcd(3, 7), 1, 'gcd 1';
+
+*dlc = *EGE::Utils::distinct_letters_count;
+is dlc(''), 0, 'distinct_letters_count 0';
+is dlc('abc'), 3, 'distinct_letters_count 1';
+is dlc('ababa'), 2, 'distinct_letters_count 2';
