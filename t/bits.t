@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 76;
+use Test::More tests => 77;
 
 use lib '..';
 use EGE::Bits;
@@ -173,4 +173,9 @@ use EGE::Bits;
     is $b->get_dec, 31, 'inc_autosize 30';
     $b->inc_autosize;
     is $b->get_dec, 32, 'inc_autosize 31';
+}
+
+{
+    my $b = EGE::Bits->new->set_bin('10110');
+    is_deeply [ $b->get_bits ], [ 1, 0, 1, 1, 0 ], 'get_bits';
 }

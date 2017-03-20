@@ -246,4 +246,6 @@ sub indexes {
 
 sub count_ones { scalar grep $_, @{$_[0]->{v}}; }
 
+sub get_bits { @{$_[0]->{v}} }
+
 1;
