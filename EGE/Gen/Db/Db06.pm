@@ -41,9 +41,9 @@ sub random_select_query {
     my ($table, $used) = @_;
     my @fields = @{$table->fields};
     shift @fields;
-    my @f = rnd->pick_n(3, @fields);
-    my $expr;
+    my (@f, $expr);
     for my $try (1..50) {
+        @f = rnd->pick_n(3, @fields);
         $expr = EGE::Prog::make_expr([
             rnd->pick(ops::add), [ rnd->pick(ops::add), @f[0..1] ], $f[2] ]);
         my $crc = 0;
