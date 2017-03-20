@@ -156,6 +156,6 @@ qw(
 Зебра
 );
 
-our @distinct_letters = grep length == EGE::Utils::distinct_letters_count($_), @list;
+our @distinct_letters = grep length == EGE::Utils::distinct_letters_count(uc $_), @list;
 
 1;

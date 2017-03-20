@@ -242,16 +242,16 @@ sub how_many_sequences1 {
 sub how_many_sequences2 {
     my($self) = @_;
 
-    my $word = uc $EGE::Russian::Animals::list[rnd->in_range(0, $#EGE::Russian::Animals::list)];
-    my $num = rnd->in_range(4, 6);
-    my $len = length $word;
+    my @word = split '', uc rnd->pick(@EGE::Russian::Animals::distinct_letters);
+    my $num = rnd->in_range(3, 7);
 
-    $self->{text} =
-        "Рас­смат­ри­ва­ют­ся сим­воль­ные по­сле­до­ва­тель­но­сти длины " . $num . ' в '. num_by_words($len, 0, 'prepositional') .
-        'бук­вен­ном ' . 'ал­фа­ви­те {' . (join ', ', split //, $word) . '}. Сколь­ко су­ще­ству­ет таких по­сле­до­ва­тель­но­стей, ' .
-        'ко­то­рые на­чи­на­ют­ся с буквы ' . substr($word, 0, 1) . ' и за­кан­чи­ва­ют­ся бук­вой ' . substr($word, $len - 1, 1) . '?';
+    $self->{text} = sprintf
+        'Рас­смат­ри­ва­ют­ся сим­воль­ные по­сле­до­ва­тель­но­сти длины %d в %sбук­вен­ном ал­фа­ви­те {%s}. ' .
+        'Сколь­ко су­ще­ству­ет таких по­сле­до­ва­тель­но­стей, ' .
+        'ко­то­рые на­чи­на­ют­ся с буквы %s и за­кан­чи­ва­ют­ся бук­вой %s?',
+        $num, num_by_words(scalar @word, 0, 'prepositional'), join(', ', @word), $word[0], $word[-1];
 
-    $self->{correct} = $len ** ($num - 2);
+    $self->{correct} = @word ** ($num - 2);
     $self->accept_number;
 }
 

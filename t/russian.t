@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 47;
+use Test::More tests => 48;
 
 use lib '..';
 use EGE::Russian::Animals;
@@ -83,4 +83,5 @@ is EGE::Russian::SimpleNames::genitive('Вий'), 'Вия', 'SimpleNames::geniti
 }
 
 is grep($_ eq 'Лемур', @EGE::Russian::Animals::distinct_letters), 1, 'distinct_letters';
+is grep($_ eq 'Скунс', @EGE::Russian::Animals::distinct_letters), 0, 'distinct_letters';
 
