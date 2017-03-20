@@ -25,7 +25,8 @@ sub run_selected {
 sub try_choose_commands {
     my $self = shift;
     my ($reg1, $reg2) = cgen->get_regs(8, 8);
-    my ($arg1, $arg2, $arg3) = map rnd->in_range(1, 255), 1..3;
+    my ($arg1, $arg2) = map rnd->in_range(1, 255), 1..2;
+    my $arg3 = rnd->in_range_except(1, 255, $arg2);
     my ($cmd1, $cmd2, $cmd3) = map rnd->pick(qw(add sub)), 1..3;
     my $commands = [
         [ 'mov', $reg1, $arg1 ],
