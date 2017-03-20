@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 207;
+use Test::More tests => 215;
 use Test::Exception;
 
 use lib '..';
@@ -413,4 +413,26 @@ sub check_stack {
     proc->run_code([ ['mov', 'al', 1], ['push', 'al'], ['mov', 'al', 2], ['push', 'al'], ['pop', 'bl'] ]);
     is proc->get_val('ebx'), 2, 'double push pop';
     ok check_stack(1), 'double push pop stack';
+}
+
+{
+    proc->run_code([ ['mov', 'ebx', 23425], ['bsr', 'si', 'ebx'] ]);
+    is proc->get_val('si'), 14, 'bsr test-1';
+    proc->run_code([ ['mov', 'ebx', 124157], ['bsr', 'sp', 'ebx'] ]);
+    is proc->get_val('sp'), 16, 'bsr test-2';
+
+    proc->run_code([ ['mov', 'edx', 354321], ['bswap', 'edx'], ['bsr', 'si', 'edx'] ]);
+    is proc->get_val('si'), 28, 'bsr_bswap test-1';
+    proc->run_code([ ['mov', 'edx', 1200766], ['bswap', 'edx'], ['bsr', 'sp', 'edx'] ]);
+    is proc->get_val('sp'), 30, 'bsr_bswap test-2';
+
+    proc->run_code([ ['mov', 'ebx', 52432], ['bsf', 'di', 'ebx'] ]);
+    is proc->get_val('di'), 4, 'bsf test-1';
+    proc->run_code([ ['mov', 'ebx', 751421], ['bsf', 'bp', 'ebx'] ]);
+    is proc->get_val('bp'), 0, 'bsf test-2';
+
+    proc->run_code([ ['mov', 'edx', 123453], ['bswap', 'edx'], ['bsf', 'di', 'edx'] ]);
+    is proc->get_val('di'), 8, 'bsf_bswap test-1';
+    proc->run_code([ ['mov', 'edx', 8432136], ['bswap', 'edx'], ['bsf', 'bp', 'edx'] ]);
+    is proc->get_val('bp'), 15, 'bsf_bswap test-2';
 }

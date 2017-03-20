@@ -23,6 +23,11 @@ sub set_size {
 
 sub get_bin { return join '', @{$_[0]->{v}} }
 
+sub print_bin_array { 
+    my ($self) = @_;
+    map { print $_ } @{$self->{v}}; 
+}
+
 sub set_bin_array {
     my ($self, $new_bin, $by_ref) = @_;
     if (my $i = $self->get_size) {
@@ -245,5 +250,29 @@ sub indexes {
 }
 
 sub count_ones { scalar grep $_, @{$_[0]->{v}}; }
+
+sub frscan {
+    my ($self, $scan_type) = @_;
+    my $ind = -1;
+    for (my ($i, $ii) = (0, $self->get_size - 1); $i < $self->get_size; $i++, $ii--) {
+        if ($self->{v}[$i] == 1) {
+            $ind = $ii;
+            if ($scan_type eq 'r') {last};
+        }
+    }
+    $ind;
+}
+
+sub bswap {
+    my ($self) = @_;
+    my $tmp = EGE::Bits->new->set_size($self->get_size);
+    for (my ($i_forw, $i_rev) = (0, $self->get_size - 8); $i_rev >= 0; $i_forw += 8, $i_rev -= 8) {
+        for (my ($bit_self, $bit_tmp) = ($i_rev, $i_forw); $bit_self < $i_rev + 8; $bit_self++, $bit_tmp++) {
+            $tmp->{v}[$bit_tmp] = $self->{v}[$bit_self];
+        }
+    }
+    $self->{v} = $tmp->{v};
+    $self;
+}
 
 1;

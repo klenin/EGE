@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 76;
+use Test::More tests => 84;
 
 use lib '..';
 use EGE::Bits;
@@ -173,4 +173,18 @@ use EGE::Bits;
     is $b->get_dec, 31, 'inc_autosize 30';
     $b->inc_autosize;
     is $b->get_dec, 32, 'inc_autosize 31';
+}
+
+{
+    is (EGE::Bits->new->set_bin('0001000001001000')->frscan('r'), 12, 'rscan_1');
+    is (EGE::Bits->new->set_bin('1001000001001000')->frscan('r'), 15, 'rscan_2');
+    is (EGE::Bits->new->set_bin('0001000001001000')->frscan('f'), 3, 'fscan_1');
+    is (EGE::Bits->new->set_bin('1000000000000001')->frscan('f'), 0, 'fscan_2');      
+}
+
+{
+    is (EGE::Bits->new->set_bin('000011111001111110011100')->bswap->get_dec, 10264335, 'bswap_1');
+    is (EGE::Bits->new->set_bin('1001000001001000')->bswap->get_dec, 18576, 'bswap_2');
+    is (EGE::Bits->new->set_bin('0000010000000000')->bswap->get_dec, 4, 'bswap_3');
+    is (EGE::Bits->new->set_bin('00000001')->bswap->get_dec, 1, 'bswap_4');
 }
