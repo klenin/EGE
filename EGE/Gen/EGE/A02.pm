@@ -69,12 +69,11 @@ sub _car_num_make_alphabet {
 sub _car_num_gen_task {
     my ($c) = @_;
     my $bits_per_item = ceil(log($c->{alph_length}) / log(2)) * $c->{sym_cnt};
-    $c->{result} = [ map num_bytes($_ * $c->{items_cnt}),
-        ceil($bits_per_item / 8),
-        ceil($bits_per_item / 8 - 1),
-        $bits_per_item,
-        $c->{alph_length},
-    ];
+    my $answer = ceil($bits_per_item / 8);
+    my @variants = ($answer, $answer - 1, $bits_per_item);
+    my $len = $c->{alph_length};
+    ++$len while grep $_ == $len, @variants;
+    $c->{result} = [ map num_bytes($_ * $c->{items_cnt}), @variants, $len ];
 }
 
 sub _car_num_gen_text {
