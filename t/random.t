@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 26;
+use Test::More tests => 29;
 use Test::Exception;
 
 use Config;
@@ -92,5 +92,12 @@ histogram(rnd, 5, 4);
 
 is(EGE::Random->new->seed(999, 888)->in_range(0, 1 << 31), 2034720810, 'stable from seed');
 isnt(EGE::Random->new->in_range(0, 1 << 31), EGE::Random->new->in_range(0, 1 << 31), 'unique');
+
+{
+    my $r1 = EGE::Random->new;
+    my @ss = $r1->get_seed;
+    my $r2 = EGE::Random->new->seed(@ss);
+    is $r1->in_range(1, 1000000), $r2->in_range(1, 1000000), "get_seed $_" for 1..3;
+}
 
 1;

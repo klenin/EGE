@@ -94,16 +94,22 @@ sub default_gen { 'PCG_XSH_RR_64_32' . ($Config{ivsize} >= 8 ? '' : '_BigInt') }
 
 sub new {
     my ($class, %p) = @_;
-    my $self = { gen => ('EGE::Random::' . ($p{gen} // default_gen))->new };
+    my $self = {
+        gen => ('EGE::Random::' . ($p{gen} // default_gen))->new,
+        seed => $p{seed},
+        seq => $p{seq},
+    };
     bless $self, $class;
     $self->seed($p{seed}, $p{seq});
 }
 
 sub seed {
     my ($self, $seed, $seq) = @_;
-    $self->{gen}->seed($seed // time, $seq // ($self + 0));
+    $self->{gen}->seed($self->{seed} = $seed // time, $self->{seq} = $seq // ($self + 0));
     $self;
 }
+
+sub get_seed { ($_[0]->{seed}, $_[0]->{seq}) }
 
 sub in_range {
     croak 'in_range: bad number of arguments' if @_ != 3;
