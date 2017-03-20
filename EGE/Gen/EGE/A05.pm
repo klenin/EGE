@@ -103,8 +103,8 @@ sub div_mod_common {
     push @errors, $get_v->(without_op($b, $_)) for 1 .. $b->count_if(\&is_binop);
 
     my %seen = ($correct => 1);
-    @errors = grep !$seen{$_}++, @errors;
-    $self->variants($correct, rnd->pick_n(3, @errors));
+    @errors = grep !$seen{$_}++, @errors or die;
+    $self->variants($correct, @errors < 3 ? @errors : rnd->pick_n(3, @errors));
 }
 
 sub div_mod_10 {
