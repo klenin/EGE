@@ -86,10 +86,13 @@ sub gen_names {
                       $a && ($f =~ $b);
                   }]->[$good];
     my $i = 0;
+    my %used;
     while (@res < $count) {
         my $f = exact_gen_file($masks->[$i], $good);
+        next if $used{$f};
         if (reduce { $check->($a, $patterns->[$b], $f) } $good, 0 .. 3) {
             push @res, $f;
+            $used{$f} = 1;
         }
         $i = ($i + 1) % $count;
     }
