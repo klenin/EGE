@@ -92,7 +92,7 @@ sub all {[
     gg('A4', qw(sum)),
     gg('A4', qw(count_zero_one)),
     gg('A5', qw(arith div_mod_10 div_mod_rotate digit_by_digit crc)),
-    gg('A6', qw(count_by_sign find_min_max count_odd_even alg_min_max alg_avg bus_station inf_size bad_message)),
+    gg('A6', qw(count_by_sign find_min_max count_odd_even alg_min_max alg_avg bus_station crc_message inf_size)),
     gg('A7', qw(names animals random_sequences restore_password spreadsheet_shift)),
     gg('A8', qw(equiv_3 equiv_4 audio_size audio_time)),
     gg('A9', qw(truth_table_fragment find_var_len_code error_correction_code hamming_code)),

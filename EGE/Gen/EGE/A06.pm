@@ -309,68 +309,42 @@ sub bus_station {
     $self->{text} = gen_schedule_text($way, \@towns, \@init_verts);
     $self->variants(map stime($_), @ans);
 }
- 
-sub wr_ans {
-    my @used = @_;
-    my @wrong_ans;
-    my $ind = 0;
-    my @str = split(/ /, $used[0], -1);
-    my @rec = split(/ /, $used[2], -1);
-    my @copy;
-    
-    for (0..2) {
-        my $get = 0;
-        while ($ind < 3) {
-            @copy = @str;
-            ($str[$ind] ne '0000000') ? $copy[$ind] = [0,0,0,0,0,0,0] : $copy[$ind] = $rec[$ind];
-            $ind += 1;
-            if (($used[0] eq "@copy") || ($used[1] eq "@copy") || ($used[2] eq "@copy")) {
-                    next;
-            }
-            $wrong_ans[$_] = "@copy";
-            $get = 1;
-            last;
-         }
-         if ($get){ next; }
-         @copy = @str;
-         do {
-             substr($copy[int(rand(3))], int(rand(7)), 1) = int(rand(2));
-         } while (($used[0] eq "@copy") || ($used[1] eq "@copy") || ($used[2] eq "@copy"));
-         $wrong_ans[$_] = "@copy";
-    }
-    return $wrong_ans[0], $wrong_ans[1], $wrong_ans[2];
-}
 
-sub bad_message {
+sub crc_message {
     my ($self) = @_;
-    my @orig_mes;
-    for my $i (0 .. 2) {
-        my @bits = map(rnd->coin, 1..6);
-        $orig_mes[$i] = join("", @bits) . ((grep $_, @bits) % 2);
-    }
-    
-    my @rec_mes = @orig_mes;
-    for my $i (0 .. 2) {
-        my @rec_mes = map(substr($rec_mes[$i], rnd->in_range(0, 6), 1) = rnd->in_range(0, 1) , 0 .. rnd->in_range(0, 2));
-    }
-    
-    my @answer = map((eval join("+", split(//, $rec_mes[$_]))) % 2 == 1 ? '0000000' : $rec_mes[$_], 0 .. 2); 
- 
+    my $len = 6;
+    my $words = 3;
+    my $zeroes = '0' x ($len + 1);
+
+    my @orig_msg = map {
+        my $bits = EGE::Bits->new->set_bin([ map(rnd->coin, 1 .. $len), 0 ], 1);
+        $bits->set_bit(0, $bits->xor_bits);
+    } 1 .. $words;
+    my @rec_msg = map $_->dup->flip(rnd->pick_n(rnd->in_range(1, 4), 0 .. $len)), @orig_msg;
+
+    my $answer_idx = EGE::Bits->new->set_bin([ map $_->xor_bits, @rec_msg ], 1)->get_dec;
+    my @bad_idx = rnd->pick_n(3, grep $_ != $answer_idx, 0 .. (2 ** $words - 1));
+
+    my ($orig_txt, $rec_txt) = map { join ' ', map $_->get_bin, @$_ } \@orig_msg, \@rec_msg;
+    my $idx_to_msg = sub {
+        my @bits = EGE::Bits->new->set_size($words)->set_dec($_)->get_bits;
+        join ' ', map $bits[$_] ? $zeroes : $rec_msg[$_]->get_bin, 0 .. ($words - 1);
+    };
+
     $self->{text} = <<QUESTION
-В некоторой информационной системе информация кодируется двоичными шестиразрядными словами. 
-При передаче данных возможны их искажения, поэтому в конец каждого слова добавляется седьмой 
-(контрольный) разряд таким образом, чтобы сумма разрядов нового слова, считая контрольный, 
+В некоторой информационной системе информация кодируется двоичными шестиразрядными словами.
+При передаче данных возможны их искажения, поэтому в конец каждого слова добавляется седьмой
+(контрольный) разряд таким образом, чтобы сумма разрядов нового слова, считая контрольный,
 была чётной. Например, к слову 110011 справа будет добавлен 0, а к слову 101100 – 1.
 После приёма слова производится его обработка. При этом проверяется сумма его разрядов,
-включая контрольный. Если она нечётна, это означает, что при передаче этого слова произошёл сбой, 
-и оно автоматически заменяется на зарезервированное слово 0000000. Если она чётна, это означает,
+включая контрольный. Если она нечётна, это означает, что при передаче этого слова произошёл сбой,
+и оно автоматически заменяется на зарезервированное слово $zeroes. Если она чётна, это означает,
 что сбоя не было или сбоев было больше одного. В этом случае принятое слово не изменяется.
-Исходное сообщение : <b>@orig_mes</b> было принято в виде : <b>@rec_mes</b>.
+Исходное сообщение: <b>$orig_txt</b> было принято в виде: <b>$rec_txt</b>.
 Как будет выглядеть принятое сообщение после обработки?
 QUESTION
 ;
-    my @m = ("@answer", "@orig_mes", "@rec_mes");
-    $self->variants("@answer", wr_ans(@m));
+    $self->variants(map $idx_to_msg->($_), $answer_idx, @bad_idx);
 }
 
 sub inf_size {
@@ -388,4 +362,5 @@ sub inf_size {
     $self->variants(
         2 ** ($pow - 3) * $time, 2 ** $pow * $time, 2 ** ($pow - 3) * $time / 60, 2 ** ($pow + 3) * $time);
 }
+
 1;
