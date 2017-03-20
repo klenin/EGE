@@ -10,11 +10,13 @@ $SIG{__DIE__} = $SIG{INT} = \&Carp::confess;
 
 use Data::Dumper;
 use Encode;
+use Getopt::Long;
 
 use lib '.';
 
 use EGE::Generate;
 use EGE::Gen::Math::Summer;
+use EGE::Random;
 
 my $questions;
 
@@ -149,6 +151,16 @@ EOT
 }
 
 binmode STDOUT, ':utf8';
+
+my @seed;
+
+GetOptions(
+    'seed=s{2}' => \@seed,
+);
+
+rnd->seed(@seed) if @seed;
+my @ss = rnd->get_seed;
+print STDERR "seed: @ss";
 
 #g('A1', 'recode');
 #g('A1', 'simple');
