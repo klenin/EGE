@@ -70,14 +70,15 @@ sub try_reg_value_shift {
         $make_wa->(sub { $_->[2] += $_->[2] == $n / 8 ? $n / 8 : rnd->pick($n / 8, -$n / 8) }),
         $make_wa->(sub { $_->[0] =~ s/^(\w\w)(l|r)$/$1 . toggle($2, 'r', 'l')/e })
     );
+    my %h;
+    @h{@variants} = undef;
+    keys %h == @variants or return 0;
     $self->formated_variants($format, @variants, make_wrongs($reg, 4, @variants));
+    1;
 }
 
 sub reg_value_shift {
-    my $self = shift;
-    do {
-        $self->try_reg_value_shift;
-    } until 1 == grep { $self->{variants}->[0] eq $_ } @{$self->{variants}};
+    1 until $_[0]->try_reg_value_shift;
 }
 
 sub reg_value_convert {
