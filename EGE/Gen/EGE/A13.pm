@@ -102,7 +102,7 @@ sub gen_names {
 sub put_mask_to_s {
     my ($s, $m, $pos) = @_;
     my $t = $s;
-    substr($t, $pos->[$_], 1, $m->[$_]) for 0..$#{$pos};
+    substr($t, $pos->[$_], 1) = $m->[$_] for 0..$#$pos;
     $t;
 }
 
@@ -110,7 +110,7 @@ sub select_pos {
     my ($len, $metachars) = @_;
     my @pos;
     do {
-        @pos = sort {$b <=> $a} rnd->pick_n($metachars, 0 .. $len - 1)
+        @pos = sort { $b <=> $a } rnd->pick_n($metachars, 0 .. $len - 1)
     } while $metachars > 1 && $pos[0] == $pos[1] + 1;
     @pos;
 }
@@ -163,19 +163,19 @@ sub file_mask2 {
         '</ul>';
 }
 
-sub file_mask3 {
-    sub gen_masks_names {
-        my ($s, $metachars) = @_;
-        my @pos = select_pos((length $s), $metachars);
-        my $mask_arr = [
-                        [['*'], ['?'], ['?'], ['?']],
-                        [['*', '*'], ['*', '?'], ['?', '*'], ['?', '?']]
-                       ]->[$metachars - 1];
-        my @masks = map { put_mask_to_s($s, $_, \@pos) } @$mask_arr;
-        my @names = map { exact_gen_file($_, 0) } @masks;
-        (\@masks, \@names);
-    }
+sub gen_masks_names {
+    my ($s, $metachars) = @_;
+    my @pos = select_pos((length $s), $metachars);
+    my $mask_arr = [
+        [ [ '*' ], [ '?' ] ],
+        [ [ '*', '*' ], [ '*', '?' ], [ '?', '*' ], [ '?', '?' ] ],
+    ]->[$metachars - 1];
+    my @masks = map { put_mask_to_s($s, $_, \@pos) } @$mask_arr;
+    my @names = map { exact_gen_file($_, 0) } @masks;
+    (\@masks, \@names);
+}
 
+sub file_mask3 {
     my ($self) = @_;
 
     my $s = random_str(rnd->in_range(5, 8));
@@ -183,13 +183,13 @@ sub file_mask3 {
     my ($base_masks, $base_names) = gen_masks_names($s, 2);
     my ($ext_masks, $ext_names) = gen_masks_names($ext, rnd->pick(1, 2));
 
-    my @ans = join_arr($base_masks, $ext_masks);
-    $self->{variants} = [shift @ans];
-    @{$self->{variants}} = (@{$self->{variants}}, rnd->pick_n(3, @ans));
+    my ($good, @bad) = join_arr($base_masks, $ext_masks);
+    $self->{variants} = [ $good, rnd->pick_n(3, @bad) ];
 
+    # FIXME: Правильный ответ содержит только *.
     my $t = $q ||= do { undef local $/; <DATA>; };
     $self->{text} = "$t Определите, по какой из масок будет выбрана указанная группа файлов: <ul>";
-    $self->{text} .= "<li>$base_names->[$_].$ext_names->[$_]</li>" for 0 .. 3;
+    $self->{text} .= "<li>$base_names->[$_].$ext_names->[$_]</li>" for 0 .. 1;
     $self->{text} .= "</ul>";
 }
 
