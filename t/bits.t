@@ -176,16 +176,17 @@ use EGE::Bits;
 }
 
 {
-    is (EGE::Bits->new->set_hex('469E')->scan_forward, 1, 'scan_forward 1');
-    is (EGE::Bits->new->set_hex('469E')->scan_reverse, 14, 'scan_reverse 1');
-    is (EGE::Bits->new->set_hex('6D64690')->scan_forward, 4, 'scan_forward 2');
-    is (EGE::Bits->new->set_hex('6D64690')->scan_reverse, 26, 'scan_reverse 2');
-    is (EGE::Bits->new->set_hex('86D64691')->scan_forward, 0, 'scan_forward 3');
-    is (EGE::Bits->new->set_hex('86D64691')->scan_reverse, 31, 'scan_reverse 3');
-    is (EGE::Bits->new->set_hex('0')->scan_forward, -1, 'scan_forward 4');
-    is (EGE::Bits->new->set_hex('0')->scan_reverse, -1, 'scan_reverse 4');
-    is (EGE::Bits->new->set_hex('1')->scan_forward, 0, 'scan_forward 5');
-    is (EGE::Bits->new->set_hex('1')->scan_reverse, 0, 'scan_reverse 5');
+    my $chk = sub {
+        my ($hex, $f, $r, $n) = @_;
+        my $b = EGE::Bits->new->set_hex($hex);
+        is $b->scan_forward, $f, "scan_forward $n";
+        is $b->scan_reverse, $r, "scan_reverse $n";
+    };
+    $chk->('0', -1, -1, -1);
+    $chk->('1', 0, 0, 1);
+    $chk->('469E', 1, 14, 2);
+    $chk->('6D64690', 4, 26, 3);
+    $chk->('86D64691', 0, 31, 4);
 }
 
 {

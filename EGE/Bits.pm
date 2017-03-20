@@ -248,24 +248,22 @@ sub count_ones { scalar grep $_, @{$_[0]->{v}}; }
 
 sub get_bits { @{$_[0]->{v}} }
 
-sub scan_forward {
-    my ($self) = @_;
-    my ($val, $pos) = (-1, $self->get_size - 1);
-    while ($pos > 0 && $val == -1) {
-        $val = $self->get_size - $pos - 1 if $self->{v}[$pos];
-        $pos--;
+sub _scan {
+    my ($self, $start, $end) = @_;
+    my $dir = $start > $end ? -1 : +1;
+    my $v = $self->{v};
+    for (my $pos = $start; $pos != $end; $pos += $dir) {
+        return $pos if $v->[-$pos - 1];
     }
-    $val;
+    -1;
 }
 
-sub scan_reverse {
-    my ($self) = @_;
-    my ($val, $pos) = (-1, 0);
-    while ($pos < $self->get_size && $val == -1) {
-        $val = $self->get_size - $pos - 1 if $self->{v}[$pos];
-        $pos++;
-    }
-    $val;
+sub scan {
+    my ($self, $reverse) = @_;
+    $reverse ? $self->_scan($self->get_size - 1, -1) : $self->_scan(0, $self->get_size);
 }
+
+sub scan_forward { $_[0]->scan }
+sub scan_reverse { $_[0]->scan(1) }
 
 1;
