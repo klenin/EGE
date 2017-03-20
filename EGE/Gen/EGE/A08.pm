@@ -70,8 +70,8 @@ sub _audio_bad_ans {
 
 sub _audio_out {
     my ($data, $size, @units) = @_; 
-    while ($data > $size) { $data /= $size; shift @units }
-    map { sprintf "%0.0f $units[0]", $_ } $data, _audio_bad_ans($data);
+    while ($data > $size) { $data /= $size; shift @units; }
+    map { sprintf '%.1f %s', $_, $units[0] } $data, _audio_bad_ans($data);
 }
 
 sub audio_size {
