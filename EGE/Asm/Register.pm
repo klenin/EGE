@@ -190,7 +190,7 @@ sub test {
 	my ($self, $eflags, $reg, $val) = @_;
 	my $oldval = $self->get_value($reg);
 	$self->and($eflags, '', $val);
-	$self->mov($eflags, '', $oldval);	
+	$self->mov($eflags, '', $oldval);
 	$self;
 }
 
