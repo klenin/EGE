@@ -279,6 +279,7 @@ print STDERR "seed: @ss";
 #g('Z22', 'calculator_find_prgm_count');
 #g1('Arch01', 'reg_value_add');
 #g1('Arch01', 'reg_value_logic');
+#g1('Arch01', 'reg_value_bscan');
 #g1('Arch01', 'reg_value_shift');
 #g1('Arch01', 'reg_value_convert');
 #g1('Arch01', 'reg_value_jump');

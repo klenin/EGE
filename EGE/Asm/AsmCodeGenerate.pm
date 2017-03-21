@@ -113,6 +113,17 @@ sub get_hex_args {
 	&{"get_hex_args_".$type}();
 }
 
+sub get_hex_arg_bscan {
+    my ($self, $n) = @_;
+    my $arg1 = 0;
+    for my $p (3..$n - 4) {
+        if (rnd->pick(0,1)) {
+            $arg1 += 2 ** $p;
+        } 
+    }
+    $arg1;
+}
+
 sub get_hex_args_add {
 	my ($arg1, $arg2) = (0, 0);
 	for (1..7) {
@@ -157,6 +168,18 @@ sub remove_command {
     my ($self, $id, $count) = @_;
     splice @{$self->{code}}, $id, $count || 1;
     $self;
+}
+
+sub generate_bscan_code {
+    my ($self, $type) = (@_, 'bscan');
+    my ($format_variants, $format_code, $n) = ('%s', rnd->pick(0,1) ? ('%04Xh', 16) : ('%08Xh', 32));
+    my ($reg1, $reg2) = (cgen->get_regs($n, $n));
+    my $arg1 = cgen->get_hex_arg_bscan($n);
+    $self->{code} = [];
+    $self->add_command('mov', $reg2, $arg1);
+    my $scan_type = (rnd->pick('bsr', 'bsf'));
+    $self->add_command(($scan_type, $reg1, $reg2));
+    ($reg1, $reg2, $format_variants, $format_code);
 }
 
 sub generate_simple_code {

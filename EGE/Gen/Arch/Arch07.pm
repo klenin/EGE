@@ -47,7 +47,7 @@ sub loop_number {
             $jmp eq 'jno' && $arg >= 128 ? 256 - $arg + 128 : '';
         my $res1 = $res == 2 ? 3 : rnd->pick($res + 1, $res - 1);
         $self->variants($res, $res1, 1, $inf);
-	}
+    }
 }
 
 1;

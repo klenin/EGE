@@ -163,7 +163,7 @@ sub gg {
 }
 
 sub all {[
-    gg('Arch01', qw(reg_value_add reg_value_logic reg_value_shift reg_value_convert reg_value_jump)),
+    gg('Arch01', qw(reg_value_add reg_value_logic reg_value_bscan reg_value_shift reg_value_convert reg_value_jump)),
     gg('Arch02', qw(flags_value_add flags_value_logic flags_value_shift)),
     gg('Arch03', qw(choose_commands_mod_3)),
     gg('Arch04', qw(choose_commands)),
@@ -174,7 +174,7 @@ sub all {[
     gg('Arch09', qw(reg_value_before_loopnz zero_fill stack)),
     gg('Arch10', qw(jcc_check_flags cmovcc)),
     gg('Arch12', qw(cond_max_min divisible_by_mask)),
-	gg('Arch13', qw(expression_calc)),
+    gg('Arch13', qw(expression_calc)),
 ]}
 
 package EGE::DatabaseGenerate;

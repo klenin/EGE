@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 77;
+use Test::More tests => 87;
 
 use lib '..';
 use EGE::Bits;
@@ -173,6 +173,19 @@ use EGE::Bits;
     is $b->get_dec, 31, 'inc_autosize 30';
     $b->inc_autosize;
     is $b->get_dec, 32, 'inc_autosize 31';
+}
+
+{
+    is (EGE::Bits->new->set_hex('469E')->scan_forward, 1, 'scan_forward 1');
+    is (EGE::Bits->new->set_hex('469E')->scan_reverse, 14, 'scan_reverse 1');
+    is (EGE::Bits->new->set_hex('6D64690')->scan_forward, 4, 'scan_forward 2');
+    is (EGE::Bits->new->set_hex('6D64690')->scan_reverse, 26, 'scan_reverse 2');
+    is (EGE::Bits->new->set_hex('86D64691')->scan_forward, 0, 'scan_forward 3');
+    is (EGE::Bits->new->set_hex('86D64691')->scan_reverse, 31, 'scan_reverse 3');
+    is (EGE::Bits->new->set_hex('0')->scan_forward, -1, 'scan_forward 4');
+    is (EGE::Bits->new->set_hex('0')->scan_reverse, -1, 'scan_reverse 4');
+    is (EGE::Bits->new->set_hex('1')->scan_forward, 0, 'scan_forward 5');
+    is (EGE::Bits->new->set_hex('1')->scan_reverse, 0, 'scan_reverse 5');
 }
 
 {

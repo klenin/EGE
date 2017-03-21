@@ -190,7 +190,7 @@ sub test {
 	my ($self, $eflags, $reg, $val) = @_;
 	my $oldval = $self->get_value($reg);
 	$self->and($eflags, '', $val);
-	$self->mov($eflags, '', $oldval);	
+	$self->mov($eflags, '', $oldval);
 	$self;
 }
 
@@ -302,6 +302,32 @@ sub pop {
 	my ($self, $eflags, $reg, $stack) = @_;
 	$self->mov($eflags, $reg, shift @{$stack});
 	$self;
+}
+
+sub bsf {
+    my ($self, $eflags, $reg, $val) = @_;
+    $self->set_indexes($reg) if $reg;
+    my $value = EGE::Bits->new->set_size(32)->set_dec($val)->scan_forward;
+    $eflags->{ZF} = 1;
+    if ($value == -1) {
+        $eflags->{ZF} = 0;
+        $value = 0;
+    }
+    $self->mov_value($value);
+    $self;
+}
+
+sub bsr {
+    my ($self, $eflags, $reg, $val) = @_;
+    $self->set_indexes($reg) if $reg;
+    my $value= EGE::Bits->new->set_size(32)->set_dec($val)->scan_reverse;
+    $eflags->{ZF} = 1;
+    if ($value == -1) {
+        $eflags->{ZF} = 0;
+        $value = 0;
+    }
+    $self->mov_value($value);
+    $self;
 }
 
 1;
