@@ -361,6 +361,47 @@ sub sport_athlete {
      );
 }
 
+sub _text_gen {
+    my($ptrn) = @_;
+    my $alphpower = 2 ** rnd->pick(5..8);
+    my $pages = 2 ** rnd->pick(7..10);
+    my $symbpage = 2 ** rnd->pick(7..11);
+    my $symbols = $pages * $symbpage;
+    my $size = ((log($alphpower) / log(2)) * $symbols) / 8192;
+    return ($alphpower, $pages, $symbpage, $size) if (!$ptrn);
+    return ($alphpower, $symbols, $size) if ($ptrn);
+}
+
+sub text_size {
+    my ($self) = @_;
+    my @arr = _text_gen(0);
+    $self->{text} = 
+        "Мощность алфавита равна $arr[0]. Сколько Кбайт памяти потребуется, чтобы сохранить $arr[1] страниц текста," .
+        "содержащего в среднем $arr[2] символов на каждой странице ?";
+    $self->variants( 
+    num_text($arr[3], [ 'кбайт', 'кбайта', 'кбайт' ]),
+        rnd->pick_n(3,
+        num_text(int ($arr[3] / 1.5), [ 'кбайт', 'кбайта', 'кбайт' ]),
+        num_text(int ($arr[3] * 1.5), [ 'кбайт', 'кбайта', 'кбайт' ]),
+        num_text(int ($arr[3] * rnd->pick(0.8, 1.2)), [ 'кбайт', 'кбайта', 'кбайт' ])),
+    );
+}
+
+sub alphabet_power {
+    my ($self) = @_;
+    my @arr = _text_gen(1);
+    $self->{text} =
+    "Объем сообщения - $arr[2] кбайт. известно, что данное сообщение содержит $arr[1] символов. " .
+    "Какова мощность алфавита?";
+    $self->variants(
+    $arr[0],
+        rnd->pick_n(3,
+        $arr[0] * 2,
+        $arr[0] / 2,
+        2 ** ((log($arr[0]) / log(2)) + rnd->pick (-2, 2))),
+    );
+}
+
 1;
 
 __END__
