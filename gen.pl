@@ -212,6 +212,7 @@ print STDERR "seed: @ss\n";
 #g('A13', 'file_mask');
 #g('A13', 'file_mask2');
 #g('A13', 'file_mask3');
+#g('A13', 'additional_inf_length');
 #g('A14', 'database');
 #g('A15', 'rgb');
 #g('A16', 'spreadsheet');
