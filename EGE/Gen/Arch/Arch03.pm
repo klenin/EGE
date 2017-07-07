@@ -8,6 +8,7 @@ use strict;
 use warnings;
 use utf8;
 
+use EGE::Html;
 use EGE::Random;
 use EGE::Asm::Processor;
 use EGE::Asm::AsmCodeGenerate;
@@ -31,7 +32,7 @@ sub choose_commands_mod_3 {
         [ "$label:" ],
         [ 'add', $reg, $val_add ],
         [ $jmp, $label ]);
-    $self->formated_variants('<code>%s</code>',
+    $self->variants(map html->code($_),
         "mov $reg, $arg",
         "$label:",
         "add $reg, 1",

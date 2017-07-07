@@ -16,7 +16,7 @@ use EGE::Russian::Names;
 use EGE::Russian::Jobs;
 use EGE::Prog;
 
-use Data::Dumper;
+use POSIX qw(ceil);
 
 use Storable qw(dclone);
 
@@ -207,37 +207,21 @@ sub create_questions {
     @cond;
 }
 
-sub genitive { # родительный падеж
-    my $name = shift;
-    if ($name =~/й$/) { $name =~ s/й$/я/ }
-    elsif ($name =~ /ь$/) { $name =~ s/ь$/я/ }
-    else { $name .= 'а' };
-    $name;
-}
-
-sub ablative { # творительный падеж
-    my $name = shift;
-    if ($name =~ /й$/) { $name =~ s/й$/ем/ }
-    elsif ($name =~ /ь$/) { $name =~ s/ь$/ем/ }
-    else { $name .= 'ом' };
-    $name;
-}
-
 sub on_right {
     rnd->pick(
-        sub { "$_[1] живет левее " . genitive($_[0]) },
-        sub { "$_[0] живёт правее " . genitive($_[1]) },
+        sub { "$_[1] живет левее " . EGE::Russian::Names::genitive($_[0]) },
+        sub { "$_[0] живёт правее " . EGE::Russian::Names::genitive($_[1]) },
         sub { "$_[1] живет левее, чем $_[0]" },
         sub { "$_[0] живёт правее, чем $_[1]" },
     )->(@_);
 }
 
 sub together {
-    "$_[0] живёт рядом c " . ablative($_[1]);
+    "$_[0] живёт рядом c " . EGE::Russian::Names::ablative($_[1]);
 }
 
 sub not_together {
-    "$_[0] живёт не рядом c " . ablative($_[1]);
+    "$_[0] живёт не рядом c " . EGE::Russian::Names::ablative($_[1]);
 }
 
 sub solve {
@@ -263,32 +247,28 @@ sub solve {
         PosLeft => sub { on_right($prof[$prof_order[$_[1]]], $names[$_[0]]) },
         PosRight => sub { on_right($names[$_[0]], $prof[$prof_order[$_[1]]]) },
         Pos => sub { "$names[$_[0]] работает " .
-                     ablative($prof[$prof_order[$_[1]]]) },
+                     EGE::Russian::Names::ablative($prof[$prof_order[$_[1]]]) },
         NotPos => sub { "$names[$_[0]] не работает " .
-                        ablative($prof[$prof_order[$_[1]]]) }
+                        EGE::Russian::Names::ablative($prof[$prof_order[$_[1]]]) }
     );
     @questions = (@questions, create_questions(\%descr));
 
     $self->{text} =
-      "На одной улице стоят в ряд 4 дома, в которых живут 4 человека: " .
-      (join ", ", map "<strong>$_</strong>", @names) .
-      ". Известно, что каждый из них владеет ровно одной из следующих профессий: " .
-      (join ", ", map "<strong>$_</strong>", @prof) .
-      ", но неизвестно, кто какой и неизвестно, кто в каком доме живет. Однако, " .
-      "известно, что:<br/>";
-
-    $self->{text} .= "<ol>";
-    $self->{text} .= "<li>$_</li>" for rnd->shuffle(@questions);
-    $self->{text} .= "</ol>";
+      'На одной улице стоят в ряд 4 дома, в которых живут 4 человека: ' .
+      (join ', ', map html->tag('strong', $_), @names) .
+      '. Известно, что каждый из них владеет ровно одной из следующих профессий: ' .
+      (join ', ', map html->tag('strong', $_), @prof) .
+      ', но неизвестно, кто какой и неизвестно, кто в каком доме живет. Однако, ' .
+      'известно, что: ' . html->ol_li([ rnd->shuffle(@questions) ]);
 
     my @example = rnd->shuffle(@names);
     $self->{text} .=
-      "Выясните, кто какой профессии, и кто где живет, и дайте ответ в виде " .
-      "заглавных букв имени людей, в порядке слева направо. Например, если бы " .
-      "в домах жили (слева направо) " . (join ", ", @example) .
-      ", ответ был бы: " . join '', map substr($_, 0, 1), @example;
+      'Выясните, кто какой профессии, и кто где живет, и дайте ответ в виде ' .
+      'заглавных букв имени людей, в порядке слева направо. Например, если бы ' .
+      'в домах жили (слева направо) ' . (join ', ', @example) .
+      ', ответ был бы: ' . join '', map substr($_, 0, 1), @example;
 
-    $self->{correct} = join '',  map { substr($names[$_], 0, 1) } @ans;
+    $self->{correct} = join '',  map substr($names[$_], 0, 1), @ans;
 }
 
 sub _rec_calculate {
@@ -321,7 +301,7 @@ sub recursive_function {
         ],
         [ '()', 'F', 'n' ],
         [ '>=', 'n', 2 ],
-        [ '()', 'F', 'n' ],
+        [ '()', 'F', $n ],
     );
 
     my @texts = map EGE::Prog::make_expr($_)->to_lang_named('Logic', { html => 1 }), @exprs;
@@ -329,13 +309,61 @@ sub recursive_function {
     $self->{text} =
         "Алгоритм вычисления значения функции $texts[3], где <i>n</i> — натуральное число, " .
         'задан следующими соотношениями:' .
-        html->ul(
-            html->li("$texts[0], $texts[1]") .
-            html->li("$texts[2], при $texts[4]"),
-            { style => 'list-style-type: none;' }) .
+        html->ul_li(
+            [ "$texts[0], $texts[1]", "$texts[2], при $texts[4]" ],
+            { html->style(list_style_type => 'none') }) .
         " Чему равно значение функции $texts[5]? В ответе запишите только натуральное число.";
 
     $self->{correct} = _rec_calculate($first_val, $second_val, $first_num, $second_num, $n);
+    $self->accept_number;
+}
+
+sub password_meta {
+    my ($self) = @_;
+    my $users_count = rnd->in_range(10, 20) * 10;
+    my $password_length = rnd->in_range(8, 20);
+
+    my %case_message = (
+        lower => 'латинские буквы только нижнего регистра (строчные)',
+        upper => 'латинские буквы только верхнего регистра (прописные)',
+        both => 'как прописные, так и строчные латинские буквы');
+    my $character_case = rnd->pick(keys %case_message);
+    my $character_variants_count = 26 * ($character_case eq 'both' ? 2 : 1);
+
+    my @conditions = $case_message{$character_case};
+    if (rnd->coin) {
+        $character_variants_count += 10;
+        push @conditions, 'хотя бы одну десятичную цифру';
+    }
+    if (rnd->coin) {
+        my $cnt = rnd->in_range(5, 11);
+        my @special_characters = rnd->pick_n($cnt, split '', '!@#$%^&*_-=+;:{}\|/,.<>?~`()\'');
+        $character_variants_count += $cnt;
+        push @conditions, "не менее одного символа из $cnt-символьного набора: " .
+            join ', ', map html->escape("«$_»"), @special_characters;
+    }
+
+    my $conditions_text = EGE::Russian::join_comma_and(rnd->shuffle(@conditions));
+    my $bits_per_character = ceil(log($character_variants_count) / log(2));
+    my $bytes_per_password = ceil($bits_per_character * $password_length / 8);
+
+    my $meta_payload = rnd->in_range(50, 200);
+    my $total_db_size = ($bytes_per_password + $meta_payload) * $users_count;
+
+    $self->{text} =
+        'При регистрации в компьютерной системе каждому пользователю выдаётся пароль, ' .
+        "состоящий из $password_length символов. " .
+        "Из соображений информационной безопасности каждый пароль должен содержать $conditions_text. " .
+        'В базе данных для хранения сведений о каждом пользователе отведено одинаковое ' .
+        'и минимально возможное целое число байт. При этом используют посимвольное кодирование паролей, ' .
+        'все символы кодируют одинаковым и минимально возможным количеством бит. ' .
+        'Кроме собственно пароля, для каждого пользователя в системе хранятся дополнительные сведения, ' .
+        'для чего выделено целое число байт; это число одно и то же для всех пользователей. ' .
+        "Для хранения сведений о $users_count пользователях потребовалось $total_db_size байт. " .
+        'Сколько байт выделено для хранения дополнительных сведений об одном пользователе? ' .
+        'В ответе запишите только целое число – количество байт. ' .
+        '<br/><i>Примечание: В латинском алфавите 26 букв.</i>' ; 
+    $self->{correct} = $meta_payload;
     $self->accept_number;
 }
 

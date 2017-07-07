@@ -13,6 +13,7 @@ sub mult { '*', '/', '%', '//' }
 sub add { '+', '-' }
 sub comp { '>', '<', '==', '!=', '>=', '<=' }
 sub logic { '&&', '||', '^', '=>', 'eq' }
+sub bitwise { '&', '|' }
 sub unary { '++%s', '--%s', '%s++', '%s--', '!', '+', '-' }
 sub prio_unary { map "`$_", unary }
 
@@ -85,7 +86,7 @@ sub make_priorities {
 
 sub prio_list {
     [ ops::prio_unary ], [ ops::power ], [ ops::mult ], [ ops::add ],
-    [ ops::comp ], [ '^', '=>' ], [ '&&' ], [ '||' ], [ 'between' ],
+    [ ops::comp ], [ '^', '=>', ops::bitwise ], [ '&&' ], [ '||' ], [ 'between' ],
 }
 
 sub translate_un_op { {} }
@@ -134,6 +135,7 @@ sub c_func_start_fmt { "FUNCTION %s(%s)\n" }
 sub c_func_end_fmt { "\nEND FUNCTION\n" }
 
 sub print_fmt { 'PRINT %s' }
+sub print_str_fmt { 'PRINT "%s"' }
 
 sub c_return_fmt { 'Return %s' }
 
@@ -167,6 +169,7 @@ sub p_func_start_fmt { "int %s(%s) {\n  int %1\$s;\n" }
 sub p_func_end_fmt { "\n  return %1\$s;\n}\n" }
 
 sub print_fmt { 'print(%s)' }
+sub print_str_fmt { 'print("%s")' }
 
 sub expr_fmt { '%s;' }
 
@@ -208,6 +211,7 @@ sub c_func_start_fmt { "function %s(%s: integer): integer;\nbegin\n" }
 sub c_func_end_fmt { "\nend;\n" }
 
 sub print_fmt { 'write(%s)' }
+sub print_str_fmt { q~write('%s')~ }
 
 sub expr_fmt { '%s;' }
 
@@ -243,6 +247,7 @@ sub c_func_start_fmt { "алг цел %s(цел %s)\nнач\n" }
 sub c_func_end_fmt { "\nкон\n" }
 
 sub print_fmt { 'вывод %s' }
+sub print_str_fmt { 'вывод "%s"' }
 
 sub c_return_fmt { 'выход_алг %s | выход_алг выраж - оператор выхода из алгоритма, с возвращением результата выраж' }
 sub p_return_fmt { 'выход_алг | выход_алг - оператор выхода из алгоритма' }
@@ -274,6 +279,7 @@ sub p_func_start_fmt { "sub %s {\n  my \$%1\$s;\n  my (%s) = \@_;\n" }
 sub p_func_end_fmt { "\n  return \$%1\$s;\n}\n" }
 
 sub print_fmt { 'print(%s)' }
+sub print_str_fmt { q~print('%s')~ }
 
 sub expr_fmt { '%s;' }
 

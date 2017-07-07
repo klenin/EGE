@@ -60,8 +60,15 @@ sub _visit_children {}
 sub count_if {
     my ($self, $cond) = @_;
     my $count = 0;
-    $_[0]->visit_dfs( sub { ++$count if $cond->($_[0]) } );
+    $_[0]->visit_dfs(sub { ++$count if $cond->($_[0]) });
     $count;
+}
+
+sub gather_if {
+    my ($self, $cond) = @_;
+    my @result;
+    $_[0]->visit_dfs(sub { push @result, $_[0] if $cond->($_[0]) });
+    @result;
 }
 
 sub get_type { (split ':', ref $_[0])[-1] }
@@ -180,9 +187,16 @@ sub run {
 package EGE::Prog::Print;
 use base 'EGE::Prog::SynElement';
 
+sub new {
+    my $self = shift->SUPER::new(@_);
+    my $fmt_types = { num => 'print_fmt', str => 'print_str_fmt' };
+    $self->{fmt} = $fmt_types->{$self->{type}} or die "Bad print type $self->{type}";
+    $self;
+}
+
 sub to_lang {
     my ($self, $lang) = @_;
-    sprintf $lang->get_fmt('print_fmt'),
+    sprintf $lang->get_fmt($self->{fmt}),
         join $lang->get_fmt('args_separator'), map $_->to_lang($lang), @{$self->{args}};
 }
 
@@ -201,10 +215,11 @@ sub new {
 }
 
 sub _children {}
+sub children { @{$_[0]}{$_[0]->_children} }
 
 sub run {
     my ($self, $env) = @_;
-    my $r = eval sprintf $self->run_fmt(), map $self->{$_}->run($env), $self->_children;
+    my $r = eval sprintf $self->run_fmt(), map $_->run($env), $self->children;
     my $err = $@;
     $err and die $err;
     $r || 0;
@@ -222,7 +237,7 @@ sub to_lang {
     my ($self, $lang) = @_;
     sprintf
         $self->to_lang_fmt($lang, $self->{op}),
-        map $self->operand($lang, $self->{$_}), $self->_children;
+        map $self->operand($lang, $_), $self->children;
 }
 
 sub needs_parens {
@@ -233,8 +248,8 @@ sub needs_parens {
 sub run_fmt { $_[0]->to_lang_fmt(EGE::Prog::Lang::Perl->new) }
 sub to_lang_fmt {}
 
-sub gather_vars { $_[0]->{$_}->gather_vars($_[1]) for $_[0]->_children; }
-sub _visit_children { my $self = shift; $self->{$_}->visit_dfs(@_) for $self->_children; }
+sub gather_vars { $_->gather_vars($_[1]) for $_[0]->children; }
+sub _visit_children { my $self = shift; $_->visit_dfs(@_) for $self->children; }
 
 sub polinom_degree { die "Polinom degree is unavaible for expr with operator: '$_[0]->{op}'"; }
 
@@ -252,10 +267,36 @@ sub _children { qw(left right) }
 sub polinom_degree {
     my $self = shift;
     my ($env, $mistakes, $iter) = @_;
-    $self->{op} eq '*' ? List::Util::sum(map $self->{$_}->polinom_degree(@_), $self->_children) :
-    $self->{op} eq '+' ? List::Util::max(map $self->{$_}->polinom_degree(@_), $self->_children) :
+    $self->{op} eq '*' ? List::Util::sum(map $_->polinom_degree(@_), $self->children) :
+    $self->{op} eq '+' ? List::Util::max(map $_->polinom_degree(@_), $self->children) :
     $self->{op} eq '**' ? $self->{left}->polinom_degree(@_) * $self->{right}->run({}) :
     $self->SUPER::polinom_degree(@_)
+}
+
+sub rotate_left {
+    my ($self) = @_;
+    my $right = $self->{right};
+    $right->isa(__PACKAGE__) or die 'right is not binop';
+
+    ($self->{op}, $right->{op}) = ($right->{op}, $self->{op});
+    $self->{right} = $right->{right};
+    $right->{right} = $right->{left};
+    $right->{left} = $self->{left};
+    $self->{left} = $right;
+    $self;
+}
+
+sub rotate_right {
+    my ($self) = @_;
+    my $left = $self->{left};
+    $left->isa(__PACKAGE__) or die 'left is not binop';
+
+    ($self->{op}, $left->{op}) = ($left->{op}, $self->{op});
+    $self->{left} = $left->{left};
+    $left->{left} = $left->{right};
+    $left->{right} = $self->{right};
+    $self->{right} = $left;
+    $self;
 }
 
 package EGE::Prog::UnOp;
@@ -302,8 +343,10 @@ sub to_lang {
 
 sub run {
     my ($self, $env) = @_;
-    for ($env->{$self->{name}}) {
-        defined $_ or die "Undefined variable $self->{name}";
+    my $n = $self->{name};
+    exists $env->{$n} or die "Unknown variable $n";
+    for ($env->{$n}) {
+        defined $_ or die "Undefined variable $n";
         return $_;
     }
 }
@@ -657,61 +700,62 @@ sub run {
 }
 
 package EGE::Prog;
-use base 'Exporter';
 
-our @EXPORT_OK = qw(make_expr make_block lang_names);
+use EGE::Utils qw(tail);
+
+use base 'Exporter';
+our @EXPORT_OK = qw(make_expr make_block lang_names add_statement move_statement);
 
 sub make_expr {
     my ($src) = @_;
+    defined $src or die 'empty argument';
     ref($src) =~ /^EGE::Prog::/ and return $src;
     if (ref $src eq 'ARRAY') {
-        if (@$src == 2 && $src->[0] eq '#') {
+        @$src or return undef;
+        my $op = $src->[0] // '';
+        $op ne '' or die 'bad op';
+        if (@$src == 2 && $op eq '#') {
             return EGE::Prog::PlainText->new(text => $src->[1]);
         }
-        if (@$src >= 2 && $src->[0] eq '[]') {
-            my @p = @$src;
-            shift @p;
+        if (@$src >= 2 && $op eq '[]') {
+            my @p = tail @$src;
             $_ = make_expr($_) for @p;
             my $array = shift @p;
             return EGE::Prog::Index->new(array => $array, indices => \@p);
         }
-        if (@$src >= 2 && $src->[0] eq '()') {
-            my @p = @$src;
-            shift @p;
-            my $func = shift @p;
+        if (@$src >= 2 && $op eq '()') {
+            my (undef, $func, @p) = @$src;
             $_ = make_expr($_) for @p;
-            my $name = EGE::Utils::aggregate_function($func)? 'EGE::Prog::CallFuncAggregate': 'EGE::Prog::CallFunc';
+            my $name = EGE::Utils::aggregate_function($func) ?
+                'EGE::Prog::CallFuncAggregate': 'EGE::Prog::CallFunc';
             return $name->new(func => $func, args => \@p);
         }
-        if (@$src >= 1 && $src->[0] eq 'print') {
-            my @p = @$src;
-            shift @p;
+        if (@$src >= 2 && $op eq 'print') {
+            my (undef, $type, @p) = @$src;
+            my $pat = join('|', qw(\\\\ \\n ' " %));
+            $_ =~ /($pat)/ and die "Print argument $_ contains bad symbol" for @p;
             $_ = make_expr($_) for @p;
-            return EGE::Prog::Print->new(args => \@p);
+            return EGE::Prog::Print->new(type => $type, args => \@p);
         }
-        if (@$src == 2 && $src->[0] =~ /\+\+|--/) {
-            return EGE::Prog::Inc->new(
-                op => $src->[0], arg => make_expr($src->[1]));
+        if (@$src == 2 && $op =~ /\+\+|--/) {
+            return EGE::Prog::Inc->new(op => $op, arg => make_expr($src->[1]));
         }
         if (@$src == 2) {
             return EGE::Prog::UnOp->new(
-                op => $src->[0], arg => make_expr($src->[1]));
+                op => $op, arg => make_expr($src->[1]));
         }
         if (@$src == 3) {
             return EGE::Prog::BinOp->new(
-                op => $src->[0],
+                op => $op,
                 left => make_expr($src->[1]),
                 right => make_expr($src->[2])
             );
         }
         if (@$src == 4) {
             return EGE::Prog::TernaryOp->new(
-                op => $src->[0],
+                op => $op,
                 map { +"arg$_" => make_expr($src->[$_]) } 1..3
             );
-        }
-        if (@$src == 0) {
-            return undef;
         }
         die "make_expr: @$src";
     }
@@ -769,14 +813,40 @@ sub make_statement {
     "EGE::Prog::$d->{type}"->new(%args, func => $cur_func);
 }
 
+sub add_statement_helper {
+    my ($block, $next) = @_;
+    $block->isa('EGE::Prog::Block') or die;
+    push @{$block->{statements}}, make_statement($next, $block->{func});
+}
+
+sub add_statement {
+    my ($block, $src) = @_;
+    ref $src eq 'ARRAY' or die;
+    my $i = 0;
+    add_statement_helper($block, sub { $src->[$i++] });
+    $i == @$src or die 'Not a single statement';
+    $block;
+}
+
+sub move_statement {
+    my ($block, $from, $to) = @_;
+    $block->isa('EGE::Prog::Block') or die;
+    my $statements = $block->{statements};
+    0 <= $from && $from < @$statements or die "Bad from: $from";
+    0 <= $to && $to <= @$statements or die "Bad to: $to";
+    my $s = splice @$statements, $from, 1;
+    splice @$statements, ($from < $to ? $to - 1 : $to), 0, $s;
+    $block;
+}
+
 sub make_block {
     my ($src, $cur_func) = @_;
     ref $src eq 'ARRAY' or die;
-    my @s;
+    my $b = EGE::Prog::Block->new(func => $cur_func);
     for (my $i = 0; $i < @$src; ) {
-        push @s, make_statement(sub { $src->[$i++] }, $cur_func);
+        add_statement_helper($b, sub { $src->[$i++] });
     }
-    EGE::Prog::Block->new(statements => \@s, func => $cur_func);
+    $b;
 }
 
 sub lang_names() {{

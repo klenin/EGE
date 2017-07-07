@@ -1,6 +1,6 @@
 # Copyright © 2014 Darya D. Gornak
 # Licensed under GPL version 2 or later.
-# http://github.com/dahin/EGE
+# http://github.com/klenin/EGE
 package EGE::Gen::Db::Db07;
 use base 'EGE::GenBase::SingleChoice';
 
@@ -33,7 +33,7 @@ sub trivial_inner_join{
         "Даны две таблицы:\n%s\n" .
         'Сколько записей будет содержать результат запроса %s?',
         EGE::SQL::Utils::multi_table_html($table_city, $table_person),
-        $query->text_html;
+        $query->text_html_tt;
     $self->variants($count, rnd->pick_n(3, grep $_ != $count, 1 .. $table_person->count()));
 }
 

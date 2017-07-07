@@ -10,6 +10,8 @@ package EGE::GenerateBase;
 
 use EGE::Random;
 
+our $test = sub {};
+
 sub one {
     my ($package, $method) = @_;
     no strict 'refs';
@@ -17,6 +19,8 @@ sub one {
     my $g = "EGE::Gen::$package"->new;
     $g->$method;
     $g->post_process;
+    $g->{method} = $method;
+    $test->($g);
     $g;
 }
 
@@ -60,8 +64,12 @@ use EGE::Gen::EGE::B15;
 use EGE::Gen::EGE::Z06;
 use EGE::Gen::EGE::Z09;
 use EGE::Gen::EGE::Z10;
+use EGE::Gen::EGE::Z11;
+use EGE::Gen::EGE::Z12;
 use EGE::Gen::EGE::Z13;
 use EGE::Gen::EGE::Z15;
+use EGE::Gen::EGE::Z16;
+use EGE::Gen::EGE::Z18;
 use EGE::Gen::EGE::Z22;
 
 sub g {
@@ -79,16 +87,16 @@ sub gg {
 
 sub all {[
     gg('A1', qw(recode simple)),
-    gg('A2', qw(sport car_numbers database units min_routes)),
-    gg('A3', qw(ones zeroes convert range)),
+    gg('A2', qw(sport car_numbers database units min_routes sport_athlete)),
+    gg('A3', qw(ones zeroes convert range binary_num_system)),
     gg('A4', qw(sum)),
     gg('A4', qw(count_zero_one)),
     gg('A5', qw(arith div_mod_10 div_mod_rotate digit_by_digit crc)),
-    gg('A6', qw(count_by_sign find_min_max count_odd_even alg_min_max alg_avg bus_station)),
+    gg('A6', qw(count_by_sign find_min_max count_odd_even alg_min_max alg_avg bus_station crc_message inf_size)),
     gg('A7', qw(names animals random_sequences restore_password spreadsheet_shift)),
     gg('A8', qw(equiv_3 equiv_4 audio_size audio_time)),
     gg('A9', qw(truth_table_fragment find_var_len_code error_correction_code hamming_code)),
-    gg('A10', qw(graph_by_matrix)),
+    gg('A10', qw(graph_by_matrix light_panel min_alphabet)),
     gg('A11', qw(variable_length fixed_length password_length)),
     gg('A12', qw(beads array_flip)),
     gg('A13', qw(file_mask file_mask2 file_mask3)),
@@ -100,26 +108,28 @@ sub all {[
     gg('B01', qw(direct recode2)),
     gg('B02', qw(flowchart)),
     gg('B02', qw(simple_while)),
-    gg('B03', qw(q1234 last_digit count_digits)),
-    gg('B03', qw(simple_equation)),
-    gg('B04', qw(impl_border lex_order morse)),
-    gg('B05', qw(calculator complete_spreadsheet)),
-    gg('B06', qw(solve)),
-    gg('B06', qw(recursive_function)),
+    gg('B03', qw(q1234 last_digit last_digit_base count_digits count_ones music_time_to_time music_size_to_size music_format_time_to_time select_base move_number range_count)),
+    gg('B03', qw(simple_equation min_required_base)),
+    gg('B04', qw(impl_border lex_order morse bulbs plus_minus letter_combinatorics signal_rockets how_many_sequences1 how_many_sequences2)),
+    gg('B05', qw(calculator complete_spreadsheet adsl_speed)),
+    gg('B06', qw(solve recursive_function password_meta)),
     gg('B07', qw(who_is_right)),
-    gg('B08', qw(identify_letter find_calc_system)),
-    gg('B10', qw(trans_rate trans_time trans_latency)),
-    gg('B11', qw(ip_mask)),
+    gg('B08', qw(identify_letter find_calc_system first_sum_digits)),
+    gg('B10', qw(trans_rate trans_time trans_latency min_period_of_time trans_text trans_time_size)),
+    gg('B11', qw(ip_mask subnet_mask)),
     gg('B12', qw(search_query)),
     gg('B13', qw(plus_minus)),
     gg('B14', qw(find_func_min)),
     gg('B15', qw(logic_var_set)),
-    gg('Z06', qw(find_number)),
+    gg('Z06', qw(find_number min_add_digits grasshopper)),
     gg('Z09', qw(get_memory_size)),
     gg('Z10', qw(words_count)),
-    gg('Z13', qw(tumblers)),
-    gg('Z13', qw(tumblers_min)),
+    gg('Z11', qw(recursive_alg)),
+    gg('Z12', qw(ip_computer_number)),
+    gg('Z13', qw(tumblers tumblers_min young_spy)),
     gg('Z15', qw(city_roads)),
+    gg('Z16', qw(base_gcd)),
+    gg('Z18', qw(bitwise_conjunction)),
     gg('Z22', qw(calculator_find_prgm_count)),
 ]}
 
@@ -139,6 +149,7 @@ use EGE::Gen::Arch::Arch08;
 use EGE::Gen::Arch::Arch09;
 use EGE::Gen::Arch::Arch10;
 use EGE::Gen::Arch::Arch12;
+use EGE::Gen::Arch::Arch13;
 
 sub g {
     my $unit = shift;
@@ -152,7 +163,7 @@ sub gg {
 }
 
 sub all {[
-    gg('Arch01', qw(reg_value_add reg_value_logic reg_value_shift reg_value_convert reg_value_jump)),
+    gg('Arch01', qw(reg_value_add reg_value_logic reg_value_bscan reg_value_shift reg_value_convert reg_value_jump)),
     gg('Arch02', qw(flags_value_add flags_value_logic flags_value_shift)),
     gg('Arch03', qw(choose_commands_mod_3)),
     gg('Arch04', qw(choose_commands)),
@@ -163,6 +174,7 @@ sub all {[
     gg('Arch09', qw(reg_value_before_loopnz zero_fill stack)),
     gg('Arch10', qw(jcc_check_flags cmovcc)),
     gg('Arch12', qw(cond_max_min divisible_by_mask)),
+    gg('Arch13', qw(expression_calc)),
 ]}
 
 package EGE::DatabaseGenerate;

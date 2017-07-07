@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 69;
+use Test::More tests => 87;
 
 use lib '..';
 use EGE::Bits;
@@ -77,6 +77,11 @@ use EGE::Bits;
 }
 
 {
+    my $b = EGE::Bits->new->set_size(40)->set_dec(2**33 + 2**15);
+    is $b->get_bin, '0000001000000000000000001000000000000000', 'set_dec 2^33';
+}
+
+{
     my $b = EGE::Bits->new->set_size(3)->set_dec(3);
     my $ok = 1;
     for (my $i = 4; $ok && $i != 3; $i = ($i + 1) % 8) {
@@ -102,8 +107,16 @@ use EGE::Bits;
 
 {
     my $b = EGE::Bits->new->set_bin('01110101');
-    is $b->dup->shift_(-1)->get_bin, '11101010', 'shift left';
-    is $b->dup->shift_(1)->get_bin, '00111010', 'shift right';
+    is $b->dup->shift_(-1)->get_bin, '11101010', 'shift left 1';
+    is $b->dup->shift_(-7)->get_bin, '10000000', 'shift left 7';
+    is $b->dup->shift_(1)->get_bin, '00111010', 'shift right 1';
+    is $b->dup->shift_(6)->get_bin, '00000001', 'shift right 6';
+
+    is $b->dup->shift_(-1, 2, 6)->get_bin, '01101001', 'shift left part';
+    is $b->dup->shift_(1, 0, 4)->get_bin, '00110101', 'shift right part';
+
+    is $b->dup->shift_(-6, 0, 8, 1)->get_bin, '01111111', 'shift left fill';
+    is $b->dup->shift_(6, 0, 8, 1)->get_bin, '11111101', 'shift right fill';
 }
 
 {
@@ -156,8 +169,27 @@ use EGE::Bits;
     my $b = EGE::Bits->new;
     $b->set_size(5);
     $b->set_dec(30);
-    $b->inc_w_resize;
-    is $b->get_dec, 31, 'inc with resize 30';
-    $b->inc_w_resize;
-    is $b->get_dec, 32, 'inc with resize 31';
+    $b->inc_autosize;
+    is $b->get_dec, 31, 'inc_autosize 30';
+    $b->inc_autosize;
+    is $b->get_dec, 32, 'inc_autosize 31';
+}
+
+{
+    my $chk = sub {
+        my ($hex, $f, $r, $n) = @_;
+        my $b = EGE::Bits->new->set_hex($hex);
+        is $b->scan_forward, $f, "scan_forward $n";
+        is $b->scan_reverse, $r, "scan_reverse $n";
+    };
+    $chk->('0', -1, -1, -1);
+    $chk->('1', 0, 0, 1);
+    $chk->('469E', 1, 14, 2);
+    $chk->('6D64690', 4, 26, 3);
+    $chk->('86D64691', 0, 31, 4);
+}
+
+{
+    my $b = EGE::Bits->new->set_bin('10110');
+    is_deeply [ $b->get_bits ], [ 1, 0, 1, 1, 0 ], 'get_bits';
 }

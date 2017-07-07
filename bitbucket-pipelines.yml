@@ -1,0 +1,7 @@
+image: perl:latest
+pipelines:
+  default:
+    - step:
+        script:
+          - cpanm Test::Exception
+          - prove

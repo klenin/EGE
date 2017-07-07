@@ -1,0 +1,6 @@
+use Test::Harness;
+
+runtests(map "$_.t", qw(
+    asm bits complexity database gen_all graph html logic notation num_text processor prog random russian utils));
+
+1;

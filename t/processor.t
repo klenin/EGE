@@ -1,9 +1,11 @@
 use strict;
 use warnings;
 
-use Test::More tests => 181;
+use Test::More tests => 233;
+use Test::Exception;
 
 use lib '..';
+use EGE::Bits;
 use EGE::Asm::Processor;
 
 sub check_stack {
@@ -14,6 +16,14 @@ sub check_stack {
         $res = '' if ($stack[$i] !=  proc->{stack}->[$i])
     }
     $res;
+}
+
+{
+    for my $r (@EGE::Asm::Processor::registers) {
+        proc->run_code([ ['mov', $r, 9999999] ]);
+        is proc->get_val($r), 9999999, "mov $r";
+    }
+    throws_ok { proc->get_register('zzz'); } qr/zzz/, 'unknown register';
 }
 
 {
@@ -42,6 +52,15 @@ sub check_stack {
     proc->run_code([ ['mov', 'al', 15], ['add', 'al', 7] ]);
     is proc->get_val('eax'), 22, 'add positive number';
     is proc->{eflags}->flags_text, '', 'add set flags';
+
+    proc->run_code([ ['mov', 'ah', 15], ['add', 'ah', 7] ]);
+    is proc->get_val('eax'), 22 * 256, 'add to ah';
+    is proc->{eflags}->flags_text, '', 'add to ah set flags';
+
+    proc->run_code([ ['mov', 'ah', 16], ['add', 'ah', 7] ]);
+    is proc->get_val('eax'), 23 * 256, 'add to ah (2)';
+    is proc->{eflags}->flags_text, 'PF', 'add to ah set flags (2)';
+
     proc->run_code([ ['mov', 'al', 15], ['add', 'al', -7] ]);
     is proc->get_val('eax'), 8, 'add negative less number';
     is proc->{eflags}->flags_text, 'CF', 'add negative less number set flags';
@@ -167,11 +186,16 @@ sub check_stack {
 
 {
     proc->run_code([ ['mov', 'al', 209], ['mov', 'bh', 10], ['add', 'al', 'bh'] ]);
-    is proc->get_val('eax'), 219, 'add regisrer';
+    is proc->get_val('eax'), 219, 'add register';
     proc->run_code([ ['mov', 'al', 55], ['add', 'al', 15], ['sub', 'al', 4] ]);
     is proc->get_val('eax'), 66, 'add sub';
     proc->run_code([ ['mov', 'al', 178], ['sub', 'al', 21], ['mov', 'dh', 5], ['add', 'al', 'dh'] ]);
     is proc->get_val('eax'), 162, 'sub add register';
+}
+
+{
+    proc->run_code([ ['mov', 'ax', 10], ['imul', 'ax', 15] ]);
+    is proc->get_val('eax'), 150, 'imul';
 }
 
 {
@@ -199,15 +223,38 @@ sub check_stack {
     proc->run_code([ ['mov', 'al', 209], ['shl', 'al', 2] ]);
     is proc->get_val('eax'), 68, 'shl';
     is proc->{eflags}->flags_text, 'CF PF', 'shl flags';
+    proc->run_code([ ['mov', 'cx', 0xDFB0], ['shl', 'ch', 4] ]);
+    is proc->get_val('ecx'), 0xF0B0, 'shl cx';
+    is proc->{eflags}->flags_text, 'CF PF SF', 'shl cx flags';
+
     proc->run_code([ ['mov', 'al', 209], ['shr', 'al', 2] ]);
     is proc->get_val('eax'), 52, 'shr';
     is proc->{eflags}->flags_text, '', 'shr flags';
+    proc->run_code([ ['mov', 'cx', 0xCFB0], ['shr', 'cl', 4] ]);
+    is proc->get_val('ecx'), 0xCF0B, 'shr cx';
+    is proc->{eflags}->flags_text, '', 'shr cx flags';
+    proc->run_code([ ['mov', 'edx', 0xFFFFFF], ['shr', 'dh', 1] ]);
+    is proc->get_val('edx'), 0xFF7FFF, 'shr dh';
+    is proc->{eflags}->flags_text, 'CF OF', 'shr dh flags';
+    proc->run_code([ ['mov', 'edx', 0x12345678], ['shr', 'edx', 36] ]);
+    is proc->get_val('edx'), 0x1234567, 'shr mod 32';
+
     proc->run_code([ ['mov', 'al', 209], ['sal', 'al', 2] ]);
     is proc->get_val('eax'), 68, 'sal';
-    is proc->{eflags}->flags_text, 'CF OF PF', 'sal flags';
+    is proc->{eflags}->flags_text, 'CF PF', 'sal flags';
+    proc->run_code([ ['mov', 'cx', 0xDFB0], ['sal', 'ch', 4] ]);
+    is proc->get_val('ecx'), 0xF0B0, 'sal cx';
+    is proc->{eflags}->flags_text, 'CF PF SF', 'sal cx flags';
+
     proc->run_code([ ['mov', 'al', 209], ['sar', 'al', 2] ]);
     is proc->get_val('eax'), 244, 'sar';
     is proc->{eflags}->flags_text, 'SF', 'sar flags';
+    proc->run_code([ ['mov', 'edx', 0xFF81FF], ['sar', 'dh', 1] ]);
+    is proc->get_val('edx'), 0xFFC0FF, 'sar dh';
+    is proc->{eflags}->flags_text, 'CF PF SF', 'sar dh flags';
+    proc->run_code([ ['mov', 'ax', 0x8000], ['sar', 'ax', 33] ]);
+    is proc->get_val('ax'), 0xC000, 'sar mod 32';
+
     proc->run_code([ ['mov', 'al', 209], ['rol', 'al', 2] ]);
     is proc->get_val('eax'), 71, 'rol';
     is proc->{eflags}->flags_text, 'CF PF', 'rol flags';
@@ -367,4 +414,46 @@ sub check_stack {
     proc->run_code([ ['mov', 'al', 1], ['push', 'al'], ['mov', 'al', 2], ['push', 'al'], ['pop', 'bl'] ]);
     is proc->get_val('ebx'), 2, 'double push pop';
     ok check_stack(1), 'double push pop stack';
+}
+
+{
+    proc->run_code([ ['mov', 'ebx', 0xDE5647C8], ['bsr', 'eax', 'ebx'] ]);
+    is proc->get_val('eax'), 31, 'bsr test 1';
+    is proc->{eflags}->flags_text, 'ZF', 'bsr flags test 1';
+    is (0xDE5647C8, proc->get_val('ebx'), 'bsr ebx unchanged 1');
+    proc->run_code([ ['mov', 'ebx', 0x28E2E288], ['bsr', 'eax', 'ebx'] ]);
+    is proc->get_val('eax'), 29, 'bsr test 2';
+    is proc->{eflags}->flags_text, 'ZF', 'bsr flags test 2';
+    proc->run_code([ ['mov', 'ebx', 0xCA288], ['bsr', 'eax', 'ebx'] ]);
+    is proc->get_val('eax'), 19, 'bsr test 3';
+    is proc->{eflags}->flags_text, 'ZF', 'bsr flags test 3';
+    proc->run_code([ ['mov', 'ebx', 0x00000000], ['bsr', 'eax', 'ebx'] ]);
+    is proc->get_val('eax'), 0, 'bsr test 4';
+    is proc->{eflags}->flags_text, '', 'bsr flags test 4';
+    proc->run_code([ ['mov', 'bx', 0xC280], ['bsr', 'ax', 'bx'] ]);
+    is proc->get_val('ax'), 15, 'bsr test 5';
+    is proc->{eflags}->flags_text, 'ZF', 'bsr flags test 5';
+    proc->run_code([ ['mov', 'bx', 0x0000], ['bsr', 'ax', 'bx'] ]);
+    is proc->get_val('ax'), 0, 'bsr test 6';
+    is proc->{eflags}->flags_text, '', 'bsr flags test 6';
+
+    proc->run_code([ ['mov', 'ebx', 0xDE5647C8], ['bsf', 'ebx', 'ebx'] ]);
+    is proc->get_val('ebx'), 3, 'bsf test 1';
+    is proc->{eflags}->flags_text, 'ZF', 'bsf flags test 1';
+    proc->run_code([ ['mov', 'ebx', 0x28E2E2A0], ['bsf', 'ebx', 'ebx'] ]);
+    is proc->get_val('ebx'), 5, 'bsf test 2';
+    is proc->{eflags}->flags_text, 'ZF', 'bsf flags test 2';
+    proc->run_code([ ['mov', 'ebx', 0xCA280], ['bsf', 'eax', 'ebx'] ]);
+    is proc->get_val('eax'), 7, 'bsf test 3';
+    is proc->{eflags}->flags_text, 'ZF', 'bsf flags test 3';
+    is (0xCA280, proc->get_val('ebx'), 'bsr ebx unchanged 2');
+    proc->run_code([ ['mov', 'ebx', 0x00000000], ['bsf', 'eax', 'ebx'] ]);
+    is proc->get_val('eax'), 0, 'bsf test 4';
+    is proc->{eflags}->flags_text, '', 'bsf flags test 4';
+    proc->run_code([ ['mov', 'bx', 0xC200], ['bsf', 'ax', 'bx'] ]);
+    is proc->get_val('ax'), 9, 'bsf test 5';
+    is proc->{eflags}->flags_text, 'ZF', 'bsf flags test 5';
+    proc->run_code([ ['mov', 'bx', 0x0000], ['bsf', 'ax', 'bx'] ]);
+    is proc->get_val('ax'), 0, 'bsf test 6';
+    is proc->{eflags}->flags_text, '', 'bsf flags test 6';
 }

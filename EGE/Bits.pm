@@ -136,23 +136,18 @@ sub set_dec {
     my $v = $self->{v};
     for (my $i = $#$v; $i >= 0; --$i) {
         $v->[$i] = $new_dec % 2;
-        $new_dec >>= 1;
+        $new_dec = int($new_dec / 2);
     }
     $self;
 }
 
-sub inc_w_resize{
+sub inc_autosize {
     my ($self) = @_;
     my $v = $self->{v};
-    my $i;
-    my $size = $self->get_size();
-    for ($i = $#$v; $i >= 0; --$i) {
-        last if $v->[$i] ^= 1;
+    for (my $i = $#$v; $i >= 0; --$i) {
+        return $self if $v->[$i] ^= 1;
     }
-    if ($i < 0){
-        $self->set_size($size+1);
-        $self->set_dec(2**($size));
-    }
+    unshift @$v, 1;
     $self;
 }
 
@@ -192,17 +187,20 @@ sub reverse_ {
 }
 
 sub shift_ {
-    my ($self, $d) = @_;
+    my ($self, $d, $idx_from, $idx_to, $fill_value) = @_;
     my $v = $self->{v};
+    $idx_from //= 0;
+    $idx_to //= @$v;
+    $fill_value //= 0;
     if ($d > 0) { # вправо
-        my $j = @$v;
-        my $i = @$v - $d;
-        $v->[--$j] = $i ? $v->[--$i] : 0 while $j;
+        my $j = $idx_to;
+        my $i = $idx_to - $d;
+        $v->[--$j] = $i > $idx_from ? $v->[--$i] : $fill_value while $j > $idx_from;
     }
     elsif ($d < 0) { # влево
-        my $j = 0;
-        my $i = -$d;
-        $v->[$j++] = $i < @$v ? $v->[$i++] : 0 while $j < @$v;
+        my $j = $idx_from;
+        my $i = $idx_from - $d;
+        $v->[$j++] = $i < $idx_to ? $v->[$i++] : $fill_value while $j < $idx_to;
     }
     $self;
 }
@@ -247,5 +245,25 @@ sub indexes {
 }
 
 sub count_ones { scalar grep $_, @{$_[0]->{v}}; }
+
+sub get_bits { @{$_[0]->{v}} }
+
+sub _scan {
+    my ($self, $start, $end) = @_;
+    my $dir = $start > $end ? -1 : +1;
+    my $v = $self->{v};
+    for (my $pos = $start; $pos != $end; $pos += $dir) {
+        return $pos if $v->[-$pos - 1];
+    }
+    -1;
+}
+
+sub scan {
+    my ($self, $reverse) = @_;
+    $reverse ? $self->_scan($self->get_size - 1, -1) : $self->_scan(0, $self->get_size);
+}
+
+sub scan_forward { $_[0]->scan }
+sub scan_reverse { $_[0]->scan(1) }
 
 1;

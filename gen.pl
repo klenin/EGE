@@ -10,11 +10,13 @@ $SIG{__DIE__} = $SIG{INT} = \&Carp::confess;
 
 use Data::Dumper;
 use Encode;
+use Getopt::Long;
 
 use lib '.';
 
 use EGE::Generate;
 use EGE::Gen::Math::Summer;
+use EGE::Random;
 
 my $questions;
 
@@ -37,7 +39,14 @@ sub print_html {
 <html xmlns="http://www.w3.org/1999/xhtml" lang="ru" xml:lang="ru">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-  <style type="text/css">li.correct { color: red; } div.q { border-bottom: 1px solid black; } </style>
+  <title>EGE</title>
+  <style type="text/css">
+    li.correct { color: #F02020; }
+    div.q { border-bottom: 1px solid black; }
+    div.code { margin: 3px 0 2px 15px; }
+    div.code code { display: inline-block; padding: 4px; border: 1px dotted #6060F0; }
+    tt { background-color: #F0FFF0; padding: 1px; }
+  </style>
 </head>
 <body>
 ~;
@@ -73,7 +82,7 @@ $q->{text}
             print "</ol>\n<ol>";
             for my $i (0..$#correct) {
                 print
-                    '<li class="correct">', $q->{type} eq 'mt' ? 
+                    '<li class="correct">', $q->{type} eq 'mt' ?
                         "$v[$i] - $q->{variants}->[1]->[$correct[$i]]</li>\n" :
                         "$v[$correct[$i]]</li>\n";
                 }
@@ -143,6 +152,16 @@ EOT
 
 binmode STDOUT, ':utf8';
 
+my @seed;
+
+GetOptions(
+    'seed=s{2}' => \@seed,
+);
+
+rnd->seed(@seed) if @seed;
+my @ss = rnd->get_seed;
+print STDERR "seed: @ss\n";
+
 #g('A1', 'recode');
 #g('A1', 'simple');
 #g('A2', 'sport');
@@ -150,10 +169,12 @@ binmode STDOUT, ':utf8';
 #g('A2', 'database');
 #g('A2', 'units');
 #g('A2', 'min_routes');
+#g('A2', 'sport_athlete');
 #g('A3', 'ones');
 #g('A3', 'zeroes');
 #g('A3', 'convert');
 #g('A3', 'range');
+#g('A3', 'binary_num_system');
 #g('A4', 'sum');
 #g('A4', 'count_zero_one');
 #g('A5', 'arith');
@@ -165,7 +186,9 @@ binmode STDOUT, ':utf8';
 #g('A6', 'find_min_max');
 #g('A6', 'count_odd_even');
 #g('A6', 'alg_min_max');
+#g('A6', 'crc_message');
 #g('A6', 'alg_avg');
+#g('A6', 'inf_size');
 #g('A7', 'names');
 #g('A7', 'animals');
 #g('A7', 'random_sequences');
@@ -180,12 +203,15 @@ binmode STDOUT, ':utf8';
 #g('A9', 'error_correction_code');
 #g('A9', 'hamming_code');
 #g('A10', 'graph_by_matrix');
+#g('A10', 'light_panel');
+#g('A10', 'min_alphabet');
 #g('A11', 'variable_length');
 #g('A11', 'fixed_length');
 #g('A11', 'password_length');
 #g('A12', 'beads');
 #g('A13', 'file_mask');
 #g('A13', 'file_mask2');
+#g('A13', 'file_mask3');
 #g('A14', 'database');
 #g('A15', 'rgb');
 #g('A16', 'spreadsheet');
@@ -196,33 +222,64 @@ binmode STDOUT, ':utf8';
 #g('B02', 'simple_while');
 #g('B03', 'q1234');
 #g('B03', 'last_digit');
+#g('B03', 'last_digit_base');
 #g('B03', 'count_digits');
 #g('B03', 'simple_equation');
+#g('B03', 'count_ones');
+#g('B03', 'music_time_to_time');
+#g('B03', 'music_size_to_size');
+#g('B03', 'music_format_time_to_time');
+#g('B03', 'select_base');
+#g('B03', 'move_number');
+#g('B03', 'range_count');
+#g('B03', 'min_required_base');
 #g('B04', 'impl_border');
 #g('B04', 'lex_order');
 #g('B04', 'morse');
+#g('B04', 'bulbs');
+#g('B04', 'plus_minus');
+#g('B04', 'letter_combinatorics');
+#g('B04', 'signal_rockets');
+#g('B04', 'how_many_sequences1');
+#g('B04', 'how_many_sequences2');
 #g('B05', 'calculator');
+#g('B05', 'complete_spreadsheet');
+#g('B05', 'adsl_speed');
 #g('B06', 'solve');
 #g('B06', 'recursive_function');
+#g('B06', 'password_meta');
 #g('B07', 'who_is_right');
 #g('B08', 'identify_letter');
+#g('B08', 'first_sum_digits');
 #g('B10', 'trans_rate');
 #g('B10', 'trans_time');
 #g('B10', 'trans_latency');
+#g('B10', 'min_period_of_time');
+#g('B10', 'trans_text');
+#g('B10', 'trans_time_size');
 #g('B11', 'ip_mask');
+#g('B11', 'subnet_mask');
 #g('B12', 'search_query');
 #g('B13', 'plus_minus');
 #g('B14', 'find_func_min');
 #g('B15', 'logic_var_set');
-# g('Z06', 'find_number');
-# g('Z09', 'get_memory_size');
-# g('Z10', 'words_count');
-# g('Z13', 'tumblers');
-# g('Z13', 'tumblers_min');
+#g('Z06', 'find_number');
+#g('Z06', 'grasshopper');
+#g('Z06', 'min_add_digits');
+#g('Z09', 'get_memory_size');
+#g('Z10', 'words_count');
+#g('Z11', 'recursive_alg');
+#g('Z12', 'ip_computer_number');
+#g('Z13', 'tumblers');
+#g('Z13', 'young_spy');
+#g('Z13', 'tumblers_min');
 #g('Z15', 'city_roads');
+#g('Z16', 'base_gcd');
+#g('Z18', 'bitwise_conjunction');
 #g('Z22', 'calculator_find_prgm_count');
 #g1('Arch01', 'reg_value_add');
 #g1('Arch01', 'reg_value_logic');
+#g1('Arch01', 'reg_value_bscan');
 #g1('Arch01', 'reg_value_shift');
 #g1('Arch01', 'reg_value_convert');
 #g1('Arch01', 'reg_value_jump');
@@ -243,6 +300,7 @@ binmode STDOUT, ':utf8';
 #g1('Arch10', 'cmovcc');
 #g1('Arch12', 'cond_max_min');
 #g1('Arch12', 'divisible_by_mask');
+#g1('Arch13', 'expression_calc');
 #g2('Db01', 'trivial_select');
 #g2('Db01', 'trivial_delete');
 #g2('Db02', 'select_where');
@@ -252,9 +310,9 @@ binmode STDOUT, ':utf8';
 #g2('Db06', 'select_between');
 #g2('Db06', 'select_expression');
 #g2('Db07', 'trivial_inner_join');
-#g2('Db08', 'parents') for 1..3;
-#g2('Db08', 'grandchildren') for 1..3;
-#g2('Db08', 'nuncle') for 1..3;
+#g2('Db08', 'parents');
+#g2('Db08', 'grandchildren');
+#g2('Db08', 'nuncle');
 #g2('Db09', 'inner_join');
 #g2('Db10', 'many_inner_join');
 #g2('Db11', 'inner_join_count');

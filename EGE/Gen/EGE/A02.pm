@@ -16,8 +16,6 @@ use POSIX q(ceil);
 use Storable q(dclone);
 use List::Util q(reduce);
 
-sub _assert { die ($_[1] // '')  unless $_[0] }
-
 sub sport {
     my ($self) = @_;
     my $flavour = rnd->pick(
@@ -28,7 +26,7 @@ sub sport {
     );
     my $bits = rnd->in_range(5, 7);
     my $total = 2 ** $bits - rnd->in_range(2, 5);
-    my $passed = rnd->in_range($total / 2 - 5, $total / 2 + 5);
+    my $passed = ceil(rnd->in_range($total / 2 - 5, $total / 2 + 5));
     my $passed_text = num_text($passed, $flavour->{t2});
     my $total_text = num_text($total, [ 'спортсмен', 'спортсмена', 'спортсменов' ]);
     $self->{text} = <<QUESTION
@@ -71,12 +69,11 @@ sub _car_num_make_alphabet {
 sub _car_num_gen_task {
     my ($c) = @_;
     my $bits_per_item = ceil(log($c->{alph_length}) / log(2)) * $c->{sym_cnt};
-    $c->{result} = [ map num_bytes($_ * $c->{items_cnt}),
-        ceil($bits_per_item / 8),
-        ceil($bits_per_item / 8 - 1),
-        $bits_per_item,
-        $c->{alph_length},
-    ];
+    my $answer = ceil($bits_per_item / 8);
+    my @variants = ($answer, $answer - 1, $bits_per_item);
+    my $len = $c->{alph_length};
+    ++$len while grep $_ == $len, @variants;
+    $c->{result} = [ map num_bytes($_ * $c->{items_cnt}), @variants, $len ];
 }
 
 sub _car_num_gen_text {
@@ -143,6 +140,12 @@ sub database {
 Было передано закодированное сообщение, состоящее из $n символов.
 Определите информационный объём переданного сообщения.~
         },
+        { bits => 5, q => qq~
+Для передачи секретного сообщения используется код, состоящий из прописных букв 
+русского языка (всего используются 32 различные буквы без пробелов). Каждая буква 
+кода записывается при помощи минимально возможного количества бит. Определите 
+информационный объём сообщения длиной в $n символов.~
+        }
     );
     my $bits = $flavour->{bits} * $n;
     $self->{text} = $flavour->{q};
@@ -237,6 +240,7 @@ sub _choose_from_to {
     my ($first, $mi, $mj) = (1, 0, 0);
     for my $i (0 .. $c->{n} - 1) {
         for my $j (0 .. $c->{n} - 1) {
+            next if $i == $j;
             if (($first  && defined $c->{routes}[$i][$j]) ||
                 (!$first && @{$c->{alt_routes}[$i][$j]} > @{$c->{alt_routes}[$mi][$mj]}))
             {
@@ -302,11 +306,11 @@ sub _dijkstra {
 
             $st[$v] = 'finished';
             for my $i (0 .. $c->{n} - 1) {
-                $_ = $c->{routes}[$v][$i];
-                if (defined $_ &&
-                    (!defined $st[$i] || $st[$i] ne 'finished' && $d[$i] > $d[$v] + $_))
+                my $x = $c->{routes}[$v][$i];
+                if (defined $x &&
+                    (!defined $st[$i] || $st[$i] ne 'finished' && $d[$i] > $d[$v] + $x))
                 {
-                    $d[$i] = $d[$v] + $_;
+                    $d[$i] = $d[$v] + $x;
                     $st[$i] = 'visited';
                 }
             }
@@ -317,11 +321,12 @@ sub _dijkstra {
 
 sub _validate {
     my ($c) = @_;
-    $_ = _dijkstra($c, $c->{ans_from}, $c->{ans_to}, 0);
-    _assert(defined $_ && $_ == $c->{ans}[0]);
-    _assert(@{$c->{ans}} >= 3);
+    $c->{ans_from} != $c->{ans_to} or die "$c->{ans_from} == $c->{ans_to}";
+    my $d = _dijkstra($c, $c->{ans_from}, $c->{ans_to}, 0);
+    defined $d && $d == $c->{ans}[0] or die "$d != $c->{ans}[0]";
+    @{$c->{ans}} >= 3 or die @{$c->{ans}};
     my %seen;
-    _assert(!$seen{$_}++) for @{$c->{ans}};
+    $seen{$_}++ and die $_ for @{$c->{ans}};
 }
 
 sub min_routes {
@@ -337,6 +342,23 @@ sub min_routes {
 
     $self->{text} = $context->{text};
     $self->variants( @{$context->{ans}}[0 .. 3] );
+}
+
+sub sport_athlete {
+    my ($self) = @_;
+    my $athletes = rnd->pick(9..255);
+    my $bits = ceil(log($athletes)/log(2));
+    $self->{text} =
+        "В соревновании участвуют $athletes атлетов. " .
+        'Какое минимальное количество бит необходимо, чтобы кодировать номер каждого атлета?';
+    $self->variants(
+        num_bits($bits),
+        rnd->pick_n(3,
+            num_bits(int($bits * 1.5)),
+            num_bits($bits + 1),
+            num_bits($bits - 1)
+        )
+     );
 }
 
 1;

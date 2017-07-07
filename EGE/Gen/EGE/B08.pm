@@ -1,4 +1,4 @@
-# Copyright © 2010-2013 Alexander S. Klenin
+# Copyright © 2010-2015 Alexander S. Klenin
 # Copyright © 2011 V. Kevroletin
 # Licensed under GPL version 2 or later.
 # http://github.com/klenin/EGE
@@ -84,78 +84,63 @@ sub find_calc_system {
     $self->accept_number;
 }
 
-sub two_bit {
-    my ($number) = @_;
-    my @n;
-    for (my $i = 1; $i <= 9; $i++) {
-        for (my $j = 0; $j <= 9; $j++) {
-            if ($i + $j == $number){ 
-                return @n = ($i, $j);
-            }
-        }
-    }
-}
-
-sub three_bit {
-    my ($number) = @_;
-    my @n = ();
-    for (my $i = 1; $i <= 9; $i++) {
-        for (my $j = 0; $j <= 9; $j++) {
-            for (my $k = 0; $k <= 9; $k++) {
-                if ($i + $j + $k == $number){
-                        return @n = ($i, $j, $k);
-                    }
-                }
-            }
-        }
-    }
-
-sub simple_amount {
+sub first_sum_digits {
     my ($self) = @_;
-    die 'Not ready';
-    my $a = rnd->pick(2, 3);
-    my $b;
-    my $x = 0;
-    my $condition = rnd->pick('наибольшее', 'наименьшее');
+
+    my $a = rnd->pick(2, 4);
+    my $b = rnd->in_range(1, $a * 9);
+    my $maximal = rnd->coin;
+
+    my $sum_digits = $b;
     my @answer;
-
-    ($a == 2) ? ($b = rnd->in_range(1, 18)) : ($b = rnd->in_range(1, 27));
-
-    ($a == 2) ? (@answer = two_bit($b)) : (@answer = three_bit($b));
-
-    if ($condition eq 'наибольшее') {
-        if ($b < 10){
-            ($a == 2) ? ($x = $b * 10) : ($x = $b * 100);         
-        } else {
-            @answer = reverse @answer;
-            $x = join("", @answer);
+    if ($maximal) {
+        while ($sum_digits > 9) {
+            $sum_digits -= 9;
+            push @answer, 9;
         }
-    } elsif (($b == 1) && ($a == 3)){
-        $x = 100;
-    } else {
-        $x = join("", @answer);
+        push @answer, $sum_digits;
+        push @answer, (0) x ($a - @answer);
     }
+    else {
+        while ($sum_digits > 10) {
+            $sum_digits -= 9;
+            unshift @answer, 9;
+        }
+        if ($a > @answer + 1) {
+            unshift @answer, $sum_digits - 1;
+            unshift @answer, 1, (0) x ($a - @answer - 1);
+        }
+        else {
+            unshift @answer, $sum_digits;
+        }
+    }
+    my $x = 0 + (join '', @answer);
 
     my $block = EGE::Prog::make_block([
-       '=', 'a', \$a,
-       '=', 'b', '0',
-      'while', [ '>', 'x', '0' ], [
-           '=', 'a', [ '+', 'a', '1' ],
-            '=', 'b', ['()', 'b + ', ['%', 'x', '10'] ],
-            '=', 'x', [ '//', 'x', '10' ],
+       '=', 'a', 0,
+       '=', 'b', 0,
+      'while', [ '>', 'x', 0 ], [
+           '=', 'a', [ '+', 'a', 1 ],
+            '=', 'b', [ '+', 'b', [ '%', 'x', 10 ] ],
+            '=', 'x', [ '//', 'x', 10 ],
         ],
     ]);
+
+    my $d = { x => $x };
+    $block->run($d);
+    $d->{a} == $a && $d->{b} == $b or die "wrong $maximal x=$x a=$a b=$b";
+    $d = { x => $x + ($maximal ? +9 : -9)};
+    $block->run($d);
+    $d->{a} == $a && $d->{b} == $b and die "not last $maximal x=$x a=$a b=$b";
+
     my $lt = EGE::LangTable::table($block, [ [ 'Basic', 'Alg' ], [ 'Pascal', 'C' ] ]);
-
-    $self->{text} = <<QUESTION
-Ниже на 4-х языках записан алгоритм. Получив на вход число x, этот алгоритм печатает 
-два числа a и b.  Укажите $condition из таких чисел x, при вводе которых алгоритм 
-печатает сначала $a, а потом $b.
-$lt <bi />
-QUESTION
-;
-
+    $self->{text} = sprintf
+        'Ниже на 4-х языках записан алгоритм. Получив на вход число x, этот алгоритм печатает ' .
+        'два числа a и b.  Укажите %s из таких чисел x, при вводе которых алгоритм ' .
+        'печатает сначала %d, а потом %d. %s',
+        ($maximal ? 'наибольшее' : 'наименьшее'), $a, $b, $lt;
     $self->{correct} = $x;
+    $self->accept_number;
 }
 
 1;

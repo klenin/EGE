@@ -1,6 +1,6 @@
 # Copyright © 2014 Darya D. Gornak
 # Licensed under GPL version 2 or later.
-# http://github.com/dahin/EGE
+# http://github.com/klenin/EGE
 
 package EGE::Gen::Db::Db03;
 use base 'EGE::GenBase::SingleChoice';
@@ -31,9 +31,9 @@ sub trivial_update {
     $update->run;
     my $select = EGE::SQL::Select->new($products, [], make_expr([ rnd->pick('>', '<', '<=', '>='), $m2,  $m4]));
     $self->{text} = sprintf
-        "Есть таблица <tt>%s</tt> : \n%s\n" .
-        'Сколько записей в этой таблицы будут удовлетворять запросу %s после выполнения запроса %s?',
-        $products->name, $old_products_text, $select->text_html, $update->text_html;
+        "Дана таблица <tt>%s</tt>: \n%s\n" .
+        'Сколько записей в этой таблицы будут удовлетворять запросу %s<br/> после выполнения запроса %s?',
+        $products->name, $old_products_text, $select->text_html_tt, $update->text_html_tt;
     my $ans = $select->run->count;
     $self->variants($ans, rnd->pick_n(3, grep $_ != $ans, 1 .. $products->count));
 }

@@ -10,6 +10,9 @@ use utf8;
 
 use EGE::Random;
 use EGE::Bits;
+use EGE::NumText;
+
+use List::Util qw(min max);
 
 sub find_number {
     my ($self) = @_;
@@ -18,13 +21,13 @@ sub find_number {
     $N->set_size(int(log($minimal_number + 1) / log(2)) + 1);
     $N->set_dec($minimal_number + 1);
 
-    $N->inc_w_resize if $N->get_bit(0) == 1;
+    $N->inc_autosize if $N->get_bit(0) == 1;
     while (1) {
         my $size = $N->get_size;
         my $unit_count = 0;  
         for my $i (2..($size - 1)) { $unit_count++ if $N->get_bit($i) }
-        last if $N->get_bit(1) == ($unit_count % 2);
-        for my $i (1..2) { $N->inc_w_resize }
+        last if $N->get_bit(1) == $unit_count % 2;
+        for my $i (1..2) { $N->inc_autosize }
     }
     $N->shift_(2);
     $self->{text} = 
@@ -37,6 +40,70 @@ sub find_number {
         "По­лу­чен­ная таким об­ра­зом за­пись (в ней на два раз­ря­да боль­ше, чем в за­пи­си ис­ход­но­го числа N) яв­ля­ет­ся дво­ич­ной за­пи­сью ис­ко­мо­го числа R.<br />".
         "Ука­жи­те такое наи­мень­шее число N, для ко­то­ро­го ре­зуль­тат ра­бо­ты ал­го­рит­ма боль­ше $minimal_number. В от­ве­те это число за­пи­ши­те в де­ся­тич­ной си­сте­ме счис­ле­ния.";
     $self->{correct} = $N->get_dec;
+}
 
-}       
+sub _get_min_origin {
+    my @r = split '', $_[0];
+    join '',
+        @r == 2 ? (1, $r[0] - 1, $r[1] - $r[0] + 1) :
+        # 920 -> 211
+        @r == 3 ? ("$r[1]$r[2]" - $r[0] == 9 ? (9, $r[0], 0) : (1, $r[0] - 1, "$r[1]$r[2]" - $r[0] + 1)) :
+        @r == 4 ? ("$r[0]$r[1]" - 9, 9, "$r[2]$r[3]"  - 9) : die;
+}
+
+sub _convert {
+    my ($x, $y, $z) = split '', $_[0];
+    join '', sort { $a <=> $b } $x + $y, $y + $z;
+}
+
+sub min_add_digits {
+    my ($self) = @_;
+    my ($orig, $result);
+    do {
+        # Не генерировать числа кратные 100.
+        $orig = rnd->in_range(1, 9) * 100 + rnd->in_range(1, 99);
+        $result = _convert($orig);
+    } while $result == 712; # Не генерировать число из примера.
+
+    $self->{text} = <<QUESTION
+Автомат получает на вход трёхзначное число. По этому числу строится новое число по следующим правилам.
+<ol>
+<li>Складываются первая и вторая, а также вторая и третья цифры исходного числа.</li>
+<li>Полученные два числа записываются друг за другом в порядке возрастания (без разделителей).</li>
+</ol>
+Пример. Исходное число: 348. Суммы: 3+4 = 7; 4+8 = 12. Результат: 712.<br />
+Укажите наименьшее число, в результате обработки которого автомат выдаст число $result.
+QUESTION
+;
+    $self->{correct} = _get_min_origin($result);
+    $result == _convert($self->{correct}) or die "$orig => $result, min = $self->{correct}";
+    $self->{correct} <= $orig or die "$orig => $result, min = $self->{correct}";
+}
+
+sub grasshopper {
+    my ($self) = @_;
+
+    my $gcd = rnd->in_range(2, 5);
+    my $forward = rnd->pick(3, 5, 7, 11, 13, 17, 19);
+    my $backward = rnd->in_range_except(2, 20, $forward);
+    my $back_cnt = rnd->in_range(2, $forward - 1);
+
+    my $offset = (($forward - $backward) * $back_cnt) % $forward;
+
+    my $start_pnt = rnd->in_range(0, 20);
+    my $end_pnt = $start_pnt + $offset * $gcd;
+    my ($fg, $bg) = ($forward * $gcd, $backward * $gcd);
+    my ($fg_text, $bg_text) = map num_text($_, [ qw(единицу единицы единиц) ]), $fg, $bg;
+
+    $self->{text} = 
+        'Исполнитель КУЗНЕЧИК живёт на числовой оси. ' .
+        "Начальное положение КУЗНЕЧИКА – точка $start_pnt. Система команд Кузнечика:<br /> " .
+        "Вперед $fg – Кузнечик прыгает вперёд на $fg_text,<br /> " .
+        "Назад $bg – Кузнечик прыгает назад на $bg_text.<br /> " .
+        "Какое наименьшее количество раз должна встретиться в программе команда «Назад $bg», " .
+        "чтобы Кузнечик оказался в точке $end_pnt?";
+    $self->{correct} = $back_cnt;
+    $self->accept_number;
+}
+
 1;

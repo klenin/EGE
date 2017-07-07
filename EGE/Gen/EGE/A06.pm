@@ -12,6 +12,7 @@ use utf8;
 use EGE::Random;
 use EGE::Prog;
 use EGE::LangTable;
+use EGE::Bits;
 
 sub count_by_sign {
     my ($self) = @_;
@@ -307,6 +308,61 @@ sub bus_station {
     }
     $self->{text} = gen_schedule_text($way, \@towns, \@init_verts);
     $self->variants(map stime($_), @ans);
+}
+
+sub crc_message {
+    my ($self) = @_;
+    my $len = 6;
+    my $words = 3;
+    my $zeroes = '0' x ($len + 1);
+
+    my @orig_msg = map {
+        my $bits = EGE::Bits->new->set_bin([ map(rnd->coin, 1 .. $len), 0 ], 1);
+        $bits->set_bit(0, $bits->xor_bits);
+    } 1 .. $words;
+    my @rec_msg = map $_->dup->
+        flip(rnd->pick_n(rnd->in_range(1, 4), 0 .. $len))->
+        set_bit(rnd->in_range(0, $len - 1), 1), @orig_msg;
+
+    my $answer_idx = EGE::Bits->new->set_bin([ map $_->xor_bits, @rec_msg ], 1)->get_dec;
+    my @bad_idx = rnd->pick_n(3, grep $_ != $answer_idx, 0 .. (2 ** $words - 1));
+
+    my ($orig_txt, $rec_txt) = map { join ' ', map $_->get_bin, @$_ } \@orig_msg, \@rec_msg;
+    my $idx_to_msg = sub {
+        my @bits = EGE::Bits->new->set_size($words)->set_dec($_[0])->get_bits;
+        join ' ', map $bits[$_] ? $zeroes : $rec_msg[$_]->get_bin, 0 .. ($words - 1);
+    };
+
+    $self->{text} = <<QUESTION
+В некоторой информационной системе информация кодируется двоичными шестиразрядными словами.
+При передаче данных возможны их искажения, поэтому в конец каждого слова добавляется седьмой
+(контрольный) разряд таким образом, чтобы сумма разрядов нового слова, считая контрольный,
+была чётной. Например, к слову 110011 справа будет добавлен 0, а к слову 101100 – 1.
+После приёма слова производится его обработка. При этом проверяется сумма его разрядов,
+включая контрольный. Если она нечётна, это означает, что при передаче этого слова произошёл сбой,
+и оно автоматически заменяется на зарезервированное слово $zeroes. Если она чётна, это означает,
+что сбоя не было или сбоев было больше одного. В этом случае принятое слово не изменяется.
+Исходное сообщение: <b>$orig_txt</b> было принято в виде: <b>$rec_txt</b>.
+Как будет выглядеть принятое сообщение после обработки?
+QUESTION
+;
+    $self->variants(map $idx_to_msg->($_), $answer_idx, @bad_idx);
+}
+
+sub inf_size {
+    my ($self) = @_;
+    my $pow = rnd->in_range(4, 7);
+    my $v = 2 ** $pow;
+    my $time = rnd->in_range(2, 11);
+    $self->{text} =
+        'Известно, что длительность непрерывного подключения к сети Интернет с помощью модема ' .
+        "для некоторых АТС не превышает $time минут. " .
+        'Определите максимальный размер файла (в Килобайтах), ' .
+        'который может быть передан за время такого подключения, ' .
+        "если модем передает информацию в среднем со скоростью $v Килобит/с?";
+    $time *= 60;
+    $self->variants(
+        2 ** ($pow - 3) * $time, 2 ** $pow * $time, 2 ** ($pow - 3) * $time / 60, 2 ** ($pow + 3) * $time);
 }
 
 1;

@@ -27,7 +27,7 @@ my %reg_indexes = (
     (map { $_ . 'l' => [ 24, 32 ] } 'a'..'d'),
     (map { $_ . 'h' => [ 16, 24 ] } 'a'..'d'),
     (map { $_ . 'x' => [ 16, 32 ] } 'a'..'d'),
-    (map { $_ => [ 0, 32 ] } 'ebp', 'esp', map "e${_}x", 'a'..'d'),
+    (map { $_ => [ 0, 32 ] } qw(esi edi ebp esp), map "e${_}x", 'a'..'d'),
 );
 
 sub set_indexes {
@@ -43,14 +43,14 @@ sub get_value {
     my $tmp = EGE::Bits->new->
         set_bin_array([ @{$self->{bits}->{v}}[$self->{id_from} .. $self->{id_to} - 1] ], 1);
     $tmp->{v}[rnd->in_range(0, $len - 1)] ^= 1 if $flip;
-    $tmp->get_dec();
+    $tmp->get_dec;
 }
 
 sub set_ZSPF {
     my ($self, $eflags) = @_;
     $eflags->{ZF} = $self->get_value() ? 0 : 1;
     $eflags->{SF} = $self->{bits}->{v}[$self->{id_from}];
-    $eflags->{PF} = 1 - scalar(grep $self->{bits}->{v}[$_], 24 .. 31) % 2;
+    $eflags->{PF} = 1 - scalar(grep $self->{bits}->{v}[$_], $self->{id_to} - 8 .. $self->{id_to} - 1) % 2;
     $self;
 }
 
@@ -146,6 +146,13 @@ sub neg {
 	$self;
 }
 
+# TODO: Это заглушка только для использования в Arch13.
+sub imul {
+    my ($self, $eflags, $reg, $val) = @_;
+    $self->set_indexes($reg);
+    $self->mov_value($self->get_value * $val)->set_ZSPF($eflags);
+}
+
 sub and {
 	my ($self, $eflags, $reg, $val) = @_;
 	$self->set_indexes($reg) if ($reg);
@@ -183,7 +190,7 @@ sub test {
 	my ($self, $eflags, $reg, $val) = @_;
 	my $oldval = $self->get_value($reg);
 	$self->and($eflags, '', $val);
-	$self->mov($eflags, '', $oldval);	
+	$self->mov($eflags, '', $oldval);
 	$self;
 }
 
@@ -195,49 +202,44 @@ sub not {
 }
 
 sub shl {
-	my ($self, $eflags, $reg, $val) = @_;
-	$self->set_indexes($reg) if ($reg);
-	my $v = $self->{bits}->{v};
-	$eflags->{CF} = $v->[$self->{id_from}+$val-1];
-	my $j = $self->{id_from};
-	my $len = $self->{id_to} - $self->{id_from};
-    $v->[$j++] = $val < $len ? $v->[$self->{id_from}+$val++] : 0 while $j < $self->{id_from} + $len;
-	$self->set_ZSPF($eflags) if ($reg);
-	$eflags->{OF} = 0 if ($reg);
-	$self;
+    my ($self, $eflags, $reg, $val) = @_;
+    $val >= 0 or die "Bad shift count: $val";
+    $val %= 32 or return $self;
+    $self->set_indexes($reg) if $reg;
+    my $last = $self->{id_from} + $val;
+    $eflags->{CF} = $last > $self->{id_to} ? 0 : $self->{bits}->{v}->[$last - 1];
+    $self->{bits}->shift_(-$val, $self->{id_from}, $self->{id_to});
+    $eflags->{OF} = $self->{bits}->{v}->[$self->{id_from}] != $eflags->{CF} ? 1 : 0
+        if $reg && $val == 1;
+    $self->set_ZSPF($eflags) if $reg;
 }
 
-sub sal {
-	my ($self, $eflags, $reg, $val) = @_;
-	$self->set_indexes($reg);
-	$eflags->{OF} = $self->{bits}->{v}[$self->{id_from}+$val-1] != $self->{bits}->{v}[$self->{id_from}+$val];
-	$self->shl($eflags, '', $val);
-	$self->set_ZSPF($eflags);
-	$self;
-}
+sub sal { goto &shl; }
 
 sub shr {
-	my ($self, $eflags, $reg, $val) = @_;
-	$self->set_indexes($reg) if ($reg);
-	my $v = $self->{bits}->{v};
-	$eflags->{CF} = $v->[$self->{id_to}-$val];
-	my $j = $self->{id_to};
-    my $i = $self->{id_to} - $val;
-    $v->[--$j] = $i ? $v->[--$i] : 0 while $j > $self->{id_from};
-	$self->set_ZSPF($eflags) if ($reg);
-	$eflags->{OF} = 0 if ($reg);
-	$self;
+    my ($self, $eflags, $reg, $val) = @_;
+    $val >= 0 or die "Bad shift count: $val";
+    $val %= 32 or return $self;
+    $self->set_indexes($reg) if $reg;
+    my $last = $self->{id_to} - $val;
+    $eflags->{CF} = $last < $self->{id_from} ? 0 : $self->{bits}->{v}->[$last];
+    $eflags->{OF} = $self->{bits}->{v}->[$self->{id_from}] if $val == 1;
+    $self->{bits}->shift_($val, $self->{id_from}, $self->{id_to});
+    $self->set_ZSPF($eflags);
 }
 
 sub sar {
-	my ($self, $eflags, $reg, $val) = @_;
-	$self->set_indexes($reg);
-	my $sgn = $self->{bits}->{v}[$self->{id_from}];
-	$self->shr($eflags, '', $val);
-	$self->{bits}->{v}[$self->{id_from}+$_] = $sgn for (0..$val-1);
-	$self->set_ZSPF($eflags);
-	$eflags->{OF} = 0;
-	$self;
+    my ($self, $eflags, $reg, $val) = @_;
+    $reg or die;
+    $val >= 0 or die "Bad shift count: $val";
+    $val %= 32 or return $self;
+    $self->set_indexes($reg);
+    my $sgn = $self->{bits}->{v}[$self->{id_from}];
+    my $last = $self->{id_to} - $val;
+    $eflags->{CF} = $last < $self->{id_from} ? 0 : $self->{bits}->{v}->[$last];
+    $eflags->{OF} = 0 if $val == 1;
+    $self->{bits}->shift_($val, $self->{id_from}, $self->{id_to}, $sgn);
+    $self->set_ZSPF($eflags);
 }
 
 sub rol {
@@ -301,5 +303,17 @@ sub pop {
 	$self->mov($eflags, $reg, shift @{$stack});
 	$self;
 }
+
+sub _bs {
+    my ($self, $eflags, $reg, $val, $reverse) = @_;
+    $self->set_indexes($reg) if $reg;
+    my $value = EGE::Bits->new->set_size(32)->set_dec($val)->scan($reverse);
+    $eflags->{ZF} = $value == -1 ? 0 : 1;
+    $self->mov_value($eflags->{ZF} ? $value : 0);
+}
+
+sub bsf { goto &_bs; }
+
+sub bsr { CORE::push @_, 1; goto &_bs; }
 
 1;

@@ -8,11 +8,29 @@ use strict;
 use warnings;
 use EGE::Html;
 
-sub text_html { html->tag('tt', html->cdata($_[0]->text)); }
-sub _field_sql { ref $_ ? $_->to_lang_named('SQL') : $_ }
-sub where_sql { $_[0]->{where} ? ' WHERE '. $_[0]->{where}->to_lang_named('SQL') : '' }
-sub having_sql { $_[0]->{having} ?  ' HAVING '. $_[0]->{having}->to_lang_named('SQL') : '' }
-sub group_by_sql { $_[0]->{group} ?  ' GROUP BY '. join(', ', map &_field_sql, @{$_[0]->{group}}) : '' }
+sub text_html { $_[0]->text({ html => 1 }) }
+sub text_html_tt { html->tag('tt', $_[0]->text({ html => 1 })) }
+
+sub _field_list_sql {
+    my ($self, $fields, $opts) = @_;
+    join ', ', map ref $_ ? $_->to_lang_named('SQL', $opts) : $_, @$fields;
+}
+
+sub where_sql {
+    my ($self, $opts) = @_;
+    $self->{where} ? 'WHERE '. $self->{where}->to_lang_named('SQL', $opts) : ''
+}
+
+sub having_sql {
+    my ($self, $opts) = @_;
+    $self->{having} ? 'HAVING '. $self->{having}->to_lang_named('SQL', $opts) : '';
+}
+
+sub group_by_sql {
+    my ($self, $opts) = @_;
+    $self->{group} ? 'GROUP BY '. $self->_field_list_sql($self->{group}) : ''
+}
+
 sub _maybe_run { $_[1]->can('run') ? $_[1]->run : $_[1]; }
 
 sub init_table {
@@ -50,11 +68,13 @@ sub name { $_[0]->{table_name} }
 
 
 sub text {
-    my ($self) = @_;
-    my $fields = join(', ', map $self->_field_sql, @{$self->{fields}}) || '*';
-    my $table = $self->{table_name};
-    $table = $self->{table}->can('text') ? $self->{table}->text : $self->{table_name} if $self->{table};
-    "SELECT $fields FROM $table" . $self->where_sql . $self->group_by_sql . $self->having_sql;
+    my ($self, $opts) = @_;
+    my $fields = $self->_field_list_sql($self->{fields}, $opts) || '*';
+    my $t = $self->{table};
+    my $table_text = $t && $t->can('text') ? $t->text($opts) : $self->{table_name};
+    join ' ',
+        "SELECT $fields FROM $table_text",
+        map $self->$_($opts) || (), qw(where_sql group_by_sql having_sql);
 }
 
 package EGE::SQL::SubqueryAlias;
@@ -78,9 +98,9 @@ sub run {
 }
 
 sub text {
-    my ($self) = @_;
+    my ($self, $opts) = @_;
     my $q = $self->{table} && $self->{table}->can('text') ?
-        '(' . $self->{table}->text . ") AS" : $self->{table_name};
+        '(' . $self->{table}->text($opts) . ") AS" : $self->{table_name};
     "$q $self->{alias}";
 }
 
@@ -104,9 +124,9 @@ sub run {
 }
 
 sub text {
-    my ($self) = @_;
+    my ($self, $opts) = @_;
     my $assigns = $self->{assigns}->to_lang_named('SQL');
-    "UPDATE $self->{table_name} SET $assigns" . $self->where_sql;
+    join ' ', "UPDATE $self->{table_name} SET $assigns", $self->where_sql($opts) || ();
 }
 
 package EGE::SQL::Delete;
@@ -127,8 +147,8 @@ sub run {
 }
 
 sub text {
-    my ($self) = @_;
-    "DELETE FROM $self->{table_name}" . $self->where_sql;
+    my ($self, $opts) = @_;
+    join ' ', "DELETE FROM $self->{table_name}", $self->where_sql($opts) || ();
 }
 
 package EGE::SQL::Insert;
@@ -152,7 +172,7 @@ sub run {
 }
 
 sub text {
-    my ($self) = @_;
+    my ($self, $opts) = @_;
     my $fields = join ', ', @{$self->{table}->{fields}};
     my $values = join ', ', map /^\d+$/ ? $_ : "'$_'", @{$self->{values}};
     "INSERT INTO $self->{table_name} ($fields) VALUES ($values)";
@@ -182,7 +202,7 @@ sub run {
 }
 
 sub text {
-    my ($self) = @_;
+    my ($self, $opts) = @_;
     my ($t1, $t2) = map
         !ref $_->{tab} ? $_->{tab} :
         $_->{tab}->can('text') ? $_->{tab}->text :
@@ -192,8 +212,8 @@ sub text {
         $_->{field} =~ /\./ ? $_->{field} :
         (ref $_->{tab} ? $_->{tab}->name : $_->{tab}) . ".$_->{field}"
     } $self->tables;
-    my $where = defined $self->{where} ? $self->{where}->to_lang_named('SQL') : "$f1 = $f2";
-    "$t1 INNER JOIN $t2 ON $where";
+    "$t1 INNER JOIN $t2 ON " .
+        ($self->{where} ? $self->{where}->to_lang_named('SQL', $opts) : "$f1 = $f2");
 }
 
 package EGE::SQL::InnerJoinExpr;

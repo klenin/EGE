@@ -1,6 +1,6 @@
 # Copyright © 2014 Darya D. Gornak
 # Licensed under GPL version 2 or later.
-# http://github.com/dahin/EGE
+# http://github.com/klenin/EGE
 package EGE::Gen::Db::Db08;
 use base 'EGE::GenBase::SingleChoice';
 
@@ -26,8 +26,8 @@ sub make_person {
         $family_name = $$new_family_name =
             $is_male ? $family_name : rnd->pick(@EGE::Russian::FamilyNames::list);
     }
-    $table_persons->insert_row(
-        $person_id, $family_name . ($is_male ? '' : 'а'), $is_male ? shift @males : shift @females, $is_male);
+    my $given_name = $is_male ? shift @males : shift @females or die;
+    $table_persons->insert_row($person_id, $family_name . ($is_male ? '' : 'а'), $given_name, $is_male);
     $person_id;
 }
 
@@ -43,8 +43,8 @@ sub children {
 sub create_table {
     my $table_persons = EGE::SQL::Table->new([ qw(id Фамилия Имя Пол) ], name => 'persons');
     my $table_kinship = EGE::SQL::Table->new([ qw(id_parent id_child) ], name => 'kinship');
-    @males = EGE::Russian::Names::different_males(10);
-    @females = EGE::Russian::Names::different_females(10);
+    @males = EGE::Russian::Names::different_males(15);
+    @females = EGE::Russian::Names::different_females(15);
     my (@grandchildren, @children);
     my $family_name = rnd->pick(@EGE::Russian::FamilyNames::list);
     my $id = make_person($family_name, $table_persons);
@@ -81,13 +81,13 @@ sub parents {
         if ($count) {
             $gen = $sex ? q~сыновья~ : q~дочери~;
             $sex = $sex ? q~'м'~ : q~'ж'~;
-            push @requests, EGE::SQL::Select->new($inner1, $query_fields, $where)->text_html;
+            push @requests, EGE::SQL::Select->new($inner1, $query_fields, $where)->text_html_tt;
             my $inner3 = EGE::SQL::InnerJoin->new(
                 { tab => $table_person, field => 'id_child' },
                 { tab => $table_kinship, field => 'id' });
-            push @requests, EGE::SQL::Select->new($inner3, $query_fields, $where)->text_html;
+            push @requests, EGE::SQL::Select->new($inner3, $query_fields, $where)->text_html_tt;
             push @requests, EGE::SQL::Select->new($inner2, $query_fields,
-                EGE::Prog::make_expr( ['||',[ '==', 'id_parent', $f1 ],[ '==', 'Пол', \$sex ] ]))->text_html;
+                EGE::Prog::make_expr( ['||',[ '==', 'id_parent', $f1 ],[ '==', 'Пол', \$sex ] ]))->text_html_tt;
             my $par = ${$table_person->select(['Фамилия', 'Имя', 'Пол'],
                 EGE::Prog::make_expr(['==', 'id', $f1]))->{data}}[0];
             $name = @$par[0];
@@ -106,10 +106,10 @@ sub parents {
         "В фрагменте базы данных представлены сведения о родственных отношениях:\n%s\n" .
         'Результатом какого запроса будут %s %s?',
         EGE::SQL::Utils::multi_table_html($table_person, $table_kinship), $gen, $name;
-    $self->variants($query->text_html, @requests);
+    $self->variants($query->text_html_tt, @requests);
 }
 
-sub grandchildren{
+sub grandchildren {
     my ($self) = @_;
     my ($table_kinship, $table_person, $grandchildren, $child) = create_table();
     my (@requests, $query, $name);
@@ -132,19 +132,19 @@ sub grandchildren{
         $name .=  q~а~;
     }
     $name .= " " . substr(@$par[1], 0, 1) . ".";
-    push @requests, EGE::SQL::Select->new($inner1, $query_fields, $where)->text_html;
+    push @requests, EGE::SQL::Select->new($inner1, $query_fields, $where)->text_html_tt;
     my $inner3 = EGE::SQL::InnerJoin->new(
         { tab => $table_person, field => 'id_child' },
         { tab => $table_kinship, field => 'id' });
-    push @requests, EGE::SQL::Select->new($inner3, $query_fields, $where)->text_html;
+    push @requests, EGE::SQL::Select->new($inner3, $query_fields, $where)->text_html_tt;
     push @requests, EGE::SQL::Select->new($inner2, $query_fields,
-        EGE::Prog::make_expr([ '==', 'id_parent', $parents ]))->text_html;
+        EGE::Prog::make_expr([ '==', 'id_parent', $parents ]))->text_html_tt;
     $table_person->update(EGE::Prog::make_block [ '=', 'Пол', sub { $_[0]->{'Пол'} ? 'м' : 'ж' } ]);
     $self->{text} = sprintf
         "В фрагменте базы данных представлены сведения о родственных отношениях:\n%s\n" .
         'Результатом какого запроса будут внуки %s?',
         EGE::SQL::Utils::multi_table_html($table_person, $table_kinship), $name;
-    $self->variants($query->text_html, @requests);
+    $self->variants($query->text_html_tt, @requests);
 }
 
 sub nuncle {
@@ -155,7 +155,7 @@ sub nuncle {
     my ($f1) = rnd->shuffle(@grand[1 .. $#grand]);
     my $where = EGE::Prog::make_expr([ '==', 'id_child', $f1 ]);
     $query = EGE::SQL::SubqueryAlias->new(
-        EGE::SQL::Select->new($table_kinship, ['id_parent'], $where), 'person1');
+        EGE::SQL::Select->new($table_kinship, [ 'id_parent' ], $where), 'person1');
     my $tab = $query->run;
     my $inner2 = EGE::SQL::InnerJoin->new(
         { tab => $query, field => 'id_parent' },
@@ -166,29 +166,31 @@ sub nuncle {
     my $inner5 = EGE::SQL::InnerJoin->new(
         { tab => $inner4, field => 'k2.id_child' },
         { tab => $table_person, field => 'id' });
-    my $query_fields = [EGE::Prog::Field->new({name =>'Фамилия'}),
-                EGE::Prog::Field->new({name => 'Имя'})];
+    my $query_fields = [
+        EGE::Prog::Field->new({ name => 'Фамилия' }),
+        EGE::Prog::Field->new({ name => 'Имя' })
+    ];
     my $query2 = EGE::SQL::Select->new($inner5, $query_fields);
-    my $par = ${$table_person->select(['Фамилия', 'Имя', 'Пол'],
-        EGE::Prog::make_expr(['==', 'id', $f1]))->{data}}[0];
-    $name = @$par[0];
-    if (!@$par[2]) {
+    my $par = $table_person->select(
+        [ 'Фамилия', 'Имя', 'Пол' ], EGE::Prog::make_expr([ '==', 'id', $f1 ]))->{data}->[0];
+    $name = $par->[0];
+    if (!$par->[2]) {
         $name = substr($name, 0, -1);
         $name .= q~ой~;
     } else {
         $name .=  q~а~;
     }
-    $name .= " " . substr(@$par[1], 0, 1) . ".";
-    push @requests, EGE::SQL::Select->new($inner2, $query_fields, $where)->text_html;
-    push @requests, EGE::SQL::Select->new($inner4, $query_fields, $where)->text_html;
+    $name .= ' ' . substr($par->[1], 0, 1) . '.';
+    push @requests, EGE::SQL::Select->new($inner2, $query_fields, $where)->text_html_tt;
+    push @requests, EGE::SQL::Select->new($inner4, $query_fields, $where)->text_html_tt;
     push @requests, EGE::SQL::Select->new($table_person, $query_fields,
-        EGE::Prog::make_expr([ '==', 'id_parent', $parents ]))->text_html;
+        EGE::Prog::make_expr([ '==', 'id_parent', $parents ]))->text_html_tt;
     $table_person->update(EGE::Prog::make_block [ '=', 'Пол', sub { $_[0]->{'Пол'} ? 'м' : 'ж' } ]);
     $self->{text} = sprintf
         "В фрагменте базы данных представлены сведения о родственных отношениях:\n%s\n" .
         'Результатом какого запроса будут родители %s, их сестры и братья?',
         EGE::SQL::Utils::multi_table_html($table_person, $table_kinship), $name;
-    $self->variants($query2->text_html, @requests);
+    $self->variants($query2->text_html_tt, @requests);
 }
 
 1;

@@ -45,12 +45,22 @@ sub reg_value_add {
     $self->formated_variants($format, @variants, make_wrongs($reg, 4, @variants));
 }
 
+sub reg_value_bscan {
+    my $self = shift;
+    my ($reg1, $reg2, $format_variants, $format_code) = cgen->generate_bscan_code;
+    my @variants = $self->get_res($reg1, $format_code);
+    push @variants, offs_modulo($variants[0], 2 ** 16, rnd->pick(2, -2), 1, - 1);
+    $self->formated_variants($format_variants, @variants);
+}
+
 sub reg_value_logic {
     my $self = shift;
     my ($reg, $format, $n) = cgen->generate_simple_code('logic');
     my @variants = $self->get_res($reg, $format);
-    push @variants, run_modified 1, sub { $_->[0] = 'and' }, $reg
-        if cgen->cmd(1) eq 'test';
+    if (cgen->cmd(1) eq 'test') {
+        my $w = run_modified 1, sub { $_->[0] = 'and' }, $reg;
+        push @variants, $w if $variants[0] ne $w;
+    }
     $self->formated_variants($format, @variants, make_wrongs($reg, 4, @variants));
 }
 
@@ -70,14 +80,15 @@ sub try_reg_value_shift {
         $make_wa->(sub { $_->[2] += $_->[2] == $n / 8 ? $n / 8 : rnd->pick($n / 8, -$n / 8) }),
         $make_wa->(sub { $_->[0] =~ s/^(\w\w)(l|r)$/$1 . toggle($2, 'r', 'l')/e })
     );
+    my %h;
+    @h{@variants} = undef;
+    keys %h == @variants or return 0;
     $self->formated_variants($format, @variants, make_wrongs($reg, 4, @variants));
+    1;
 }
 
 sub reg_value_shift {
-    my $self = shift;
-    do {
-        $self->try_reg_value_shift;
-    } until 1 == grep { $self->{variants}->[0] eq $_ } @{$self->{variants}};
+    1 until $_[0]->try_reg_value_shift;
 }
 
 sub reg_value_convert {

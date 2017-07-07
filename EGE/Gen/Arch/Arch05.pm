@@ -8,6 +8,7 @@ use strict;
 use warnings;
 use utf8;
 
+use EGE::Html;
 use EGE::Random;
 use EGE::Asm::Processor;
 use EGE::Asm::AsmCodeGenerate;
@@ -73,8 +74,8 @@ sub try_gen_sort {
     $self->{text} =
         'Расположите команды в такой последовательности, ' .
         "чтобы после их выполнения в регистре $reg1 содержалось значение $hex_val:";
-    $self->formated_variants('<code>%s</code>',
-        map cgen->format_command($_, ($_->[2] // '') eq '4' ? '%d' : '%02Xh'), @$commands);
+    $self->variants(map html->code(
+        cgen->format_command($_, ($_->[2] // '') eq '4' ? '%d' : '%02Xh')), @$commands);
     $self->{correct} = $p{good}->[$idx];
 }
 

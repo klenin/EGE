@@ -1,6 +1,6 @@
 # Copyright © 2014 Darya D. Gornak
 # Licensed under GPL version 2 or later.
-# http://github.com/dahin/EGE
+# http://github.com/klenin/EGE
 
 package EGE::Gen::Db::Db05;
 use base 'EGE::GenBase::MultipleChoice';
@@ -11,39 +11,41 @@ use utf8;
 
 use EGE::Random;
 use EGE::Prog;
-use EGE::Prog::Lang;
 use EGE::Html;
 use EGE::SQL::Table;
-use EGE::Russian::Product;
 use EGE::SQL::Queries;
-use EGE::SQL::RandomTable qw(create_table);
+use EGE::SQL::RandomTable;
+use EGE::SQL::Utils;
 
 sub insert_delete {
     my ($self) = @_;
-    my $products = EGE::SQL::RandomTable::create_table(column => 5, row => 13);
-    my (%ans, @query);
-    my $candy = $products->column_array($products->{fields}[0]);
-    my $ind = rnd->in_range(7, 10);
-    my @val = map rnd->in_range(10, 80) * 100 , 1..@{$products->{fields}} - 1;
-    $products->{data} = [ grep $_->[0] ne @$candy[$ind], @{$products->{data}} ];
+    my $rt = EGE::SQL::RandomTable->new(
+        column => rnd->in_range(4, 5), row => rnd->in_range(11, 13));
+    my $rt_class = $rt->pick;
+    my $products = $rt->make;
+    my $delete_cond = EGE::SQL::Utils::generate_nontrivial_cond($products, \&EGE::SQL::Utils::expr_3);
+
+    my $f = $products->{fields}->[0];
+    my $all_names = $products->column_array($f);
+    my @insert_rows = splice @{$products->{data}}, 0, rnd->in_range(1, 3);
     my $text_table = $products->table_html;
-    $products->insert_row(@$candy[$ind], @val);
-    my $insert = EGE::SQL::Insert->new($products, [ @$candy[$ind] , @val ]);
-    my $new_candy = $products->column_array($products->{fields}[0]);
-    push @query, $insert->text_html();
-    my $cond = EGE::SQL::Utils::check_cond($products, \&EGE::SQL::Utils::expr_3);
-    my $delete = EGE::SQL::Delete->new($products, $cond);
-    $delete->run();
-    push @query, $delete->text_html();
-    my $selected = $products->select([ $products->{fields}[0] ]);
-    $ans{$_->[0]} = 1 for @{$selected->{data}};
+
+    my @sqls = (
+        map(EGE::SQL::Insert->new($products, $_), @insert_rows),
+        EGE::SQL::Delete->new($products, $delete_cond));
+    $_->run for @sqls;
+
+    my %ans;
+    @ans{@{$products->column_array($f)}} = undef;
+
     $self->{text} = sprintf
-        "В таблице <tt>%s</tt> представлен список товаров: \n%s\n" .
-        "Какие товары в ней будут после выполнения приведенных ниже запросов?\n",
-        $products->name, $text_table;
-    $self->{text} .= html->row_n('td', $_) for @query;
-    $self->variants(@$new_candy);
-    $self->{correct} = [ map $ans{$_} ? 1 : 0, @$new_candy ];
+        "В таблице <tt>%s</tt> представлен список %s: \n%s\n" .
+        "Какие %s в ней будут после выполнения приведенных ниже запросов?\n%s",
+        $products->name, $rt_class->get_text_name->{genitive}, $text_table,
+        $rt_class->get_text_name->{nominative},
+        html->table([ map html->row_n('td', $_->text_html_tt), @sqls ]);
+    $self->variants(@$all_names);
+    $self->{correct} = [ map exists $ans{$_} ? 1 : 0, @$all_names ];
 }
 
 1;

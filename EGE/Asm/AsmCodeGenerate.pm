@@ -6,9 +6,11 @@ package EGE::Asm::AsmCodeGenerate;
 use strict;
 use warnings;
 
+use POSIX qw/ceil/;
+
 use EGE::Random;
 use EGE::Asm::Processor;
-use POSIX qw/ceil/;
+use EGE::Prog;
 
 use Exporter;
 our @ISA = qw(Exporter);
@@ -58,16 +60,25 @@ sub set_commands {
     $self->{code} = [ @_ ];
 }
 
+sub is_integer { $_[0] =~ m/^-?(\d+)$/ }
+
+sub ensure_numeric { $_[0] =~ m/^[\-0-9]/ ? $_[0] : "0$_[0]" }
+
 sub format_command {
     my ($self, $command, $num_format) = @_;
     my ($cmd, @args) = @$command;
-    "$cmd " . join ', ', map { m/^-?(\d+)$/ ? sprintf $num_format, $_ : $_ } grep { @_ ne '' } @args;
+    "$cmd " . join ', ', map { is_integer($_) ? ensure_numeric(sprintf $num_format, $_) : $_ } @args;
+}
+
+sub format_commands {
+    my ($self, $num_format) = @_;
+    map $self->format_command($_, $num_format), @{$self->{code}};
 }
 
 sub get_code_txt {
     my ($self, $num_format) = @_;
-    my $cmd_list = join('<br></br>', map $self->format_command($_, $num_format), @{$self->{code}});
-    qq~<div id="code"><code>$cmd_list</code></div>~;
+    my $cmd_list = join '<br/>', $self->format_commands($num_format);
+    qq~<div class="code"><code>$cmd_list</code></div>~;
 }
 
 sub make_reg {
@@ -102,6 +113,17 @@ sub get_hex_args {
 	&{"get_hex_args_".$type}();
 }
 
+sub get_hex_arg_bscan {
+    my ($self, $n) = @_;
+    my $arg1 = 0;
+    for my $p (3..$n - 4) {
+        if (rnd->pick(0,1)) {
+            $arg1 += 2 ** $p;
+        } 
+    }
+    $arg1;
+}
+
 sub get_hex_args_add {
 	my ($arg1, $arg2) = (0, 0);
 	for (1..7) {
@@ -132,29 +154,32 @@ sub get_hex_args_shift {
 	($arg, rnd->pick(4, 8, 12));
 }
 
-sub swap_commands {
-	my ($self, $id1, $id2) = @_;
-	my $c = $self->{code}->[$id1];
-	$self->{code}->[$id1] = $self->{code}->[$id2];
-	$self->{code}->[$id2] = $c;
-	$self;
-}
-
 sub move_command {
-	my ($self, $from, $to) = @_;
-	my $c = $self->{code}->[$from];
-	my $i = $from;
-	while ($i != $to) {
-		($self->{code}->[$i], $i) = $from < $to ? ($self->{code}->[$i+1], $i+1) : ($self->{code}->[$i-1], $i-1);
-	}
-	$self->{code}->[$to] = $c;
-	$self;
+    my ($self, $from, $to) = @_;
+    my $code = $self->{code};
+    0 <= $from && $from < @$code or die "Bad from: $from";
+    0 <= $to && $to <= @$code or die "Bad to: $to";
+    my $c = splice @$code, $from, 1;
+    splice @$code, ($from < $to ? $to - 1 : $to), 0, $c;
+    $self;
 }
 
 sub remove_command {
     my ($self, $id, $count) = @_;
     splice @{$self->{code}}, $id, $count || 1;
     $self;
+}
+
+sub generate_bscan_code {
+    my ($self, $type) = (@_, 'bscan');
+    my ($format_variants, $format_code, $n) = ('%s', rnd->pick(0,1) ? ('%04Xh', 16) : ('%08Xh', 32));
+    my ($reg1, $reg2) = (cgen->get_regs($n, $n));
+    my $arg1 = cgen->get_hex_arg_bscan($n);
+    $self->{code} = [];
+    $self->add_command('mov', $reg2, $arg1);
+    my $scan_type = (rnd->pick('bsr', 'bsf'));
+    $self->add_command(($scan_type, $reg1, $reg2));
+    ($reg1, $reg2, $format_variants, $format_code);
 }
 
 sub generate_simple_code {
@@ -179,6 +204,52 @@ sub generate_simple_code {
 
 sub cmd { $_[0]->{code}->[$_[1]]->[0] }
 
-sub clear { $_[0]->{code} = [] }
+sub clear { $_[0]->{code} = []; $_[0]->free_all_registers; }
+
+sub allocate_register {
+    my ($self) = @_;
+    my $alloc = $self->{allocated_registers} //= {};
+    for (@EGE::Asm::Processor::registers) {
+        next if $alloc->{$_};
+        $alloc->{$_} = 1;
+        return $_;
+    }
+    die 'Not enought registers';
+}
+
+sub free_register {
+    my ($self, $reg) = @_;
+    my $alloc = $self->{allocated_registers} //= {};
+    $alloc->{$reg} or die "Register $reg is not allocated";
+    delete $alloc->{$reg};
+}
+
+sub free_all_registers { $_[0]->{allocated_registers} = {} }
+
+sub compile {
+    my ($self, $expr) = @_;
+    if ($expr->isa('EGE::Prog::Const')) {
+        my $reg = $self->allocate_register;
+        $self->add_command('mov', $reg, $expr->{value});
+        return $reg;
+    }
+    if ($expr->isa('EGE::Prog::BinOp')) {
+        my $reg_left = $self->compile($expr->{left});
+        my $r = $expr->{right};
+        my $op = {
+            '+' => 'add', '-' => 'sub', '*' => 'imul', '&' => 'and', '|' => 'or', '^' => 'xor'
+        }->{$expr->{op}};
+        if ($r->isa('EGE::Prog::Const')) {
+            $self->add_command($op, $reg_left, $r->{value});
+        }
+        else {
+            my $reg_right = $self->compile($expr->{right});
+            $self->add_command($op, $reg_left, $reg_right);
+            $self->free_register($reg_right);
+        }
+        return $reg_left;
+    }
+    die "Not implemented: $expr";
+}
 
 1;

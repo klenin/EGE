@@ -125,12 +125,12 @@ sub select {
         $group = $p->{group};
         $having = $p->{having};
     }
-    $aggr =  grep ref $_ eq 'EGE::Prog::CallFuncAggregate', @$fields;
+    $aggr = grep ref $_ eq 'EGE::Prog::CallFuncAggregate', @$fields;
     my $k = 0;
 
     my $result = EGE::SQL::Table->new([ map { ref $_ ne 'EGE::Prog::Field' && ref $_ ? 'expr_' . ++$k : $_ } @$fields ]);
 
-    my @values = map { ref $_  ? $_ : make_expr($_) } @$fields;
+    my @values = map { ref $_ ? $_ : make_expr($_) } @$fields;
     my $calc_row = sub { map $_->run($_[0]), @values };
 
     my $tab_where = $self->where($where, $ref);
@@ -138,8 +138,8 @@ sub select {
         $result->{data} = $tab_where->group_by($calc_row, $group, $having);
     } else {
         my @ans;
-        my $evn = $tab_where->_hash;
-        push @ans, [ $calc_row->($tab_where->_row_hash($_, $evn)) ] for @{$tab_where->{data}};
+        my $env = $tab_where->_hash;
+        push @ans, [ $calc_row->($tab_where->_row_hash($_, $env)) ] for @{$tab_where->{data}};
         $result->{data} = $aggr ? [ $ans[0] ] : [ @ans ];
     }
     $result;
@@ -169,6 +169,12 @@ sub where {
         push @{$table->{data}}, $ref ? $data : [ @$data ] if $where->run($self->_row_hash($data));
     }
     $table;
+}
+
+sub count_where {
+    my ($self, $where) = @_;
+    $where or return $self->count;
+    scalar grep $where->run($self->_row_hash($_)), @{$self->{data}};
 }
 
 sub update {
@@ -232,10 +238,25 @@ sub fetch_val {
 
 sub random_row { rnd->pick(@{$_[0]->{data}}) }
 
+sub _field_index {
+    my ($self, $field) = @_;
+    ($field !~ /^\d$/ ? $self->{field_index}->{$field} :
+    1 <= $field && $field <= @{$self->{fields}} ? $field - 1 :
+    undef) // die "Unknown field $field";
+}
+
 sub column_array {
     my ($self, $field) = @_;
-    my $column = $self->{field_index}->{$field} // die $field;
-    [ map $_->[$column], @{$self->{data}} ];
+    my $column_idx = $self->_field_index($field);
+    [ map $_->[$column_idx], @{$self->{data}} ];
+}
+
+sub column_hash {
+    my ($self, $field) = @_;
+    my $column_idx = $self->_field_index($field);
+    my $r = {};
+    ++$r->{$_->[$column_idx]} for @{$self->{data}};
+    $r;
 }
 
 package EGE::SQL::Table::Aggregate::count;

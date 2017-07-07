@@ -2,11 +2,11 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 134;
+use Test::More tests => 169;
 use Test::Exception;
 
 use lib '..';
-use EGE::Prog qw(make_block make_expr);
+use EGE::Prog qw(make_block make_expr add_statement move_statement);
 
 {
     my @t = (
@@ -21,6 +21,9 @@ use EGE::Prog qw(make_block make_expr);
         [ '-', 4 ],      -4,
         [ '!', 0 ],       1,
         [ '**', 2, 8 ], 256,
+        [ '&', 14, 9 ],   8,
+        [ '|', 8, 7 ],   15,
+        [ '^', 15, 4 ],  11,
         55,              55,
         sub { 77 },      77,
     );
@@ -32,8 +35,15 @@ use EGE::Prog qw(make_block make_expr);
 }
 
 {
+    my $op = make_expr [ '+', 3, 5 ];
+    is_deeply [ $op->children ], [ $op->{left}, $op->{right} ], 'children';
+}
+
+{
+    throws_ok { make_expr() } qr/empty/i, 'make_expr empty';
     throws_ok { make_expr([ 1, 2, 3, 4, 5, 6 ]) } qr/make_expr/, 'bad make_expr';
     throws_ok { make_expr([ [], 'a', 1 ]) } qr/bad op/i, 'bad op';
+    throws_ok { make_expr [ undef ] } qr/bad op/i, 'bad op';
 }
 
 {
@@ -64,24 +74,40 @@ use EGE::Prog qw(make_block make_expr);
 }
 
 {
+    my $e = make_expr([ '[]', 'a', 2 ]);
+    is $e->run({ a => [1..3] }), 3, 'run []';
+}
+
+{
     my $e = make_expr([ '+', 'a', 3 ]);
     is_deeply make_expr($e), $e, 'double make_expr';
+}
+
+{
+    my $o = [ '+', 'a', [ '-', 1, 2 ] ];
+    my $e = make_expr $o;
+    is_deeply $e->rotate_left, make_expr([ '-', [ '+', 'a', 1 ], 2 ]), 'rotate left';
+    is_deeply $e->rotate_right, make_expr($o), 'rotate right';
 }
 
 {
     my $env = { a_1 => 2, a_b => 3 };
     is make_expr('a_b')->run($env), 3, 'var underline';
     is make_expr('a_1')->run($env), 2, 'var digit';
-    throws_ok { make_expr(['xyz'])->run({}) } qr/xyz/, 'undefined variable';
+    throws_ok { make_expr([ 'xyz' ]) } qr/xyz/i, 'bad op';
+    throws_ok { make_expr('xyz')->run({}) } qr/unknown.*xyz/i, 'unknown variable';
+    throws_ok { make_expr('xyz')->run({ xyz => undef }) } qr/undefined.*xyz/i, 'undefined variable';
 }
 
 {
     sub plus2minus { $_[0]->{op} = '+' if ($_[0]->{op} || '') eq '-' }
-    my $e = make_expr([ '-', [ '-', 3, ['-', 2, 1 ] ] ]);
-    is $e->run(), -2, 'visit_dfs before';
-    is $e->visit_dfs(\&plus2minus)->run(), 6, 'visit_dfs after';
+    my $e = make_expr([ '-', [ '-', 3, [ '-', 2, 1 ] ] ]);
+    is $e->run, -2, 'visit_dfs before';
+    is $e->visit_dfs(\&plus2minus)->run, 6, 'visit_dfs after';
     is $e->count_if(sub { 1 }), 6, 'visit_dfs count all';
     is $e->count_if(sub { $_[0]->isa('EGE::Prog::Const') }), 3, 'count_if';
+    is_deeply [ $e->gather_if(sub { $_[0]->isa('EGE::Prog::BinOp') }) ],
+       [ $e->{arg}, $e->{arg}->{right} ], 'gather_if';
 }
 
 {
@@ -390,7 +416,7 @@ sub check_sub {
 {
     my $b = make_block([
         'for', 'i', 0, 9, [
-            'expr', [ 'print', 'i', 0 ]
+            'expr', [ 'print', 'num', 'i', 0 ]
         ]
     ]);
     my $c = {
@@ -570,14 +596,113 @@ sub check_sub {
 }
 
 {
-    sub check_sql { is make_expr($_[0])->to_lang_named('SQL'), $_[1], "SQL $_[2]" }
-    check_sql(
+    my $html = 0;
+    my $check_sql = sub {
+        is make_expr($_[0])->to_lang_named('SQL', { html => $html }), $_[1], "SQL $_[2]"
+    };
+    $check_sql->(
         [ '&&', [ '<=', 1, 'a' ], [ '<=', 'a', 'n' ] ],
         '1 <= a AND a <= n', 'AND');
-    check_sql(
+    $check_sql->(
         [ '||', [ '!=', 1, 'a' ], [ '!', 'a' ] ],
         '1 <> a OR NOT a', 'OR NOT');
-    check_sql(
+    $check_sql->(
         [ '&&', [ '||', 'x', 'y' ], [ '==', 'a', 1 ] ],
         '(x OR y) AND a = 1', 'priorities');
+    $html = 1;
+    $check_sql->(
+        [ '&&', [ '<=', 1, 'a' ], [ '<=', 'a', 'n' ] ],
+        '1 &lt;= a AND a &lt;= n', 'AND html');
+    $check_sql->(
+        [ '||', [ '!=', 1, 'a' ], [ '!', 'a' ] ],
+        '1 &lt;&gt; a OR NOT a', 'OR NOT html');
+}
+
+
+{
+    my $b = make_block([
+        '=', 'M', 3
+    ]);
+    add_statement($b, [ '=', 'M', 4 ]);
+    my $c = {
+        Basic => [
+           'M = 3',
+           'M = 4',
+        ],
+        Alg => [
+            'M := 3',
+            'M := 4',
+        ],
+        Pascal => [
+            'M := 3;',
+            'M := 4;',
+        ],
+        C => [
+            'M = 3;',
+            'M = 4;',
+        ],
+        Perl => [
+            '$M = 3;',
+            '$M = 4;',
+        ],
+    };
+    check_sub($_, $b, $c->{$_}, 'add_statement') for keys %$c;
+    is $b->run_val('M'), 4, 'add_statement run';
+    throws_ok { add_statement($b, [ '=', 'M', 5, '=' ]) } qr/single/, 'add_statemen extra';
+}
+
+{
+    my $b = make_block([
+        '=', 'M', 3,
+        '=', 'M', 4,
+    ]);
+    move_statement($b, 1, 0);
+    my $c = {
+        Basic => [
+           'M = 4',
+           'M = 3',
+        ],
+        Alg => [
+            'M := 4',
+            'M := 3',
+        ],
+        Pascal => [
+            'M := 4;',
+            'M := 3;',
+        ],
+        C => [
+            'M = 4;',
+            'M = 3;',
+        ],
+        Perl => [
+            '$M = 4;',
+            '$M = 3;',
+        ],
+    };
+    check_sub($_, $b, $c->{$_}, 'move_statement') for keys %$c;
+    is $b->run_val('M'), 3, 'move_statement run';
+    throws_ok { move_statement($b, 2, 0); } qr /bad from/i, 'move_statement bad from';
+}
+
+{
+    my $b = make_block([ 'expr', [ 'print', 'str', '*' ] ]);
+    my $c = {
+        Basic =>  [ q(PRINT "*") ],
+        Alg =>    [ q(вывод "*") ],
+        Pascal => [ q(write('*');) ],
+        C =>      [ q(print("*");) ],
+        Perl =>   [ q(print('*');) ],
+    };
+    check_sub($_, $b, $c->{$_}, "print str in $_") for keys %$c;
+}
+
+{
+    throws_ok { make_block([
+        'expr', [ 'print', 'str', '"']
+    ]) } qr/Print argument.*contains bad symbol/, 'print restricted symbol "';
+
+    throws_ok { make_block([
+        'expr', [ 'print', 'str', q(') ]
+    ]) } qr/Print argument.*contains bad symbol/, q(print restricted symbol ');
+
 }

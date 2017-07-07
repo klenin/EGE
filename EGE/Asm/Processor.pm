@@ -14,7 +14,7 @@ use EGE::Asm::Register;
 use EGE::Asm::Eflags;
 
 my $proc;
-my @registers = qw(eax ebx ecx edx esp ebp);
+our @registers = qw(eax ebx ecx edx esi edi esp ebp);
 
 sub proc {
     $proc ||= EGE::Asm::Processor->new;
@@ -43,8 +43,8 @@ sub shift_commands() {
 
 sub get_register {
     my ($self, $reg) = @_;
-    $reg =~ /^e?([a-d])[lhx]$/ or die;
-    $self->{"e$1x"};
+    $reg =~ /^e?(si|di|sp|bp)/ ? $self->{"e$1"} :
+    $reg =~ /^e?([a-d])[lhx]$/ ? $self->{"e$1x"} : die "Unknown register $reg";
 }
 
 sub get_val {

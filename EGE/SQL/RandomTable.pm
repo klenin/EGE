@@ -8,20 +8,40 @@ use warnings;
 use utf8;
 
 use EGE::Random;
-use EGE::SQL::Utils;
+
+sub new {
+    my ($class, %p) = @_;
+    bless { %p }, $class;
+}
+
+sub ok_table {
+    my ($self, $table) = @_;
+    my @cols = $table->get_columns;
+    @cols >= $self->{column} && grep @$_ >= $self->{row}, $table->get_rows_array;
+}
+
+sub pick {
+    my ($self) = @_;
+    $self->{class} = rnd->pick(grep $self->ok_table($_), map "EGE::SQL::$_",
+        qw(Products Jobs SalesMonth Cities People Subjects Marks ParticipantsMonth));
+}
+
+sub make {
+    my ($self) = @_;
+    $self->{class}->make_table($self->{column}, $self->{row});
+}
 
 sub create_table {
     my %p = @_;
-    my $ok_table = sub {
-        (() = $_[0]->get_columns) >= $p{column} && grep scalar @$_ >= $p{row}, $_[0]->get_rows_array;
-    };
-    my $class = rnd->pick(grep $ok_table->($_), map "EGE::SQL::$_",
-        qw(Products Jobs ProductMonth Cities People Subjects));
-    $class->make_table($p{column}, $p{row});
+    my $self = __PACKAGE__->new(%p);
+    $self->pick;
+    $self->make;
 }
 
 package EGE::SQL::BaseTable;
+
 use EGE::Random;
+use EGE::SQL::Utils;
 
 sub make_table {
     my ($self, $column_count, $row_count, $name) = @_;
@@ -43,33 +63,54 @@ sub get_rows_array { (
     \@EGE::Russian::Product::printers,
     \@EGE::Russian::Product::laptops
 ) }
+sub get_text_name { { nominative => 'товары', genitive => 'товаров' } }
 
 package EGE::SQL::Jobs;
 use base 'EGE::SQL::BaseTable';
 sub get_name { 'jobs' }
 sub get_columns { ('Профессия', 'Зарплата'); }
 sub get_rows_array { (\@EGE::Russian::Jobs::list) }
+sub get_text_name { { nominative => 'профессии', genitive => 'профессий' } }
 
-package EGE::SQL::ProductMonth;
+package EGE::SQL::SalesMonth;
 use base 'EGE::SQL::Products';
+sub get_name { 'sales' }
 sub get_columns { ('Товар', @EGE::Russian::Time::month) }
+sub get_text_name { { nominative => 'продажи', genitive => 'продаж' } }
 
 package EGE::SQL::Cities;
 use base 'EGE::SQL::BaseTable';
 sub get_name { 'cities' }
-sub get_columns { qw(Город Жители Площадь) }
+sub get_columns { qw(Город Население Население2010 Население2020 Площадь Продажи) }
 sub get_rows_array { (\@EGE::Russian::City::city) }
+sub get_text_name { { nominative => 'города', genitive => 'городов' } }
 
 package EGE::SQL::People;
 use base 'EGE::SQL::BaseTable';
-sub get_name { 'people' }
-sub get_columns { qw(Фамилия Зарплата) }
+sub get_name { 'persons' }
+sub get_columns { qw(Фамилия Зарплата Продажи) }
 sub get_rows_array { (\@EGE::Russian::FamilyNames::list) }
+sub get_text_name { { nominative => 'сотрудники', genitive => 'сотрудников' } }
 
 package EGE::SQL::Subjects;
 use base 'EGE::SQL::BaseTable';
 sub get_name { 'subject' }
-sub get_columns { qw(Предмет Часы) }
+sub get_columns { qw(Предмет ЧасыЛекций ЧасыПрактики ЧасыЛаб) }
 sub get_rows_array { (\@EGE::Russian::Subjects::list) }
+sub get_text_name { { nominative => 'предметы', genitive => 'предметов' } }
+
+package EGE::SQL::Marks;
+use base 'EGE::SQL::BaseTable';
+sub get_name { 'marks' }
+sub get_columns { 'Ученик', map { /^(\w+)/ ? $1 : die } @EGE::Russian::Subjects::list }
+sub get_rows_array { (\@EGE::Russian::FamilyNames::list) }
+sub get_text_name { { nominative => 'оценки', genitive => 'оценок' } }
+
+package EGE::SQL::ParticipantsMonth;
+use base 'EGE::SQL::BaseTable';
+sub get_name { 'participants' }
+sub get_columns { 'Спорт', @EGE::Russian::Time::month }
+sub get_rows_array { (\@EGE::Russian::Sports::list) }
+sub get_text_name { { nominative => 'участники', genitive => 'участников' } }
 
 1;

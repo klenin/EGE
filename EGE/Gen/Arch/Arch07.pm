@@ -33,14 +33,9 @@ sub loop_number {
     my $inf = 'бесконечное число (программа зациклится)';
     if ($jmp eq 'jp' || $jmp eq 'jnp') {
         $self->variants(1, 2, 3, $inf);
-        if ($reg =~ m/^[a-d]h$/) {
-            $self->{correct} = $jmp eq 'jp' ? 3 : 0;
-        }
-        else {
-            cgen->add_command('add', $reg2, 1);
-            cgen->move_command(4, 2);
-            $self->{correct} = proc->run_code(cgen->{code})->get_val($reg2) - 1;
-        }
+        cgen->add_command('add', $reg2, 1);
+        cgen->move_command(4, 2);
+        $self->{correct} = proc->run_code(cgen->{code})->get_val($reg2) - 1;
     }
     elsif ($jmp eq 'jo') {
         $self->variants(1, 256 - $arg, (128 - $arg + 256) % 256, $inf);
@@ -52,7 +47,7 @@ sub loop_number {
             $jmp eq 'jno' && $arg >= 128 ? 256 - $arg + 128 : '';
         my $res1 = $res == 2 ? 3 : rnd->pick($res + 1, $res - 1);
         $self->variants($res, $res1, 1, $inf);
-	}
+    }
 }
 
 1;

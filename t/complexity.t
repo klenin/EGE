@@ -21,7 +21,7 @@ use EGE::Prog qw(make_block make_expr);
 
 {
     my $e = make_expr([ '**', 'x', 'y' ]);
-    throws_ok { $e->polinom_degree({ x => 2, y => 3 }) } qr/Undefined variable y/, 'polinom degree of non-const power';
+    throws_ok { $e->polinom_degree({ x => 2, y => 3 }) } qr/Unknown variable y/, 'polinom degree of non-const power';
 }
 
 {

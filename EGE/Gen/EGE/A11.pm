@@ -22,14 +22,16 @@ sub variable_length {
     my $symt = EGE::Russian::join_comma_and(@letters);
     my $codet = join ', ', map "$_ - $code{$_}", @letters;
 
-    my @msg = map rnd->pick(@letters), 1..6;
+    my (@msg, $bs, $bad_bs);
+    do {
+        @msg = map rnd->pick(@letters), 1..6;
+        $bs = EGE::Bits->new->set_bin(join '', map $code{$_}, @msg);
+        $bad_bs = EGE::Bits->new->set_bin(
+            join '', map substr('000' . $code{$_}, -3), @msg
+        );
+    } while ($bs->get_oct eq $bad_bs->get_oct);
+
     my $msgt = join '', @msg;
-
-    my $bs = EGE::Bits->new->set_bin(join '', map $code{$_}, @msg);
-    my $bad_bs = EGE::Bits->new->set_bin(
-        join '', map substr('000' . $code{$_}, -3), @msg
-    );
-
     my $c = 'A';
     my %bad_letters = map { $_ => $c++ } @letters;
     my $bads = join '', map $bad_letters{$_}, @msg;

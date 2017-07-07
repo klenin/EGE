@@ -58,7 +58,6 @@ sub next_prg {
 }
 
 sub code { join '', map $_ + 1, @{$_[0]}; }
-sub li { join '', map "<li>$_</li>", @_; }
 
 sub same_digit { $_[0] =~ /^(\d)\1+$/; }
 
@@ -95,15 +94,16 @@ sub calculator {
     my @sample_prg_list = map $cmd->[$_]->{t1}, @$sample_prg;
     $sample_prg_list[-1] .= ',';
 
+    my $bold = { html->style(font_weight => 'bold') };
     $self->{text} =
         'У исполнителя Калькулятор две команды, которым присвоены номера: ' .
-        '<b><ol> ' . li(map ucfirst($_->{t1}), @$cmd) . '</ol></b> ' .
+        html->ol_li([ map ucfirst($_->{t1}), @$cmd ], $bold) .
         "Выполняя первую из них, Калькулятор $cmd->[0]->{t2}, " .
         "а выполняя вторую, $cmd->[1]->{t3}. " .
         "Запишите порядок команд в программе получения из числа $arg " .
         "числа $result, содержащей не более $num команд, указывая лишь номера команд " .
         "(Например, программа $sample_code — это программма " .
-        '<b><ul> ' . li(@sample_prg_list) . '</ul></b> ' .
+        html->ul_li(\@sample_prg_list, $bold) .
         "которая преобразует число 1 в число $sample_result)";
     $self->{correct} = $code;
     $self->accept_number;
@@ -137,51 +137,78 @@ sub complete_spreadsheet {
     my ($self) = @_;
 
     my $table = rnd->pick(
-        { 1    => [3, 2, 3, 2],
-          2    => ["(%C+%A)/2", "%C-%D", "%A-%D", "%B/2"],
-          ans  => [3, 1, 1, 1],
-          find => 1 },
-        { 1    => [1, 2, 3],
-          2    => ["(%A+%B+%C)/2", "%C", "3*%B-%C"],
-          ans  => [3, 3, 3],
-          find => 0 },
-        { 1    => [2, 3, 0, 3],
-          2    => ["%A", "(%B+%D)/3", "2*%C", "2*(%B-%A)"],
-          ans  => [2, 2, 0, 2],
-          find => 2 }
+        {
+            1    => [ 3, 2, 3, 2 ],
+            2    => [ '(%C+%A)/2', '%C-%D', '%A-%D', '%B/2' ],
+            ans  => [ 3, 1, 1, 1 ],
+            find => 1 },
+        {
+            1    => [ 1, 2, 3 ],
+            2    => [ '(%A+%B+%C)/2', '%C', '3*%B-%C' ],
+            ans  => [ 3, 3, 3 ],
+            find => 0 },
+        {
+            1    => [ 2, 3, 0, 3 ],
+            2    => [ '%A', '(%B+%D)/3', '2*%C', '2*(%B-%A)' ],
+            ans  => [ 2, 2, 0, 2 ],
+            find => 2 }
     );
 
     my $n = @{$table->{1}};
-    my $perm_1 = [rnd->shuffle(0 .. $n -1)];
+    my $perm_1 = [ rnd->shuffle(0 .. $n - 1) ];
     my $perm_1_back = _back_perm($perm_1);
-    my $perm_2 = [rnd->shuffle(0 .. $n -1)];
-    my $perm_alph = _apply_perm(['A' .. 'Z'], $perm_1_back);
+    my $perm_2 = [ rnd->shuffle(0 .. $n - 1) ];
+    my $perm_alph = _apply_perm([ 'A' .. 'Z' ], $perm_1_back);
 
-    my $new_table =
-    {
+    my $new_table = {
        1    => _apply_perm($table->{1}, $perm_1),
        2    => _apply_perm($table->{2}, $perm_2),
        ans  => _apply_perm($table->{ans}, $perm_2),
        find => $perm_1_back->[$table->{find}]
     };
-    $self->{correct} = $new_table->{1}[$new_table->{find}];
-    $new_table->{1}[$new_table->{find}] = '';
-    my $empty_ceil_text = ['A' .. 'Z']->[$new_table->{find}] . 1;
+    $self->{correct} = $new_table->{1}->[$new_table->{find}];
+    $new_table->{1}->[$new_table->{find}] = '';
+    my $empty_cell = [ 'A' .. 'Z' ]->[$new_table->{find}] . 1;
 
-    $_  = html->row('th', html->nbsp, 'A' .. chr(ord('A') + $n - 1));
-    $_ .= html->row('td', '<strong>1</strong>', @{$new_table->{1}});
-    $_ .= html->row('td', '<strong>2</strong>',
-                    map { _to_formula($_, $perm_alph) } @{$new_table->{2}});
-    my $table_text =
-        html->table($_, {border => 1, style => 'text-align: center'});
-    my $colors = [qw(red green blue orange gray yellow brown)];
-    my $chart = EGE::Gen::EGE::A17::pie_chart($new_table->{ans},
-                                         { size => 100, colors => $colors} );
-    my $last_letter = ['A' .. 'Z']->[$n - 1];
-    $self->{text} = "Дан фрагмент электронной таблицы: $table_text" .
-        "Какое число  должно быть записано в ячейке $empty_ceil_text, чтобы " .
-        "построенная после выполнения вычислений диаграмма по значениям " .
+    my $last_letter = [ 'A' .. 'Z' ]->[$n - 1];
+    my $table_text = html->table([
+        html->row('th', html->nbsp, 'A' .. $last_letter),
+        html->row('td', '<strong>1</strong>', @{$new_table->{1}}),
+        html->row('td', '<strong>2</strong>',
+            map { _to_formula($_, $perm_alph) } @{$new_table->{2}}),
+        ], { border => 1, html->style(text_align => 'center') });
+    my $colors = [ qw(red green blue orange gray yellow brown) ];
+    my $chart = EGE::Gen::EGE::A17::pie_chart(
+        $new_table->{ans}, { size => 100, colors => $colors });
+    $self->{text} =
+        "Дан фрагмент электронной таблицы: $table_text " .
+        "Какое число  должно быть записано в ячейке $empty_cell, чтобы " .
+        'построенная после выполнения вычислений диаграмма по значениям ' .
         "диапазона ячеек A2:${last_letter}2 соответствовала рисунку? $chart";
+}
+
+sub adsl_speed {
+    my ($self) = @_;
+
+    my $speed = (1 << rnd->in_range(5, 9)) * 1000;
+    my %word_forms = (
+        1 => [ qw(секунду секунды секунд) ],
+        60 => [ qw(минуту минуты минут) ],
+        3600 => [ qw(час часа часов) ],
+    );
+    my $time_unit_multiplier = rnd->pick(keys %word_forms);
+    my $time_in_units = rnd->in_range(1, 7);
+    while (1) {
+        my $c = $self->{correct} = $time_in_units * $time_unit_multiplier * $speed / 8 / 1024 ;
+        last if $c == int($c);
+        $time_in_units *= 2;
+    }
+
+    $self->{text} = sprintf
+        'Скорость передачи данных через ADSL-соединение равна %d бит/c. ' .
+        'Передача файла через данное соединение заняла %s. ' .
+        'Определите размер файла в килобайтах.',
+        $speed, EGE::NumText::num_text($time_in_units, $word_forms{$time_unit_multiplier});
 }
 
 1;
@@ -197,6 +224,8 @@ __END__
 =item calculator
 
 =item min_routes
+
+=item adsl_speed
 
 =back
 

@@ -29,7 +29,7 @@ sub super_recursion {
                 '=', 'f', 1 
             ],
         ],
-        'expr', [ 'print', [ '()', 'f', $n ] ],
+        'expr', [ 'print', 'num', [ '()', 'f', $n ] ],
     ];
     my $lt = EGE::LangTable::table(EGE::Prog::make_block($code), [ [ 'C', 'Basic' ], [ 'Pascal', 'Alg', 'Perl' ] ]);
 

@@ -1,0 +1,11 @@
+﻿cache:
+  - C:\strawberry
+
+install:
+  - if not exist "C:\strawberry" cinst strawberryperl
+  - set PATH=C:\strawberry\perl\bin;C:\strawberry\perl\site\bin;C:\strawberry\c\bin;%PATH%
+
+build: off
+
+test_script:
+  - prove

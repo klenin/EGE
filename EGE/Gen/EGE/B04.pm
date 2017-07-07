@@ -8,12 +8,15 @@ use strict;
 use warnings;
 use utf8;
 
-use List::Util qw(sum first);
+use List::Util qw(sum first min max);
+use POSIX qw(ceil);
 
 use EGE::Random;
 use EGE::Prog;
 use EGE::Prog::Lang;
 use EGE::Html;
+use EGE::NumText;
+use EGE::Utils qw(product);
 
 sub make_xx {[
     '*', map rnd->pick('X', [ '+', 'X', 1 ], [ '-', 'X', 1 ]), 1 .. 2
@@ -127,8 +130,129 @@ QUESTION
     my $answer = 0;
     $answer += 2 ** $_ for $first..$second;
     $self->{correct} = $answer;
+    $self->accept_number;
+}
+
+sub bulbs {
+    my($self) = @_;
+    my $count = rnd->in_range(3, 100);
+
+    $self->{text} =
+        'Световое табло состоит из лампочек. Каждая лампочка может находиться в одном из трех состояний ' .
+        '(«включено», «выключено» или «мигает»). Какое наименьшее количество лампочек должно находиться ' .
+        "на табло, чтобы с его помощью можно было передать $count различных сигналов?";
+
+    $self->{correct} = ceil(log($count) / log(3));
+    $self->accept_number;
+}
+
+sub plus_minus {
+    my($self) = @_;
+    my $num = rnd->in_range(5, 10);
+    my $text_num = num_by_words($num);
+
+    $self->{text} =
+        'Сколь­ко су­ще­ству­ет раз­лич­ных по­сле­до­ва­тель­но­стей из сим­во­лов «плюс» и «минус», ' .
+        "дли­ной ровно в $text_num сим­во­лов? ";
+
+    $self->{correct} = 2 ** $num;
+    $self->accept_number;
+}
+
+sub letter_combinatorics {
+    my ($self) = @_;
+
+    my $word_length = rnd->in_range(5, 7);
+    my $vowels_count = rnd->in_range(1, 3);
+    my $consonants_count = $word_length - $vowels_count;
+    my @vowels = rnd->pick_n($vowels_count, @EGE::Russian::vowels);
+    my @consonants = rnd->pick_n($consonants_count, @EGE::Russian::consonants);
+
+    my @letters = rnd->shuffle(@vowels, @consonants);
+
+    my $letters = join(', ', @letters);
+    $self->{text} =
+        "Вася составляет $word_length-буквенные слова, в которых встречаются только буквы $letters, " .
+        'причём в каждом слове есть ровно одна гласная буква. Каждая из допустимых согласных букв может встречаться ' .
+        'в кодовом слове любое количество раз или не встречаться совсем. Словом считается любая допустимая ' .
+        'последовательность букв, не обязательно осмысленная. ' .
+        'Сколько существует таких слов, которые может написать Вася?';
+
+    $self->{correct} = $word_length * $vowels_count * $consonants_count ** ($word_length - 1);
+    $self->accept_number;
+}
+
+sub signal_rockets {
+    my ($self) = @_;
+    my ($answer, $sequence_length, $colors_count, $repeats_allowed);
+    my $order_matters = rnd->coin;
+    if ($order_matters) {
+        $repeats_allowed = rnd->coin;
+        $sequence_length = rnd->in_range(4, 6);
+        $colors_count = rnd->in_range(4, 6);
+        if ($repeats_allowed) {
+            $answer = $colors_count ** $sequence_length;
+        } else {
+            $colors_count = max $colors_count, $sequence_length;
+            $answer = product(($colors_count - $sequence_length + 1) .. $colors_count);
+        }
+    } else {
+        # Формула сочетаний с повторениями неизвестна школьникам.
+        $repeats_allowed = 0;
+        $sequence_length = rnd->in_range(2, 4);
+        $colors_count = rnd->in_range($sequence_length + 1, 6);
+        my $s = max $sequence_length, ($colors_count - $sequence_length);
+        my $t = min $sequence_length, ($colors_count - $sequence_length);
+        $answer = product(($s + 1) .. $colors_count) / product(1..$t);
+    }
+    my $order_condition_text = $order_matters ? 'существенно' : 'не существенно';
+    my $repeats_condition_text = $repeats_allowed ? 'может повторяться' : 'не может повторяться';
+    $self->{text} =
+        'Для передачи аварийных сигналов договорились использовать специальные цветные сигнальные ракеты, ' .
+        'запускаемые последовательно. Одна последовательность ракет – один сигнал; в каком порядке идут ' .
+        "цвета – $order_condition_text. Какое количество различных сигналов можно передать при помощи запуска ровно " .
+        "${\EGE::NumText::num_by_words($sequence_length, 1, 'genitive')} таких сигнальных ракет, если в ".
+        "запасе имеются ракеты ${\EGE::NumText::num_by_words($colors_count, 1, 'genitive')} различных цветов " .
+        "(ракет каждого вида неограниченное количество, цвет ракет в последовательности $repeats_condition_text)?";
+
+    $self->{correct} = $answer;
+    $self->accept_number;
+}
+
+sub how_many_sequences1 {
+    my($self) = @_;
+
+    my $first_num = rnd->in_range(1, 3);
+    my $second_num = rnd->in_range($first_num + 1, 6);
+    my $num_of_letters = rnd->in_range(2, 5);
+    my @alphabet = @EGE::Russian::alphabet[0 .. $num_of_letters - 1];
+
+    $self->{text} = sprintf
+        'Сколь­ко есть раз­лич­ных сим­воль­ных по­сле­до­ва­тель­но­стей длины от %s до %s ' .
+        'в %sбук­вен­ном ал­фа­ви­те {%s}?',
+        num_by_words($first_num, 0, 'genitive'),
+        num_by_words($second_num, 0, 'genitive'),
+        num_by_words($num_of_letters, 0, 'prepositional'),
+        join ', ', @alphabet;
+
+    $self->{correct} += $num_of_letters ** $_ for $first_num .. $second_num;
+    $self->accept_number;
+}
+
+sub how_many_sequences2 {
+    my($self) = @_;
+
+    my @word = split '', uc rnd->pick(@EGE::Russian::Animals::distinct_letters);
+    my $num = rnd->in_range(3, 7);
+
+    $self->{text} = sprintf
+        'Рас­смат­ри­ва­ют­ся сим­воль­ные по­сле­до­ва­тель­но­сти длины %d в %sбук­вен­ном ал­фа­ви­те {%s}. ' .
+        'Сколь­ко су­ще­ству­ет таких по­сле­до­ва­тель­но­стей, ' .
+        'ко­то­рые на­чи­на­ют­ся с буквы %s и за­кан­чи­ва­ют­ся бук­вой %s?',
+        $num, num_by_words(scalar @word, 0, 'prepositional'), join(', ', @word), $word[0], $word[-1];
+
+    $self->{correct} = @word ** ($num - 2);
+    $self->accept_number;
 }
 
 1;
-
-__END__

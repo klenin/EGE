@@ -25,6 +25,7 @@ sub new {
 
 sub tag {
     my ($self, $tag, $body, $attrs) = @_;
+    $body = join '', @$body if ref $body eq 'ARRAY';
     $self->open_tag($tag, $attrs, defined $body ? ">$body</$tag>" : '/>');
 }
 
@@ -58,22 +59,51 @@ sub cdata { "<![CDATA[$_[1]]]>" }
 sub pre {
     my ($self, $data, $attr) = @_;
     $self->tag('pre', $self->cdata($data), $attr);
- }
+}
+
+sub _underscores {
+    my ($k) = @_;
+    $k =~ tr/_/-/;
+    $k;
+}
 
 sub style {
     my ($self, %p) = @_;
-    style => join ' ', map "$_: $p{$_};", sort keys %p;
+    style => join ' ', map _underscores($_) . ": $p{$_};", sort keys %p;
 }
 
 sub div_xy {
-    my ($self, $text, $x, $y) = @_;
-    $self->div($text, { $self->style(width => "${x}px", height => "${y}px") });
+    my ($self, $text, $x, $y, $p) = @_;
+    $self->div($text, { $self->style(width => "${x}px", height => "${y}px", %$p) });
 }
 
 sub nbsp { ' ' }
 
+sub tag2 {
+    my ($self, $tag1, $tag2, $body, $attrs1, $attrs2) = @_;
+    $self->tag($tag1, [ map $self->tag($tag2, $_, $attrs2), @$body ], $attrs1);
+}
+
+sub ul_li {
+    my ($self, @rest) = @_;
+    $self->tag2('ul', 'li', @rest);
+}
+
+sub ol_li {
+    my ($self, @rest) = @_;
+    $self->tag2('ol', 'li', @rest);
+}
+
+sub escape {
+    (my $self, $_) = @_;
+    s/&/&amp;/g;
+    s/</&lt;/g;
+    s/>/&gt;/g;
+    $_;
+}
+
 BEGIN {
-    for my $tag (qw(p td th table div ol ul li)) {
+    for my $tag (qw(p td th table div ol ul li code)) {
         no strict 'refs';
         *$tag = sub {
             my $self = shift;

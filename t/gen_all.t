@@ -7,7 +7,9 @@ use lib '..';
 
 use EGE::Generate;
 
-ok eval { EGE::Generate::all; 1; }, 'EGE';
-ok eval { EGE::AsmGenerate::all; 1; }, 'Asm';
-ok eval { EGE::DatabaseGenerate::all; 1; }, 'Database';
-ok eval { EGE::AlgGenerate::all; 1; }, 'Alg';
+$EGE::GenerateBase::test = sub { isa_ok $_[0], 'EGE::GenBase', $_[0]->{method}; };
+
+subtest EGE => sub { EGE::Generate::all; done_testing; };
+subtest Asm => sub { EGE::AsmGenerate::all; done_testing; };
+subtest Database => sub { EGE::DatabaseGenerate::all; done_testing; };
+subtest Alg => sub { EGE::AlgGenerate::all; done_testing; };

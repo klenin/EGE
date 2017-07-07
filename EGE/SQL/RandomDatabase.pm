@@ -71,9 +71,9 @@ sub relation {
             students => {
                 lecturers => { text => 'Какие преподаватели преподают у студента' },
                 students_subject => {
-                    name_field => 'marks',
-                    col_range => [ 2, 5],
-                    text => 'Выбрать студентов имеющих оценку равную %s в больше %s случаев',
+                    name_field => 'mark',
+                    col_range => [ 2, 5 ],
+                    text => 'Выбрать студентов, получивших оценку %s более %s раз',
                     inversion => 1 },
                 students => { name_field => 'курс', text => 'Посчитать количество студентов на каждом курсе' },
             },
@@ -85,10 +85,10 @@ sub relation {
                 lecturers => { text => 'Кто преподаёт предмет' }
             },
             students_subject => {
-                lecturers_subject => { name_field => 'marks', text => 'Какая %s оценка была поставлена преподавателем' },
-                students_subject => { name_field => 'marks', text => 'Подсчитать для каждой оценки количество получивших её студентов' },
+                lecturers_subject => { name_field => 'mark', text => 'Какая %s оценка была поставлена преподавателем' },
+                students_subject => { name_field => 'mark', text => 'Подсчитать для каждой оценки количество получивших её студентов' },
                 students => {
-                    name_field => 'marks',
+                    name_field => 'mark',
                     col_range => [ 2, 4 ],
                     text => 'Выбрать студентов сдавших предмет на оценку больше %s и таких предметов у студента больше %s' }
             },
@@ -100,7 +100,7 @@ sub relation {
             },
         },
         potential_field => {
-            marks => [ 2, 5 ],
+            mark => [ 2, 5 ],
             часы => [ 100, 200 ],
             курс => [ 1, 5 ],
         }
@@ -148,26 +148,26 @@ sub relation {
             },
             products => {
                 cities => { text => 'Где покупали' },
-                people_products => {
+                persons_products => {
                     name_field => 'склад',
-                    col_range => [2, 5],
-                    text => 'Выбрать продукты, которые со склада № %s, купили больше %s человек',
+                    col_range => [ 2, 5 ],
+                    text => 'Выбрать продукты, которые со склада № %s купили больше %s человек',
                     inversion => 1 },
                 products => { name_field => 'склад', text => 'Посчитать количество товаров на каждом складе' }
             },
-            people => {
+            persons => {
                 cities => { text => 'Где живет' },
                 products => { text => 'Что купил' }
             },
-            people_cities => {
+            persons_cities => {
                 cities => {
                     name_field => 'количество',
                     col_range => [ 1, 4 ],
                     text => 'Выбрать города, в которых более %2$s покупателей приобрели более %1$s товаров каждый' }
             },
-            people_products => {
-                people_cities => { name_field => 'marks', text => 'Какая %s оценка была поставлена товарам купленным в городе' },
-                people_products => rnd->pick(
+            persons_products => {
+                persons_cities => { name_field => 'mark', text => 'Какая %s оценка была поставлена товарам купленным в городе' },
+                persons_products => rnd->pick(
                     { name_field => 'rating', text => 'Подсчитать для каждой оценки количество получивших её товаров' },
                     { name_field => 'день', text => 'Посчитать количество купленных товаров в различные дни' }
                 ),
@@ -182,7 +182,7 @@ sub relation {
             склад => [ 1, 5 ],
             price => [ 1000, 5000 ],
             rating => [ 2, 5 ],
-            marks => [ 2, 5 ],
+            mark => [ 2, 5 ],
             день => [ 1, 7 ],
         }
     }

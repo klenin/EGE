@@ -31,7 +31,7 @@ sub start {
         xmlns => 'http://www.w3.org/2000/svg',
         version => '1.1',
         viewBox => join(' ', @$viewBox),
-        preserveAspectRatio => 'meet'
+        preserveAspectRatio => 'none meet'
     }) . "\n";
 }
 
@@ -45,7 +45,7 @@ BEGIN {
             html->tag($tag, undef, \%params) . "\n";
         };
     }
-    for my $tag (qw(text tspan g pattern)) {
+    for my $tag (qw(text tspan g pattern marker defs)) {
         *$tag = sub {
             my ($self, $text, %params) = @_;
             $text = join '', @$text if ref $text eq 'ARRAY';
