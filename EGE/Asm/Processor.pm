@@ -59,15 +59,35 @@ sub get_wrong_val {
 }
 
 sub run_cmd {
-    my ($self, $cmd, $reg, $arg) = @_;
+    my ($self, $cmd, $reg, $arg, $extra_reg) = @_;
     $arg //= 'cl' if shift_commands->{$cmd};
     my $val = $self->is_stack_command($cmd) ? $self->{stack} : $self->get_val($arg);
     no strict 'refs';
-    $reg ? $self->get_register($reg)->$cmd($self->{eflags}, $reg, $val) : $self->$cmd;
+    if ($cmd eq 'div') { $self->get_register($reg)->$cmd($self->{eflags}, $reg, $val, $extra_reg); }
+    else { $reg ? $self->get_register($reg)->$cmd($self->{eflags}, $reg, $val) : $self->$cmd; }
     $self;
 }
 
 sub label_regexp() { qr/^(\w+):$/ }
+
+sub extend_args {
+    my ($self, $cmd) = @_;
+    my $reg = $cmd ->[1];
+    if ($cmd->[0] eq 'div'){
+        if ($reg =~ /^[a-d](l|h)/) {
+            $self->run_cmd('div', 'ax', $reg);
+        }
+        elsif ($reg =~ /^[a-d]x/) {
+            my $ax = $self->get_register('ax');
+            $self->run_cmd('div', 'dx', $reg, $ax);
+        }
+        else {
+            my $eax = $self->get_register('eax');
+            my $ebx_val = $self->get_val($reg);
+            $self->run_cmd('div', 'edx', $reg, $eax);
+        }   
+    }
+}
 
 sub run_code {
     my ($self, $code) = @_;
@@ -79,6 +99,9 @@ sub run_code {
         if ($op =~ label_regexp) {}
         elsif ($self->{eflags}->is_jump($op)) {
             $i = ($labels{$cmd->[1]} // die) - 1 if $self->{eflags}->valid_jump($op);
+        }
+        elsif ($self->is_extended_result($op)) {
+            $self->extend_args($cmd);
         }
         else {
             $self->run_cmd(@$cmd);
@@ -102,6 +125,11 @@ sub clc {
 sub is_stack_command {
     my ($self, $cmd) = @_;
     { push => 1, pop => 1 }->{$cmd};
+}
+
+sub is_extended_result {
+    my ($self, $cmd) = @_;
+    { div => 1 }->{$cmd};
 }
 
 sub print_state {
