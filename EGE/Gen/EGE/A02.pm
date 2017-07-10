@@ -361,6 +361,43 @@ sub sport_athlete {
      );
 }
 
+sub _gen_alphabet {
+    my ($c) = @_;
+    $c->{alphpower} = 2 ** rnd->in_range(5, 8);
+    $c->{pages} = 2 ** rnd->in_range(7, 10);
+    $c->{symbpage} = 2 ** rnd->in_range(7, 11);
+    $c->{symbols} = $c->{pages} * $c->{symbpage};
+    $c->{size} = log($c->{alphpower}) / log(2) * $c->{symbols} / 8192;
+}
+
+sub text_size {
+    my ($self) = @_;
+    my $context = {};
+    _gen_alphabet($context);
+    $self->{text} = 
+        "Мощность алфавита равна $context->{alphpower}. Сколько Кбайт памяти потребуется, " . 
+        "чтобы сохранить $context->{pages} страниц текста," .
+        "содержащего в среднем $context->{symbpage} символов на каждой странице ?";
+    $self->variants(num_text($context->{size}, [ 'кбайт', 'кбайта', 'кбайт' ]), 
+        num_text(int ($context->{size} / 1.5), [ 'кбайт', 'кбайта', 'кбайт' ]),
+        num_text(int ($context->{size} * 1.5), [ 'кбайт', 'кбайта', 'кбайт' ]), 
+        num_text(int ($context->{size} * rnd->pick(0.8, 1.2)), [ 'кбайт', 'кбайта', 'кбайт' ]));
+}
+
+sub alphabet_power {
+    my ($self) = @_;
+    my $context = {};
+    _gen_alphabet($context);
+    $self->{text} =
+        "Объем сообщения - $context->{size} кбайт. Известно, что данное " .
+        "сообщение содержит $context->{symbols} символов. " .
+        'Какова мощность алфавита?';
+    $self->variants($context->{alphpower}, 
+        $context->{alphpower} * 2, 
+        $context->{alphpower} / 2, 
+        2 ** ((log($context->{alphpower}) / log(2)) + rnd->pick (-2, 2)));
+}
+
 1;
 
 __END__

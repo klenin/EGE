@@ -170,6 +170,8 @@ print STDERR "seed: @ss\n";
 #g('A2', 'units');
 #g('A2', 'min_routes');
 #g('A2', 'sport_athlete');
+#g('A2', 'text_size');
+#g('A2', 'alphabet_power');
 #g('A3', 'ones');
 #g('A3', 'zeroes');
 #g('A3', 'convert');
