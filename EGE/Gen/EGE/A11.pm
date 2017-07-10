@@ -103,6 +103,29 @@ QUESTION
     $self->{variants} = $context->{result};
 }
 
+sub planet_massage {
+    my ($self) = @_;
+    my $N1 = 2 ** rnd->in_range(5, 10);
+    my $N2 = 2 ** rnd->in_range_except(5, 10, log($N1) / log(2));
+    my $P = rnd->in_range(5, 20);
+    $self->{text} =
+        "Жители планеты Принтер используют алфавит из $N1 знаков, а жители планеты Плоттер — из $N2".
+        " знаков. Для жителей какой планеты сообщение из $P знаков несет больше информации и на сколько?";
+    my $ans;
+    my $dif = $P * (ceil(log($N1) / log(2)) - ceil(log($N2) / log(2)));
+    my @bad = (rnd->pick('Принтер на ', 'Плоттер на ') . $P * (ceil(log($N1) / log(2)) + ceil(log($N2) / log(2))) . ' бит');
+    if ($dif > 0) {
+        $ans = "Принтер на $dif бит";
+        $bad[1] = "Плоттер на $dif бит";
+        $bad[2] = 'Принтер на ' . $P * ($N1 - $N2) . ' бит';
+    } else {
+        $ans = 'Плоттер на ' . abs($dif) . ' бит';
+        $bad[1] = 'Принтер на ' . abs($dif) . ' бит';
+        $bad[2] = 'Плоттер на ' . $P * ($N2 - $N1) . ' бит';
+    }
+    $self->variants($ans, @bad);
+}
+
 1;
 
 

@@ -208,6 +208,7 @@ print STDERR "seed: @ss\n";
 #g('A11', 'variable_length');
 #g('A11', 'fixed_length');
 #g('A11', 'password_length');
+#g('A11', 'planet_massage');
 #g('A12', 'beads');
 #g('A13', 'file_mask');
 #g('A13', 'file_mask2');
