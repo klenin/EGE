@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 233;
+use Test::More tests => 245;
 use Test::Exception;
 
 use lib '..';
@@ -456,4 +456,24 @@ sub check_stack {
     proc->run_code([ ['mov', 'bx', 0x0000], ['bsf', 'ax', 'bx'] ]);
     is proc->get_val('ax'), 0, 'bsf test 6';
     is proc->{eflags}->flags_text, '', 'bsf flags test 6';
+}
+
+{
+    proc->run_code([ ['mov', 'ax', 250], ['mov', 'bl', 150], ['div', 'bl'] ]);
+    is proc->get_val('al'), 1, 'div test 8-bit argument: quotient';
+    is proc->get_val('ah'), 100, 'div test 8-bit argument: remainder';
+    throws_ok { proc->run_code([ ['mov', 'ax', 2**15], ['mov', 'bl', 1], ['div', 'bl'] ]); } qr/quotient is too big/ , '#DE 8-bit argument';
+    throws_ok { proc->run_code([ ['mov', 'ax', 2**15], ['mov', 'bl', 0], ['div', 'bl'] ]); } qr/Illegal division by zero/ , '#DE 8-bit argument';
+    
+    proc->run_code([ ['mov', 'dx', 762], ['mov', 'ax', 61568], ['mov', 'bx', 60000], ['div', 'bx'] ]);
+    is proc->get_val('ax'), 833, 'div test 16-bit argument: divisor';
+    is proc->get_val('dx'), 20000, 'div test 16-bit argument: remainder';
+    throws_ok { proc->run_code([ ['mov', 'dx', 2**15], ['mov', 'ax', 2**15], ['mov', 'bx', 1], ['div', 'bx'] ]); } qr/quotient is too big/ , '#DE 16-bit argument';
+    throws_ok { proc->run_code([ ['mov', 'dx', 2**15], ['mov', 'ax', 2**15], ['mov', 'bx', 0], ['div', 'bx'] ]); } qr/Illegal division by zero/ , '#DE 16-bit argument';
+    
+    proc->run_code([ ['mov', 'edx', 2**7], ['mov', 'eax', 2**31 + 2**16], ['mov', 'ebx', 2**31 + 1], ['div', 'ebx'] ]);
+    is proc->get_val('eax'), 2**8 + 1, 'div test 32-bit argument: divisor';
+    is proc->get_val('edx'), 65279, 'div test 32-bit argument: divisor';
+    throws_ok { proc->run_code([ ['mov', 'edx', 2**7], ['mov', 'eax', 2**31 + 2**16], ['mov', 'ebx', 1], ['div', 'ebx'] ]); } qr/quotient is too big/ , '#DE 32-bit argument';
+    throws_ok { proc->run_code([ ['mov', 'edx', 2**7], ['mov', 'eax', 2**31 + 2**16], ['mov', 'ebx', 0], ['div', 'ebx'] ]); } qr/Illegal division by zero/ , '#DE 32-bit argument';
 }

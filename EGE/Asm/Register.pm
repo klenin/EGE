@@ -105,6 +105,29 @@ sub add {
 	$self;
 }
 
+sub div {
+    my ($self, $eflags, $reg, $divisor, $extra_reg) = @_;
+    if (not defined $extra_reg) {
+        my $dividend = $self->get_value;
+        my $quotient = int ($dividend / $divisor);
+        my $remainder = $dividend % $divisor;
+        $self->mov($eflags, 'al', $quotient);
+        $self->mov($eflags, 'ah', $remainder);
+        die '#DE quotient is too big' if ($quotient >= 2**8);  
+    }
+    else {
+        my $high_bits = $self->get_value;
+        my $low_bits = $extra_reg->get_value;
+        my $reg_size = $extra_reg->{id_to} - $extra_reg->{id_from};
+        my $dividend = $high_bits*2**($extra_reg->{id_to} - $extra_reg->{id_from}) + $low_bits;
+        my $quotient = int ($dividend / $divisor);
+        my $remainder = $dividend % $divisor;
+        die '#DE quotient is too big' if ($quotient >= 2**$reg_size);
+        $self->mov($eflags, '', $remainder);
+        $extra_reg->mov($eflags, '', $quotient);
+    }
+}
+
 sub adc {
 	my ($self, $eflags, $reg, $val) = @_;
 	$self->add($eflags, $reg, $val, 1);

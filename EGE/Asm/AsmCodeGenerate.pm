@@ -202,6 +202,41 @@ sub generate_simple_code {
 	($reg, $format, $n, cgen->{code}->[0]->[2]);
 }
 
+sub generate_div_code {
+    my ($self, $type) =@_;
+    my $size = rnd->pick(8, 16, 32);
+    my ($format) = { 8 => '%s', 16=> ('%04Xh'), 32 => ('%08Xh') }->{$size};
+    $self->{code} = [];
+    my $reg;
+    if ($size == 8){
+        $reg = rnd->pick('c', 'b', 'd') . rnd->pick('h', 'l');
+        $self->add_commands(
+            $self->random_mov('ax'),
+            $self->random_mov($reg),
+            ['div', $reg ] );  
+            $reg = rnd->pick('al', 'ah');  
+        }
+    else {
+        my $div_reg = rnd->pick('bx', 'cx');
+        my ($h_bits, $l_bits) = ('ax', 'dx');
+        if ($size == 32){
+            $h_bits = 'e' . $h_bits;
+            $l_bits = 'e' . $l_bits;
+            $div_reg = 'e' . $div_reg;
+        }
+        $self->add_commands(
+            $self->random_mov($h_bits),
+            $self->random_mov($l_bits),
+            ['mov', $div_reg, rnd->in_range(2**9, 2**$size - 1)],
+            ['div', $div_reg ]);    
+        $reg = rnd->pick('ax', 'dx');
+        if ($size == 32){
+            $reg = "e" . $reg;
+        }
+        }
+    ($reg, $format, $size);
+}
+
 sub cmd { $_[0]->{code}->[$_[1]]->[0] }
 
 sub clear { $_[0]->{code} = []; $_[0]->free_all_registers; }

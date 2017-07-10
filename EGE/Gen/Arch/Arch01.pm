@@ -121,6 +121,14 @@ sub reg_value_jump {
     $self->variants($res, offs_modulo($res, 256, rnd->pick(2, -2), 1, -1));
 }
 
+sub reg_value_div {
+    my $self = shift;
+    my ($reg, $format, $n) = cgen->generate_div_code('div');
+    my @variants = $self->get_res($reg, $format);
+    push @variants, offs_modulo($variants[0], 2 ** $n, rnd->pick(2, -2), 1, - 1);
+    $self->formated_variants($format, @variants, make_wrongs($reg, 4, @variants));
+}
+
 sub get_res {
     my ($self, $reg, $format) = @_;
     my $code_txt = cgen->get_code_txt($format);
